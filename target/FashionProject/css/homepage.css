@@ -1,0 +1,154 @@
+/* base */
+:root{
+    /*    --muted:#7b8794;*/
+    --muted: #9B774E;
+    --accent: #CAC9C7;
+    --bg:#f8f9fb;
+}
+
+html, body {
+    height:100%;
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:var(--bg);
+    overscroll-behavior: none;
+    overflow: hidden;
+}
+
+/* wrapper contains stacked sections */
+#hero-wrapper {
+    position: relative;
+    height: 100vh;
+    width:100%;
+}
+
+/* each hero-section stacked in same area */
+.hero-section {
+    position: absolute;
+    inset: 0; /* top:0;right:0;bottom:0;left:0; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .9s ease, transform .9s ease;
+    opacity: 0;
+    transform: scale(1.02);
+    pointer-events: none;
+    will-change: opacity, transform;
+    z-index: 1;
+}
+
+/* active section visible */
+.hero-section.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+    z-index: 2;
+}
+
+/* background & overlay */
+.hero-bg {
+    position:absolute;
+    inset:0;
+    background-size:cover;
+    background-position:center;
+    z-index:1;
+    filter: saturate(0.95) contrast(1);
+}
+.hero-overlay {
+    position:absolute;
+    inset:0;
+    z-index:2;
+    background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.25));
+}
+
+/* content */
+.hero-content {
+    position:relative;
+    z-index:3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:100%;
+    width:100%;
+    padding:24px;
+}
+.hero-card {
+    max-width:1200px;
+    color:#fff;
+    padding:36px;
+    text-align:center;
+}
+.hero-title {
+    font-size:48px;
+    font-weight:700;
+    margin:0 0 10px;
+    letter-spacing:0.4px;
+}
+.hero-sub {
+    font-size:18px;
+    opacity:0.95;
+}
+
+/* subtle fade-in text animation */
+.hero-card .hero-title, .hero-card .hero-sub {
+    transition: transform .8s ease, opacity .8s ease;
+    transform: translateY(6px);
+    opacity:0;
+}
+.hero-section.active .hero-card .hero-title,
+.hero-section.active .hero-card .hero-sub {
+    transform: translateY(0);
+    opacity:1;
+}
+
+/* collection cards (if later) and product area basic */
+.collections-grid {
+    display:flex;
+    gap:16px;
+    margin-top:24px;
+    justify-content:center;
+}
+.collection-card{
+    width:220px;
+    height:120px;
+    border-radius:10px;
+    overflow:hidden;
+    position:relative;
+    cursor:pointer;
+}
+.collection-card img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+.collection-card .col-label{
+    position:absolute;
+    left:12px;
+    bottom:12px;
+    color:#fff;
+    font-weight:700;
+    text-shadow:0 3px 8px rgba(0,0,0,0.5);
+}
+
+/* visual hint for keyboard */
+.skip-hint {
+    position: absolute;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:10;
+    color:rgba(255,255,255,0.85);
+    font-size:13px;
+}
+
+/* responsive tweaks */
+@media (max-width:700px) {
+    .hero-title {
+        font-size:32px;
+    }
+    .hero-card {
+        padding:20px;
+    }
+}
+
+
