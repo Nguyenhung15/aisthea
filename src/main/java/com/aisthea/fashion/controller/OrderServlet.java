@@ -6,7 +6,7 @@ import com.aisthea.fashion.model.OrderItem;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.IOrderService;
 import com.aisthea.fashion.service.OrderService;
-import com.aisthea.fashion.utils.MailUtil;
+import com.aisthea.fashion.util.MailUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -22,7 +22,7 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@WebServlet(name = "OrderServlet", urlPatterns = {"/order"})
+@WebServlet(name = "OrderServlet", urlPatterns = { "/order" })
 public class OrderServlet extends HttpServlet {
 
     private IOrderService orderService;
@@ -166,7 +166,8 @@ public class OrderServlet extends HttpServlet {
                 html.append("<html><body style='font-family: Arial, sans-serif; line-height: 1.6;'>");
                 html.append("<h2>Chào " + customerName + ",</h2>");
                 html.append("<p>Cảm ơn bạn đã mua sắm tại <b>AISTHÉA FASHION</b>!</p>");
-                html.append("<p>Đơn hàng <strong>#" + newOrder.getOrderid() + "</strong> của bạn đã được xác nhận và đang chờ xử lý.</p>");
+                html.append("<p>Đơn hàng <strong>#" + newOrder.getOrderid()
+                        + "</strong> của bạn đã được xác nhận và đang chờ xử lý.</p>");
                 html.append("<h3 style='border-bottom: 2px solid #eee; padding-bottom: 5px;'>Chi tiết đơn hàng</h3>");
                 html.append("<table style='width: 100%; border-collapse: collapse;'>");
 
@@ -174,21 +175,30 @@ public class OrderServlet extends HttpServlet {
                     for (OrderItem item : newOrder.getItems()) {
                         html.append("<tr style='border-bottom: 1px solid #eee;'>");
                         html.append("<td style='padding: 10px 0; width: 85px; vertical-align: top;'>");
-                        html.append("<img src='" + item.getImageUrl() + "' width='70' style='border-radius: 8px; margin-right: 15px;'>");
+                        html.append("<img src='" + item.getImageUrl()
+                                + "' width='70' style='border-radius: 8px; margin-right: 15px;'>");
                         html.append("</td>");
                         html.append("<td style='padding: 10px 0; vertical-align: top;'>");
                         html.append("<strong>" + item.getProductName() + "</strong><br>");
-                        html.append("<span style='color: #555; font-size: 0.9em;'>" + item.getColor() + " / " + item.getSize() + "</span>");
+                        html.append("<span style='color: #555; font-size: 0.9em;'>" + item.getColor() + " / "
+                                + item.getSize() + "</span>");
                         html.append("</td>");
-                        html.append("<td style='padding: 10px 0; text-align: right; width: 50px; vertical-align: top;'>x " + item.getQuantity() + "</td>");
-                        html.append("<td style='padding: 10px 0; text-align: right; white-space: nowrap; width: 120px; vertical-align: top;'><strong>" + currencyFormatter.format(item.getPrice().multiply(new BigDecimal(item.getQuantity()))) + "</strong></td>");
+                        html.append(
+                                "<td style='padding: 10px 0; text-align: right; width: 50px; vertical-align: top;'>x "
+                                        + item.getQuantity() + "</td>");
+                        html.append(
+                                "<td style='padding: 10px 0; text-align: right; white-space: nowrap; width: 120px; vertical-align: top;'><strong>"
+                                        + currencyFormatter
+                                                .format(item.getPrice().multiply(new BigDecimal(item.getQuantity())))
+                                        + "</strong></td>");
                         html.append("</tr>");
                     }
                 }
 
                 html.append("</table>");
                 html.append("<p style='text-align: right; font-size: 1.2em; margin-top: 20px;'>");
-                html.append("Tổng cộng: <strong style='color: #9B774E;'>" + currencyFormatter.format(newOrder.getTotalprice()) + "</strong>");
+                html.append("Tổng cộng: <strong style='color: #9B774E;'>"
+                        + currencyFormatter.format(newOrder.getTotalprice()) + "</strong>");
                 html.append("</p>");
                 html.append("<h3 style='border-bottom: 2px solid #eee; padding-bottom: 5px;'>Thông tin giao hàng</h3>");
                 html.append("<p style='background-color: #f9f9f9; padding: 15px; border-radius: 8px;'>");
@@ -209,7 +219,8 @@ public class OrderServlet extends HttpServlet {
             session.setAttribute("cart", new Cart());
             session.removeAttribute("originalCart");
 
-            response.sendRedirect(request.getContextPath() + "/order?action=view&id=" + newOrder.getOrderid() + "&success=true");
+            response.sendRedirect(
+                    request.getContextPath() + "/order?action=view&id=" + newOrder.getOrderid() + "&success=true");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -305,7 +316,8 @@ public class OrderServlet extends HttpServlet {
             }
 
             orderService.updateOrderStatus(orderId, newStatus);
-            response.sendRedirect(request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
+            response.sendRedirect(
+                    request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -3,7 +3,7 @@ package com.aisthea.fashion.controller;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.IUserService;
 import com.aisthea.fashion.service.UserService;
-import com.aisthea.fashion.utils.MailUtil;
+import com.aisthea.fashion.util.MailUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;

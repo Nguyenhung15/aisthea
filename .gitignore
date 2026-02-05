@@ -1,0 +1,73 @@
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+*.swp
+*.swo
+*~
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+build/
+
+# Logs
+logs/
+*.log
+log/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Database
+*.db
+*.sqlite
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Sensitive configuration (use environment variables instead)
+application-local.properties
+
+# Uploads (user-generated content)
+uploads/
+!uploads/.gitkeep
+
+# Test coverage reports
+coverage/
+*.exec
+
+# Package files
+node_modules/
+package-lock.json
+
+# Compiled files
+*.min.js
+*.min.css
