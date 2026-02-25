@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Exception for validation errors
+ * Custom exception for validation errors
+ * Contains a list of validation error messages
  */
-public class ValidationException extends RuntimeException {
-    private List<String> errors;
+public class ValidationException extends Exception {
+
+    private final List<String> errors;
 
     public ValidationException(String message) {
         super(message);
@@ -16,7 +18,7 @@ public class ValidationException extends RuntimeException {
     }
 
     public ValidationException(List<String> errors) {
-        super(errors.isEmpty() ? "Validation failed" : errors.get(0));
+        super("Validation failed");
         this.errors = errors;
     }
 
@@ -24,7 +26,7 @@ public class ValidationException extends RuntimeException {
         return errors;
     }
 
-    public void addError(String error) {
-        this.errors.add(error);
+    public boolean hasErrors() {
+        return errors != null && !errors.isEmpty();
     }
 }

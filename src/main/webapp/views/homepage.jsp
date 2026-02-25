@@ -16,7 +16,7 @@
 
     <body>
 
-        <%@ include file="/views/header_home.jsp" %>
+        <%@ include file="/views/shared/header_home.jsp" %>
 
         <div id="hero-wrapper">
             <section class="hero-section" data-section="women" data-title="OuterWear Fall"

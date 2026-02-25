@@ -34,7 +34,7 @@ public class GoogleLoginServlet extends HttpServlet {
         String credential = request.getParameter("credential");
 
         if (credential == null || credential.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/views/user/login.jsp?error=Google login failed");
+            response.sendRedirect(request.getContextPath() + "/login?error=Google+login+failed");
             return;
         }
 
@@ -79,7 +79,7 @@ public class GoogleLoginServlet extends HttpServlet {
                         user = userService.getUserByEmail(email);
                     } else {
                         request.setAttribute("error", "Failed to register Google user: " + result);
-                        request.getRequestDispatcher("/views/user/login.jsp").forward(request, response);
+                        request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
                         return;
                     }
                 } else {
@@ -96,15 +96,15 @@ public class GoogleLoginServlet extends HttpServlet {
                 // 5. Create Session
                 HttpSession session = request.getSession();
                 session.setAttribute("user", user);
-                response.sendRedirect(request.getContextPath() + "/views/homepage.jsp");
+                response.sendRedirect(request.getContextPath() + "/home");
 
             } else {
-                response.sendRedirect(request.getContextPath() + "/views/user/login.jsp?error=Invalid Google Token");
+                response.sendRedirect(request.getContextPath() + "/login?error=Invalid+Google+Token");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/views/user/login.jsp?error=System Error");
+            response.sendRedirect(request.getContextPath() + "/login?error=System+Error");
         }
     }
 }

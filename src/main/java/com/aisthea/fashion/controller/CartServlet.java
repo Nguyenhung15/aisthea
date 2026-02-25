@@ -49,7 +49,7 @@ public class CartServlet extends HttpServlet {
             action = "view";
         }
         Cart cart = (Cart) session.getAttribute("cart");
-        String jspPath = "/views/cart/cart.jsp";
+        String jspPath = "/WEB-INF/views/cart/cart.jsp";
 
         try {
             if ("remove".equals(action)) {
@@ -109,7 +109,7 @@ public class CartServlet extends HttpServlet {
                     session.removeAttribute("originalCart");
                 } else {
                     session.setAttribute("cart", buyNowCart);
-                    redirectUrl = request.getContextPath() + "/views/cart/checkout.jsp";
+                    redirectUrl = request.getContextPath() + "/WEB-INF/views/cart/checkout.jsp";
                 }
 
             } else if ("update".equals(action)) {

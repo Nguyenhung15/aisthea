@@ -16,35 +16,54 @@ public class ProductDAO implements IProductDAO {
 
     private static final Logger logger = Logger.getLogger(ProductDAO.class.getName());
     private static final String INSERT_SQL = """
-        INSERT INTO Products (name, description, price, categoryid, brand, discount, createdat, updatedat)
-        VALUES (?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())
-    """;
+                INSERT INTO Products (name, description, price, categoryid, brand, discount, createdat, updatedat)
+                VALUES (?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())
+            """;
     private static final String SELECT_BY_ID = "SELECT * FROM Products WHERE productid = ?";
     private static final String SELECT_ALL = "SELECT * FROM Products";
+    private static final String SELECT_ALL_OPTIMIZED = """
+            SELECT
+                p.productid, p.name, p.description, p.price, p.brand, p.discount,
+                p.createdat, p.updatedat, p.categoryid,
+                c.name AS category_name, c.type AS category_type,
+                c.genderid AS category_genderid, c.parentid AS category_parentid,
+                c.INDEX_name AS category_index,
+                img.imageurl AS image_url, img.color AS image_color, img.isprimary AS image_isprimary,
+                (SELECT COALESCE(SUM(pcs.stock), 0) FROM product_color_size pcs WHERE pcs.productid = p.productid) AS total_stock
+            FROM
+                Products p
+            LEFT JOIN
+                Categories c ON p.categoryid = c.categoryid
+            LEFT JOIN
+                product_image img ON p.productid = img.productid
+            ORDER BY p.productid
+            """;
     private static final String UPDATE_SQL = """
-        UPDATE Products
-        SET name = ?, description = ?, price = ?, categoryid = ?, brand = ?, discount = ?, updatedat = GETDATE()
-        WHERE productid = ?
-    """;
+                UPDATE Products
+                SET name = ?, description = ?, price = ?, categoryid = ?, brand = ?, discount = ?, updatedat = GETDATE()
+                WHERE productid = ?
+            """;
     private static final String DELETE_SQL = "DELETE FROM Products WHERE productid = ?";
     private static final String SELECT_BY_PARENT_CATEGORY_OPTIMIZED = """
-    SELECT
-        p.productid, p.name, p.description, p.price, p.brand, p.discount,
-        p.createdat, p.updatedat, p.categoryid,
-        c.name AS category_name, c.type AS category_type, 
-        c.genderid AS category_genderid, c.parentid AS category_parentid, 
-        c.INDEX_name AS category_index,
-        img.imageurl AS primary_image_url
-    FROM
-        Products p
-    JOIN
-        Categories c ON p.categoryid = c.categoryid
-    LEFT JOIN
-        product_image img ON p.productid = img.productid AND img.isprimary = 1
-    WHERE
-        c.genderid = ? 
-        AND (c.INDEX_name = ? OR c.parentid = ?)
-    """;
+            SELECT
+                p.productid, p.name, p.description, p.price, p.brand, p.discount,
+                p.createdat, p.updatedat, p.categoryid,
+                c.name AS category_name, c.type AS category_type,
+                c.genderid AS category_genderid, c.parentid AS category_parentid,
+                c.INDEX_name AS category_index,
+                img.imageurl AS image_url, img.color AS image_color, img.isprimary AS image_isprimary,
+                (SELECT COALESCE(SUM(pcs.stock), 0) FROM product_color_size pcs WHERE pcs.productid = p.productid) AS total_stock
+            FROM
+                Products p
+            JOIN
+                Categories c ON p.categoryid = c.categoryid
+            LEFT JOIN
+                product_image img ON p.productid = img.productid
+            WHERE
+                c.genderid = ?
+                AND (c.INDEX_name = ? OR c.parentid = ?)
+            ORDER BY p.productid
+            """;
 
     public ProductDAO() {
         this.categoryDAO = new CategoryDAO();
@@ -134,7 +153,8 @@ public class ProductDAO implements IProductDAO {
     @Override
     public Product getProductById(int productId) throws SQLException {
         Product product = null;
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(SELECT_BY_ID)) {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_ID)) {
             ps.setInt(1, productId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -163,52 +183,16 @@ public class ProductDAO implements IProductDAO {
     @Override
     public List<Product> getAllProducts() throws SQLException {
         List<Product> list = new ArrayList<>();
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(SELECT_ALL); ResultSet rs = ps.executeQuery()) {
+        java.util.Map<Integer, Product> productMap = new java.util.LinkedHashMap<>();
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_ALL_OPTIMIZED);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 int productId = rs.getInt("productid");
-                if (productId == 0) {
-                    System.out.println("Warning: productId is 0 for a product. Check your data!");
-                }
-
-                String name = rs.getString("name");
-                String description = rs.getString("description");
-                BigDecimal price = rs.getBigDecimal("price");
-                String brand = rs.getString("brand");
-                BigDecimal discount = rs.getBigDecimal("discount");
-                Date createdAt = rs.getTimestamp("createdat");
-                Date updatedAt = rs.getTimestamp("updatedat");
-                Product p = new Product(productId, name, description, price, brand, discount, createdAt, updatedAt);
-
-                int categoryId = rs.getInt("categoryid");
-                Category category = categoryDAO.selectCategory(categoryId);
-                p.setCategory(category);
-                p.setColorSizes(colorSizeDAO.getByProductId(productId));
-                p.setImages(imageDAO.getByProductId(productId));
-                list.add(p);
-            }
-        } catch (SQLException e) {
-            printSQLException(e);
-        }
-        return list;
-    }
-
-    @Override
-    public List<Product> getProductsByParentCategory(String parentIndex, int genderId) throws SQLException {
-        List<Product> list = new ArrayList<>();
-
-        // Sử dụng truy vấn SQL mới
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(SELECT_BY_PARENT_CATEGORY_OPTIMIZED)) {
-
-            // Gán các tham số cho câu lệnh WHERE
-            ps.setInt(1, genderId);    // c.genderid = ?
-            ps.setString(2, parentIndex); // c.INDEX_name = ?
-            ps.setString(3, parentIndex); // c.parentid = ?
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    // 1. Tạo đối tượng Product
-                    Product p = new Product();
-                    p.setProductId(rs.getInt("productid"));
+                Product p = productMap.get(productId);
+                if (p == null) {
+                    p = new Product();
+                    p.setProductId(productId);
                     p.setName(rs.getString("name"));
                     p.setDescription(rs.getString("description"));
                     p.setPrice(rs.getBigDecimal("price"));
@@ -216,8 +200,8 @@ public class ProductDAO implements IProductDAO {
                     p.setDiscount(rs.getBigDecimal("discount"));
                     p.setCreatedAt(rs.getTimestamp("createdat"));
                     p.setUpdatedAt(rs.getTimestamp("updatedat"));
+                    p.setTotalStock(rs.getInt("total_stock"));
 
-                    // 2. Tạo đối tượng Category (từ các cột đã JOIN)
                     Category category = new Category();
                     category.setCategoryid(rs.getInt("categoryid"));
                     category.setName(rs.getString("category_name"));
@@ -225,31 +209,89 @@ public class ProductDAO implements IProductDAO {
                     category.setGenderid(rs.getInt("category_genderid"));
                     category.setParentid(rs.getString("category_parentid"));
                     category.setIndexName(rs.getString("category_index"));
-
                     p.setCategory(category);
 
-                    // 3. Xử lý ảnh đại diện (từ cột đã JOIN)
-                    String primaryImageUrl = rs.getString("primary_image_url");
-                    List<ProductImage> images = new ArrayList<>();
-                    if (primaryImageUrl != null && !primaryImageUrl.isBlank()) {
-                        ProductImage primaryImg = new ProductImage();
-                        primaryImg.setImageUrl(primaryImageUrl);
-                        primaryImg.setPrimary(true);
-                        primaryImg.setProduct(p);
-                        images.add(primaryImg);
-                    }
-
-                    p.setImages(images);
-
-                    // 4. Bỏ qua ColorSizes cho trang danh sách
+                    p.setImages(new ArrayList<>());
                     p.setColorSizes(new ArrayList<>());
+                    productMap.put(productId, p);
+                }
 
-                    list.add(p);
+                // Add image if exists
+                String imageUrl = rs.getString("image_url");
+                if (imageUrl != null && !imageUrl.isBlank()) {
+                    ProductImage img = new ProductImage();
+                    img.setImageUrl(imageUrl);
+                    img.setColor(rs.getString("image_color"));
+                    img.setPrimary(rs.getBoolean("image_isprimary"));
+                    img.setProduct(p);
+                    p.getImages().add(img);
                 }
             }
         } catch (SQLException e) {
             printSQLException(e);
         }
+        list.addAll(productMap.values());
+        return list;
+    }
+
+    @Override
+    public List<Product> getProductsByParentCategory(String parentIndex, int genderId) throws SQLException {
+        List<Product> list = new ArrayList<>();
+        java.util.Map<Integer, Product> productMap = new java.util.LinkedHashMap<>();
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_PARENT_CATEGORY_OPTIMIZED)) {
+
+            ps.setInt(1, genderId);
+            ps.setString(2, parentIndex);
+            ps.setString(3, parentIndex);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int productId = rs.getInt("productid");
+                    Product p = productMap.get(productId);
+                    if (p == null) {
+                        p = new Product();
+                        p.setProductId(productId);
+                        p.setName(rs.getString("name"));
+                        p.setDescription(rs.getString("description"));
+                        p.setPrice(rs.getBigDecimal("price"));
+                        p.setBrand(rs.getString("brand"));
+                        p.setDiscount(rs.getBigDecimal("discount"));
+                        p.setCreatedAt(rs.getTimestamp("createdat"));
+                        p.setUpdatedAt(rs.getTimestamp("updatedat"));
+                        p.setTotalStock(rs.getInt("total_stock"));
+
+                        Category category = new Category();
+                        category.setCategoryid(rs.getInt("categoryid"));
+                        category.setName(rs.getString("category_name"));
+                        category.setType(rs.getString("category_type"));
+                        category.setGenderid(rs.getInt("category_genderid"));
+                        category.setParentid(rs.getString("category_parentid"));
+                        category.setIndexName(rs.getString("category_index"));
+                        p.setCategory(category);
+
+                        p.setImages(new ArrayList<>());
+                        p.setColorSizes(new ArrayList<>());
+                        productMap.put(productId, p);
+                    }
+
+                    // Add image if exists
+                    String imageUrl = rs.getString("image_url");
+                    if (imageUrl != null && !imageUrl.isBlank()) {
+                        ProductImage img = new ProductImage();
+                        img.setImageUrl(imageUrl);
+                        img.setColor(rs.getString("image_color"));
+                        img.setPrimary(rs.getBoolean("image_isprimary"));
+                        img.setProduct(p);
+                        p.getImages().add(img);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            printSQLException(e);
+        }
+        list.addAll(productMap.values());
         return list;
     }
 
@@ -280,12 +322,14 @@ public class ProductDAO implements IProductDAO {
 
             int productId = product.getProductId();
 
-            try (PreparedStatement psDeleteStock = conn.prepareStatement("DELETE FROM product_color_size WHERE productid = ?")) {
+            try (PreparedStatement psDeleteStock = conn
+                    .prepareStatement("DELETE FROM product_color_size WHERE productid = ?")) {
                 psDeleteStock.setInt(1, productId);
                 psDeleteStock.executeUpdate();
             }
 
-            try (PreparedStatement psDeleteImages = conn.prepareStatement("DELETE FROM product_image WHERE productid = ?")) {
+            try (PreparedStatement psDeleteImages = conn
+                    .prepareStatement("DELETE FROM product_image WHERE productid = ?")) {
                 psDeleteImages.setInt(1, productId);
                 psDeleteImages.executeUpdate();
             }

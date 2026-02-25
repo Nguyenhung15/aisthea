@@ -133,6 +133,6 @@
         <url-pattern>/google-login</url-pattern>
     </servlet-mapping>
     <welcome-file-list>
-        <welcome-file>/views/homepage.jsp</welcome-file>
+        <welcome-file>views/homepage.jsp</welcome-file>
     </welcome-file-list>
 </web-app>

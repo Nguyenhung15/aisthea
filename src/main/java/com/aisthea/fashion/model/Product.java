@@ -15,6 +15,7 @@ public class Product {
     private BigDecimal discount;
     private List<ProductColorSize> colorSizes;
     private List<ProductImage> images;
+    private int totalStock; // Total stock across all color/sizes (for listing page)
     private Date createdAt;
     private Date updatedAt;
 
@@ -38,7 +39,8 @@ public class Product {
         this.updatedAt = updatedAt;
     }
 
-    public Product(String name, String description, BigDecimal price, String brand, BigDecimal discount, Date createdAt, Date updatedAt) {
+    public Product(String name, String description, BigDecimal price, String brand, BigDecimal discount, Date createdAt,
+            Date updatedAt) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -48,7 +50,8 @@ public class Product {
         this.updatedAt = updatedAt;
     }
 
-    public Product(int productId, String name, String description, BigDecimal price, String brand, BigDecimal discount, Date createdAt, Date updatedAt) {
+    public Product(int productId, String name, String description, BigDecimal price, String brand, BigDecimal discount,
+            Date createdAt, Date updatedAt) {
         this.productId = productId;
         this.name = name;
         this.description = description;
@@ -145,5 +148,13 @@ public class Product {
 
     public void setImages(List<ProductImage> images) {
         this.images = images;
+    }
+
+    public int getTotalStock() {
+        return totalStock;
+    }
+
+    public void setTotalStock(int totalStock) {
+        this.totalStock = totalStock;
     }
 }

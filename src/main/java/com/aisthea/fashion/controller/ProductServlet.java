@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import jakarta.servlet.annotation.WebServlet;
 import java.util.stream.Collectors;
 
+@WebServlet(name = "ProductServlet", urlPatterns = { "/product" })
 public class ProductServlet extends HttpServlet {
 
     private static final Logger logger = Logger.getLogger(ProductServlet.class.getName());
@@ -56,7 +57,8 @@ public class ProductServlet extends HttpServlet {
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Lỗi doGet ProductServlet", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Đã xảy ra lỗi trên server: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Đã xảy ra lỗi trên server: " + e.getMessage());
         }
     }
 
@@ -66,7 +68,7 @@ public class ProductServlet extends HttpServlet {
 
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        String jspPage = "/views/admin/product/edit_product.jsp";
+        String jspPage = "/WEB-INF/views/admin/product/edit_product.jsp";
         Product productForRollback = null;
 
         try {
@@ -108,8 +110,7 @@ public class ProductServlet extends HttpServlet {
                 if (parentIndexName != null && !parentIndexName.isEmpty()) {
                     Category parentCategory = categoryService.findCategoryByIndexNameAndGender(
                             parentIndexName,
-                            productForRollback.getCategory().getGenderid()
-                    );
+                            productForRollback.getCategory().getGenderid());
                     request.setAttribute("parentCategory", parentCategory);
                 }
             }
@@ -120,21 +121,113 @@ public class ProductServlet extends HttpServlet {
 
     private void listProducts(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String categoryIndex = request.getParameter("categoryIndex");
+
+        // Get filter parameters
+        String categoryIdParam = request.getParameter("categoryId");
+        String categoryIndexParam = request.getParameter("categoryIndex");
         String genderIdParam = request.getParameter("genderid");
+        String maxPriceParam = request.getParameter("maxPrice");
+        String sortParam = request.getParameter("sort");
+
         List<Product> list;
 
-        if (categoryIndex != null && genderIdParam != null) {
-            int genderId = Integer.parseInt(genderIdParam);
-            Category displayCategory = categoryService.findCategoryByIndexNameAndGender(categoryIndex, genderId);
-            request.setAttribute("displayCategory", displayCategory);
-            list = productService.getProductsByParentCategory(categoryIndex, genderId);
-        } else {
-            list = productService.getAllProducts();
+        try {
+            // If categoryIndex + genderid from UrlRewriteFilter (e.g. /men/ao_thun)
+            if (categoryIndexParam != null && !categoryIndexParam.isBlank()
+                    && genderIdParam != null && !genderIdParam.isBlank()) {
+                int genderId = Integer.parseInt(genderIdParam);
+                list = productService.getProductsByParentCategory(categoryIndexParam, genderId);
+                // Set display category name for breadcrumb
+                request.setAttribute("displayCategoryName", categoryIndexParam.replace("_", " "));
+            }
+            // If categoryId filter (from form submission)
+            else if (categoryIdParam != null && !categoryIdParam.isBlank()) {
+                int categoryId = Integer.parseInt(categoryIdParam);
+                Category displayCategory = categoryService.getCategoryById(categoryId);
+                request.setAttribute("displayCategory", displayCategory);
+                list = productService.getAllProducts();
+                list = list.stream()
+                        .filter(p -> p.getCategory() != null && p.getCategory().getCategoryid() == categoryId)
+                        .collect(Collectors.toList());
+            }
+            // No filter - show all
+            else {
+                list = productService.getAllProducts();
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error loading products", e);
+            list = new ArrayList<>();
         }
 
-        request.setAttribute("productList", list);
-        request.getRequestDispatcher("views/product/product-list-page.jsp").forward(request, response);
+        // Apply price filter
+        if (maxPriceParam != null && !maxPriceParam.isBlank()) {
+            BigDecimal maxPrice = new BigDecimal(maxPriceParam);
+            list = list.stream()
+                    .filter(p -> p.getPrice().compareTo(maxPrice) <= 0)
+                    .collect(Collectors.toList());
+        }
+
+        // Apply sorting
+        // Apply sorting
+        if (sortParam != null) {
+            switch (sortParam) {
+                case "price_asc":
+                    list.sort((p1, p2) -> p1.getPrice().compareTo(p2.getPrice()));
+                    break;
+                case "price_desc":
+                    list.sort((p1, p2) -> p2.getPrice().compareTo(p1.getPrice()));
+                    break;
+                case "newest":
+                    list.sort((p1, p2) -> Integer.compare(p2.getProductId(), p1.getProductId()));
+                    break;
+                default: // featured
+                    break;
+            }
+        }
+
+        // Pagination
+        int page = 1;
+        int recordsPerPage = 12; // 12 items per page
+        if (request.getParameter("page") != null && !request.getParameter("page").isBlank()) {
+            try {
+                page = Integer.parseInt(request.getParameter("page"));
+            } catch (Exception e) {
+                page = 1;
+            }
+        }
+
+        int totalRecords = list.size();
+        int totalPages = (int) Math.ceil(totalRecords * 1.0 / recordsPerPage);
+        int start = (page - 1) * recordsPerPage;
+        int end = Math.min(start + recordsPerPage, totalRecords);
+
+        List<Product> listForPage;
+        if (start < 0 || start >= totalRecords) {
+            // handle empty list or out of bounds (but if list is empty, totalRecords=0,
+            // start=0, end=0 -> subList(0,0) is fine)
+            if (totalRecords == 0)
+                listForPage = new ArrayList<>();
+            else
+                listForPage = new ArrayList<>(); // weird out of bound
+        } else {
+            listForPage = new ArrayList<>(list.subList(start, end)); // Use ArrayList copy to avoid serialization issues
+                                                                     // with subList
+        }
+
+        // Handle empty list case correctly
+        if (totalRecords > 0 && start < totalRecords) {
+            listForPage = new ArrayList<>(list.subList(start, end));
+        } else {
+            listForPage = new ArrayList<>();
+        }
+
+        // Set attributes
+        request.setAttribute("productList", listForPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalRecords", totalRecords);
+        request.setAttribute("categories", categoryService.getAllCategories());
+        request.getRequestDispatcher("/WEB-INF/views/product/product-list-page.jsp").forward(request, response);
     }
 
     private void manageProducts(HttpServletRequest request, HttpServletResponse response)
@@ -153,14 +246,14 @@ public class ProductServlet extends HttpServlet {
         }
 
         request.setAttribute("productList", list);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/views/admin/product/manage_products.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/admin/product/manage_products.jsp");
         dispatcher.forward(request, response);
     }
 
     private void showNewForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setAttribute("allCategories", categoryService.getAllCategories());
-        request.getRequestDispatcher("/views/admin/product/edit_product.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/product/edit_product.jsp").forward(request, response);
     }
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
@@ -174,15 +267,14 @@ public class ProductServlet extends HttpServlet {
             if (parentIndexName != null && !parentIndexName.isEmpty()) {
                 Category parentCategory = categoryService.findCategoryByIndexNameAndGender(
                         parentIndexName,
-                        childCategory.getGenderid()
-                );
+                        childCategory.getGenderid());
                 request.setAttribute("parentCategory", parentCategory);
             }
         }
 
         request.setAttribute("product", product);
         request.setAttribute("allCategories", categoryService.getAllCategories());
-        request.getRequestDispatcher("/views/admin/product/edit_product.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/product/edit_product.jsp").forward(request, response);
     }
 
     private void viewProductDetail(HttpServletRequest request, HttpServletResponse response)
@@ -191,7 +283,7 @@ public class ProductServlet extends HttpServlet {
         request.setAttribute("product", productService.getProductById(id));
         request.setAttribute("colorSizes", productService.getColorSizesByProductId(id));
         request.setAttribute("images", productService.getImagesByProductId(id));
-        request.getRequestDispatcher("views/product/product-detail.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/product/product-detail.jsp").forward(request, response);
     }
 
     private void deleteProduct(HttpServletRequest request, HttpServletResponse response)

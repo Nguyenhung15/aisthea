@@ -62,7 +62,7 @@ public class UserServlet extends HttpServlet {
             throws ServletException, IOException {
         List<User> users = userService.selectAllUsers();
         request.setAttribute("users", users);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/views/admin/user/manage_users.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/admin/user/manage_users.jsp");
         dispatcher.forward(request, response);
     }
 
@@ -71,7 +71,7 @@ public class UserServlet extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         User user = userService.selectUser(id);
         request.setAttribute("user", user);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/views/admin/user/edit_user.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/admin/user/edit_user.jsp");
         dispatcher.forward(request, response);
     }
 

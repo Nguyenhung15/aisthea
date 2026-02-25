@@ -30,7 +30,7 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
-        String jspPath = "/views/user/profile.jsp";
+        String jspPath = "/WEB-INF/views/user/profile.jsp";
 
         request.getRequestDispatcher(jspPath).forward(request, response);
     }

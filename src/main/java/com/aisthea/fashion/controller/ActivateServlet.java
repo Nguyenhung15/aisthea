@@ -33,6 +33,6 @@ public class ActivateServlet extends HttpServlet {
         } else {
             request.setAttribute("error", "Email không hợp lệ!");
         }
-        request.getRequestDispatcher("/views/user/login.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
     }
 }

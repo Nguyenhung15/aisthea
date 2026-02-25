@@ -56,6 +56,6 @@ public class DashboardServlet extends HttpServlet {
         request.setAttribute("onlineUsers", onlineUsers);
         request.setAttribute("activeSessions", SessionListener.getActiveUsers());
 
-        request.getRequestDispatcher("/views/admin/dashboard.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/admin/dashboard.jsp").forward(request, response);
     }
 }

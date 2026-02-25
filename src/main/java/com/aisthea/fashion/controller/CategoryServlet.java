@@ -81,7 +81,7 @@ public class CategoryServlet extends HttpServlet {
             throws ServletException, IOException {
         List<Category> list = categoryService.getAllCategories();
         request.setAttribute("list", list);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/views/admin/category/manage_category.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/admin/category/manage_category.jsp");
         dispatcher.forward(request, response);
     }
 
@@ -89,7 +89,7 @@ public class CategoryServlet extends HttpServlet {
             throws ServletException, IOException {
         List<Category> allCategories = categoryService.getAllCategories();
         request.setAttribute("allCategories", allCategories);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/views/admin/category/edit_category.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/admin/category/edit_category.jsp");
         dispatcher.forward(request, response);
     }
 
@@ -100,7 +100,7 @@ public class CategoryServlet extends HttpServlet {
         List<Category> allCategories = categoryService.getAllCategories();
         request.setAttribute("allCategories", allCategories);
         request.setAttribute("category", existing);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/views/admin/category/edit_category.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/admin/category/edit_category.jsp");
         dispatcher.forward(request, response);
     }
 
@@ -117,7 +117,7 @@ public class CategoryServlet extends HttpServlet {
             response.sendRedirect("category");
         } catch (Exception e) {
             request.setAttribute("errorMsg", "Lỗi khi thêm danh mục: " + e.getMessage());
-            request.getRequestDispatcher("/views/admin/category/category-form.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/admin/category/category-form.jsp").forward(request, response);
         }
     }
 
@@ -136,7 +136,7 @@ public class CategoryServlet extends HttpServlet {
             response.sendRedirect("category");
         } catch (Exception e) {
             request.setAttribute("errorMsg", "Lỗi khi cập nhật danh mục: " + e.getMessage());
-            request.getRequestDispatcher("/views/admin/category/edit_category.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/admin/category/edit_category.jsp").forward(request, response);
         }
     }
 

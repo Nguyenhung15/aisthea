@@ -17,7 +17,7 @@ public class ResetRequestServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String jspPath = "/views/user/forgot_password.jsp";
+        String jspPath = "/WEB-INF/views/user/forgot_password.jsp";
         req.getRequestDispatcher(jspPath).forward(req, resp);
     }
 
@@ -25,7 +25,7 @@ public class ResetRequestServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         String email = req.getParameter("email");
-        String jspPath = "/views/user/forgot_password.jsp";
+        String jspPath = "/WEB-INF/views/user/forgot_password.jsp";
 
         String appUrl = req.getScheme() + "://" + req.getServerName() + ":" + req.getServerPort()
                 + req.getContextPath();

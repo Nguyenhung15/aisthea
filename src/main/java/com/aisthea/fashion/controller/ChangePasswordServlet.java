@@ -37,7 +37,7 @@ public class ChangePasswordServlet extends HttpServlet {
 
         if (newPassword == null || !newPassword.equals(confirmPassword)) {
             session.setAttribute("changePassError", "Mật khẩu mới không khớp!");
-            response.sendRedirect(request.getContextPath() + "/views/user/profile.jsp");
+            response.sendRedirect(request.getContextPath() + "/profile");
             return;
         }
 
@@ -47,6 +47,6 @@ public class ChangePasswordServlet extends HttpServlet {
             session.setAttribute("changePassError", "Mật khẩu cũ không đúng hoặc có lỗi xảy ra!");
         }
 
-        response.sendRedirect(request.getContextPath() + "/views/user/profile.jsp");
+        response.sendRedirect(request.getContextPath() + "/profile");
     }
 }

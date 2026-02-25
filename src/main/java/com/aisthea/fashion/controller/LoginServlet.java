@@ -22,7 +22,7 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        request.getRequestDispatcher("/views/user/login.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
     }
 
     @Override
@@ -38,12 +38,12 @@ public class LoginServlet extends HttpServlet {
             User user = result.getUser();
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
-            response.sendRedirect(request.getContextPath() + "/views/homepage.jsp");
+            response.sendRedirect(request.getContextPath() + "/home");
 
         } else {
             String errorMsg = result.getMessage();
             request.setAttribute("error", errorMsg);
-            request.getRequestDispatcher("/views/user/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
         }
     }
 }

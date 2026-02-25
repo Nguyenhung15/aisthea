@@ -3,7 +3,7 @@ package com.aisthea.fashion.controller;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.IUserService;
 import com.aisthea.fashion.service.UserService;
-import com.aisthea.fashion.util.MailUtil;
+import com.aisthea.fashion.utils.MailUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class RegisterServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/views/register.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class RegisterServlet extends HttpServlet {
                     || fullname == null || fullname.trim().isEmpty()) {
 
                 request.setAttribute("error", "Vui lòng nhập đầy đủ email, họ tên và mật khẩu.");
-                request.getRequestDispatcher("/views/register.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
                 return;
             }
 
@@ -76,31 +76,31 @@ public class RegisterServlet extends HttpServlet {
                     MailUtil.sendMail(email, subject, html);
                     request.setAttribute("message",
                             "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
-                    request.getRequestDispatcher("/views/user/login.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
                     break;
 
                 case "EMAIL_EXISTS":
                     request.setAttribute("error", "Đăng ký thất bại! Email này đã được sử dụng.");
-                    request.getRequestDispatcher("/views/register.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
                     break;
 
                 case "USERNAME_EXISTS":
                     request.setAttribute("error", "Đăng ký thất bại! Tên đăng nhập (email) này đã tồn tại.");
-                    request.getRequestDispatcher("/views/register.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
                     break;
 
                 case "DB_ERROR":
                 case "SYSTEM_ERROR":
                 default:
                     request.setAttribute("error", "Đăng ký thất bại! Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.");
-                    request.getRequestDispatcher("/views/register.jsp").forward(request, response);
+                    request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
                     break;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
-            request.getRequestDispatcher("/views/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
         }
     }
 }
