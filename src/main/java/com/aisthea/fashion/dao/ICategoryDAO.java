@@ -20,4 +20,6 @@ public interface ICategoryDAO {
 
     Category selectCategoryByIndexAndGender(String indexName, int genderId) throws SQLException;
 
+    List<Category> selectChildrenByParentAndGender(String parentIndexName, int genderId) throws SQLException;
+
 }

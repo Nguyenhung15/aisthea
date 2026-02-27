@@ -64,6 +64,18 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
+        // Handle /checkout route
+        if ("checkout".equals(action)) {
+            Cart checkoutCart = (Cart) session.getAttribute("cart");
+            if (checkoutCart == null || checkoutCart.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/cart");
+                return;
+            }
+            request.getRequestDispatcher("/WEB-INF/views/cart/checkout.jsp")
+                    .forward(request, response);
+            return;
+        }
+
         request.getRequestDispatcher(jspPath).forward(request, response);
     }
 
@@ -109,7 +121,7 @@ public class CartServlet extends HttpServlet {
                     session.removeAttribute("originalCart");
                 } else {
                     session.setAttribute("cart", buyNowCart);
-                    redirectUrl = request.getContextPath() + "/WEB-INF/views/cart/checkout.jsp";
+                    redirectUrl = request.getContextPath() + "/checkout";
                 }
 
             } else if ("update".equals(action)) {
@@ -182,10 +194,10 @@ public class CartServlet extends HttpServlet {
         int newQuantity = Integer.parseInt(request.getParameter("quantity"));
 
         CartItem item = cart.getItem(pcsId);
-        
+
         if (item != null) {
             List<ProductColorSize> variants = productService.getColorSizesByProductId(item.getProductId());
-            
+
             int currentStockDb = 0;
             for (ProductColorSize v : variants) {
                 if (v.getProductColorSizeId() == pcsId) {
@@ -196,8 +208,9 @@ public class CartServlet extends HttpServlet {
 
             if (newQuantity > currentStockDb) {
                 newQuantity = currentStockDb;
-                request.getSession().setAttribute("error", 
-                    "Số lượng sản phẩm '" + item.getProductName() + "' vượt quá tồn kho! Đã điều chỉnh về mức tối đa: " + currentStockDb);
+                request.getSession().setAttribute("error",
+                        "Số lượng sản phẩm '" + item.getProductName()
+                                + "' vượt quá tồn kho! Đã điều chỉnh về mức tối đa: " + currentStockDb);
             }
             cart.updateItem(pcsId, newQuantity);
         }

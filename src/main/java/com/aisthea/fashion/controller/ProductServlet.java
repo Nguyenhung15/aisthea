@@ -128,6 +128,8 @@ public class ProductServlet extends HttpServlet {
         String genderIdParam = request.getParameter("genderid");
         String maxPriceParam = request.getParameter("maxPrice");
         String sortParam = request.getParameter("sort");
+        String colorParam = request.getParameter("color");
+        String sizeParam = request.getParameter("size");
 
         List<Product> list;
 
@@ -137,18 +139,60 @@ public class ProductServlet extends HttpServlet {
                     && genderIdParam != null && !genderIdParam.isBlank()) {
                 int genderId = Integer.parseInt(genderIdParam);
                 list = productService.getProductsByParentCategory(categoryIndexParam, genderId);
-                // Set display category name for breadcrumb
-                request.setAttribute("displayCategoryName", categoryIndexParam.replace("_", " "));
+                // Look up and set the real category name from DB for proper display
+                Category foundCategory = categoryService.findCategoryByIndexNameAndGender(categoryIndexParam, genderId);
+                if (foundCategory != null) {
+                    request.setAttribute("displayCategory", foundCategory);
+                    // Set gender label for breadcrumb
+                    request.setAttribute("genderLabel", genderId == 1 ? "NAM" : "NỮ");
+                    request.setAttribute("genderId", genderId);
+                } else {
+                    // Fallback: derive name from slug
+                    request.setAttribute("displayCategoryName", categoryIndexParam.replace("_", " "));
+                }
             }
             // If categoryId filter (from form submission)
             else if (categoryIdParam != null && !categoryIdParam.isBlank()) {
                 int categoryId = Integer.parseInt(categoryIdParam);
-                Category displayCategory = categoryService.getCategoryById(categoryId);
-                request.setAttribute("displayCategory", displayCategory);
-                list = productService.getAllProducts();
-                list = list.stream()
-                        .filter(p -> p.getCategory() != null && p.getCategory().getCategoryid() == categoryId)
-                        .collect(Collectors.toList());
+                Category selectedCategory = categoryService.getCategoryById(categoryId);
+                request.setAttribute("displayCategory", selectedCategory);
+
+                // Set gender label for breadcrumb based on selected category's genderid
+                if (selectedCategory != null) {
+                    int catGenderId = selectedCategory.getGenderid();
+                    request.setAttribute("genderLabel", catGenderId == 1 ? "NAM" : "NỮ");
+                    request.setAttribute("genderId", catGenderId);
+                }
+
+                List<Product> allProducts = productService.getAllProducts();
+
+                // Determine if this is a parent category (parentid is null or empty)
+                boolean isParentCategory = selectedCategory != null
+                        && (selectedCategory.getParentid() == null || selectedCategory.getParentid().isBlank());
+
+                if (isParentCategory && selectedCategory.getIndexName() != null) {
+                    // Parent selected: show products that belong to this parent OR any of its
+                    // children
+                    final String parentIndexName = selectedCategory.getIndexName();
+                    final int genderId = selectedCategory.getGenderid();
+                    // Collect child category IDs for this parent+gender
+                    List<Category> childCategories = categoryService.getChildCategoriesByGender(parentIndexName,
+                            genderId);
+                    final java.util.Set<Integer> childCategoryIds = new java.util.HashSet<>();
+                    for (Category child : childCategories) {
+                        childCategoryIds.add(child.getCategoryid());
+                    }
+                    list = allProducts.stream()
+                            .filter(p -> p.getCategory() != null
+                                    && (p.getCategory().getCategoryid() == categoryId
+                                            || childCategoryIds.contains(p.getCategory().getCategoryid())))
+                            .collect(Collectors.toList());
+                } else {
+                    // Child (leaf) category selected: show only its products
+                    list = allProducts.stream()
+                            .filter(p -> p.getCategory() != null && p.getCategory().getCategoryid() == categoryId)
+                            .collect(Collectors.toList());
+                }
             }
             // No filter - show all
             else {
@@ -159,11 +203,66 @@ public class ProductServlet extends HttpServlet {
             list = new ArrayList<>();
         }
 
-        // Apply price filter
+        // Apply price filter (only if maxPrice is explicitly provided AND is NOT the
+        // default max)
+        // The slider max is 500,000,000 — treat that as "no price filter"
         if (maxPriceParam != null && !maxPriceParam.isBlank()) {
-            BigDecimal maxPrice = new BigDecimal(maxPriceParam);
+            try {
+                BigDecimal maxPrice = new BigDecimal(maxPriceParam);
+                BigDecimal sliderMax = new BigDecimal("500000000");
+                // Only apply filter if user actually lowered the price from the maximum
+                if (maxPrice.compareTo(sliderMax) < 0) {
+                    list = list.stream()
+                            .filter(p -> p.getPrice() != null && p.getPrice().compareTo(maxPrice) <= 0)
+                            .collect(Collectors.toList());
+                }
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid maxPrice value: " + maxPriceParam);
+            }
+        }
+
+        // Apply color filter (check product images or colorSizes)
+        if (colorParam != null && !colorParam.isBlank()) {
+            final String colorFilter = colorParam.trim().toLowerCase();
             list = list.stream()
-                    .filter(p -> p.getPrice().compareTo(maxPrice) <= 0)
+                    .filter(p -> {
+                        // Check in images
+                        if (p.getImages() != null) {
+                            for (var img : p.getImages()) {
+                                if (img.getColor() != null
+                                        && img.getColor().trim().toLowerCase().contains(colorFilter)) {
+                                    return true;
+                                }
+                            }
+                        }
+                        // Check in colorSizes
+                        if (p.getColorSizes() != null) {
+                            for (var cs : p.getColorSizes()) {
+                                if (cs.getColor() != null && cs.getColor().trim().toLowerCase().contains(colorFilter)) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Apply size filter
+        if (sizeParam != null && !sizeParam.isBlank()) {
+            final String sizeFilter = sizeParam.trim().toUpperCase();
+            list = list.stream()
+                    .filter(p -> {
+                        if (p.getColorSizes() != null) {
+                            for (var cs : p.getColorSizes()) {
+                                if (cs.getSize() != null && cs.getSize().trim().toUpperCase().equals(sizeFilter)
+                                        && cs.getStock() > 0) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
+                    })
                     .collect(Collectors.toList());
         }
 
@@ -227,6 +326,8 @@ public class ProductServlet extends HttpServlet {
         request.setAttribute("currentPage", page);
         request.setAttribute("totalRecords", totalRecords);
         request.setAttribute("categories", categoryService.getAllCategories());
+        request.setAttribute("parentCategoriesMale", categoryService.getParentCategoriesByGender(1));
+        request.setAttribute("parentCategoriesFemale", categoryService.getParentCategoriesByGender(2));
         request.getRequestDispatcher("/WEB-INF/views/product/product-list-page.jsp").forward(request, response);
     }
 

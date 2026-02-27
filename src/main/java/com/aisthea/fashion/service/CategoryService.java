@@ -75,9 +75,7 @@ public class CategoryService implements ICategoryService {
         if (parentIndexName == null || parentIndexName.isBlank()) {
             return new ArrayList<>();
         }
-        return filterCategories(c
-                -> c.getParentid() != null && parentIndexName.equalsIgnoreCase(c.getParentid())
-        );
+        return filterCategories(c -> c.getParentid() != null && parentIndexName.equalsIgnoreCase(c.getParentid()));
     }
 
     @Override
@@ -112,5 +110,18 @@ public class CategoryService implements ICategoryService {
             }
             return match;
         });
+    }
+
+    @Override
+    public List<Category> getChildCategoriesByGender(String parentIndexName, int genderId) {
+        if (parentIndexName == null || parentIndexName.isBlank()) {
+            return new ArrayList<>();
+        }
+        try {
+            return categoryDAO.selectChildrenByParentAndGender(parentIndexName, genderId);
+        } catch (SQLException e) {
+            System.err.println("Error loading child categories by gender: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 }

@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
         <header>
             <div class="left">
                 <div class="logo">
@@ -22,8 +23,15 @@
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </div>
 
-                <a class="icon-btn" href="${pageContext.request.contextPath}/cart" title="Cart">
+                <a class="icon-btn" href="${pageContext.request.contextPath}/cart" title="Cart"
+                    style="position:relative;">
                     <i class="fa-solid fa-bag-shopping"></i>
+                    <c:if test="${not empty sessionScope.cart and sessionScope.cart.totalQuantity > 0}">
+                        <span
+                            style="position:absolute;top:-6px;right:-8px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;">
+                            ${sessionScope.cart.totalQuantity}
+                        </span>
+                    </c:if>
                 </a>
                 <c:choose>
                     <c:when test="${not empty sessionScope.user}">
@@ -43,7 +51,7 @@
                             <span style="font-weight:600;margin-left:6px;">${sessionScope.user.fullname}</span>
 
                             <div id="account-menu" style="display:none;position:absolute;top:60px;right:0;background:white;
-                                border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.15);min-width:160px;z-index:100;">
+                        border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.15);min-width:160px;z-index:100;">
 
                                 <a href="${pageContext.request.contextPath}/profile"
                                     style="display:block;padding:10px 16px;color:#a0522d;text-decoration:none;font-weight:600;">
@@ -78,12 +86,11 @@
                             const accountMenu = document.getElementById("account-menu");
                             if (accountBtn) {
                                 accountBtn.addEventListener("click", (e) => {
-                                    e.stopPropagation(); // Ngăn event click lan ra ngoài
+                                    e.stopPropagation();
                                     accountMenu.style.display = accountMenu.style.display === "block" ? "none" : "block";
                                 });
                             }
                             window.addEventListener("click", (e) => {
-                                // Nếu click ra ngoài button VÀ menu đang mở, thì đóng lại
                                 if (accountMenu && accountMenu.style.display === "block") {
                                     accountMenu.style.display = "none";
                                 }

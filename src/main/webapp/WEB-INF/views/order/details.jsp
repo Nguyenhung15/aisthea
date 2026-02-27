@@ -48,7 +48,8 @@
 
             <h1 class="text-3xl font-bold text-gray-800 mb-8">Chi tiết Đơn hàng #${order.orderid}</h1>
 
-            <div class="flex flex-col lg:flex-row gap-8">
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+
 
                 <%-- 🛒 Cột trái: sản phẩm --%>
                 <div class="w-full lg:w-2/3 bg-white rounded-lg shadow-lg p-6">

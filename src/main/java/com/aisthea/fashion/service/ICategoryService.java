@@ -26,4 +26,6 @@ public interface ICategoryService {
     public List<Category> searchCategories(
             Integer genderId, String parentIndexName, Boolean isParent, String type);
 
+    public List<Category> getChildCategoriesByGender(String parentIndexName, int genderId);
+
 }

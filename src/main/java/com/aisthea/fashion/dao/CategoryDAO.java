@@ -17,8 +17,7 @@ public class CategoryDAO implements ICategoryDAO {
     private static final String GET_CATEGORY_BY_ID = "SELECT * FROM Categories WHERE categoryid = ?";
     private static final String UPDATE_CATEGORY = "UPDATE Categories SET name = ?, type = ?, genderid = ?, parentid = ?, INDEX_name = ?, updatedat = GETDATE() WHERE categoryid = ?";
     private static final String DELETE_CATEGORY = "DELETE FROM Categories WHERE categoryid = ?";
-    private static final String GET_PARENTS_BY_GENDER
-            = "SELECT * FROM Categories WHERE parentid IS NULL AND genderid = ?";
+    private static final String GET_PARENTS_BY_GENDER = "SELECT * FROM Categories WHERE (parentid IS NULL OR parentid = '') AND genderid = ?";
 
     @Override
     public void insertCategory(Category cate) {
@@ -62,8 +61,7 @@ public class CategoryDAO implements ICategoryDAO {
                                 (parentid == null ? null : parentid.trim()),
                                 (indexName == null ? null : indexName.trim()),
                                 createdat,
-                                updatedat
-                        );
+                                updatedat);
                     }
                 }
             }
@@ -99,8 +97,7 @@ public class CategoryDAO implements ICategoryDAO {
                             (parentid == null ? null : parentid.trim()),
                             (indexName == null ? null : indexName.trim()),
                             createdat,
-                            updatedat
-                    ));
+                            updatedat));
                 }
             }
         } catch (SQLException e) {
@@ -143,7 +140,8 @@ public class CategoryDAO implements ICategoryDAO {
     public List<Category> selectParentsByGender(int genderId) throws SQLException {
         List<Category> categories = new ArrayList<>();
         // Dùng SQL WHERE...
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(GET_PARENTS_BY_GENDER)) {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(GET_PARENTS_BY_GENDER)) {
 
             ps.setInt(1, genderId);
 
@@ -158,8 +156,7 @@ public class CategoryDAO implements ICategoryDAO {
                             (rs.getString("parentid") == null ? null : rs.getString("parentid").trim()),
                             (rs.getString("INDEX_name") == null ? null : rs.getString("INDEX_name").trim()),
                             rs.getDate("createdat"),
-                            rs.getDate("updatedat")
-                    ));
+                            rs.getDate("updatedat")));
                 }
             }
         } catch (SQLException e) {
@@ -184,40 +181,68 @@ public class CategoryDAO implements ICategoryDAO {
             }
         }
     }
-    
-    
-    
-        
-        private static final String SELECT_BY_INDEX_AND_GENDER = "SELECT * FROM Categories WHERE INDEX_name = ? AND genderid = ?";
-@Override
-public Category selectCategoryByIndexAndGender(String indexName, int genderId) throws SQLException {
-    Category category = null;
-    
-    try (Connection conn = DBConnection.getConnection(); 
-         PreparedStatement ps = conn.prepareStatement(SELECT_BY_INDEX_AND_GENDER)) {
-        
-        ps.setString(1, indexName);
-        ps.setInt(2, genderId);
-        
-        try (ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                category = new Category();
-                category.setCategoryid(rs.getInt("categoryid"));
-                category.setName(rs.getString("name"));
-                category.setType(rs.getString("type"));
-                category.setGenderid(rs.getInt("genderid"));
-                category.setParentid(rs.getString("parentid"));
-                
-                category.setIndexName(rs.getString("INDEX_name")); 
-                
-                category.setCreatedat(rs.getTimestamp("createdat"));
-                category.setUpdatedat(rs.getTimestamp("updatedat"));
+
+    private static final String SELECT_BY_INDEX_AND_GENDER = "SELECT * FROM Categories WHERE INDEX_name = ? AND genderid = ?";
+    private static final String SELECT_CHILDREN_BY_PARENT_AND_GENDER = "SELECT * FROM Categories WHERE parentid = ? AND genderid = ? ORDER BY name";
+
+    @Override
+    public Category selectCategoryByIndexAndGender(String indexName, int genderId) throws SQLException {
+        Category category = null;
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_BY_INDEX_AND_GENDER)) {
+
+            ps.setString(1, indexName);
+            ps.setInt(2, genderId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    category = new Category();
+                    category.setCategoryid(rs.getInt("categoryid"));
+                    category.setName(rs.getString("name"));
+                    category.setType(rs.getString("type"));
+                    category.setGenderid(rs.getInt("genderid"));
+                    category.setParentid(rs.getString("parentid"));
+
+                    category.setIndexName(rs.getString("INDEX_name"));
+
+                    category.setCreatedat(rs.getTimestamp("createdat"));
+                    category.setUpdatedat(rs.getTimestamp("updatedat"));
+                }
             }
+        } catch (SQLException e) {
+            System.err.println("Lỗi SQL trong selectCategoryByIndexAndGender: " + e.getMessage());
+            throw e;
         }
-    } catch (SQLException e) {
-        System.err.println("Lỗi SQL trong selectCategoryByIndexAndGender: " + e.getMessage());
-        throw e;
+        return category;
     }
-    return category;
-}
+
+    @Override
+    public List<Category> selectChildrenByParentAndGender(String parentIndexName, int genderId) throws SQLException {
+        List<Category> categories = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_CHILDREN_BY_PARENT_AND_GENDER)) {
+
+            ps.setString(1, parentIndexName);
+            ps.setInt(2, genderId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    categories.add(new Category(
+                            rs.getInt("categoryid"),
+                            rs.getString("name").trim(),
+                            (rs.getString("type") == null ? null : rs.getString("type").trim()),
+                            rs.getInt("genderid"),
+                            (rs.getString("parentid") == null ? null : rs.getString("parentid").trim()),
+                            (rs.getString("INDEX_name") == null ? null : rs.getString("INDEX_name").trim()),
+                            rs.getDate("createdat"),
+                            rs.getDate("updatedat")));
+                }
+            }
+        } catch (SQLException e) {
+            printSQLException(e);
+            throw e;
+        }
+        return categories;
+    }
 }

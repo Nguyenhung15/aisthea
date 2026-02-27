@@ -7,7 +7,7 @@ import java.util.List;
  * Custom exception for validation errors
  * Contains a list of validation error messages
  */
-public class ValidationException extends Exception {
+public class ValidationException extends RuntimeException {
 
     private final List<String> errors;
 

@@ -16,7 +16,7 @@
                         margin: 0;
                         padding: 0;
                         font-family: 'Poppins', sans-serif;
-                        background: url('${pageContext.request.contextPath}/assets/images/bg-watercolor.png') no-repeat center center fixed;
+                        background: url('${pageContext.request.contextPath}/images/bg-watercolor.png?v=1') no-repeat center center fixed;
                         background-size: cover;
                         height: 100vh;
                         display: flex;
@@ -55,15 +55,21 @@
 
                     /* Container */
                     .profile-container {
-                        background: rgba(255, 255, 255, 0.5);
-                        backdrop-filter: blur(14px);
-                        border-radius: 20px;
-                        box-shadow: 0 8px 25px rgba(0, 0, 0, .15);
-                        width: 550px;
-                        padding: 45px 50px;
+                        background: rgba(255, 255, 255, 0.02);
+                        backdrop-filter: blur(12px);
+                        -webkit-backdrop-filter: blur(12px);
+                        border-radius: 30px;
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                        width: 480px;
+                        /* Exact match to Login */
+                        padding: 50px 40px;
+                        /* Slightly compacted padding */
                         color: #003366;
                         opacity: 0;
                         animation: fadeInUp 1s ease forwards;
+                        display: flex;
+                        flex-direction: column;
                     }
 
                     .profile-header {
@@ -75,13 +81,15 @@
                         margin: 0;
                         font-size: 24px;
                         font-weight: 600;
-                        color: #003366;
+                        letter-spacing: -0.5px;
+                        color: #0f2c52;
                     }
 
                     .profile-header p {
                         margin-top: 8px;
                         font-size: 14px;
-                        color: #555;
+                        color: #1a3b5d;
+                        font-weight: 500;
                     }
 
                     /* Avatar section */
@@ -92,21 +100,24 @@
                     }
 
                     .avatar-circle {
-                        width: 120px;
-                        height: 120px;
+                        width: 100px;
+                        /* Smaller avatar */
+                        height: 100px;
                         border-radius: 50%;
-                        border: 3px solid #003366;
+                        border: 3px solid rgba(255, 255, 255, 0.5);
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        background: white;
+                        background: rgba(255, 255, 255, 0.2);
                         margin: 0 auto;
                         cursor: pointer;
                         transition: 0.3s;
+                        backdrop-filter: blur(4px);
                     }
 
                     .avatar-circle:hover {
-                        box-shadow: 0 0 12px rgba(0, 51, 102, 0.3);
+                        box-shadow: 0 0 15px rgba(0, 51, 102, 0.2);
+                        transform: scale(1.02);
                     }
 
                     .avatar-circle img {
@@ -117,70 +128,99 @@
                     }
 
                     .avatar-circle i {
-                        font-size: 50px;
+                        font-size: 40px;
                         color: #003366;
                     }
 
                     /* Form */
+                    /* Form */
                     form {
                         display: grid;
                         grid-template-columns: 1fr 1fr;
-                        gap: 20px 25px;
+                        gap: 16px;
+                        /* Tighter gap */
                     }
 
                     .form-group {
                         display: flex;
                         flex-direction: column;
+                        gap: 6px;
+                        /* Gap between label and input */
                     }
 
                     label {
-                        font-weight: 500;
+                        font-weight: 600;
                         font-size: 14px;
-                        color: #00264d;
-                        margin-bottom: 6px;
+                        color: #1a3b5d;
+                        /* Darker blue */
+                        margin-left: 4px;
+                        /* Align with input radius */
+                        margin-bottom: 0;
                     }
 
                     input,
                     select {
                         width: 100%;
-                        padding: 11px 12px;
-                        border: none;
-                        border-radius: 8px;
-                        background: rgba(255, 255, 255, 0.9);
+                        padding: 12px 16px;
+                        /* Optimized padding */
+                        border: 1px solid rgba(255, 255, 255, 0.5);
+                        /* Subtle border */
+                        border-radius: 10px;
+                        /* Softer corners */
+                        background: rgba(255, 255, 255, 0.7);
+                        /* Translucent */
                         outline: none;
                         font-size: 14px;
-                        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-                        transition: all 0.25s ease;
+                        /* Standard font */
+                        color: #333;
+                        box-shadow: none;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-sizing: border-box;
                     }
 
                     input:focus,
                     select:focus {
-                        background: rgba(255, 255, 255, 0.98);
-                        box-shadow: 0 0 6px rgba(0, 76, 153, 0.3);
+                        background: #ffffff;
+                        border-color: #2b7bff;
+                        box-shadow: 0 0 0 4px rgba(43, 123, 255, 0.15);
+                        transform: translateY(-1px);
+                    }
+
+                    /* Readonly input style */
+                    input[readonly] {
+                        background: rgba(200, 200, 200, 0.2);
+                        color: #555;
+                        cursor: not-allowed;
                     }
 
                     .form-actions {
                         grid-column: span 2;
                         text-align: center;
-                        margin-top: 15px;
+                        margin-top: 10px;
+                        display: flex;
+                        gap: 12px;
+                        justify-content: center;
                     }
 
                     button {
-                        background: linear-gradient(135deg, #004c99, #0073e6);
+                        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
                         color: white;
-                        padding: 12px 30px;
+                        padding: 12px 24px;
+                        /* Standard buttons */
                         border: none;
-                        border-radius: 8px;
+                        border-radius: 10px;
                         cursor: pointer;
                         font-weight: 600;
                         transition: all 0.3s ease;
                         font-size: 15px;
+                        box-shadow: 0 8px 16px rgba(0, 102, 204, 0.15);
+                        width: auto;
+                        min-width: 150px;
                     }
 
                     button:hover {
                         transform: translateY(-2px);
-                        background: linear-gradient(135deg, #0066cc, #0099ff);
-                        box-shadow: 0 4px 15px rgba(0, 102, 204, 0.4);
+                        box-shadow: 0 12px 20px rgba(0, 102, 204, 0.25);
                     }
 
                     @keyframes fadeInUp {
@@ -270,8 +310,8 @@
 
                 <!-- Logo -->
                 <div class="logo">
-                    <a href="${pageContext.request.contextPath}/home">
-                        <img src="${pageContext.request.contextPath}/assets/images/ata-logo.png" alt="AISTHÉA Logo">
+                    <a href="${pageContext.request.contextPath}/views/homepage.jsp">
+                        <img src="${pageContext.request.contextPath}/images/ata-logo.png" alt="AISTHÉA Logo">
                     </a>
                     <span>AISTHÉA</span>
                 </div>
@@ -426,10 +466,11 @@
                 <% if (request.getParameter("success") !=null) { %>
                     <script>
                         setTimeout(() => {
-                            window.location.href = '${pageContext.request.contextPath}/home';
+                            window.location.href = '${pageContext.request.contextPath}/views/homepage.jsp';
                         }, 1200);
                     </script>
                     <% } %>
             </body>
 
             </html>
+
