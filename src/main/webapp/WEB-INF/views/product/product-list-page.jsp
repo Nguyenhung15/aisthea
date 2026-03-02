@@ -824,8 +824,8 @@
                             </main>
                     </form>
 
-                    <!-- Footer (product-list specific) -->
-                    <jsp:include page="/WEB-INF/views/product/product-list-footer.jsp" />
+                    <!-- Global Luxury Footer -->
+                    <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
                     <!-- Quick View Modal -->
                     <div id="quickViewModal" class="relative z-[100] hidden" aria-labelledby="modal-title" role="dialog"

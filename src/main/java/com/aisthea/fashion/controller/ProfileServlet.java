@@ -93,7 +93,7 @@ public class ProfileServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        String redirectPath = "views/user/profile.jsp";
+        String redirectPath = request.getContextPath() + "/profile";
 
         if (success) {
             session.setAttribute("user", user);

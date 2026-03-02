@@ -310,7 +310,7 @@
 
                 <!-- Logo -->
                 <div class="logo">
-                    <a href="${pageContext.request.contextPath}/views/homepage.jsp">
+                    <a href="${pageContext.request.contextPath}/home">
                         <img src="${pageContext.request.contextPath}/images/ata-logo.png" alt="AISTHÉA Logo">
                     </a>
                     <span>AISTHÉA</span>
@@ -465,12 +465,11 @@
 
                 <% if (request.getParameter("success") !=null) { %>
                     <script>
-                        setTimeout(() => {
-                            window.location.href = '${pageContext.request.contextPath}/views/homepage.jsp';
-                        }, 1200);
+                        alert('Cập nhật thông tin thành công!');
+                        // Xóa query parameters trên URL để tránh hiển thị lại thông báo khi Refresh
+                        window.history.replaceState({}, document.title, window.location.pathname);
                     </script>
                     <% } %>
             </body>
 
             </html>
-

@@ -1,109 +1,208 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-        <!-- Product List Page Navigation -->
-        <nav class="sticky top-0 z-50 glass-panel border-b border-white/20">
-            <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                <div class="flex items-center space-x-8 hidden md:flex">
-                    <a class="text-sm font-medium hover:text-primary transition-colors"
-                        href="${pageContext.request.contextPath}/product?sort=newest">New Arrivals</a>
-                    <a class="text-sm font-medium hover:text-primary transition-colors"
-                        href="${pageContext.request.contextPath}/product">Collection</a>
-                    <a class="text-sm font-medium hover:text-primary transition-colors" href="#">Editorial</a>
-                </div>
-                <button class="md:hidden text-slate-800 dark:text-white">
-                    <span class="material-icons-outlined">menu</span>
-                </button>
-                <div class="absolute left-1/2 transform -translate-x-1/2">
-                    <a class="text-2xl font-bold tracking-[0.2em] text-primary dark:text-white"
-                        href="${pageContext.request.contextPath}/">AISTHÉA</a>
-                </div>
-                <div class="right">
-                    <div id="search-icon" class="icon-btn" title="Search">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </div>
+        <%--============================================================product-list-header.jsp (Editorial style — v2)
+            3-column layout: [NAV LINKS] | [AISTHÉA] | [ICONS] Dependencies (in parent page <head>):
+            - Tailwind CDN + config (primary: #024acf)
+            - .glass-panel CSS class
+            - Font Awesome 6.x
+            - Material Symbols Outlined (for mobile menu icon)
+            ============================================================ --%>
+            <nav class="sticky top-0 z-50 bg-white border-b border-slate-100 transition-all duration-300" id="pl-nav">
+                <div class="max-w-[1400px] mx-auto px-6 h-24 flex items-center justify-between">
 
-                    <a class="icon-btn" href="${pageContext.request.contextPath}/cart" title="Cart"
-                        style="position:relative;">
-                        <i class="fa-solid fa-bag-shopping"></i>
-                        <c:if test="${not empty sessionScope.cart and sessionScope.cart.totalQuantity > 0}">
-                            <span
-                                style="position:absolute;top:-6px;right:-8px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;">
-                                ${sessionScope.cart.totalQuantity}
-                            </span>
-                        </c:if>
-                    </a>
-                    <c:choose>
-                        <c:when test="${not empty sessionScope.user}">
-                            <div id="account-btn" class="icon-btn" style="position:relative;">
-                                <c:choose>
-                                    <c:when
-                                        test="${not empty sessionScope.user.avatar and !sessionScope.user.avatar.equals('images/ava_default.png')}">
-                                        <img src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
-                                            alt="Avatar"
-                                            style="width:36px;height:36px;border-radius:50%;object-fit:cover;vertical-align:middle;">
-                                    </c:when>
-                                    <c:otherwise>
-                                        <i class="fa-solid fa-user"></i>
-                                    </c:otherwise>
-                                </c:choose>
-
-                                <span style="font-weight:600;margin-left:6px;">${sessionScope.user.fullname}</span>
-
-                                <div id="account-menu" style="display:none;position:absolute;top:60px;right:0;background:white;
-                            border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.15);min-width:160px;z-index:100;">
-
-                                    <a href="${pageContext.request.contextPath}/profile"
-                                        style="display:block;padding:10px 16px;color:#a0522d;text-decoration:none;font-weight:600;">
-                                        <i class="fa-solid fa-id-card"></i> Profile
-                                    </a>
-
-                                    <%--===LOGIC MỚI CHO ROLE===--%>
-                                        <c:if test="${sessionScope.user.role == 'ADMIN'}">
-                                            <a href="${pageContext.request.contextPath}/dashboard"
-                                                style="display:block;padding:10px 16px;color:#a0522d;text-decoration:none;font-weight:600;">
-                                                <i class="fa-solid fa-tachometer-alt"></i> Dashboard
-                                            </a>
-                                        </c:if>
-
-                                        <c:if test="${sessionScope.user.role == 'USER'}">
-                                            <a href="${pageContext.request.contextPath}/order"
-                                                style="display:block;padding:10px 16px;color:#a0522d;text-decoration:none;font-weight:600;">
-                                                <i class="fa-solid fa-box"></i> Đơn hàng
-                                            </a>
-                                        </c:if>
-                                        <%--===KẾT THÚC LOGIC MỚI===--%>
-
-                                            <a href="${pageContext.request.contextPath}/logout"
-                                                style="display:block;padding:10px 16px;color:#a0522d;text-decoration:none;font-weight:600;">
-                                                <i class="fa-solid fa-right-from-bracket"></i> Logout
-                                            </a>
-                                </div>
-                            </div>
-
-                            <script>
-                                const accountBtn = document.getElementById("account-btn");
-                                const accountMenu = document.getElementById("account-menu");
-                                if (accountBtn) {
-                                    accountBtn.addEventListener("click", (e) => {
-                                        e.stopPropagation();
-                                        accountMenu.style.display = accountMenu.style.display === "block" ? "none" : "block";
-                                    });
-                                }
-                                window.addEventListener("click", (e) => {
-                                    if (accountMenu && accountMenu.style.display === "block") {
-                                        accountMenu.style.display = "none";
-                                    }
-                                });
-                            </script>
-                        </c:when>
-
-                        <c:otherwise>
-                            <a class="icon-btn" href="${pageContext.request.contextPath}/login" title="Login">
-                                <i class="fa-solid fa-user"></i>
+                    <%-- ── LEFT: Nav Links (desktop) ── --%>
+                        <div class="hidden lg:flex items-center space-x-10 w-1/3">
+                            <a class="text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
+                                href="${pageContext.request.contextPath}/product?genderid=2">
+                                Women
+                                <span
+                                    class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                             </a>
-                        </c:otherwise>
-                    </c:choose>
+                            <a class="text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
+                                href="${pageContext.request.contextPath}/product?genderid=1">
+                                Men
+                                <span
+                                    class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+                            </a>
+                            <a class="text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
+                                href="${pageContext.request.contextPath}/product">
+                                Stylist
+                                <span
+                                    class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+                            </a>
+                        </div>
+
+                        <%-- Mobile hamburger --%>
+                            <button class="lg:hidden text-slate-800 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-3xl">menu</span>
+                            </button>
+
+                            <%-- ── CENTER: Brand Logo ── --%>
+                                <div class="flex-shrink-0 w-1/3 text-center">
+                                    <a class="text-3xl md:text-4xl font-serif font-bold tracking-[0.15em] text-slate-900 hover:text-primary transition-colors duration-300"
+                                        href="${pageContext.request.contextPath}/">
+                                        AISTHÉA
+                                    </a>
+                                </div>
+
+                                <%-- ── RIGHT: Icons ── --%>
+                                    <div class="flex items-center justify-end gap-6 w-1/3">
+
+                                        <%-- Search --%>
+                                            <button
+                                                class="text-slate-600 hover:text-primary transition-transform hover:-translate-y-0.5 duration-200"
+                                                title="Search">
+                                                <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                                            </button>
+
+                                            <%-- Cart with badge --%>
+                                                <a class="text-slate-600 hover:text-primary transition-transform hover:-translate-y-0.5 duration-200 relative"
+                                                    href="${pageContext.request.contextPath}/cart" title="Cart">
+                                                    <i class="fa-solid fa-bag-shopping text-lg"></i>
+                                                    <c:if
+                                                        test="${not empty sessionScope.cart and sessionScope.cart.totalQuantity > 0}">
+                                                        <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center
+                                 rounded-full bg-primary text-[10px] text-white font-bold">
+                                                            ${sessionScope.cart.totalQuantity}
+                                                        </span>
+                                                    </c:if>
+                                                </a>
+
+                                                <%-- User / Account --%>
+                                                    <c:choose>
+                                                        <c:when test="${not empty sessionScope.user}">
+                                                            <%-- Logged in: avatar + dropdown --%>
+                                                                <div class="relative flex items-center gap-2 cursor-pointer group"
+                                                                    id="pl-account-btn"
+                                                                    title="${sessionScope.user.fullname}">
+                                                                    <c:choose>
+                                                                        <c:when
+                                                                            test="${not empty sessionScope.user.avatar and !sessionScope.user.avatar.equals('images/ava_default.png')}">
+                                                                            <img src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
+                                                                                alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
+                                            group-hover:scale-105 transition-transform duration-200">
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <div
+                                                                                class="text-slate-600 group-hover:text-primary transition-transform group-hover:-translate-y-0.5 duration-200">
+                                                                                <i class="fa-solid fa-user text-lg"></i>
+                                                                            </div>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                    <span id="pl-user-name"
+                                                                        data-fullname="${sessionScope.user.fullname}"
+                                                                        class="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors hidden md:block select-none">
+                                                                        ${sessionScope.user.fullname}
+                                                                    </span>
+                                                                    <script>
+                                                                        (function () {
+                                                                            var nameEl = document.getElementById('pl-user-name');
+                                                                            if (nameEl) {
+                                                                                var nameStr = nameEl.getAttribute('data-fullname') || '';
+                                                                                var parts = nameStr.trim().split(/\s+/);
+                                                                                if (parts.length > 2) {
+                                                                                    nameEl.textContent = parts[parts.length - 2] + ' ' + parts[parts.length - 1];
+                                                                                }
+                                                                            }
+                                                                        })();
+                                                                    </script>
+
+                                                                    <%-- Dropdown menu --%>
+                                                                        <div id="pl-account-menu" style="display:none;"
+                                                                            class="absolute top-12 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl
+                                    border border-slate-100 min-w-[200px] z-50 overflow-hidden">
+                                                                            <%-- User Info Header --%>
+                                                                                <div
+                                                                                    class="px-4 py-3.5 border-b border-slate-100 bg-slate-50/30 mb-1">
+                                                                                    <p
+                                                                                        class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+                                                                                        Welcome back</p>
+                                                                                    <p
+                                                                                        class="text-sm font-bold text-slate-800 truncate font-serif-display tracking-wide">
+                                                                                        ${sessionScope.user.fullname}
+                                                                                    </p>
+                                                                                </div>
+                                                                                <a href="${pageContext.request.contextPath}/profile"
+                                                                                    class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700
+                                      hover:text-primary hover:bg-blue-50/60 transition-colors font-medium">
+                                                                                    <i
+                                                                                        class="fa-solid fa-id-card text-sm w-4"></i>
+                                                                                    Profile
+                                                                                </a>
+                                                                                <c:if
+                                                                                    test="${sessionScope.user.role == 'ADMIN'}">
+                                                                                    <a href="${pageContext.request.contextPath}/dashboard"
+                                                                                        class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700
+                                          hover:text-primary hover:bg-blue-50/60 transition-colors font-medium">
+                                                                                        <i
+                                                                                            class="fa-solid fa-tachometer-alt text-sm w-4"></i>
+                                                                                        Dashboard
+                                                                                    </a>
+                                                                                </c:if>
+                                                                                <c:if
+                                                                                    test="${sessionScope.user.role == 'USER'}">
+                                                                                    <a href="${pageContext.request.contextPath}/order"
+                                                                                        class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700
+                                          hover:text-primary hover:bg-blue-50/60 transition-colors font-medium">
+                                                                                        <i
+                                                                                            class="fa-solid fa-box text-sm w-4"></i>
+                                                                                        Đơn hàng
+                                                                                    </a>
+                                                                                </c:if>
+                                                                                <hr class="my-1 border-slate-100">
+                                                                                <a href="${pageContext.request.contextPath}/logout"
+                                                                                    class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-500
+                                      hover:bg-red-50/60 transition-colors font-medium">
+                                                                                    <i
+                                                                                        class="fa-solid fa-right-from-bracket text-sm w-4"></i>
+                                                                                    Logout
+                                                                                </a>
+                                                                        </div>
+                                                                </div>
+                                                                <script>
+                                                                    (function () {
+                                                                        var btn = document.getElementById('pl-account-btn');
+                                                                        var menu = document.getElementById('pl-account-menu');
+                                                                        if (btn && menu) {
+                                                                            btn.addEventListener('click', function (e) {
+                                                                                e.stopPropagation();
+                                                                                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                                                                            });
+                                                                            window.addEventListener('click', function () {
+                                                                                menu.style.display = 'none';
+                                                                            });
+                                                                        }
+                                                                    })();
+                                                                </script>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <%-- Not logged in --%>
+                                                                <a class="text-slate-600 hover:text-primary transition-transform hover:-translate-y-0.5 duration-200 hidden sm:block"
+                                                                    href="${pageContext.request.contextPath}/login"
+                                                                    title="Login">
+                                                                    <i class="fa-solid fa-user text-lg"></i>
+                                                                </a>
+                                                        </c:otherwise>
+                                                    </c:choose>
+
+                                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+
+            <script>
+                (function () {
+                    var nav = document.getElementById('pl-nav');
+                    if (!nav) return;
+                    window.addEventListener('scroll', function () {
+                        if (window.scrollY > 10) {
+                            // Subtle dark shadow when scrolled
+                            nav.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.10)';
+                            nav.style.borderBottomColor = 'transparent';
+                        } else {
+                            nav.style.boxShadow = 'none';
+                            nav.style.borderBottomColor = '';
+                        }
+                    }, { passive: true });
+                })();
+            </script>
