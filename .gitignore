@@ -81,3 +81,10 @@ uploads/*
 # Custom scripts (temporary)
 update-servlet-paths.ps1
 update-jsp-paths.ps1
+
+/target/
+*.class
+.settings/
+.project
+.classpath
+bin/
