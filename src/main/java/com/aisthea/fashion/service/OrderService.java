@@ -103,7 +103,11 @@ public class OrderService implements IOrderService {
     @Override
     public List<Order> getOrderHistory(int userId) {
         try {
-            return orderDAO.getOrdersByUserId(userId);
+            List<Order> orders = orderDAO.getOrdersByUserId(userId);
+            for (Order o : orders) {
+                o.setItems(orderItemDAO.getOrderItemsByOrderId(o.getOrderid()));
+            }
+            return orders;
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -195,7 +199,8 @@ public class OrderService implements IOrderService {
             for (OrderItem item : items) {
                 boolean stockRestored = orderItemDAO.increaseStock(item, conn);
                 if (!stockRestored) {
-                    throw new SQLException("Lỗi: Không thể hoàn trả kho cho sản phẩm ID: " + item.getProductcolorsizeid());
+                    throw new SQLException(
+                            "Lỗi: Không thể hoàn trả kho cho sản phẩm ID: " + item.getProductcolorsizeid());
                 }
             }
 

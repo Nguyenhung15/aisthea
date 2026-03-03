@@ -1,112 +1,470 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Lịch sử Đơn hàng - AISTHÉA</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
-    </style>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+        <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+            <% if (session.getAttribute("user")==null) { response.sendRedirect(request.getContextPath() + "/login" );
+                return; } %>
+                <!DOCTYPE html>
+                <html lang="vi">
 
-    <jsp:include page="/views/shared/header.jsp" />
+                <head>
+                    <meta charset="utf-8" />
+                    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+                    <title>Lịch sử đơn hàng | AISTHÉA</title>
+                    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+                    <link
+                        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
+                        rel="stylesheet" />
+                    <link
+                        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+                        rel="stylesheet" />
+                    <!-- Font Awesome -->
+                    <link rel="stylesheet"
+                        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-    <div class="container mx-auto max-w-6xl p-4 md:p-8 flex-grow">
-        <h1 class="text-3xl font-bold text-gray-800 mb-8">Lịch sử Đơn hàng</h1>
+                    <script>
+                        tailwind.config = {
+                            darkMode: "class",
+                            theme: {
+                                extend: {
+                                    colors: {
+                                        primary: "#0056b3",
+                                        "primary-dark": "#004494",
+                                        "accent-gold": "#C5A059",
+                                        "glass-light": "rgba(255, 255, 255, 0.7)",
+                                        "glass-border": "rgba(255, 255, 255, 0.5)",
+                                        "glass-input": "rgba(255, 255, 255, 0.4)",
+                                    },
+                                    fontFamily: {
+                                        display: ["'Playfair Display'", "serif"],
+                                        body: ["'Inter'", "sans-serif"],
+                                    },
+                                    backgroundImage: {
+                                        'ethereal-sky': "linear-gradient(180deg, #F8FAFC 0%, #E0F2FE 100%)",
+                                    },
+                                    boxShadow: {
+                                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                                        'glass-sm': '0 4px 16px 0 rgba(31, 38, 135, 0.05)',
+                                        'glow-gold': '0 0 15px rgba(197, 160, 89, 0.3)',
+                                    }
+                                },
+                            },
+                        };
+                    </script>
+                    <style>
+                        .glass-island {
+                            background: rgba(255, 255, 255, 0.65);
+                            backdrop-filter: blur(20px);
+                            -webkit-backdrop-filter: blur(20px);
+                            border: 1px solid rgba(255, 255, 255, 0.8);
+                            box-shadow: 0 20px 40px -10px rgba(0, 86, 179, 0.05);
+                        }
 
-        <c:choose>
-            <%-- TRƯỜNG HỢP 1: KHÔNG CÓ ĐƠN HÀNG --%>
-            <c:when test="${empty orderList}">
-                <div class="bg-white rounded-lg shadow-lg p-12 text-center">
-                    <i class="fa-solid fa-box-open text-6xl text-gray-300 mb-6"></i>
-                    <h2 class="text-2xl font-semibold text-gray-700 mb-2">Bạn chưa có đơn hàng nào</h2>
-                    <p class="text-gray-500 mb-6">Hãy bắt đầu mua sắm để lấp đầy giỏ hàng của bạn nhé!</p>
-                    <a href="${pageContext.request.contextPath}/home" 
-                       class="inline-block bg-[#9B774E] text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-[#8a6944] transition duration-300">
-                        Tiếp tục mua sắm
-                    </a>
-                </div>
-            </c:when>
+                        .glass-input {
+                            background: rgba(255, 255, 255, 0.4);
+                            backdrop-filter: blur(10px);
+                            border: 1px solid rgba(255, 255, 255, 0.6);
+                            transition: all 0.3s ease;
+                        }
 
-            <%-- TRƯỜNG HỢP 2: CÓ ĐƠN HÀNG --%>
-            <c:otherwise>
-                <div class="space-y-6">
-                    <c:forEach var="order" items="${orderList}">
-                        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                            <div class="p-6">
-                                <div class="flex flex-col md:flex-row justify-between md:items-center border-b border-gray-200 pb-4 mb-4">
-                                    <div>
-                                        <p class="text-lg font-bold text-gray-900">Đơn hàng #${order.orderid}</p>
-                                        <p class="text-sm text-gray-500">
-                                            Ngày đặt: <fmt:formatDate value="${order.createdat}" pattern="dd/MM/yyyy HH:mm" />
-                                        </p>
-                                    </div>
-                                    <div class="mt-4 md:mt-0 md:text-right">
-                                        <a href="${pageContext.request.contextPath}/order?action=view&id=${order.orderid}" 
-                                           class="inline-block bg-[#9B774E] text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:bg-[#8a6944] transition duration-300 text-sm">
-                                            Xem chi tiết
-                                        </a>
-                                    </div>
-                                </div>
-                                
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <p class="text-gray-600">Trạng thái:</p>
-                                        <p class="font-semibold text-lg">
+                        .glass-input:focus {
+                            background: rgba(255, 255, 255, 0.8);
+                            border-color: #0056b3;
+                            box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);
+                        }
+
+                        .gold-border-glow {
+                            box-shadow: 0 0 0 1px #C5A059, 0 0 12px rgba(197, 160, 89, 0.4);
+                        }
+
+                        .marble-texture {
+                            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+                            opacity: 0.4;
+                            pointer-events: none;
+                        }
+
+                        .nav-item-active {
+                            color: #0056b3;
+                            font-weight: 600;
+                            background-color: rgba(255, 255, 255, 0.6);
+                            box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.05);
+                        }
+
+                        .nav-subitem-active {
+                            color: #0056b3;
+                            font-weight: 600;
+                        }
+
+                        ::-webkit-scrollbar {
+                            width: 8px;
+                        }
+
+                        ::-webkit-scrollbar-track {
+                            background: transparent;
+                        }
+
+                        ::-webkit-scrollbar-thumb {
+                            background: rgba(0, 86, 179, 0.2);
+                            border-radius: 4px;
+                        }
+
+                        ::-webkit-scrollbar-thumb:hover {
+                            background: rgba(0, 86, 179, 0.4);
+                        }
+
+                        details>summary {
+                            list-style: none;
+                        }
+
+                        details>summary::-webkit-details-marker {
+                            display: none;
+                        }
+
+                        details[open] summary~* {
+                            animation: slideDown 0.3s ease-in-out;
+                        }
+
+                        @keyframes slideDown {
+                            0% {
+                                opacity: 0;
+                                transform: translateY(-10px);
+                            }
+
+                            100% {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+
+                        .chevron {
+                            transition: transform 0.3s ease;
+                        }
+
+                        details[open] summary .chevron {
+                            transform: rotate(180deg);
+                        }
+
+                        .tab-underline {
+                            position: relative;
+                        }
+
+                        .tab-underline::after {
+                            content: '';
+                            position: absolute;
+                            bottom: -1px;
+                            left: 0;
+                            width: 100%;
+                            height: 2px;
+                            background-color: transparent;
+                            transition: background-color 0.3s ease;
+                        }
+
+                        .tab-active {
+                            color: #0056b3;
+                            font-weight: 600;
+                        }
+
+                        .tab-active::after {
+                            background-color: #0056b3;
+                        }
+
+                        .scrollbar-hide::-webkit-scrollbar {
+                            display: none;
+                        }
+
+                        .scrollbar-hide {
+                            -ms-overflow-style: none;
+                            scrollbar-width: none;
+                        }
+                    </style>
+                </head>
+
+                <body
+                    class="bg-ethereal-sky font-body min-h-screen text-slate-800 relative selection:bg-primary/20 selection:text-primary">
+                    <div class="fixed inset-0 z-0">
+                        <div class="absolute inset-0 bg-gradient-to-br from-white via-sky-50 to-blue-100 opacity-80">
+                        </div>
+                        <div class="absolute inset-0 marble-texture"></div>
+                        <div
+                            class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2">
+                        </div>
+                        <div
+                            class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/30 rounded-full blur-3xl -translate-x-1/4 translate-y-1/4">
+                        </div>
+                    </div>
+
+                    <!-- Header -->
+                    <jsp:include page="/WEB-INF/views/product/product-list-header.jsp" />
+
+                    <main class="relative z-10 max-w-7xl mx-auto px-4 pb-20 mt-8">
+                        <div class="flex flex-col lg:flex-row gap-8">
+                            <aside class="lg:w-1/4">
+                                <div
+                                    class="glass-island rounded-[24px] p-6 sticky top-28 transition-transform hover:shadow-lg duration-500">
+                                    <div class="flex flex-col items-center mb-6 pb-6 border-b border-slate-200/60">
+                                        <div class="relative w-24 h-24 mb-4 group cursor-pointer"
+                                            onclick="window.location.href='${pageContext.request.contextPath}/profile'">
+                                            <div
+                                                class="absolute inset-0 rounded-full gold-border-glow opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                                            </div>
                                             <c:choose>
-                                                <c:when test="${order.status == 'Pending'}">
-                                                    <span class="px-3 py-1 text-sm font-bold rounded-full bg-yellow-100 text-yellow-800">
-                                                        <i class="fa-solid fa-clock-rotate-left mr-1"></i> Chờ xử lý
-                                                    </span>
-                                                </c:when>
-                                                <c:when test="${order.status == 'Shipped'}">
-                                                    <span class="px-3 py-1 text-sm font-bold rounded-full bg-blue-100 text-blue-800">
-                                                        <i class="fa-solid fa-truck mr-1"></i> Đang giao
-                                                    </span>
-                                                </c:when>
-                                                <c:when test="${order.status == 'Completed'}">
-                                                    <span class="px-3 py-1 text-sm font-bold rounded-full bg-green-100 text-green-800">
-                                                        <i class="fa-solid fa-check-circle mr-1"></i> Hoàn thành
-                                                    </span>
-                                                </c:when>
-                                                <c:when test="${order.status == 'Cancelled'}">
-                                                    <span class="px-3 py-1 text-sm font-bold rounded-full bg-red-100 text-red-800">
-                                                        <i class="fa-solid fa-times-circle mr-1"></i> Đã hủy
-                                                    </span>
+                                                <c:when
+                                                    test="${not empty sessionScope.user.avatar and !sessionScope.user.avatar.equals('images/ava_default.png')}">
+                                                    <img alt="Profile Avatar"
+                                                        class="w-full h-full rounded-full object-cover border-4 border-white shadow-md relative z-10"
+                                                        src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}" />
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <span class="px-3 py-1 text-sm font-bold rounded-full bg-gray-100 text-gray-800">
-                                                        ${order.status}
-                                                    </span>
+                                                    <div
+                                                        class="w-full h-full rounded-full border-4 border-white shadow-md relative z-10 bg-slate-200 flex items-center justify-center text-slate-400">
+                                                        <i class="fa-solid fa-user text-4xl"></i>
+                                                    </div>
                                                 </c:otherwise>
                                             </c:choose>
-                                        </p>
+                                        </div>
+                                        <h2
+                                            class="font-display font-bold text-lg text-slate-900 mb-2 text-center leading-tight">
+                                            ${sessionScope.user.fullname}</h2>
+                                        <div
+                                            class="flex items-center space-x-2 bg-gradient-to-r from-amber-50 to-amber-100 px-3 py-1 rounded-full border border-amber-200/50 mb-4">
+                                            <span
+                                                class="material-symbols-outlined text-accent-gold text-[16px]">stars</span>
+                                            <span
+                                                class="text-xs font-bold text-accent-gold tracking-wide uppercase">Gold
+                                                Member</span>
+                                        </div>
+                                        <div class="w-full px-2">
+                                            <div class="flex justify-between items-end mb-1.5">
+                                                <span
+                                                    class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Points</span>
+                                                <span class="text-[10px] font-bold text-primary">1500 / 2000</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                <div class="bg-gradient-to-r from-sky-300 via-primary to-accent-gold h-1.5 rounded-full"
+                                                    style="width: 75%"></div>
+                                            </div>
+                                            <p class="mt-2 text-[10px] text-center text-slate-500 font-medium">500
+                                                points to <span class="text-accent-gold font-bold">DIAMOND</span></p>
+                                        </div>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="text-gray-600">Tổng tiền:</p>
-                                        <p class="text-xl font-bold text-[#9B774E]">
-                                            <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0"/>
-                                        </t:formatNumber>
+                                    <nav class="space-y-1">
+                                        <details class="group">
+                                            <summary
+                                                class="flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer hover:bg-white/40 transition-colors">
+                                                <div class="flex items-center text-slate-700 font-medium">
+                                                    <span
+                                                        class="material-symbols-outlined mr-3 text-[20px] text-slate-400 group-hover:text-primary">person</span>
+                                                    <span class="text-sm tracking-wide">Tài khoản của tôi</span>
+                                                </div>
+                                                <span
+                                                    class="material-symbols-outlined text-[18px] text-slate-400 transition-transform duration-300 chevron">expand_more</span>
+                                            </summary>
+                                            <div class="pl-11 pr-2 pt-1 pb-2 space-y-1">
+                                                <a class="block py-2 text-sm text-slate-500 hover:text-primary transition-colors"
+                                                    href="${pageContext.request.contextPath}/profile">Hồ sơ cá nhân</a>
+                                                <a class="block py-2 text-sm text-slate-500 hover:text-primary transition-colors"
+                                                    href="${pageContext.request.contextPath}/change-password">Đổi mật
+                                                    khẩu</a>
+                                                <a class="block py-2 text-sm text-slate-500 hover:text-primary transition-colors"
+                                                    href="${pageContext.request.contextPath}/tier-details">Chi tiết hạng
+                                                    thành viên</a>
+                                            </div>
+                                        </details>
+
+                                        <a class="flex items-center px-4 py-3 rounded-lg nav-item-active group"
+                                            href="${pageContext.request.contextPath}/order">
+                                            <span
+                                                class="material-symbols-outlined mr-3 text-[20px] text-primary">history_edu</span>
+                                            <span class="text-sm tracking-wide">Lịch sử đơn hàng</span>
+                                        </a>
+
+                                        <a class="flex items-center px-4 py-3 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white/40 transition-all duration-300 group"
+                                            href="#">
+                                            <span
+                                                class="material-symbols-outlined mr-3 text-[20px] group-hover:text-slate-700">notifications</span>
+                                            <span class="font-medium text-sm tracking-wide">Thông báo</span>
+                                            <span
+                                                class="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">3</span>
+                                        </a>
+
+                                        <a class="flex items-center px-4 py-3 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50/50 transition-all duration-300 group mt-4 border-t border-slate-100 pt-4"
+                                            href="${pageContext.request.contextPath}/logout">
+                                            <span class="material-symbols-outlined mr-3 text-[20px]">logout</span>
+                                            <span class="font-medium text-sm tracking-wide">Đăng xuất</span>
+                                        </a>
+                                    </nav>
+
+                                    <div class="mt-8 text-center">
+                                        <div
+                                            class="inline-block border border-accent-gold/30 bg-accent-gold/5 px-4 py-1.5 rounded-sm text-[10px] tracking-[0.25em] text-accent-gold font-display font-semibold">
+                                            EST. 2024
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </aside>
+
+                            <section class="lg:w-3/4">
+                                <div
+                                    class="glass-island rounded-[32px] p-8 lg:p-10 min-h-[700px] relative overflow-hidden flex flex-col">
+                                    <div
+                                        class="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-b from-blue-50/80 to-transparent rounded-bl-full pointer-events-none">
+                                    </div>
+                                    <header class="relative z-10 mb-8">
+                                        <h1 class="font-display font-bold text-3xl text-slate-900 mb-6 tracking-tight">
+                                            Lịch sử đơn hàng</h1>
+                                        <div
+                                            class="flex flex-nowrap overflow-x-auto border-b border-slate-200/70 pb-0 gap-8 scrollbar-hide">
+                                            <button
+                                                class="whitespace-nowrap pb-3 px-1 text-sm tab-underline tab-active">Tất
+                                                cả</button>
+                                            <button
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline">Chờ
+                                                xác nhận</button>
+                                            <button
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline">Đang
+                                                giao</button>
+                                            <button
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline">Đã
+                                                giao</button>
+                                            <button
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline">Đã
+                                                hủy</button>
+                                        </div>
+                                    </header>
+
+                                    <div class="relative z-10 flex-1 space-y-6">
+                                        <c:choose>
+                                            <c:when test="${empty orderList}">
+                                                <div
+                                                    class="flex flex-col items-center justify-center py-20 text-center">
+                                                    <div
+                                                        class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+                                                        <span
+                                                            class="material-symbols-outlined text-4xl text-slate-300">shopping_basket</span>
+                                                    </div>
+                                                    <h3 class="text-xl font-display font-bold text-slate-800 mb-2">Bạn
+                                                        chưa có đơn hàng nào</h3>
+                                                    <p class="text-slate-500 max-w-xs mb-8">Hãy khám phá bộ sưu tập của
+                                                        AISTHÉA để chọn cho mình những món đồ ưng ý nhất.</p>
+                                                    <a href="${pageContext.request.contextPath}/product"
+                                                        class="px-8 py-3 bg-primary text-white font-semibold rounded-full shadow-lg hover:bg-primary-dark transition-all duration-300">
+                                                        Khám phá ngay
+                                                    </a>
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:forEach var="order" items="${orderList}">
+                                                    <div
+                                                        class="bg-white/60 border border-white rounded-2xl p-6 shadow-glass-sm hover:shadow-glass transition-all duration-300">
+                                                        <div
+                                                            class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-4 border-b border-slate-100">
+                                                            <div class="flex flex-col">
+                                                                <span
+                                                                    class="font-bold text-slate-800 text-lg">#${order.orderid}</span>
+                                                                <span class="text-xs text-slate-400 mt-1">
+                                                                    <fmt:formatDate value="${order.createdat}"
+                                                                        pattern="dd 'Tháng' MM, yyyy" />
+                                                                </span>
+                                                            </div>
+                                                            <div class="mt-2 md:mt-0 flex items-center">
+                                                                <c:choose>
+                                                                    <c:when test="${order.status eq 'Pending'}">
+                                                                        <span
+                                                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-100 flex items-center">
+                                                                            <span
+                                                                                class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2 animate-pulse"></span>
+                                                                            Chờ xác nhận
+                                                                        </span>
+                                                                    </c:when>
+                                                                    <c:when test="${order.status eq 'Shipped'}">
+                                                                        <span
+                                                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100 flex items-center">
+                                                                            <span
+                                                                                class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
+                                                                            Đang giao
+                                                                        </span>
+                                                                    </c:when>
+                                                                    <c:when test="${order.status eq 'Completed'}">
+                                                                        <span
+                                                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                                            Đã giao
+                                                                        </span>
+                                                                    </c:when>
+                                                                    <c:when test="${order.status eq 'Cancelled'}">
+                                                                        <span
+                                                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                                                                            Đã hủy
+                                                                        </span>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <span
+                                                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200">
+                                                                            ${order.status}
+                                                                        </span>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="flex flex-col md:flex-row gap-6 mb-4">
+                                                            <div
+                                                                class="flex -space-x-3 overflow-hidden py-1 pl-1 ${order.status eq 'Cancelled' ? 'grayscale opacity-70' : ''}">
+                                                                <c:forEach var="item" items="${order.items}"
+                                                                    varStatus="status">
+                                                                    <c:if test="${status.index < 3}">
+                                                                        <img alt="${item.productName}"
+                                                                            class="inline-block h-16 w-16 rounded-lg ring-2 ring-white object-cover shadow-sm bg-slate-50"
+                                                                            src="${item.imageUrl}"
+                                                                            onerror="this.src='https://via.placeholder.com/150'" />
+                                                                    </c:if>
+                                                                </c:forEach>
+                                                                <c:if test="${order.items.size() > 3}">
+                                                                    <div
+                                                                        class="h-16 w-16 rounded-lg ring-2 ring-white bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-500 shadow-sm z-10">
+                                                                        +${order.items.size() - 3}
+                                                                    </div>
+                                                                </c:if>
+                                                            </div>
+                                                            <div class="flex-1 flex flex-col justify-center">
+                                                                <p class="text-sm text-slate-600 line-clamp-2">
+                                                                    <c:forEach var="item" items="${order.items}"
+                                                                        varStatus="status">
+                                                                        ${item.productName}${!status.last ? ', ' : ''}
+                                                                    </c:forEach>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div
+                                                            class="flex justify-between items-end mt-4 pt-4 border-t border-slate-50">
+                                                            <div>
+                                                                <p
+                                                                    class="text-xs text-slate-400 uppercase tracking-wider mb-1">
+                                                                    Tổng tiền</p>
+                                                                <p
+                                                                    class="text-lg font-display font-bold ${order.status eq 'Cancelled' ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-900'}">
+                                                                    <fmt:formatNumber value="${order.totalprice}"
+                                                                        type="currency" currencyCode="VND"
+                                                                        maxFractionDigits="0" />
+                                                                </p>
+                                                            </div>
+                                                            <a href="${pageContext.request.contextPath}/order?action=view&id=${order.orderid}"
+                                                                class="px-5 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 hover:text-primary hover:border-primary/30 transition-all duration-300">
+                                                                Xem chi tiết
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </c:forEach>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
-                    </c:forEach>
-                </div>
-            </c:otherwise>
-        </c:choose>
+                    </main>
 
-    </div>
+                    <!-- Footer -->
+                    <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
-    <jsp:include page="/views/shared/footer.jsp" />
+                </body>
 
-</body>
-</html>
+                </html>

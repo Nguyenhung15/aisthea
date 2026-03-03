@@ -148,5 +148,13 @@
         <servlet-name>HomeServlet</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>TierDetailServlet</servlet-name>
+        <servlet-class>com.aisthea.fashion.controller.TierDetailServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>TierDetailServlet</servlet-name>
+        <url-pattern>/tier-details</url-pattern>
+    </servlet-mapping>
     <!-- HomeServlet mapped to / handles root URL directly -->
 </web-app>

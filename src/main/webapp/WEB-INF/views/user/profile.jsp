@@ -6,470 +6,463 @@
             <html lang="vi">
 
             <head>
-                <meta charset="UTF-8">
+                <meta charset="utf-8" />
+                <meta content="width=device-width, initial-scale=1.0" name="viewport" />
                 <title>Hồ sơ cá nhân | AISTHÉA</title>
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+                <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
+                    rel="stylesheet" />
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+                    rel="stylesheet" />
+                <!-- Font Awesome (for header) -->
+                <link rel="stylesheet"
+                    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+                <script>
+                    tailwind.config = {
+                        darkMode: "class",
+                        theme: {
+                            extend: {
+                                colors: {
+                                    primary: "#0056b3", // Cerulean Blue
+                                    "primary-dark": "#004494",
+                                    "accent-gold": "#C5A059",
+                                    "glass-light": "rgba(255, 255, 255, 0.7)",
+                                    "glass-border": "rgba(255, 255, 255, 0.5)",
+                                    "glass-input": "rgba(255, 255, 255, 0.4)",
+                                },
+                                fontFamily: {
+                                    display: ["'Playfair Display'", "serif"],
+                                    body: ["'Inter'", "sans-serif"],
+                                },
+                                backgroundImage: {
+                                    'ethereal-sky': "linear-gradient(180deg, #F8FAFC 0%, #E0F2FE 100%)",
+                                },
+                                boxShadow: {
+                                    'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                                    'glass-sm': '0 4px 16px 0 rgba(31, 38, 135, 0.05)',
+                                    'glow-gold': '0 0 15px rgba(197, 160, 89, 0.3)',
+                                }
+                            },
+                        },
+                    };
+                </script>
                 <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
-
-                    body {
-                        margin: 0;
-                        padding: 0;
-                        font-family: 'Poppins', sans-serif;
-                        background: url('${pageContext.request.contextPath}/images/bg-watercolor.png?v=1') no-repeat center center fixed;
-                        background-size: cover;
-                        height: 100vh;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
+                    .glass-island {
+                        background: rgba(255, 255, 255, 0.65);
+                        backdrop-filter: blur(20px);
+                        -webkit-backdrop-filter: blur(20px);
+                        border: 1px solid rgba(255, 255, 255, 0.8);
+                        box-shadow: 0 20px 40px -10px rgba(0, 86, 179, 0.05);
                     }
 
-                    /* Logo */
-                    .logo {
-                        position: absolute;
-                        top: 20px;
-                        left: 30px;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                        animation: fadeIn 1.2s ease;
-                    }
-
-                    .logo img {
-                        height: 60px;
-                        width: auto;
-                        cursor: pointer;
-                        transition: transform 0.3s ease;
-                    }
-
-                    .logo img:hover {
-                        transform: scale(1.05);
-                    }
-
-                    .logo span {
-                        font-weight: 600;
-                        color: #003366;
-                        font-size: 20px;
-                        letter-spacing: 1px;
-                    }
-
-                    /* Container */
-                    .profile-container {
-                        background: rgba(255, 255, 255, 0.02);
-                        backdrop-filter: blur(12px);
-                        -webkit-backdrop-filter: blur(12px);
-                        border-radius: 30px;
-                        border: 1px solid rgba(255, 255, 255, 0.2);
-                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                        width: 480px;
-                        /* Exact match to Login */
-                        padding: 50px 40px;
-                        /* Slightly compacted padding */
-                        color: #003366;
-                        opacity: 0;
-                        animation: fadeInUp 1s ease forwards;
-                        display: flex;
-                        flex-direction: column;
-                    }
-
-                    .profile-header {
-                        text-align: center;
-                        margin-bottom: 25px;
-                    }
-
-                    .profile-header h2 {
-                        margin: 0;
-                        font-size: 24px;
-                        font-weight: 600;
-                        letter-spacing: -0.5px;
-                        color: #0f2c52;
-                    }
-
-                    .profile-header p {
-                        margin-top: 8px;
-                        font-size: 14px;
-                        color: #1a3b5d;
-                        font-weight: 500;
-                    }
-
-                    /* Avatar section */
-                    .profile-img {
-                        text-align: center;
-                        margin-bottom: 25px;
-                        position: relative;
-                    }
-
-                    .avatar-circle {
-                        width: 100px;
-                        /* Smaller avatar */
-                        height: 100px;
-                        border-radius: 50%;
-                        border: 3px solid rgba(255, 255, 255, 0.5);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        background: rgba(255, 255, 255, 0.2);
-                        margin: 0 auto;
-                        cursor: pointer;
-                        transition: 0.3s;
-                        backdrop-filter: blur(4px);
-                    }
-
-                    .avatar-circle:hover {
-                        box-shadow: 0 0 15px rgba(0, 51, 102, 0.2);
-                        transform: scale(1.02);
-                    }
-
-                    .avatar-circle img {
-                        width: 100%;
-                        height: 100%;
-                        border-radius: 50%;
-                        object-fit: cover;
-                    }
-
-                    .avatar-circle i {
-                        font-size: 40px;
-                        color: #003366;
-                    }
-
-                    /* Form */
-                    /* Form */
-                    form {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 16px;
-                        /* Tighter gap */
-                    }
-
-                    .form-group {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 6px;
-                        /* Gap between label and input */
-                    }
-
-                    label {
-                        font-weight: 600;
-                        font-size: 14px;
-                        color: #1a3b5d;
-                        /* Darker blue */
-                        margin-left: 4px;
-                        /* Align with input radius */
-                        margin-bottom: 0;
-                    }
-
-                    input,
-                    select {
-                        width: 100%;
-                        padding: 12px 16px;
-                        /* Optimized padding */
-                        border: 1px solid rgba(255, 255, 255, 0.5);
-                        /* Subtle border */
-                        border-radius: 10px;
-                        /* Softer corners */
-                        background: rgba(255, 255, 255, 0.7);
-                        /* Translucent */
-                        outline: none;
-                        font-size: 14px;
-                        /* Standard font */
-                        color: #333;
-                        box-shadow: none;
-                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                        box-sizing: border-box;
-                    }
-
-                    input:focus,
-                    select:focus {
-                        background: #ffffff;
-                        border-color: #2b7bff;
-                        box-shadow: 0 0 0 4px rgba(43, 123, 255, 0.15);
-                        transform: translateY(-1px);
-                    }
-
-                    /* Readonly input style */
-                    input[readonly] {
-                        background: rgba(200, 200, 200, 0.2);
-                        color: #555;
-                        cursor: not-allowed;
-                    }
-
-                    .form-actions {
-                        grid-column: span 2;
-                        text-align: center;
-                        margin-top: 10px;
-                        display: flex;
-                        gap: 12px;
-                        justify-content: center;
-                    }
-
-                    button {
-                        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
-                        color: white;
-                        padding: 12px 24px;
-                        /* Standard buttons */
-                        border: none;
-                        border-radius: 10px;
-                        cursor: pointer;
-                        font-weight: 600;
+                    .glass-input {
+                        background: rgba(255, 255, 255, 0.4);
+                        backdrop-filter: blur(10px);
+                        border: 1px solid rgba(255, 255, 255, 0.6);
                         transition: all 0.3s ease;
-                        font-size: 15px;
-                        box-shadow: 0 8px 16px rgba(0, 102, 204, 0.15);
-                        width: auto;
-                        min-width: 150px;
                     }
 
-                    button:hover {
-                        transform: translateY(-2px);
-                        box-shadow: 0 12px 20px rgba(0, 102, 204, 0.25);
+                    .glass-input:focus {
+                        background: rgba(255, 255, 255, 0.8);
+                        border-color: #0056b3;
+                        box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);
+                        outline: none;
                     }
 
-                    @keyframes fadeInUp {
-                        from {
-                            transform: translateY(40px);
-                            opacity: 0;
-                        }
-
-                        to {
-                            transform: translateY(0);
-                            opacity: 1;
-                        }
+                    .gold-border-glow {
+                        box-shadow: 0 0 0 1px #C5A059, 0 0 12px rgba(197, 160, 89, 0.4);
                     }
 
-                    /* Modal CSS */
-                    .modal {
+                    .marble-texture {
+                        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+                        opacity: 0.4;
+                        pointer-events: none;
+                    }
+
+                    .nav-item-active {
+                        color: #0056b3;
+                        font-weight: 600;
+                    }
+
+                    .nav-subitem-active {
+                        color: #0056b3;
+                        font-weight: 600;
+                    }
+
+                    ::-webkit-scrollbar {
+                        width: 8px;
+                    }
+
+                    ::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+
+                    ::-webkit-scrollbar-thumb {
+                        background: rgba(0, 86, 179, 0.2);
+                        border-radius: 4px;
+                    }
+
+                    ::-webkit-scrollbar-thumb:hover {
+                        background: rgba(0, 86, 179, 0.4);
+                    }
+
+                    details>summary {
+                        list-style: none;
+                    }
+
+                    details>summary::-webkit-details-marker {
                         display: none;
-                        position: fixed;
-                        z-index: 1000;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        height: 100%;
-                        overflow: auto;
-                        background-color: rgba(0, 0, 0, 0.5);
-                        animation: fadeIn 0.3s;
                     }
 
-                    .modal-content {
-                        background-color: #fefefe;
-                        margin: 10% auto;
-                        padding: 30px;
-                        border: 1px solid #888;
-                        width: 400px;
-                        border-radius: 15px;
-                        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-                        position: relative;
-                        animation: slideDown 0.4s;
+                    details[open] summary~* {
+                        animation: slideDown 0.3s ease-in-out;
                     }
 
                     @keyframes slideDown {
-                        from {
-                            transform: translateY(-50px);
+                        0% {
                             opacity: 0;
+                            transform: translateY(-10px);
                         }
 
-                        to {
-                            transform: translateY(0);
+                        100% {
                             opacity: 1;
+                            transform: translateY(0);
                         }
                     }
 
-                    .close {
-                        color: #aaa;
-                        float: right;
-                        font-size: 28px;
-                        font-weight: bold;
-                        cursor: pointer;
+                    .rotate-chevron {
+                        transform: rotate(180deg);
                     }
 
-                    .close:hover,
-                    .close:focus {
-                        color: black;
-                        text-decoration: none;
-                        cursor: pointer;
-                    }
-
-                    .modal h3 {
-                        color: #003366;
-                        margin-top: 0;
-                        text-align: center;
-                        margin-bottom: 20px;
-                    }
-
-                    .btn-secondary {
-                        background: linear-gradient(135deg, #6c757d, #495057);
-                        margin-left: 10px;
-                    }
-
-                    .btn-secondary:hover {
-                        background: linear-gradient(135deg, #5a6268, #343a40);
+                    details[open] summary .chevron {
+                        transform: rotate(180deg);
                     }
                 </style>
             </head>
 
-            <body>
-
-                <!-- Logo -->
-                <div class="logo">
-                    <a href="${pageContext.request.contextPath}/home">
-                        <img src="${pageContext.request.contextPath}/images/ata-logo.png" alt="AISTHÉA Logo">
-                    </a>
-                    <span>AISTHÉA</span>
+            <body
+                class="bg-ethereal-sky font-body min-h-screen text-slate-800 relative selection:bg-primary/20 selection:text-primary">
+                <div class="fixed inset-0 z-0">
+                    <div class="absolute inset-0 bg-gradient-to-br from-white via-sky-50 to-blue-100 opacity-80"></div>
+                    <div class="absolute inset-0 marble-texture"></div>
+                    <div
+                        class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2">
+                    </div>
+                    <div
+                        class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/30 rounded-full blur-3xl -translate-x-1/4 translate-y-1/4">
+                    </div>
                 </div>
 
-                <!-- Profile Form -->
-                <div class="profile-container">
-                    <div class="profile-header">
-                        <h2>Hồ sơ cá nhân</h2>
-                        <p>Quản lý thông tin tài khoản của bạn</p>
-                    </div>
+                <!-- Header -->
+                <jsp:include page="/WEB-INF/views/product/product-list-header.jsp" />
 
-                    <form id="profileForm" action="${pageContext.request.contextPath}/updateProfile" method="post"
-                        enctype="multipart/form-data">
+                <main class="relative z-10 max-w-7xl mx-auto px-4 pb-20 mt-8">
+                    <div class="flex flex-col lg:flex-row gap-8">
+                        <aside class="lg:w-1/4">
+                            <div
+                                class="glass-island rounded-[24px] p-6 sticky top-28 transition-transform hover:shadow-lg duration-500">
+                                <div class="flex flex-col items-center mb-6 pb-6 border-b border-slate-200/60">
+                                    <div class="relative w-24 h-24 mb-4 group cursor-pointer"
+                                        onclick="document.getElementById('avatarInput').click();">
+                                        <div
+                                            class="absolute inset-0 rounded-full gold-border-glow opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                                        </div>
+                                        <c:choose>
+                                            <c:when
+                                                test="${not empty sessionScope.user.avatar and !sessionScope.user.avatar.equals('images/ava_default.png')}">
+                                                <img id="avatarPreview" alt="Profile Avatar"
+                                                    class="w-full h-full rounded-full object-cover border-4 border-white shadow-md relative z-10"
+                                                    src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}" />
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div id="avatarPlaceholder"
+                                                    class="w-full h-full rounded-full border-4 border-white shadow-md relative z-10 bg-slate-200 flex items-center justify-center text-slate-400">
+                                                    <i class="fa-solid fa-user text-4xl"></i>
+                                                </div>
+                                                <img id="avatarPreview" alt="Profile Avatar"
+                                                    class="w-full h-full rounded-full object-cover border-4 border-white shadow-md relative z-10 hidden" />
+                                            </c:otherwise>
+                                        </c:choose>
+                                        <button
+                                            class="absolute bottom-1 right-1 z-20 bg-white text-primary p-1.5 rounded-full shadow-lg hover:bg-primary hover:text-white transition-colors border border-slate-100">
+                                            <span class="material-symbols-outlined text-[14px] block">edit</span>
+                                        </button>
+                                    </div>
 
-                        <!-- Avatar -->
-                        <div class="profile-img" style="grid-column: span 2;">
-                            <label for="avatarInput">
-                                <div class="avatar-circle" id="avatarWrapper">
-                                    <c:choose>
-                                        <c:when
-                                            test="${not empty sessionScope.user.avatar and !sessionScope.user.avatar.equals('images/ava_default.png')}">
-                                            <img id="avatarPreview"
-                                                src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
-                                                alt="Avatar">
-                                        </c:when>
-                                        <c:otherwise>
-                                            <i class="fa-solid fa-user"></i>
-                                        </c:otherwise>
-                                    </c:choose>
+                                    <h2
+                                        class="font-display font-bold text-lg text-slate-900 mb-2 text-center leading-tight">
+                                        ${sessionScope.user.fullname}</h2>
+
+                                    <div
+                                        class="flex items-center space-x-2 bg-gradient-to-r from-amber-50 to-amber-100 px-3 py-1 rounded-full border border-amber-200/50 mb-4">
+                                        <span
+                                            class="material-symbols-outlined text-accent-gold text-[16px]">stars</span>
+                                        <span
+                                            class="text-xs font-bold text-accent-gold tracking-wide uppercase">Member</span>
+                                    </div>
+
+                                    <!-- Phần hiển thị Điểm -->
+                                    <div class="w-full px-2">
+                                        <div class="flex justify-between items-end mb-1.5">
+                                            <span
+                                                class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Points</span>
+                                            <span class="text-[10px] font-bold text-primary">1500 / 2000</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                            <div class="bg-gradient-to-r from-sky-300 via-primary to-accent-gold h-1.5 rounded-full"
+                                                style="width: 75%"></div>
+                                        </div>
+                                        <p class="mt-2 text-[10px] text-center text-slate-500 font-medium">
+                                            Cần thêm 500 points to <span
+                                                class="text-accent-gold font-bold">DIAMOND</span>
+                                        </p>
+                                    </div>
                                 </div>
-                            </label>
-                            <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display:none;">
-                        </div>
 
-                        <!-- Thông tin -->
-                        <div class="form-group">
-                            <label>Họ và tên</label>
-                            <input type="text" name="fullname" value="${sessionScope.user.fullname}" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" name="email" value="${sessionScope.user.email}" required readonly
-                                style="background: rgba(200, 200, 200, 0.3); cursor: not-allowed;">
-                        </div>
-                        <div class="form-group">
-                            <label>Giới tính</label>
-                            <select name="gender">
-                                <option value="Male" ${sessionScope.user.gender=='Male' ? 'selected' : '' }>Nam</option>
-                                <option value="Female" ${sessionScope.user.gender=='Female' ? 'selected' : '' }>Nữ
-                                </option>
-                                <option value="Other" ${sessionScope.user.gender=='Other' ? 'selected' : '' }>Khác
-                                </option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Số điện thoại</label>
-                            <input type="text" name="phone" value="${sessionScope.user.phone}">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label>Địa chỉ</label>
-                            <input type="text" name="address" value="${sessionScope.user.address}">
-                        </div>
+                                <nav class="space-y-1">
+                                    <details class="group" open="">
+                                        <summary
+                                            class="flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer hover:bg-white/40 transition-colors">
+                                            <div class="flex items-center text-slate-700 font-medium">
+                                                <span
+                                                    class="material-symbols-outlined mr-3 text-[20px] text-primary">person</span>
+                                                <span class="text-sm tracking-wide">Tài khoản của tôi</span>
+                                            </div>
+                                            <span
+                                                class="material-symbols-outlined text-[18px] text-slate-400 transition-transform duration-300 chevron">expand_more</span>
+                                        </summary>
+                                        <div class="pl-11 pr-2 pt-1 pb-2 space-y-1">
+                                            <a class="block py-2 text-sm nav-subitem-active transition-colors hover:text-primary"
+                                                href="${pageContext.request.contextPath}/profile">Hồ sơ cá nhân</a>
+                                            <a class="block py-2 text-sm text-slate-500 hover:text-primary transition-colors"
+                                                href="${pageContext.request.contextPath}/change-password">Đổi mật
+                                                khẩu</a>
+                                            <a class="block py-2 text-sm text-slate-500 hover:text-primary transition-colors"
+                                                href="${pageContext.request.contextPath}/tier-details">Chi tiết hạng
+                                                thành viên</a>
+                                        </div>
+                                    </details>
 
-                        <div class="form-actions" style="grid-column: span 2;text-align:center;">
-                            <button type="submit">Cập nhật thông tin</button>
-                            <button type="button" class="btn-secondary" onclick="openModal()">Đổi mật khẩu</button>
-                        </div>
-                    </form>
-                </div>
+                                    <a class="flex items-center px-4 py-3 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white/40 transition-all duration-300 group"
+                                        href="${pageContext.request.contextPath}/order">
+                                        <span
+                                            class="material-symbols-outlined mr-3 text-[20px] group-hover:text-slate-700">history_edu</span>
+                                        <span class="font-medium text-sm tracking-wide">Lịch sử đơn hàng</span>
+                                    </a>
 
-                <!-- Change Password Modal -->
-                <div id="passwordModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close" onclick="closeModal()">&times;</span>
-                        <h3>Đổi mật khẩu</h3>
-                        <form action="${pageContext.request.contextPath}/change-password" method="post"
-                            style="display: flex; flex-direction: column; gap: 15px;">
-                            <div class="form-group">
-                                <label>Mật khẩu cũ</label>
-                                <input type="password" name="oldPassword" required placeholder="Nhập mật khẩu hiện tại">
+                                    <a class="flex items-center px-4 py-3 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white/40 transition-all duration-300 group"
+                                        href="#">
+                                        <span
+                                            class="material-symbols-outlined mr-3 text-[20px] group-hover:text-slate-700">notifications</span>
+                                        <span class="font-medium text-sm tracking-wide">Thông báo</span>
+                                        <span
+                                            class="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">3</span>
+                                    </a>
+
+                                    <a class="flex items-center px-4 py-3 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50/50 transition-all duration-300 group mt-4 border-t border-slate-100 pt-4"
+                                        href="${pageContext.request.contextPath}/logout">
+                                        <span class="material-symbols-outlined mr-3 text-[20px]">logout</span>
+                                        <span class="font-medium text-sm tracking-wide">Đăng xuất</span>
+                                    </a>
+                                </nav>
+
                             </div>
-                            <div class="form-group">
-                                <label>Mật khẩu mới</label>
-                                <input type="password" name="newPassword" required placeholder="Nhập mật khẩu mới">
+                        </aside>
+
+                        <section class="lg:w-3/4">
+                            <div class="glass-island rounded-[32px] p-8 lg:p-12 min-h-[700px] relative overflow-hidden">
+                                <div
+                                    class="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-b from-blue-50/80 to-transparent rounded-bl-full pointer-events-none">
+                                </div>
+                                <div class="relative z-10 max-w-4xl mx-auto">
+                                    <header
+                                        class="mb-10 border-b border-slate-200/60 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                                        <div>
+                                            <h1
+                                                class="font-display font-bold text-3xl text-slate-900 mb-2 tracking-tight">
+                                                Hồ sơ cá nhân</h1>
+                                            <p class="text-slate-500 font-light text-sm tracking-wide">Quản lý và bảo vệ
+                                                thông tin tài khoản của bạn</p>
+                                        </div>
+                                    </header>
+
+                                    <!-- Notification Banner Area -->
+                                    <div id="notificationArea" class="mb-6 space-y-3">
+                                        <c:if test="${param.success != null}">
+                                            <div
+                                                class="bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl p-4 text-sm flex items-center shadow-sm animate-fadeIn">
+                                                <span
+                                                    class="material-symbols-outlined mr-3 text-[20px]">check_circle</span>
+                                                <span class="font-medium">Cập nhật hồ sơ thành công!</span>
+                                            </div>
+                                        </c:if>
+
+                                        <c:if test="${not empty sessionScope.changePassSuccess}">
+                                            <div
+                                                class="bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl p-4 text-sm flex items-center shadow-sm animate-fadeIn">
+                                                <span class="material-symbols-outlined mr-3 text-[20px]">verified</span>
+                                                <span class="font-medium">${sessionScope.changePassSuccess}</span>
+                                            </div>
+                                            <c:remove var="changePassSuccess" scope="session" />
+                                        </c:if>
+
+                                        <c:if test="${not empty sessionScope.changePassError}">
+                                            <div
+                                                class="bg-red-50 border border-red-200 text-red-600 rounded-xl p-4 text-sm flex items-center shadow-sm animate-fadeIn">
+                                                <span
+                                                    class="material-symbols-outlined mr-3 text-[20px]">error_outline</span>
+                                                <span class="font-medium">${sessionScope.changePassError}</span>
+                                            </div>
+                                            <c:remove var="changePassError" scope="session" />
+                                        </c:if>
+                                    </div>
+
+                                    <form id="profileForm" action="${pageContext.request.contextPath}/updateProfile"
+                                        method="post" enctype="multipart/form-data" class="space-y-8">
+                                        <input type="file" id="avatarInput" name="avatar" accept="image/*"
+                                            style="display:none;">
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+
+                                            <div class="space-y-2 group">
+                                                <label
+                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                                    for="fullName">Họ và tên</label>
+                                                <div class="relative">
+                                                    <input name="fullname"
+                                                        class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 placeholder-slate-400 outline-none font-medium"
+                                                        id="fullName" type="text" value="${sessionScope.user.fullname}"
+                                                        required />
+                                                    <div
+                                                        class="absolute right-4 top-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="space-y-2">
+                                                <label
+                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                                    for="email">Email</label>
+                                                <div class="relative opacity-75">
+                                                    <input
+                                                        class="w-full pl-5 pr-12 py-3.5 bg-slate-100/50 border border-slate-200/60 rounded-xl text-slate-500 cursor-not-allowed font-medium"
+                                                        disabled="" id="email" type="email"
+                                                        value="${sessionScope.user.email}" />
+                                                    <input type="hidden" name="email"
+                                                        value="${sessionScope.user.email}" />
+                                                    <span
+                                                        class="material-symbols-outlined absolute right-4 top-3.5 text-slate-400 text-[20px]">lock</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="space-y-2">
+                                                <label
+                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                                    for="phone">Số điện thoại</label>
+                                                <div class="relative group">
+                                                    <input name="phone"
+                                                        class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium"
+                                                        id="phone" type="tel" value="${sessionScope.user.phone}" />
+                                                    <div
+                                                        class="absolute right-4 top-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="space-y-2">
+                                                <label
+                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                                    for="gender">Giới tính</label>
+                                                <div class="relative">
+                                                    <select name="gender"
+                                                        class="w-full pl-5 pr-12 py-3.5 glass-input rounded-xl text-slate-800 appearance-none cursor-pointer font-medium"
+                                                        id="gender">
+                                                        <option value="Male" ${sessionScope.user.gender=='Male'
+                                                            ? 'selected' : '' }>Nam</option>
+                                                        <option value="Female" ${sessionScope.user.gender=='Female'
+                                                            ? 'selected' : '' }>Nữ</option>
+                                                        <option value="Other" ${sessionScope.user.gender=='Other'
+                                                            ? 'selected' : '' }>Khác</option>
+                                                    </select>
+                                                    <span
+                                                        class="material-symbols-outlined absolute right-4 top-3.5 pointer-events-none text-slate-500 text-[20px]">expand_more</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="space-y-2 md:col-span-2 lg:col-span-1">
+                                                <label
+                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                                    for="birthday">Ngày sinh</label>
+                                                <div class="relative">
+                                                    <input name="birthday"
+                                                        class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium cursor-pointer"
+                                                        id="birthday" type="date" value="1999-01-01" />
+                                                    <span
+                                                        class="material-symbols-outlined absolute right-4 top-3.5 pointer-events-none text-slate-500 text-[20px]">calendar_today</span>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <div
+                                            class="pt-6 flex items-center justify-start gap-5 border-transparent mt-10">
+                                            <button
+                                                class="px-8 py-3.5 bg-primary text-white rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:bg-primary-dark transition-all duration-300 transform hover:-translate-y-0.5"
+                                                type="submit">
+                                                <span
+                                                    class="font-medium tracking-wide flex items-center justify-center text-sm uppercase">
+                                                    <span class="material-symbols-outlined mr-2 text-[18px]">save</span>
+                                                    Lưu thay đổi
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label>Xác nhận mật khẩu mới</label>
-                                <input type="password" name="confirmPassword" required
-                                    placeholder="Nhập lại mật khẩu mới">
-                            </div>
-                            <div style="text-align: center; margin-top: 10px;">
-                                <button type="submit" style="width: 100%;">Lưu thay đổi</button>
-                            </div>
-                        </form>
+                        </section>
                     </div>
-                </div>
+                </main>
 
+                <!-- Footer -->
+                <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
+
+                <!-- Scripts -->
                 <script>
-                    // ... existing avatar code ...
+                    // Preview Image when selecting avatar file
                     const avatarInput = document.getElementById("avatarInput");
-                    const avatarWrapper = document.getElementById("avatarWrapper");
 
-                    avatarInput.addEventListener("change", e => {
-                        const file = e.target.files[0];
-                        if (file) {
-                            let preview = document.getElementById("avatarPreview");
-                            if (!preview) {
-                                preview = document.createElement("img");
-                                preview.id = "avatarPreview";
-                                preview.style.width = "100%";
-                                preview.style.height = "100%";
-                                preview.style.borderRadius = "50%";
-                                preview.style.objectFit = "cover";
-                                avatarWrapper.innerHTML = "";
-                                avatarWrapper.appendChild(preview);
+                    if (avatarInput) {
+                        avatarInput.addEventListener("change", e => {
+                            const file = e.target.files[0];
+                            if (file) {
+                                let preview = document.getElementById("avatarPreview");
+                                let placeholder = document.getElementById("avatarPlaceholder");
+
+                                if (placeholder) {
+                                    placeholder.classList.add("hidden");
+                                }
+                                preview.classList.remove("hidden");
+                                preview.src = URL.createObjectURL(file);
                             }
-                            preview.src = URL.createObjectURL(file);
-                        }
-                    });
-
-                    // Modal Script
-                    function openModal() {
-                        document.getElementById("passwordModal").style.display = "block";
+                        });
                     }
 
-                    function closeModal() {
-                        document.getElementById("passwordModal").style.display = "none";
+                    // Success URL param handling
+                    if (new URLSearchParams(window.location.search).get("success") !== null) {
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        // Optional: auto-hide notification after 5 seconds
+                        setTimeout(() => {
+                            const note = document.querySelector('.bg-emerald-50');
+                            if (note) note.style.opacity = '0';
+                        }, 5000);
                     }
-
-                    window.onclick = function (event) {
-                        if (event.target == document.getElementById("passwordModal")) {
-                            closeModal();
-                        }
-                    }
-
                 </script>
 
-                <c:if test="${not empty sessionScope.changePassSuccess}">
-                    <script>
-                        alert("${sessionScope.changePassSuccess}");
-                    </script>
-                    <c:remove var="changePassSuccess" scope="session" />
-                </c:if>
-
-                <c:if test="${not empty sessionScope.changePassError}">
-                    <script>
-                        alert("${sessionScope.changePassError}");
-                    </script>
-                    <c:remove var="changePassError" scope="session" />
-                </c:if>
-
-                <% if (request.getParameter("success") !=null) { %>
-                    <script>
-                        alert('Cập nhật thông tin thành công!');
-                        // Xóa query parameters trên URL để tránh hiển thị lại thông báo khi Refresh
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    </script>
-                    <% } %>
             </body>
 
             </html>
