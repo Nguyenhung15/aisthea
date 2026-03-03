@@ -197,110 +197,10 @@
 
                     <main class="relative z-10 max-w-7xl mx-auto px-4 pb-20 mt-8">
                         <div class="flex flex-col lg:flex-row gap-8">
-                            <aside class="lg:w-1/4">
-                                <div
-                                    class="glass-island rounded-[24px] p-6 sticky top-28 transition-transform hover:shadow-lg duration-500">
-                                    <div class="flex flex-col items-center mb-6 pb-6 border-b border-slate-200/60">
-                                        <div class="relative w-24 h-24 mb-4 group cursor-pointer"
-                                            onclick="window.location.href='${pageContext.request.contextPath}/profile'">
-                                            <div
-                                                class="absolute inset-0 rounded-full gold-border-glow opacity-60 group-hover:opacity-100 transition-opacity duration-500">
-                                            </div>
-                                            <c:choose>
-                                                <c:when
-                                                    test="${not empty sessionScope.user.avatar and !sessionScope.user.avatar.equals('images/ava_default.png')}">
-                                                    <img alt="Profile Avatar"
-                                                        class="w-full h-full rounded-full object-cover border-4 border-white shadow-md relative z-10"
-                                                        src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}" />
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div
-                                                        class="w-full h-full rounded-full border-4 border-white shadow-md relative z-10 bg-slate-200 flex items-center justify-center text-slate-400">
-                                                        <i class="fa-solid fa-user text-4xl"></i>
-                                                    </div>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </div>
-                                        <h2
-                                            class="font-display font-bold text-lg text-slate-900 mb-2 text-center leading-tight">
-                                            ${sessionScope.user.fullname}</h2>
-                                        <div
-                                            class="flex items-center space-x-2 bg-gradient-to-r from-amber-50 to-amber-100 px-3 py-1 rounded-full border border-amber-200/50 mb-4">
-                                            <span
-                                                class="material-symbols-outlined text-accent-gold text-[16px]">stars</span>
-                                            <span
-                                                class="text-xs font-bold text-accent-gold tracking-wide uppercase">Gold
-                                                Member</span>
-                                        </div>
-                                        <div class="w-full px-2">
-                                            <div class="flex justify-between items-end mb-1.5">
-                                                <span
-                                                    class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Points</span>
-                                                <span class="text-[10px] font-bold text-primary">1500 / 2000</span>
-                                            </div>
-                                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                                <div class="bg-gradient-to-r from-sky-300 via-primary to-accent-gold h-1.5 rounded-full"
-                                                    style="width: 75%"></div>
-                                            </div>
-                                            <p class="mt-2 text-[10px] text-center text-slate-500 font-medium">500
-                                                points to <span class="text-accent-gold font-bold">DIAMOND</span></p>
-                                        </div>
-                                    </div>
-                                    <nav class="space-y-1">
-                                        <details class="group">
-                                            <summary
-                                                class="flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer hover:bg-white/40 transition-colors">
-                                                <div class="flex items-center text-slate-700 font-medium">
-                                                    <span
-                                                        class="material-symbols-outlined mr-3 text-[20px] text-slate-400 group-hover:text-primary">person</span>
-                                                    <span class="text-sm tracking-wide">Tài khoản của tôi</span>
-                                                </div>
-                                                <span
-                                                    class="material-symbols-outlined text-[18px] text-slate-400 transition-transform duration-300 chevron">expand_more</span>
-                                            </summary>
-                                            <div class="pl-11 pr-2 pt-1 pb-2 space-y-1">
-                                                <a class="block py-2 text-sm text-slate-500 hover:text-primary transition-colors"
-                                                    href="${pageContext.request.contextPath}/profile">Hồ sơ cá nhân</a>
-                                                <a class="block py-2 text-sm text-slate-500 hover:text-primary transition-colors"
-                                                    href="${pageContext.request.contextPath}/change-password">Đổi mật
-                                                    khẩu</a>
-                                                <a class="block py-2 text-sm text-slate-500 hover:text-primary transition-colors"
-                                                    href="${pageContext.request.contextPath}/tier-details">Chi tiết hạng
-                                                    thành viên</a>
-                                            </div>
-                                        </details>
-
-                                        <a class="flex items-center px-4 py-3 rounded-lg nav-item-active group"
-                                            href="${pageContext.request.contextPath}/order">
-                                            <span
-                                                class="material-symbols-outlined mr-3 text-[20px] text-primary">history_edu</span>
-                                            <span class="text-sm tracking-wide">Lịch sử đơn hàng</span>
-                                        </a>
-
-                                        <a class="flex items-center px-4 py-3 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white/40 transition-all duration-300 group"
-                                            href="#">
-                                            <span
-                                                class="material-symbols-outlined mr-3 text-[20px] group-hover:text-slate-700">notifications</span>
-                                            <span class="font-medium text-sm tracking-wide">Thông báo</span>
-                                            <span
-                                                class="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">3</span>
-                                        </a>
-
-                                        <a class="flex items-center px-4 py-3 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50/50 transition-all duration-300 group mt-4 border-t border-slate-100 pt-4"
-                                            href="${pageContext.request.contextPath}/logout">
-                                            <span class="material-symbols-outlined mr-3 text-[20px]">logout</span>
-                                            <span class="font-medium text-sm tracking-wide">Đăng xuất</span>
-                                        </a>
-                                    </nav>
-
-                                    <div class="mt-8 text-center">
-                                        <div
-                                            class="inline-block border border-accent-gold/30 bg-accent-gold/5 px-4 py-1.5 rounded-sm text-[10px] tracking-[0.25em] text-accent-gold font-display font-semibold">
-                                            EST. 2024
-                                        </div>
-                                    </div>
-                                </div>
-                            </aside>
+                            <!-- Sidebar -->
+                            <jsp:include page="/WEB-INF/views/common/user-sidebar.jsp">
+                                <jsp:param name="activeTab" value="order" />
+                            </jsp:include>
 
                             <section class="lg:w-3/4">
                                 <div
@@ -313,20 +213,20 @@
                                             Lịch sử đơn hàng</h1>
                                         <div
                                             class="flex flex-nowrap overflow-x-auto border-b border-slate-200/70 pb-0 gap-8 scrollbar-hide">
-                                            <button
-                                                class="whitespace-nowrap pb-3 px-1 text-sm tab-underline tab-active">Tất
+                                            <button data-status="All"
+                                                class="whitespace-nowrap pb-3 px-1 text-sm tab-underline tab-active filter-tab">Tất
                                                 cả</button>
-                                            <button
-                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline">Chờ
+                                            <button data-status="Pending"
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Chờ
                                                 xác nhận</button>
-                                            <button
-                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline">Đang
+                                            <button data-status="Shipped"
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Đang
                                                 giao</button>
-                                            <button
-                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline">Đã
+                                            <button data-status="Completed"
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Đã
                                                 giao</button>
-                                            <button
-                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline">Đã
+                                            <button data-status="Cancelled"
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Đã
                                                 hủy</button>
                                         </div>
                                     </header>
@@ -353,8 +253,8 @@
                                             </c:when>
                                             <c:otherwise>
                                                 <c:forEach var="order" items="${orderList}">
-                                                    <div
-                                                        class="bg-white/60 border border-white rounded-2xl p-6 shadow-glass-sm hover:shadow-glass transition-all duration-300">
+                                                    <div data-status="${order.status}"
+                                                        class="order-card bg-white/60 border border-white rounded-2xl p-6 shadow-glass-sm hover:shadow-glass transition-all duration-300">
                                                         <div
                                                             class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-4 border-b border-slate-100">
                                                             <div class="flex flex-col">
@@ -465,6 +365,41 @@
                     <!-- Footer -->
                     <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const tabs = document.querySelectorAll('.filter-tab');
+                            const orderCards = document.querySelectorAll('.order-card');
+                            const emptyState = document.getElementById('empty-state');
+
+                            tabs.forEach(tab => {
+                                tab.addEventListener('click', function () {
+                                    const filter = this.getAttribute('data-status');
+
+                                    // Update active tab UI
+                                    tabs.forEach(t => {
+                                        t.classList.remove('tab-active');
+                                        t.classList.add('text-slate-500');
+                                    });
+                                    this.classList.add('tab-active');
+                                    this.classList.remove('text-slate-500');
+
+                                    // Filter orders
+                                    let visibleCount = 0;
+                                    orderCards.forEach(card => {
+                                        if (filter === 'All' || card.getAttribute('data-status') === filter) {
+                                            card.style.display = 'block';
+                                            visibleCount++;
+                                        } else {
+                                            card.style.display = 'none';
+                                        }
+                                    });
+
+                                    // If we had a "no results for this tab" message, we'd show it here
+                                    // For now, if someone has no orders at all, the empty state is already shown by JSTL
+                                });
+                            });
+                        });
+                    </script>
                 </body>
 
                 </html>

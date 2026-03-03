@@ -156,5 +156,29 @@
         <servlet-name>TierDetailServlet</servlet-name>
         <url-pattern>/tier-details</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>AddressServlet</servlet-name>
+        <servlet-class>com.aisthea.fashion.controller.AddressServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AddressServlet</servlet-name>
+        <url-pattern>/address</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>NotificationServlet</servlet-name>
+        <servlet-class>com.aisthea.fashion.controller.NotificationServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>NotificationServlet</servlet-name>
+        <url-pattern>/notifications</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>StylistServlet</servlet-name>
+        <servlet-class>com.aisthea.fashion.controller.StylistServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>StylistServlet</servlet-name>
+        <url-pattern>/stylist</url-pattern>
+    </servlet-mapping>
     <!-- HomeServlet mapped to / handles root URL directly -->
 </web-app>

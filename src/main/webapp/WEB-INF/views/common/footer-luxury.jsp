@@ -4,7 +4,7 @@
         <%--============================================================footer-luxury.jsp New minimal luxury footer.
             Dependencies: Tailwind CDN + Font Awesome
             6.x============================================================--%>
-            <footer class="bg-white border-t border-slate-200">
+            <footer class="relative z-10 bg-white border-t border-slate-200">
                 <div
                     class="max-w-[1400px] mx-auto px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
 
@@ -15,12 +15,12 @@
                         </a>
 
                         <%-- Copyright --%>
-                            <div class="text-xs text-slate-500 tracking-wider text-center">
+                            <div class="text-xs text-slate-600 tracking-wider text-center">
                                 &copy; 2025 Aisthéa. All rights reserved.
                             </div>
 
                             <%-- Social links --%>
-                                <div class="flex gap-6 text-slate-400">
+                                <div class="flex gap-6 text-slate-500">
                                     <a class="hover:text-[#024acf] transition-colors transform hover:scale-110 duration-200"
                                         href="#" aria-label="Instagram">
                                         <i class="fa-brands fa-instagram text-xl"></i>

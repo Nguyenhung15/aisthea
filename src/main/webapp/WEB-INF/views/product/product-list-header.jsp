@@ -26,7 +26,7 @@
                                     class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                             </a>
                             <a class="text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
-                                href="${pageContext.request.contextPath}/product">
+                                href="${pageContext.request.contextPath}/stylist">
                                 Stylist
                                 <span
                                     class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>

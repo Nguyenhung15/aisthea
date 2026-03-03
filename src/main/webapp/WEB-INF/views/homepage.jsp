@@ -115,8 +115,6 @@
                                         stroke-width="1.5" />
                                     <path d="M125 110L150 115M125 120L145 125" stroke="#C8A97E" stroke-linecap="round"
                                         stroke-width="1.5" />
-                                    <text fill="#C8A97E" font-family="'Playfair Display', serif" font-size="14"
-                                        letter-spacing="4" text-anchor="middle" x="100" y="170">EST. 2024</text>
                                 </svg>
                             </div>
 
