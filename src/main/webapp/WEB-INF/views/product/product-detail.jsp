@@ -215,11 +215,6 @@
                                         <img id="mainImage" src="${primaryImgUrl}" alt="${product.name}"
                                             class="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.02]"
                                             onerror="this.src='${placeholderImg}'">
-                                        <div class="absolute top-6 left-6">
-                                            <span
-                                                class="bg-white/80 backdrop-blur-sm px-3 py-1 text-[10px] tracking-[0.2em] font-bold uppercase text-slate-800">Maison
-                                                Choice</span>
-                                        </div>
                                     </div>
 
                                     <div class="grid grid-cols-4 gap-4" id="thumbnail-container">
@@ -244,26 +239,48 @@
                                 <div class="lg:col-span-5 flex flex-col pt-4 lg:pt-8 lg:sticky lg:top-28 h-fit">
 
                                     <!-- Breadcrumb -->
-                                    <nav
-                                        class="flex items-center text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-8 font-bold">
-                                        <a class="hover:text-primary transition-colors"
-                                            href="${pageContext.request.contextPath}/home">Home</a>
-                                        <span class="mx-3 text-slate-300">/</span>
-                                        <a class="hover:text-primary transition-colors"
-                                            href="${pageContext.request.contextPath}/product?genderid=${not empty product.category ? product.category.genderid : '1'}">
-                                            <c:choose>
-                                                <c:when
-                                                    test="${not empty product.category and product.category.genderid == 1}">
-                                                    Men</c:when>
-                                                <c:when
-                                                    test="${not empty product.category and product.category.genderid == 2}">
-                                                    Women</c:when>
-                                                <c:otherwise>Collection</c:otherwise>
-                                            </c:choose>
-                                        </a>
-                                        <span class="mx-3 text-slate-300">/</span>
-                                        <span class="text-slate-800">${not empty product.category and not empty
-                                            product.category.name ? product.category.name : 'Category'}</span>
+                                    <nav aria-label="Breadcrumb"
+                                        class="flex items-center flex-wrap text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-8 font-bold gap-1">
+                                        <%-- Level 1: Home --%>
+                                            <a class="hover:text-primary transition-colors"
+                                                href="${pageContext.request.contextPath}/home">Home</a>
+                                            <span class="mx-2 text-slate-300">/</span>
+
+                                            <%-- Level 2: Gender (NAM / NỮ) --%>
+                                                <c:choose>
+                                                    <c:when test="${not empty genderLabel}">
+                                                        <a class="hover:text-primary transition-colors"
+                                                            href="${pageContext.request.contextPath}/product?genderid=${genderId}">${genderLabel}</a>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <a class="hover:text-primary transition-colors"
+                                                            href="${pageContext.request.contextPath}/product">Collection</a>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                                <span class="mx-2 text-slate-300">/</span>
+
+                                                <%-- Level 3: Parent Category (only when product belongs to a child
+                                                    category) --%>
+                                                    <c:if test="${not empty parentCategory}">
+                                                        <a class="hover:text-primary transition-colors"
+                                                            href="${pageContext.request.contextPath}/product?categoryId=${parentCategory.categoryid}">
+                                                            ${parentCategory.name}
+                                                        </a>
+                                                        <span class="mx-2 text-slate-300">/</span>
+                                                    </c:if>
+
+                                                    <%-- Level 4: Category of this product (clickable) --%>
+                                                        <c:if test="${not empty product.category}">
+                                                            <a class="hover:text-primary transition-colors"
+                                                                href="${pageContext.request.contextPath}/product?categoryId=${product.category.categoryid}">
+                                                                ${product.category.name}
+                                                            </a>
+                                                            <span class="mx-2 text-slate-300">/</span>
+                                                        </c:if>
+
+                                                        <%-- Level 5: Product Name (current, not clickable) --%>
+                                                            <span class="text-slate-800 truncate max-w-[180px]"
+                                                                title="${product.name}">${product.name}</span>
                                     </nav>
 
                                     <!-- Product Name -->
@@ -363,7 +380,7 @@
                                                     onclick="document.querySelector('input[name=action]').value='buy'"
                                                     disabled
                                                     class="w-full py-5 border border-slate-900 text-slate-900 text-[11px] font-extrabold tracking-[0.25em] uppercase hover:bg-slate-900 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-900 disabled:cursor-not-allowed">
-                                                    Buy It Now
+                                                    Buy Now
                                                 </button>
                                             </div>
 
@@ -727,7 +744,7 @@
                         </main>
 
                         <!-- Footer (shared with product-list page) -->
-                        <jsp:include page="/WEB-INF/views/product/product-list-footer.jsp" />
+                        <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
                         <!-- ======= SCRIPTS ======= -->
                         <script>

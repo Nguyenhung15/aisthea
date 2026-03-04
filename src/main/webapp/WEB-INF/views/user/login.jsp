@@ -549,8 +549,7 @@
                         </div>
 
 
-                        <input type="text" name="address" placeholder="Địa chỉ" />
-
+                        <input type="date" name="dob" title="Ngày sinh" />
 
                         <button type="submit">Đăng ký</button>
 

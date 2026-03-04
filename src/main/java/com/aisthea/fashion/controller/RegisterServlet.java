@@ -33,14 +33,14 @@ public class RegisterServlet extends HttpServlet {
             String password = request.getParameter("password");
             String gender = request.getParameter("gender");
             String phone = request.getParameter("phone");
-            String address = request.getParameter("address");
+            String dobStr = request.getParameter("dob");
 
             if (email == null || email.trim().isEmpty()
                     || password == null || password.trim().isEmpty()
                     || fullname == null || fullname.trim().isEmpty()) {
 
-                request.setAttribute("error", "Vui lòng nhập đầy đủ email, họ tên và mật khẩu.");
-                request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
+                request.setAttribute("registerError", "Vui lòng nhập đầy đủ email, họ tên và mật khẩu.");
+                request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
                 return;
             }
 
@@ -50,7 +50,15 @@ public class RegisterServlet extends HttpServlet {
             newUser.setPassword(password);
             newUser.setGender(gender);
             newUser.setPhone(phone);
-            newUser.setAddress(address);
+            newUser.setAddress(null);
+
+            if (dobStr != null && !dobStr.trim().isEmpty()) {
+                try {
+                    newUser.setDob(java.sql.Date.valueOf(dobStr.trim()));
+                } catch (IllegalArgumentException e) {
+                    newUser.setDob(null);
+                }
+            }
             // Avatar will be null by default - user can upload later
 
             String result = userService.registerUser(newUser);
@@ -80,27 +88,28 @@ public class RegisterServlet extends HttpServlet {
                     break;
 
                 case "EMAIL_EXISTS":
-                    request.setAttribute("error", "Đăng ký thất bại! Email này đã được sử dụng.");
-                    request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
+                    request.setAttribute("registerError", "Đăng ký thất bại! Email này đã được sử dụng.");
+                    request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
                     break;
 
                 case "USERNAME_EXISTS":
-                    request.setAttribute("error", "Đăng ký thất bại! Tên đăng nhập (email) này đã tồn tại.");
-                    request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
+                    request.setAttribute("registerError", "Đăng ký thất bại! Tên đăng nhập (email) này đã tồn tại.");
+                    request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
                     break;
 
                 case "DB_ERROR":
                 case "SYSTEM_ERROR":
                 default:
-                    request.setAttribute("error", "Đăng ký thất bại! Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.");
-                    request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
+                    request.setAttribute("registerError",
+                            "Đăng ký thất bại! Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.");
+                    request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
                     break;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
-            request.getRequestDispatcher("/WEB-INF/views/user/register.jsp").forward(request, response);
+            request.setAttribute("registerError", "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
+            request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
         }
     }
 }

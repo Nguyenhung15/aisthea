@@ -291,11 +291,11 @@
                                             <div class="space-y-2 md:col-span-2 lg:col-span-1">
                                                 <label
                                                     class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
-                                                    for="birthday">Ngày sinh</label>
+                                                    for="dob">Ngày sinh</label>
                                                 <div class="relative">
-                                                    <input name="birthday"
+                                                    <input name="dob"
                                                         class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium cursor-pointer"
-                                                        id="birthday" type="date" value="1999-01-01" />
+                                                        id="dob" type="date" value="${sessionScope.user.dob}" />
                                                     <span
                                                         class="material-symbols-outlined absolute right-4 top-3.5 pointer-events-none text-slate-500 text-[20px]">calendar_today</span>
                                                 </div>

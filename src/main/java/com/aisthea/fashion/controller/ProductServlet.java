@@ -50,6 +50,8 @@ public class ProductServlet extends HttpServlet {
                     deleteProduct(request, response);
                 case "view" ->
                     viewProductDetail(request, response);
+                case "quickview" ->
+                    viewProductQuickview(request, response);
                 case "manage" ->
                     manageProducts(request, response);
                 default ->
@@ -143,11 +145,10 @@ public class ProductServlet extends HttpServlet {
                 Category foundCategory = categoryService.findCategoryByIndexNameAndGender(categoryIndexParam, genderId);
                 if (foundCategory != null) {
                     request.setAttribute("displayCategory", foundCategory);
-                    // Set gender label for breadcrumb
                     request.setAttribute("genderLabel", genderId == 1 ? "NAM" : "NỮ");
                     request.setAttribute("genderId", genderId);
+                    request.setAttribute("pageTitle", foundCategory.getName());
                 } else {
-                    // Fallback: derive name from slug
                     request.setAttribute("displayCategoryName", categoryIndexParam.replace("_", " "));
                 }
             }
@@ -157,11 +158,22 @@ public class ProductServlet extends HttpServlet {
                 Category selectedCategory = categoryService.getCategoryById(categoryId);
                 request.setAttribute("displayCategory", selectedCategory);
 
-                // Set gender label for breadcrumb based on selected category's genderid
                 if (selectedCategory != null) {
                     int catGenderId = selectedCategory.getGenderid();
                     request.setAttribute("genderLabel", catGenderId == 1 ? "NAM" : "NỮ");
                     request.setAttribute("genderId", catGenderId);
+                    request.setAttribute("pageTitle", selectedCategory.getName());
+
+                    // If this is a CHILD category, also fetch the parent for the breadcrumb
+                    boolean isChildCategory = selectedCategory.getParentid() != null
+                            && !selectedCategory.getParentid().isBlank();
+                    if (isChildCategory) {
+                        Category parentCategory = categoryService
+                                .findCategoryByIndexNameAndGender(selectedCategory.getParentid(), catGenderId);
+                        if (parentCategory != null) {
+                            request.setAttribute("parentCategory", parentCategory);
+                        }
+                    }
                 }
 
                 List<Product> allProducts = productService.getAllProducts();
@@ -171,11 +183,8 @@ public class ProductServlet extends HttpServlet {
                         && (selectedCategory.getParentid() == null || selectedCategory.getParentid().isBlank());
 
                 if (isParentCategory && selectedCategory.getIndexName() != null) {
-                    // Parent selected: show products that belong to this parent OR any of its
-                    // children
                     final String parentIndexName = selectedCategory.getIndexName();
                     final int genderId = selectedCategory.getGenderid();
-                    // Collect child category IDs for this parent+gender
                     List<Category> childCategories = categoryService.getChildCategoriesByGender(parentIndexName,
                             genderId);
                     final java.util.Set<Integer> childCategoryIds = new java.util.HashSet<>();
@@ -194,9 +203,27 @@ public class ProductServlet extends HttpServlet {
                             .collect(Collectors.toList());
                 }
             }
+            // Only genderid given (clicking NAM / NỮ from navbar)
+            else if (genderIdParam != null && !genderIdParam.isBlank()) {
+                int genderId = Integer.parseInt(genderIdParam);
+                String genderLbl = genderId == 1 ? "NAM" : "NỮ";
+                request.setAttribute("genderLabel", genderLbl);
+                request.setAttribute("genderId", genderId);
+                request.setAttribute("pageTitle", genderId == 1 ? "BST NAM" : "BST NỮ");
+                // Filter all products by gender via their category
+                List<Category> genderCategories = categoryService.getParentCategoriesByGender(genderId);
+                genderCategories.addAll(categoryService.getChildCategoriesByGender(null, genderId) != null
+                        ? new java.util.ArrayList<>()
+                        : new java.util.ArrayList<>());
+                // Simpler: get all products, filter by category.genderid
+                list = productService.getAllProducts().stream()
+                        .filter(p -> p.getCategory() != null && p.getCategory().getGenderid() == genderId)
+                        .collect(Collectors.toList());
+            }
             // No filter - show all
             else {
                 list = productService.getAllProducts();
+                request.setAttribute("pageTitle", "BỘ SƯU TẬP");
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error loading products", e);
@@ -381,10 +408,105 @@ public class ProductServlet extends HttpServlet {
     private void viewProductDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
-        request.setAttribute("product", productService.getProductById(id));
+        Product product = productService.getProductById(id);
+
+        request.setAttribute("product", product);
         request.setAttribute("colorSizes", productService.getColorSizesByProductId(id));
         request.setAttribute("images", productService.getImagesByProductId(id));
+
+        // Build breadcrumb data (same pattern as product list page)
+        if (product != null && product.getCategory() != null) {
+            Category category = product.getCategory();
+            int genderId = category.getGenderid();
+            request.setAttribute("genderLabel", genderId == 1 ? "NAM" : "NỮ");
+            request.setAttribute("genderId", genderId);
+
+            // If this product's category is a child, fetch its parent too
+            if (category.getParentid() != null && !category.getParentid().isBlank()) {
+                Category parentCat = categoryService.findCategoryByIndexNameAndGender(
+                        category.getParentid(), genderId);
+                if (parentCat != null) {
+                    request.setAttribute("parentCategory", parentCat);
+                }
+            }
+        }
+
         request.getRequestDispatcher("/WEB-INF/views/product/product-detail.jsp").forward(request, response);
+    }
+
+    /**
+     * Returns product data as JSON for the Quick Add to Cart modal.
+     * Endpoint: GET /product?action=quickview&id=N
+     * Expected by fetch() with X-Requested-With: XMLHttpRequest header.
+     */
+    private void viewProductQuickview(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        java.io.PrintWriter out = response.getWriter();
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            Product p = productService.getProductById(id);
+            if (p == null) {
+                out.print("{\"error\":\"Product not found\"}");
+                return;
+            }
+            List<ProductColorSize> colorSizes = productService.getColorSizesByProductId(id);
+            List<com.aisthea.fashion.model.ProductImage> images = productService.getImagesByProductId(id);
+
+            StringBuilder json = new StringBuilder();
+            json.append("{");
+            json.append("\"productId\":").append(p.getProductId()).append(",");
+            json.append("\"name\":").append(jsonStr(p.getName())).append(",");
+            json.append("\"brand\":").append(jsonStr(p.getBrand())).append(",");
+            json.append("\"price\":").append(p.getPrice() != null ? p.getPrice().toPlainString() : "0").append(",");
+            json.append("\"discount\":").append(p.getDiscount() != null ? p.getDiscount().toPlainString() : "0")
+                    .append(",");
+            json.append("\"bestseller\":").append(p.isBestseller()).append(",");
+            // images array
+            json.append("\"images\":[");
+            if (images != null) {
+                for (int i = 0; i < images.size(); i++) {
+                    com.aisthea.fashion.model.ProductImage img = images.get(i);
+                    if (i > 0)
+                        json.append(",");
+                    json.append("{");
+                    json.append("\"imageUrl\":").append(jsonStr(img.getImageUrl())).append(",");
+                    json.append("\"color\":").append(jsonStr(img.getColor())).append(",");
+                    json.append("\"isPrimary\":").append(img.isPrimary());
+                    json.append("}");
+                }
+            }
+            json.append("],");
+            // colorSizes array
+            json.append("\"colorSizes\":[");
+            if (colorSizes != null) {
+                for (int i = 0; i < colorSizes.size(); i++) {
+                    ProductColorSize cs = colorSizes.get(i);
+                    if (i > 0)
+                        json.append(",");
+                    json.append("{");
+                    json.append("\"productColorSizeId\":").append(cs.getProductColorSizeId()).append(",");
+                    json.append("\"color\":").append(jsonStr(cs.getColor())).append(",");
+                    json.append("\"size\":").append(jsonStr(cs.getSize())).append(",");
+                    json.append("\"stock\":").append(cs.getStock());
+                    json.append("}");
+                }
+            }
+            json.append("]}");
+            out.print(json.toString());
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "quickview error", e);
+            out.print("{\"error\":\"" + e.getMessage() + "\"}");
+        } finally {
+            out.flush();
+        }
+    }
+
+    /** Escape a Java String to a JSON string literal (with quotes). */
+    private static String jsonStr(String s) {
+        if (s == null)
+            return "null";
+        return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "") + "\"";
     }
 
     private void deleteProduct(HttpServletRequest request, HttpServletResponse response)

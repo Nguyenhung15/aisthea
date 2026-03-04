@@ -1,5 +1,7 @@
 package com.aisthea.fashion.model;
 
+import java.sql.Date;
+
 public class User {
 
     private int userId;
@@ -13,6 +15,7 @@ public class User {
     private String role;
     private boolean active;
     private String avatar;
+    private Date dob;
 
     public User() {
     }
@@ -111,5 +114,13 @@ public class User {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
+    }
+
+    public Date getDob() {
+        return dob;
+    }
+
+    public void setDob(Date dob) {
+        this.dob = dob;
     }
 }
