@@ -1,0 +1,25 @@
+/* ==========================================================================
+   AISTHEA - Main Stylesheet
+   Import all CSS files in correct order
+   ========================================================================== */
+
+/* 1. Reset & Base Styles */
+@import url('common/reset.css');
+@import url('common/variables.css');
+
+/* 2. Layout & Utilities */
+@import url('common/layout.css');
+
+/* 3. Components (if created later) */
+/* @import url('components/buttons.css'); */
+/* @import url('components/forms.css'); */
+/* @import url('components/cards.css'); */
+
+/* 4. Page-specific styles */
+@import url('pages/main_layout.css');
+@import url('pages/homepage.css');
+
+/* ==========================================================================
+   Usage in JSP:
+   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main.css">
+   ========================================================================== */

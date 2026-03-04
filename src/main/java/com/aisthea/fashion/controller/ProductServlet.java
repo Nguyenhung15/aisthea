@@ -1,0 +1,488 @@
+package com.aisthea.fashion.controller;
+
+import com.aisthea.fashion.model.*;
+import com.aisthea.fashion.service.CategoryService;
+import com.aisthea.fashion.service.ICategoryService;
+import com.aisthea.fashion.service.IProductService;
+import com.aisthea.fashion.service.ProductService;
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jakarta.servlet.annotation.WebServlet;
+import java.util.stream.Collectors;
+
+@WebServlet(name = "ProductServlet", urlPatterns = { "/product" })
+public class ProductServlet extends HttpServlet {
+
+    private static final Logger logger = Logger.getLogger(ProductServlet.class.getName());
+    private IProductService productService;
+    private ICategoryService categoryService;
+
+    @Override
+    public void init() {
+        this.productService = new ProductService();
+        this.categoryService = new CategoryService();
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        request.setCharacterEncoding("UTF-8");
+        String action = request.getParameter("action");
+        if (action == null) {
+            action = "list";
+        }
+
+        try {
+            switch (action) {
+                case "new" ->
+                    showNewForm(request, response);
+                case "edit" ->
+                    showEditForm(request, response);
+                case "delete" ->
+                    deleteProduct(request, response);
+                case "view" ->
+                    viewProductDetail(request, response);
+                case "manage" ->
+                    manageProducts(request, response);
+                default ->
+                    listProducts(request, response);
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Lỗi doGet ProductServlet", e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Đã xảy ra lỗi trên server: " + e.getMessage());
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        request.setCharacterEncoding("UTF-8");
+        String action = request.getParameter("action");
+        String jspPage = "/WEB-INF/views/admin/product/edit_product.jsp";
+        Product productForRollback = null;
+
+        try {
+            switch (action) {
+                case "insert":
+                    productForRollback = extractProductFromRequest(request);
+                    if (productService.addProduct(productForRollback)) {
+                        response.sendRedirect(request.getContextPath() + "/product?action=manage");
+                    } else {
+                        throw new Exception("productService.addProduct trả về false.");
+                    }
+                    break;
+
+                case "update":
+                    int id = Integer.parseInt(request.getParameter("id"));
+                    productForRollback = extractProductFromRequest(request);
+                    productForRollback.setProductId(id);
+
+                    if (productService.updateProduct(productForRollback)) {
+                        response.sendRedirect(request.getContextPath() + "/product?action=manage");
+                    } else {
+                        throw new Exception("productService.updateProduct trả về false (Lỗi logic/DAO).");
+                    }
+                    break;
+
+                default:
+                    response.sendRedirect(request.getContextPath() + "/product?action=manage");
+                    break;
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Lỗi doPost ProductServlet (action=" + action + ")", e);
+
+            request.setAttribute("error", "Lỗi: " + e.getMessage());
+            request.setAttribute("product", productForRollback);
+            request.setAttribute("allCategories", categoryService.getAllCategories());
+
+            if (productForRollback != null && productForRollback.getCategory() != null) {
+                String parentIndexName = productForRollback.getCategory().getParentid();
+                if (parentIndexName != null && !parentIndexName.isEmpty()) {
+                    Category parentCategory = categoryService.findCategoryByIndexNameAndGender(
+                            parentIndexName,
+                            productForRollback.getCategory().getGenderid());
+                    request.setAttribute("parentCategory", parentCategory);
+                }
+            }
+
+            request.getRequestDispatcher(jspPage).forward(request, response);
+        }
+    }
+
+    private void listProducts(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // Get filter parameters
+        String categoryIdParam = request.getParameter("categoryId");
+        String categoryIndexParam = request.getParameter("categoryIndex");
+        String genderIdParam = request.getParameter("genderid");
+        String maxPriceParam = request.getParameter("maxPrice");
+        String sortParam = request.getParameter("sort");
+        String colorParam = request.getParameter("color");
+        String sizeParam = request.getParameter("size");
+
+        List<Product> list;
+
+        try {
+            // If categoryIndex + genderid from UrlRewriteFilter (e.g. /men/ao_thun)
+            if (categoryIndexParam != null && !categoryIndexParam.isBlank()
+                    && genderIdParam != null && !genderIdParam.isBlank()) {
+                int genderId = Integer.parseInt(genderIdParam);
+                list = productService.getProductsByParentCategory(categoryIndexParam, genderId);
+                // Look up and set the real category name from DB for proper display
+                Category foundCategory = categoryService.findCategoryByIndexNameAndGender(categoryIndexParam, genderId);
+                if (foundCategory != null) {
+                    request.setAttribute("displayCategory", foundCategory);
+                    // Set gender label for breadcrumb
+                    request.setAttribute("genderLabel", genderId == 1 ? "NAM" : "NỮ");
+                    request.setAttribute("genderId", genderId);
+                } else {
+                    // Fallback: derive name from slug
+                    request.setAttribute("displayCategoryName", categoryIndexParam.replace("_", " "));
+                }
+            }
+            // If categoryId filter (from form submission)
+            else if (categoryIdParam != null && !categoryIdParam.isBlank()) {
+                int categoryId = Integer.parseInt(categoryIdParam);
+                Category selectedCategory = categoryService.getCategoryById(categoryId);
+                request.setAttribute("displayCategory", selectedCategory);
+
+                // Set gender label for breadcrumb based on selected category's genderid
+                if (selectedCategory != null) {
+                    int catGenderId = selectedCategory.getGenderid();
+                    request.setAttribute("genderLabel", catGenderId == 1 ? "NAM" : "NỮ");
+                    request.setAttribute("genderId", catGenderId);
+                }
+
+                List<Product> allProducts = productService.getAllProducts();
+
+                // Determine if this is a parent category (parentid is null or empty)
+                boolean isParentCategory = selectedCategory != null
+                        && (selectedCategory.getParentid() == null || selectedCategory.getParentid().isBlank());
+
+                if (isParentCategory && selectedCategory.getIndexName() != null) {
+                    // Parent selected: show products that belong to this parent OR any of its
+                    // children
+                    final String parentIndexName = selectedCategory.getIndexName();
+                    final int genderId = selectedCategory.getGenderid();
+                    // Collect child category IDs for this parent+gender
+                    List<Category> childCategories = categoryService.getChildCategoriesByGender(parentIndexName,
+                            genderId);
+                    final java.util.Set<Integer> childCategoryIds = new java.util.HashSet<>();
+                    for (Category child : childCategories) {
+                        childCategoryIds.add(child.getCategoryid());
+                    }
+                    list = allProducts.stream()
+                            .filter(p -> p.getCategory() != null
+                                    && (p.getCategory().getCategoryid() == categoryId
+                                            || childCategoryIds.contains(p.getCategory().getCategoryid())))
+                            .collect(Collectors.toList());
+                } else {
+                    // Child (leaf) category selected: show only its products
+                    list = allProducts.stream()
+                            .filter(p -> p.getCategory() != null && p.getCategory().getCategoryid() == categoryId)
+                            .collect(Collectors.toList());
+                }
+            }
+            // No filter - show all
+            else {
+                list = productService.getAllProducts();
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error loading products", e);
+            list = new ArrayList<>();
+        }
+
+        // Apply price filter (only if maxPrice is explicitly provided AND is NOT the
+        // default max)
+        // The slider max is 500,000,000 — treat that as "no price filter"
+        if (maxPriceParam != null && !maxPriceParam.isBlank()) {
+            try {
+                BigDecimal maxPrice = new BigDecimal(maxPriceParam);
+                BigDecimal sliderMax = new BigDecimal("500000000");
+                // Only apply filter if user actually lowered the price from the maximum
+                if (maxPrice.compareTo(sliderMax) < 0) {
+                    list = list.stream()
+                            .filter(p -> p.getPrice() != null && p.getPrice().compareTo(maxPrice) <= 0)
+                            .collect(Collectors.toList());
+                }
+            } catch (NumberFormatException e) {
+                logger.warning("Invalid maxPrice value: " + maxPriceParam);
+            }
+        }
+
+        // Apply color filter (check product images or colorSizes)
+        if (colorParam != null && !colorParam.isBlank()) {
+            final String colorFilter = colorParam.trim().toLowerCase();
+            list = list.stream()
+                    .filter(p -> {
+                        // Check in images
+                        if (p.getImages() != null) {
+                            for (var img : p.getImages()) {
+                                if (img.getColor() != null
+                                        && img.getColor().trim().toLowerCase().contains(colorFilter)) {
+                                    return true;
+                                }
+                            }
+                        }
+                        // Check in colorSizes
+                        if (p.getColorSizes() != null) {
+                            for (var cs : p.getColorSizes()) {
+                                if (cs.getColor() != null && cs.getColor().trim().toLowerCase().contains(colorFilter)) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Apply size filter
+        if (sizeParam != null && !sizeParam.isBlank()) {
+            final String sizeFilter = sizeParam.trim().toUpperCase();
+            list = list.stream()
+                    .filter(p -> {
+                        if (p.getColorSizes() != null) {
+                            for (var cs : p.getColorSizes()) {
+                                if (cs.getSize() != null && cs.getSize().trim().toUpperCase().equals(sizeFilter)
+                                        && cs.getStock() > 0) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Apply sorting
+        // Apply sorting
+        if (sortParam != null) {
+            switch (sortParam) {
+                case "price_asc":
+                    list.sort((p1, p2) -> p1.getPrice().compareTo(p2.getPrice()));
+                    break;
+                case "price_desc":
+                    list.sort((p1, p2) -> p2.getPrice().compareTo(p1.getPrice()));
+                    break;
+                case "newest":
+                    list.sort((p1, p2) -> Integer.compare(p2.getProductId(), p1.getProductId()));
+                    break;
+                default: // featured
+                    break;
+            }
+        }
+
+        // Pagination
+        int page = 1;
+        int recordsPerPage = 12; // 12 items per page
+        if (request.getParameter("page") != null && !request.getParameter("page").isBlank()) {
+            try {
+                page = Integer.parseInt(request.getParameter("page"));
+            } catch (Exception e) {
+                page = 1;
+            }
+        }
+
+        int totalRecords = list.size();
+        int totalPages = (int) Math.ceil(totalRecords * 1.0 / recordsPerPage);
+        int start = (page - 1) * recordsPerPage;
+        int end = Math.min(start + recordsPerPage, totalRecords);
+
+        List<Product> listForPage;
+        if (start < 0 || start >= totalRecords) {
+            // handle empty list or out of bounds (but if list is empty, totalRecords=0,
+            // start=0, end=0 -> subList(0,0) is fine)
+            if (totalRecords == 0)
+                listForPage = new ArrayList<>();
+            else
+                listForPage = new ArrayList<>(); // weird out of bound
+        } else {
+            listForPage = new ArrayList<>(list.subList(start, end)); // Use ArrayList copy to avoid serialization issues
+                                                                     // with subList
+        }
+
+        // Handle empty list case correctly
+        if (totalRecords > 0 && start < totalRecords) {
+            listForPage = new ArrayList<>(list.subList(start, end));
+        } else {
+            listForPage = new ArrayList<>();
+        }
+
+        // Set attributes
+        request.setAttribute("productList", listForPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalRecords", totalRecords);
+        request.setAttribute("categories", categoryService.getAllCategories());
+        request.setAttribute("parentCategoriesMale", categoryService.getParentCategoriesByGender(1));
+        request.setAttribute("parentCategoriesFemale", categoryService.getParentCategoriesByGender(2));
+        request.getRequestDispatcher("/WEB-INF/views/product/product-list-page.jsp").forward(request, response);
+    }
+
+    private void manageProducts(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException {
+
+        String searchName = request.getParameter("searchName");
+
+        List<Product> list = productService.getAllProducts();
+
+        if (searchName != null && !searchName.trim().isEmpty()) {
+            String searchLower = searchName.trim().toLowerCase();
+
+            list = list.stream()
+                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(searchLower))
+                    .collect(Collectors.toList());
+        }
+
+        request.setAttribute("productList", list);
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/admin/product/manage_products.jsp");
+        dispatcher.forward(request, response);
+    }
+
+    private void showNewForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setAttribute("allCategories", categoryService.getAllCategories());
+        request.getRequestDispatcher("/WEB-INF/views/admin/product/edit_product.jsp").forward(request, response);
+    }
+
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        Product product = productService.getProductById(id);
+
+        if (product != null && product.getCategory() != null) {
+            Category childCategory = product.getCategory();
+            String parentIndexName = childCategory.getParentid();
+            if (parentIndexName != null && !parentIndexName.isEmpty()) {
+                Category parentCategory = categoryService.findCategoryByIndexNameAndGender(
+                        parentIndexName,
+                        childCategory.getGenderid());
+                request.setAttribute("parentCategory", parentCategory);
+            }
+        }
+
+        request.setAttribute("product", product);
+        request.setAttribute("allCategories", categoryService.getAllCategories());
+        request.getRequestDispatcher("/WEB-INF/views/admin/product/edit_product.jsp").forward(request, response);
+    }
+
+    private void viewProductDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        request.setAttribute("product", productService.getProductById(id));
+        request.setAttribute("colorSizes", productService.getColorSizesByProductId(id));
+        request.setAttribute("images", productService.getImagesByProductId(id));
+        request.getRequestDispatcher("/WEB-INF/views/product/product-detail.jsp").forward(request, response);
+    }
+
+    private void deleteProduct(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        productService.deleteProduct(id);
+        response.sendRedirect(request.getContextPath() + "/product?action=manage");
+    }
+
+    private Product extractProductFromRequest(HttpServletRequest request)
+            throws IOException, ServletException, NumberFormatException {
+
+        Product product = new Product();
+
+        product.setName(request.getParameter("name"));
+        product.setDescription(request.getParameter("description"));
+        product.setBrand(request.getParameter("brand"));
+        product.setPrice(parseBigDecimal(request.getParameter("price")));
+        product.setDiscount(parseBigDecimal(request.getParameter("discount")));
+
+        String categoryIdParam = request.getParameter("categoryid");
+        if (categoryIdParam == null || categoryIdParam.isBlank()) {
+            throw new ServletException("Danh mục con (categoryid) không được rỗng. Vui lòng chọn lại danh mục.");
+        }
+
+        int categoryId;
+        try {
+            categoryId = Integer.parseInt(categoryIdParam);
+        } catch (NumberFormatException e) {
+            throw new ServletException("Lỗi: categoryid không phải là số. Giá trị nhận được: " + categoryIdParam);
+        }
+
+        product.setCategory(categoryService.getCategoryById(categoryId));
+
+        List<ProductColorSize> colorSizeList = new ArrayList<>();
+        String[] colors = request.getParameterValues("stock_color");
+        String[] sizes = request.getParameterValues("stock_size");
+        String[] stocks = request.getParameterValues("stock_stock");
+
+        if (colors != null && sizes != null && stocks != null) {
+            int rowCount = Math.min(colors.length, Math.min(sizes.length, stocks.length));
+            for (int i = 0; i < rowCount; i++) {
+                String color = colors[i];
+                String size = sizes[i];
+                String stockStr = stocks[i];
+
+                if (color != null && !color.isBlank()
+                        && size != null && !size.isBlank()
+                        && stockStr != null && !stockStr.isBlank()) {
+
+                    ProductColorSize pcs = new ProductColorSize();
+                    pcs.setColor(color);
+                    pcs.setSize(size);
+                    try {
+                        pcs.setStock(Integer.parseInt(stockStr));
+                    } catch (NumberFormatException e) {
+                        pcs.setStock(0);
+                    }
+                    pcs.setProduct(product);
+                    colorSizeList.add(pcs);
+                }
+            }
+        }
+        product.setColorSizes(colorSizeList);
+
+        List<ProductImage> imageList = new ArrayList<>();
+        String[] urls = request.getParameterValues("image_url");
+        String[] imgColors = request.getParameterValues("image_color");
+        String primaryImageIndex = request.getParameter("image_isprimary");
+
+        if (urls != null && imgColors != null) {
+            int imageRowCount = Math.min(urls.length, imgColors.length);
+
+            for (int i = 0; i < imageRowCount; i++) {
+                String url = urls[i];
+                if (url != null && !url.isBlank()) {
+                    ProductImage img = new ProductImage();
+                    img.setImageUrl(url);
+                    img.setColor(imgColors[i]);
+                    img.setPrimary(String.valueOf(i).equals(primaryImageIndex));
+                    img.setProduct(product);
+                    imageList.add(img);
+                }
+            }
+        }
+        product.setImages(imageList);
+
+        return product;
+    }
+
+    private BigDecimal parseBigDecimal(String value) {
+        try {
+            if (value == null || value.isBlank()) {
+                return BigDecimal.ZERO;
+            }
+            return new BigDecimal(value);
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+}
