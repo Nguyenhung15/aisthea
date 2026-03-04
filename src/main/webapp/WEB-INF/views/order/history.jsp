@@ -347,10 +347,19 @@
                                                                         maxFractionDigits="0" />
                                                                 </p>
                                                             </div>
-                                                            <a href="${pageContext.request.contextPath}/order?action=view&id=${order.orderid}"
-                                                                class="px-5 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 hover:text-primary hover:border-primary/30 transition-all duration-300">
-                                                                Xem chi tiết
-                                                            </a>
+                                                            <div class="flex items-center gap-3">
+                                                                <c:if test="${order.status eq 'Completed'}">
+                                                                    <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
+                                                                        class="px-5 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-600 transition-all duration-300 flex items-center gap-1.5">
+                                                                        <i class="fa-regular fa-star text-xs"></i>
+                                                                        Đánh giá
+                                                                    </a>
+                                                                </c:if>
+                                                                <a href="${pageContext.request.contextPath}/order?action=view&id=${order.orderid}"
+                                                                    class="px-5 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 hover:text-primary hover:border-primary/30 transition-all duration-300">
+                                                                    Xem chi tiết
+                                                                </a>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </c:forEach>

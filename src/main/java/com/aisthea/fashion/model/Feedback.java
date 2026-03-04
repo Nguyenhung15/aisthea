@@ -9,6 +9,7 @@ public class Feedback {
     private int productid;
     private int rating;
     private String comment;
+    private String username;
     private Date createdat;
     private Date updatedat;
 
@@ -16,7 +17,8 @@ public class Feedback {
     public Feedback() {
     }
 
-    public Feedback(int feedbackid, int userid, int productid, int rating, String comment, Date createdat, Date updatedat) {
+    public Feedback(int feedbackid, int userid, int productid, int rating, String comment, Date createdat,
+            Date updatedat) {
         this.feedbackid = feedbackid;
         this.userid = userid;
         this.productid = productid;
@@ -65,6 +67,14 @@ public class Feedback {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public Date getCreatedat() {

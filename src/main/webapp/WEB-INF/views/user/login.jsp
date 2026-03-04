@@ -156,13 +156,13 @@
 
 
                 .container {
-                    background: rgba(255, 255, 255, 0.9);
-                    /* Readability returned while keeping slight transparency */
-                    backdrop-filter: blur(45px);
-                    -webkit-backdrop-filter: blur(45px);
-                    border: 1px solid rgba(255, 255, 255, 0.7);
+                    background: rgba(255, 255, 255, 0.15);
+                    /* High transparency matching profile */
+                    backdrop-filter: blur(15px);
+                    -webkit-backdrop-filter: blur(15px);
+                    border: 1px solid rgba(255, 255, 255, 0.35);
                     border-radius: 30px;
-                    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.12);
+                    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
                     position: relative;
                     overflow: hidden;
                     width: 900px;
@@ -565,6 +565,7 @@
                 <!-- LOGIN FORM -->
                 <div class="form-container sign-in-container">
                     <form action="${pageContext.request.contextPath}/login" method="post">
+                        <input type="hidden" name="returnUrl" value="${returnUrl}">
                         <h2>Đăng Nhập</h2>
 
 
@@ -597,8 +598,9 @@
                         <c:if test="${not empty error}">
                             <div class="error">${error}</div>
                         </c:if>
-                        <c:if test="${not empty param.success or not empty success}">
-                            <div style="color: #009933; margin-top: 15px; font-weight: 600;">${success} ${param.success}
+                        <c:if test="${not empty param.success or not empty success or not empty message}">
+                            <div style="color: #009933; margin-top: 15px; font-weight: 600;">
+                                ${success} ${param.success} ${message}
                             </div>
                         </c:if>
                     </form>
@@ -715,16 +717,18 @@
                     passwordMsg.textContent = password.value.length < 8 && password.value.length > 0 ? 'Mật khẩu phải có ít nhất 8 ký tự.' : '';
                 });
 
-
                 confirmPassword.addEventListener('input', () => {
                     confirmMsg.textContent = confirmPassword.value !== password.value && confirmPassword.value.length > 0 ? 'Mật khẩu không khớp.' : '';
                 });
 
+                // Check gender
+                gender.addEventListener('change', () => {
+                    genderMsg.textContent = gender.value === '' ? 'Vui lòng chọn giới tính.' : '';
+                });
 
                 // Validate before submit
                 form.addEventListener('submit', (e) => {
                     let hasError = false;
-
 
                     if (emailMsg.textContent !== '' || phoneMsg.textContent !== '') {
                         hasError = true;
@@ -741,7 +745,6 @@
                         genderMsg.textContent = 'Vui lòng chọn giới tính.';
                         hasError = true;
                     }
-
 
                     if (hasError) {
                         e.preventDefault();

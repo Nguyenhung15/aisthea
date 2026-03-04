@@ -146,6 +146,13 @@
                                                     </button>
                                                 </c:if>
 
+                                                <c:if test="${order.status == 'Completed'}">
+                                                    <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
+                                                        class="block w-full text-center bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition duration-300 mt-6">
+                                                        <i class="fa-regular fa-star mr-2"></i> Đánh giá sản phẩm
+                                                    </a>
+                                                </c:if>
+
                                                 <a href="${pageContext.request.contextPath}/order?action=history"
                                                     class="block w-full text-center bg-gray-200 text-gray-800 font-semibold px-6 py-3 rounded-lg hover:bg-gray-300 transition duration-300 mt-6">
                                                     <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại Lịch sử

@@ -418,33 +418,66 @@
 
                             function getColorHex(name) {
                                 const map = {
-                                    "navy": "#000080", "white": "#ffffff", "black": "#0c0c0c", "charcoal": "#333333",
-                                    "cream": "#f5f5dc", "cerulean": "#007ba7", "brown": "#5d4037", "beige": "#d4be8d",
-                                    "trắng": "#ffffff", "đen": "#0c0c0c", "xanh": "#0047ab"
+                                    // English
+                                    "white": "#ffffff", "black": "#0c0c0c", "red": "#e53e3e",
+                                    "blue": "#0047ab", "navy": "#000080", "cerulean": "#007ba7",
+                                    "sky": "#87ceeb", "green": "#2d7a4f", "olive": "#808000",
+                                    "yellow": "#f6d55c", "orange": "#f97316", "pink": "#f472b6",
+                                    "purple": "#7c3aed", "violet": "#8b5cf6", "lavender": "#c4b5fd",
+                                    "brown": "#5d4037", "beige": "#d4be8d", "cream": "#f5f5dc",
+                                    "ivory": "#fffff0", "grey": "#9e9e9e", "gray": "#9e9e9e",
+                                    "charcoal": "#333333", "silver": "#c0c0c0", "gold": "#ffd700",
+                                    "rose": "#f43f5e", "coral": "#ff6b6b", "teal": "#008080",
+                                    "mint": "#98ff98", "lime": "#32cd32", "khaki": "#c3b091",
+                                    "camel": "#c19a6b", "sand": "#c2b280", "tan": "#d2b48c",
+                                    "burgundy": "#800020", "maroon": "#800000", "wine": "#722f37",
+                                    "cobalt": "#0047ab", "indigo": "#4b0082",
+                                    // Vietnamese
+                                    "trắng": "#ffffff", "đen": "#0c0c0c",
+                                    "đỏ": "#e53e3e", "đỏ đậm": "#9b1c1c", "đỏ nhạt": "#fca5a5",
+                                    "xanh": "#0047ab", "xanh dương": "#0047ab", "xanh lam": "#0047ab",
+                                    "xanh lá": "#2d7a4f", "xanh lá cây": "#2d7a4f",
+                                    "xanh navy": "#000080", "xanh đậm": "#1e3a5f",
+                                    "xanh nhạt": "#87ceeb", "xanh ngọc": "#008080",
+                                    "vàng": "#f6d55c", "vàng đồng": "#b8860b", "vàng kim": "#ffd700",
+                                    "vàng be": "#d4be8d", "vàng nhạt": "#fffacd",
+                                    "cam": "#f97316", "cam đất": "#c2410c",
+                                    "hồng": "#f472b6", "hồng đậm": "#ec4899", "hồng nhạt": "#fce7f3",
+                                    "tím": "#7c3aed", "tím đậm": "#4c1d95", "tím nhạt": "#c4b5fd",
+                                    "nâu": "#5d4037", "nâu đất": "#78350f", "nâu nhạt": "#d4be8d",
+                                    "be": "#d4be8d", "kem": "#f5f5dc",
+                                    "xám": "#9e9e9e", "xám đậm": "#4b5563", "xám nhạt": "#e5e7eb",
+                                    "bạc": "#c0c0c0", "rêu": "#808000", "mận": "#722f37"
                                 };
-                                return map[name.toLowerCase()] || name;
+                                const key = name.toLowerCase().trim();
+                                if (map[key]) return map[key];
+                                // Fallback: generate a consistent hue from the name string
+                                let hash = 0;
+                                for (let i = 0; i < key.length; i++) hash = key.charCodeAt(i) + ((hash << 5) - hash);
+                                const h = Math.abs(hash) % 360;
+                                return 'hsl(' + h + ', 55%, 48%)';
                             }
 
                             function renderColors() {
                                 const colors = [...new Set(colorSizeData.map(d => d.color))].filter(c => c !== '');
-                                colorOptions.innerHTML = colors.map(c => `
-                <label class="cursor-pointer group relative">
-                    <input type="radio" name="color" value="${c}" class="peer sr-only" onchange="selectColor('${c}')">
-                    <div class="w-10 h-10 rounded-full border border-slate-200 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-primary transition-all group-hover:scale-110" 
-                         style="background-color: ${getColorHex(c)}"></div>
-                    <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-widest text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">${c}</span>
-                </label>
-            `).join('');
+                                colorOptions.innerHTML = colors.map(function (c) {
+                                    return '<label class="cursor-pointer group relative">'
+                                        + '<input type="radio" name="color" value="' + c + '" class="peer sr-only" onchange="selectColor(\'' + c + '\')">'
+                                        + '<div class="w-10 h-10 rounded-full border border-slate-200 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-primary transition-all group-hover:scale-110" '
+                                        + 'style="background-color: ' + getColorHex(c) + '"></div>'
+                                        + '<span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-widest text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">' + c + '</span>'
+                                        + '</label>';
+                                }).join('');
                             }
 
                             function renderSizes() {
                                 const sizes = [...new Set(colorSizeData.map(d => d.size))].filter(s => s !== '');
-                                sizeOptions.innerHTML = sizes.map(s => `
-                <label class="cursor-pointer">
-                    <input type="radio" name="size" value="${s}" class="peer sr-only" onchange="selectSize('${s}')">
-                    <div class="h-12 border border-slate-200 flex items-center justify-center text-[11px] font-extrabold text-slate-800 hover:border-primary peer-checked:bg-slate-900 peer-checked:text-white peer-checked:border-slate-900 transition-all uppercase">${s}</div>
-                </label>
-            `).join('');
+                                sizeOptions.innerHTML = sizes.map(function (s) {
+                                    return '<label class="cursor-pointer">'
+                                        + '<input type="radio" name="size" value="' + s + '" class="peer sr-only" onchange="selectSize(\'' + s + '\')">'
+                                        + '<div class="h-12 border border-slate-200 flex items-center justify-center text-[11px] font-extrabold text-slate-800 hover:border-primary peer-checked:bg-slate-900 peer-checked:text-white peer-checked:border-slate-900 transition-all uppercase">' + s + '</div>'
+                                        + '</label>';
+                                }).join('');
                             }
 
                             window.selectColor = function (c) {
