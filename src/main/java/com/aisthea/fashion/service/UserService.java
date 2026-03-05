@@ -43,11 +43,12 @@ public class UserService implements IUserService {
             userDAO.insertUser(user);
             return "SUCCESS";
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error inserting user into DB", e);
-            return "DB_ERROR";
+            LOGGER.log(Level.SEVERE, "Error inserting user into DB: SQLState=" + e.getSQLState() + ", ErrorCode="
+                    + e.getErrorCode() + ", Msg=" + e.getMessage(), e);
+            return "DB_ERROR: " + e.getMessage();
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "Hashing or other error", ex);
-            return "SYSTEM_ERROR";
+            return "SYSTEM_ERROR: " + ex.getMessage();
         }
     }
 

@@ -4,6 +4,7 @@ import com.aisthea.fashion.dao.IOrderDAO;
 import com.aisthea.fashion.dao.IOrderItemDAO;
 import com.aisthea.fashion.dao.OrderDAO;
 import com.aisthea.fashion.dao.OrderItemDAO;
+import com.aisthea.fashion.dao.UserDAO;
 import com.aisthea.fashion.model.*;
 import com.aisthea.fashion.dao.DBConnection;
 import jakarta.servlet.http.HttpServletRequest;
@@ -76,6 +77,20 @@ public class OrderService implements IOrderService {
 
             newOrder.setItems(items);
             conn.commit();
+
+            // Cộng điểm thành viên: 1 điểm cho mỗi 10,000 VND
+            try {
+                int pointsEarned = cart.getTotalPrice().divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
+                        .intValue();
+                if (pointsEarned > 0) {
+                    UserDAO userDAO = new UserDAO();
+                    userDAO.updateMembershipPoints(user.getUserId(), pointsEarned);
+                    logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + user.getUserId());
+                }
+            } catch (Exception pointsEx) {
+                logger.warning("Đặt hàng thành công nhưng cộng điểm thất bại: " + pointsEx.getMessage());
+            }
+
             return newOrder;
 
         } catch (Exception e) {

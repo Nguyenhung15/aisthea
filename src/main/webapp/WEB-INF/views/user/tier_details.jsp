@@ -2,196 +2,272 @@
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
         <% if (session.getAttribute("user")==null) { response.sendRedirect(request.getContextPath() + "/login" );
             return; } %>
-            <!DOCTYPE html>
-            <html lang="vi">
 
-            <head>
-                <meta charset="utf-8" />
-                <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-                <title>Chi tiết hạng thành viên | AISTHÉA</title>
-                <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
-                    rel="stylesheet" />
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-                    rel="stylesheet" />
-                <!-- Font Awesome -->
-                <link rel="stylesheet"
-                    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+            <%-- Set default values if servlet hasn't set them (fallback) --%>
+                <c:if test="${empty currentTier}">
+                    <c:set var="currentTier" value="MEMBER" />
+                    <c:set var="currentTierKey" value="member" />
+                    <c:set var="userPoints" value="0" />
+                    <c:set var="cardGradient" value="linear-gradient(135deg, #78909C 0%, #546E7A 50%, #37474F 100%)" />
+                    <c:set var="cardShadow" value="0 10px 30px -5px rgba(84, 110, 122, 0.4)" />
+                    <c:set var="accentColor" value="#546E7A" />
+                    <c:set var="progressGradient" value="linear-gradient(to right, #78909C, #546E7A)" />
+                    <c:set var="badgeBg" value="rgba(120, 144, 156, 0.15)" />
+                    <c:set var="badgeColor" value="#37474F" />
+                    <c:set var="badgeBorder" value="rgba(120, 144, 156, 0.3)" />
+                    <c:set var="iconBg" value="rgba(120, 144, 156, 0.1)" />
+                    <c:set var="iconColor" value="#546E7A" />
+                    <c:set var="nextTierName" value="SILVER" />
+                    <c:set var="nextTierPoints" value="2000" />
+                    <c:set var="tierProgress" value="0" />
+                    <c:set var="pointsNeeded" value="2000" />
 
-                <script>
-                    tailwind.config = {
-                        darkMode: "class",
-                        theme: {
-                            extend: {
-                                colors: {
-                                    primary: "#0056b3",
-                                    "primary-dark": "#004494",
-                                    "accent-gold": "#C5A059",
-                                    "glass-light": "rgba(255, 255, 255, 0.7)",
-                                    "glass-border": "rgba(255, 255, 255, 0.5)",
-                                    "glass-input": "rgba(255, 255, 255, 0.4)",
+                    <%-- Recalculate tier from points if servlet didn't --%>
+                        <c:if test="${userPoints >= 15000}">
+                            <c:set var="currentTier" value="PLATINUM" />
+                            <c:set var="currentTierKey" value="platinum" />
+                            <c:set var="cardGradient"
+                                value="linear-gradient(135deg, #E8EAF6 0%, #7986CB 50%, #303F9F 100%)" />
+                            <c:set var="cardShadow" value="0 10px 30px -5px rgba(63, 81, 181, 0.4)" />
+                            <c:set var="accentColor" value="#5C6BC0" />
+                            <c:set var="progressGradient"
+                                value="linear-gradient(to right, #7986CB, #5C6BC0, #3F51B5)" />
+                            <c:set var="iconBg" value="rgba(121, 134, 203, 0.1)" />
+                            <c:set var="iconColor" value="#3F51B5" />
+                            <c:set var="nextTierName" value="MAX" />
+                            <c:set var="nextTierPoints" value="15000" />
+                            <c:set var="tierProgress" value="100" />
+                            <c:set var="pointsNeeded" value="0" />
+                        </c:if>
+                        <c:if test="${userPoints >= 5000 && userPoints < 15000}">
+                            <c:set var="currentTier" value="GOLD" />
+                            <c:set var="currentTierKey" value="gold" />
+                            <c:set var="cardGradient"
+                                value="linear-gradient(135deg, #F3E5C3 0%, #C5A059 50%, #8A6E2F 100%)" />
+                            <c:set var="cardShadow" value="0 10px 30px -5px rgba(197, 160, 89, 0.4)" />
+                            <c:set var="accentColor" value="#C5A059" />
+                            <c:set var="progressGradient"
+                                value="linear-gradient(to right, #C5A059, #F9A825, #FF8F00)" />
+                            <c:set var="iconBg" value="rgba(197, 160, 89, 0.1)" />
+                            <c:set var="iconColor" value="#C5A059" />
+                            <c:set var="nextTierName" value="PLATINUM" />
+                            <c:set var="nextTierPoints" value="15000" />
+                        </c:if>
+                        <c:if test="${userPoints >= 2000 && userPoints < 5000}">
+                            <c:set var="currentTier" value="SILVER" />
+                            <c:set var="currentTierKey" value="silver" />
+                            <c:set var="cardGradient"
+                                value="linear-gradient(135deg, #B0BEC5 0%, #78909C 50%, #455A64 100%)" />
+                            <c:set var="cardShadow" value="0 10px 30px -5px rgba(96, 125, 139, 0.4)" />
+                            <c:set var="accentColor" value="#78909C" />
+                            <c:set var="progressGradient" value="linear-gradient(to right, #B0BEC5, #78909C)" />
+                            <c:set var="iconBg" value="rgba(144, 164, 174, 0.1)" />
+                            <c:set var="iconColor" value="#607D8B" />
+                            <c:set var="nextTierName" value="GOLD" />
+                            <c:set var="nextTierPoints" value="5000" />
+                        </c:if>
+                </c:if>
+
+                <!DOCTYPE html>
+                <html lang="vi">
+
+                <head>
+                    <meta charset="utf-8" />
+                    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+                    <title>Chi tiết hạng thành viên | AISTHÉA</title>
+                    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+                    <link
+                        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&amp;family=Inter:wght@300;400;500;600&amp;display=swap"
+                        rel="stylesheet" />
+                    <link
+                        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+                        rel="stylesheet" />
+                    <link rel="stylesheet"
+                        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+                    <script>
+                        tailwind.config = {
+                            darkMode: "class",
+                            theme: {
+                                extend: {
+                                    colors: {
+                                        primary: "#0056b3",
+                                        "primary-dark": "#004494",
+                                        "accent-gold": "#C5A059",
+                                        "glass-light": "rgba(255, 255, 255, 0.7)",
+                                        "glass-border": "rgba(255, 255, 255, 0.5)",
+                                        "glass-input": "rgba(255, 255, 255, 0.4)",
+                                    },
+                                    fontFamily: {
+                                        display: ["'Playfair Display'", "serif"],
+                                        body: ["'Inter'", "sans-serif"],
+                                    },
+                                    backgroundImage: {
+                                        'ethereal-sky': "linear-gradient(180deg, #F8FAFC 0%, #E0F2FE 100%)",
+                                        'gold-shimmer': "linear-gradient(45deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 60%)"
+                                    },
+                                    boxShadow: {
+                                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                                        'glass-sm': '0 4px 16px 0 rgba(31, 38, 135, 0.05)',
+                                    },
                                 },
-                                fontFamily: {
-                                    display: ["'Playfair Display'", "serif"],
-                                    body: ["'Inter'", "sans-serif"],
-                                },
-                                backgroundImage: {
-                                    'ethereal-sky': "linear-gradient(180deg, #F8FAFC 0%, #E0F2FE 100%)",
-                                    'gold-gradient': "linear-gradient(135deg, #F3E5C3 0%, #C5A059 50%, #8A6E2F 100%)",
-                                    'gold-shimmer': "linear-gradient(45deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 60%)"
-                                },
-                                boxShadow: {
-                                    'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-                                    'glass-sm': '0 4px 16px 0 rgba(31, 38, 135, 0.05)',
-                                    'glow-gold': '0 0 25px rgba(197, 160, 89, 0.5)',
-                                    'card-gold': '0 10px 30px -5px rgba(197, 160, 89, 0.4)',
-                                }
                             },
-                        },
-                    };
-                </script>
-                <style>
-                    .glass-island {
-                        background: rgba(255, 255, 255, 0.65);
-                        backdrop-filter: blur(20px);
-                        -webkit-backdrop-filter: blur(20px);
-                        border: 1px solid rgba(255, 255, 255, 0.8);
-                        box-shadow: 0 20px 40px -10px rgba(0, 86, 179, 0.05);
-                    }
-
-                    .glass-input {
-                        background: rgba(255, 255, 255, 0.4);
-                        backdrop-filter: blur(10px);
-                        border: 1px solid rgba(255, 255, 255, 0.6);
-                        transition: all 0.3s ease;
-                    }
-
-                    .gold-border-glow {
-                        box-shadow: 0 0 0 1px #C5A059, 0 0 12px rgba(197, 160, 89, 0.4);
-                    }
-
-                    .marble-texture {
-                        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-                        opacity: 0.4;
-                        pointer-events: none;
-                    }
-
-                    .nav-subitem-active {
-                        color: #0056b3;
-                        font-weight: 600;
-                    }
-
-                    ::-webkit-scrollbar {
-                        width: 8px;
-                    }
-
-                    ::-webkit-scrollbar-track {
-                        background: transparent;
-                    }
-
-                    ::-webkit-scrollbar-thumb {
-                        background: rgba(0, 86, 179, 0.2);
-                        border-radius: 4px;
-                    }
-
-                    details>summary {
-                        list-style: none;
-                    }
-
-                    details>summary::-webkit-details-marker {
-                        display: none;
-                    }
-
-                    details[open] summary~* {
-                        animation: slideDown 0.3s ease-in-out;
-                    }
-
-                    @keyframes slideDown {
-                        0% {
-                            opacity: 0;
-                            transform: translateY(-10px);
+                        };
+                    </script>
+                    <style>
+                        .glass-island {
+                            background: rgba(255, 255, 255, 0.65);
+                            backdrop-filter: blur(20px);
+                            -webkit-backdrop-filter: blur(20px);
+                            border: 1px solid rgba(255, 255, 255, 0.8);
+                            box-shadow: 0 20px 40px -10px rgba(0, 86, 179, 0.05);
                         }
 
-                        100% {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-
-                    .chevron {
-                        transition: transform 0.3s ease;
-                    }
-
-                    details[open] summary .chevron {
-                        transform: rotate(180deg);
-                    }
-
-                    .card-shimmer {
-                        background-size: 200% 100%;
-                        animation: shimmer 5s infinite linear;
-                    }
-
-                    @keyframes shimmer {
-                        0% {
-                            background-position: 200% 0;
+                        .marble-texture {
+                            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+                            opacity: 0.4;
+                            pointer-events: none;
                         }
 
-                        100% {
-                            background-position: -200% 0;
+                        .nav-subitem-active {
+                            color: #0056b3;
+                            font-weight: 600;
                         }
-                    }
-                </style>
-            </head>
 
-            <body
-                class="bg-ethereal-sky font-body min-h-screen text-slate-800 relative selection:bg-primary/20 selection:text-primary">
-                <div class="fixed inset-0 z-0">
-                    <div class="absolute inset-0 bg-gradient-to-br from-white via-sky-50 to-blue-100 opacity-80"></div>
-                    <div class="absolute inset-0 marble-texture"></div>
-                    <div
-                        class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2">
+                        ::-webkit-scrollbar {
+                            width: 8px;
+                        }
+
+                        ::-webkit-scrollbar-track {
+                            background: transparent;
+                        }
+
+                        ::-webkit-scrollbar-thumb {
+                            background: rgba(0, 86, 179, 0.2);
+                            border-radius: 4px;
+                        }
+
+                        details>summary {
+                            list-style: none;
+                        }
+
+                        details>summary::-webkit-details-marker {
+                            display: none;
+                        }
+
+                        details[open] summary~* {
+                            animation: slideDown 0.3s ease-in-out;
+                        }
+
+                        @keyframes slideDown {
+                            0% {
+                                opacity: 0;
+                                transform: translateY(-10px);
+                            }
+
+                            100% {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+
+                        .chevron {
+                            transition: transform 0.3s ease;
+                        }
+
+                        details[open] summary .chevron {
+                            transform: rotate(180deg);
+                        }
+
+                        .card-shimmer {
+                            background-image: linear-gradient(45deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 60%);
+                            background-size: 200% 100%;
+                            animation: shimmer 5s infinite linear;
+                        }
+
+                        @keyframes shimmer {
+                            0% {
+                                background-position: 200% 0;
+                            }
+
+                            100% {
+                                background-position: -200% 0;
+                            }
+                        }
+
+                        .perk-card {
+                            transition: all 0.3s ease;
+                        }
+
+                        .perk-card:hover {
+                            transform: translateY(-4px);
+
+                            border-color: $ {
+                                accentColor
+                            }
+
+                            !important;
+
+                            box-shadow: $ {
+                                cardShadow
+                            }
+
+                            !important;
+                        }
+                    </style>
+                </head>
+
+                <body
+                    class="bg-ethereal-sky font-body min-h-screen text-slate-800 relative selection:bg-primary/20 selection:text-primary">
+                    <div class="fixed inset-0 z-0">
+                        <div class="absolute inset-0 bg-gradient-to-br from-white via-sky-50 to-blue-100 opacity-80">
+                        </div>
+                        <div class="absolute inset-0 marble-texture"></div>
+                        <div
+                            class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2">
+                        </div>
+                        <div
+                            class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/30 rounded-full blur-3xl -translate-x-1/4 translate-y-1/4">
+                        </div>
                     </div>
-                    <div
-                        class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/30 rounded-full blur-3xl -translate-x-1/4 translate-y-1/4">
-                    </div>
-                </div>
 
-                <!-- Header -->
-                <jsp:include page="/WEB-INF/views/product/product-list-header.jsp" />
+                    <!-- Header -->
+                    <jsp:include page="/WEB-INF/views/product/product-list-header.jsp" />
 
-                <main class="relative z-10 max-w-7xl mx-auto px-4 pb-20 mt-8">
-                    <div class="flex flex-col lg:flex-row gap-8">
-                        <!-- Sidebar -->
-                        <jsp:include page="/WEB-INF/views/common/user-sidebar.jsp">
-                            <jsp:param name="activeTab" value="tier" />
-                        </jsp:include>
+                    <main class="relative z-10 max-w-7xl mx-auto px-4 pb-20 mt-8">
+                        <div class="flex flex-col lg:flex-row gap-8">
+                            <!-- Sidebar -->
+                            <jsp:include page="/WEB-INF/views/common/user-sidebar.jsp">
+                                <jsp:param name="activeTab" value="tier" />
+                            </jsp:include>
 
-                        <section class="lg:w-3/4">
-                            <div
-                                class="glass-island rounded-[32px] p-8 lg:p-12 min-h-[700px] relative overflow-hidden flex flex-col">
+                            <section class="lg:w-3/4">
                                 <div
-                                    class="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-b from-amber-50/50 to-transparent rounded-bl-full pointer-events-none">
-                                </div>
-                                <header class="mb-10 border-b border-slate-200/60 pb-6">
-                                    <h1 class="font-display font-bold text-3xl text-slate-900 mb-2 tracking-tight">Chi
-                                        tiết hạng thành
-                                        viên</h1>
-                                    <p class="text-slate-500 font-light text-sm tracking-wide">Theo dõi tiến trình và
-                                        tận hưởng đặc
-                                        quyền dành riêng cho bạn</p>
-                                </header>
-                                <div class="max-w-4xl mx-auto w-full flex-grow">
-                                    <!-- Loyalty Card -->
+                                    class="glass-island rounded-[32px] p-8 lg:p-12 min-h-[700px] relative overflow-hidden flex flex-col">
                                     <div
-                                        class="w-full relative rounded-2xl overflow-hidden shadow-card-gold mb-12 group transform transition-transform hover:scale-[1.01] duration-500">
-                                        <div class="absolute inset-0 bg-gold-gradient opacity-90"></div>
-                                        <div class="absolute inset-0 bg-gold-shimmer card-shimmer"></div>
-                                        <div class="absolute inset-0 marble-texture opacity-30"></div>
-                                        <div
-                                            class="relative z-10 p-8 md:p-10 flex flex-col md:flex-row justify-between items-center md:items-start text-white h-full min-h-[220px]">
-                                            <div class="flex flex-col justify-between h-full w-full">
+                                        class="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-b from-amber-50/50 to-transparent rounded-bl-full pointer-events-none">
+                                    </div>
+
+                                    <header class="mb-10 border-b border-slate-200/60 pb-6">
+                                        <h1 class="font-display font-bold text-3xl text-slate-900 mb-2 tracking-tight">
+                                            Chi tiết hạng thành viên</h1>
+                                        <p class="text-slate-500 font-light text-sm tracking-wide">Theo dõi tiến trình
+                                            và tận hưởng đặc quyền dành riêng cho bạn</p>
+                                    </header>
+
+                                    <div class="max-w-4xl mx-auto w-full flex-grow">
+
+                                        <!-- ========== LOYALTY CARD ========== -->
+                                        <div class="w-full relative rounded-2xl overflow-hidden mb-12 group transform transition-transform hover:scale-[1.01] duration-500"
+                                            style="box-shadow: ${cardShadow};">
+                                            <!-- Card gradient background - INLINE STYLE guaranteed to work -->
+                                            <div class="absolute inset-0"
+                                                style="background: ${cardGradient}; opacity: 0.95;"></div>
+                                            <div class="absolute inset-0 card-shimmer"></div>
+                                            <div class="absolute inset-0 marble-texture" style="opacity: 0.2;"></div>
+
+                                            <div
+                                                class="relative z-10 p-8 md:p-10 flex flex-col justify-between text-white min-h-[220px]">
                                                 <div class="flex justify-between items-start w-full">
                                                     <div
                                                         class="bg-white/20 backdrop-blur-sm border border-white/30 px-4 py-1.5 rounded-full">
@@ -204,101 +280,328 @@
                                                 <div class="mt-8 md:mt-12 text-center md:text-left">
                                                     <div
                                                         class="text-sm font-medium opacity-80 mb-1 tracking-widest uppercase">
-                                                        Current
-                                                        Tier</div>
+                                                        Current Tier</div>
                                                     <h2
                                                         class="font-display text-4xl md:text-5xl font-bold tracking-wider text-white drop-shadow-md">
-                                                        GOLD MEMBER</h2>
+                                                        ${currentTier}</h2>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Progress Bar -->
-                                    <div class="mb-16 px-2">
-                                        <div class="flex justify-between items-end mb-4">
-                                            <div>
-                                                <span
-                                                    class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Tiến
-                                                    trình thăng hạng</span>
-                                                <span class="text-2xl font-display font-bold text-slate-800">1500 <span
-                                                        class="text-lg text-slate-400 font-normal">/ 2000
-                                                        điểm</span></span>
-                                            </div>
-                                            <div class="text-right">
-                                                <span
-                                                    class="text-xs font-medium text-accent-gold bg-accent-gold/10 px-3 py-1 rounded-full border border-accent-gold/20">Next:
-                                                    DIAMOND</span>
-                                            </div>
-                                        </div>
-                                        <div class="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                                            <div class="h-full bg-gradient-to-r from-accent-gold via-yellow-400 to-amber-500 rounded-full relative"
-                                                style="width: 75%">
-                                                <div class="absolute inset-0 bg-white/20 w-full h-full animate-pulse">
+                                        <!-- ========== PROGRESS BAR ========== -->
+                                        <div class="mb-16 px-2">
+                                            <div class="flex justify-between items-end mb-4">
+                                                <div>
+                                                    <span
+                                                        class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Tiến
+                                                        trình thăng hạng</span>
+                                                    <span
+                                                        class="text-2xl font-display font-bold text-slate-800">${userPoints}
+                                                        <span class="text-lg text-slate-400 font-normal">/
+                                                            ${nextTierPoints} điểm</span>
+                                                    </span>
+                                                </div>
+                                                <div class="text-right">
+                                                    <c:if test="${nextTierName != 'MAX'}">
+                                                        <span class="text-xs font-medium px-3 py-1 rounded-full border"
+                                                            style="background: ${badgeBg}; color: ${badgeColor}; border-color: ${badgeBorder};">
+                                                            Next: ${nextTierName}
+                                                        </span>
+                                                    </c:if>
                                                 </div>
                                             </div>
+                                            <div
+                                                class="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                                                <div class="h-full rounded-full relative"
+                                                    style="width: ${tierProgress}%; background: ${progressGradient};">
+                                                    <div
+                                                        class="absolute inset-0 bg-white/20 w-full h-full animate-pulse">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <c:if test="${nextTierName != 'MAX'}">
+                                                <p class="mt-3 text-sm text-slate-500 text-right">Bạn cần thêm
+                                                    <span class="font-bold text-slate-800">${pointsNeeded} điểm</span>
+                                                    để thăng hạng ${nextTierName}
+                                                </p>
+                                            </c:if>
+                                            <c:if test="${nextTierName == 'MAX'}">
+                                                <p class="mt-3 text-sm text-right font-bold"
+                                                    style="color: ${accentColor};">
+                                                    Bạn đã đạt hạng thẻ cao nhất!
+                                                </p>
+                                            </c:if>
                                         </div>
-                                        <p class="mt-3 text-sm text-slate-500 text-right">Bạn cần thêm <span
-                                                class="font-bold text-slate-800">500 điểm</span> để thăng hạng Diamond
-                                        </p>
-                                    </div>
 
-                                    <!-- Perks Section -->
-                                    <div>
-                                        <h3
-                                            class="font-display font-bold text-xl text-slate-800 mb-8 flex items-center">
-                                            <span class="w-8 h-[1px] bg-accent-gold mr-4"></span>
-                                            Đặc quyền của bạn
-                                            <span class="w-full h-[1px] bg-slate-100 ml-4"></span>
-                                        </h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <!-- ========== CÁCH TÍCH ĐIỂM ========== -->
+                                        <div class="mb-12 px-2">
                                             <div
-                                                class="group p-6 rounded-2xl bg-white border border-slate-100 hover:border-accent-gold/30 shadow-sm hover:shadow-glow-gold transition-all duration-300 flex flex-col items-center text-center">
-                                                <div
-                                                    class="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                                    <span
-                                                        class="material-symbols-outlined text-3xl text-accent-gold font-light">local_shipping</span>
+                                                class="bg-white/60 backdrop-blur-sm border border-slate-100 rounded-2xl p-6">
+                                                <h4 class="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-xl"
+                                                        style="color: ${accentColor};">info</span>
+                                                    Cách tích điểm
+                                                </h4>
+                                                <p class="text-sm text-slate-500 leading-relaxed">Mỗi <span
+                                                        class="font-bold text-slate-700">10.000₫</span> bạn chi tiêu mua
+                                                    hàng sẽ tích được <span class="font-bold text-slate-700">1
+                                                        điểm</span>. Điểm được cộng tự động sau khi đặt hàng thành công.
+                                                </p>
+                                                <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                    <div class="text-center p-3 rounded-xl border"
+                                                        style="background: ${currentTierKey == 'member' ? 'rgba(120,144,156,0.08)' : '#f8fafc'}; border-color: ${currentTierKey == 'member' ? 'rgba(120,144,156,0.3)' : '#f1f5f9'};">
+                                                        <div class="text-xs uppercase tracking-wide mb-1"
+                                                            style="color: ${currentTierKey == 'member' ? '#37474F' : '#94a3b8'};">
+                                                            Member</div>
+                                                        <div class="font-bold"
+                                                            style="color: ${currentTierKey == 'member' ? '#37474F' : '#64748b'};">
+                                                            0 - 1.999</div>
+                                                        <div class="text-xs text-slate-400">điểm</div>
+                                                    </div>
+                                                    <div class="text-center p-3 rounded-xl border"
+                                                        style="background: ${currentTierKey == 'silver' ? 'rgba(144,164,174,0.08)' : '#f8fafc'}; border-color: ${currentTierKey == 'silver' ? 'rgba(144,164,174,0.3)' : '#f1f5f9'};">
+                                                        <div class="text-xs uppercase tracking-wide mb-1"
+                                                            style="color: ${currentTierKey == 'silver' ? '#455A64' : '#94a3b8'};">
+                                                            Silver</div>
+                                                        <div class="font-bold"
+                                                            style="color: ${currentTierKey == 'silver' ? '#455A64' : '#64748b'};">
+                                                            2.000 - 4.999</div>
+                                                        <div class="text-xs text-slate-400">điểm</div>
+                                                    </div>
+                                                    <div class="text-center p-3 rounded-xl border"
+                                                        style="background: ${currentTierKey == 'gold' ? 'rgba(197,160,89,0.08)' : '#f8fafc'}; border-color: ${currentTierKey == 'gold' ? 'rgba(197,160,89,0.3)' : '#f1f5f9'};">
+                                                        <div class="text-xs uppercase tracking-wide mb-1"
+                                                            style="color: ${currentTierKey == 'gold' ? '#8A6E2F' : '#94a3b8'};">
+                                                            Gold</div>
+                                                        <div class="font-bold"
+                                                            style="color: ${currentTierKey == 'gold' ? '#8A6E2F' : '#64748b'};">
+                                                            5.000 - 14.999</div>
+                                                        <div class="text-xs text-slate-400">điểm</div>
+                                                    </div>
+                                                    <div class="text-center p-3 rounded-xl border"
+                                                        style="background: ${currentTierKey == 'platinum' ? 'rgba(121,134,203,0.08)' : '#f8fafc'}; border-color: ${currentTierKey == 'platinum' ? 'rgba(121,134,203,0.3)' : '#f1f5f9'};">
+                                                        <div class="text-xs uppercase tracking-wide mb-1"
+                                                            style="color: ${currentTierKey == 'platinum' ? '#303F9F' : '#94a3b8'};">
+                                                            Platinum</div>
+                                                        <div class="font-bold"
+                                                            style="color: ${currentTierKey == 'platinum' ? '#303F9F' : '#64748b'};">
+                                                            15.000+</div>
+                                                        <div class="text-xs text-slate-400">điểm</div>
+                                                    </div>
                                                 </div>
-                                                <h4 class="font-bold text-slate-800 mb-2">Miễn phí vận chuyển</h4>
-                                                <p class="text-xs text-slate-500 leading-relaxed">Áp dụng cho mọi đơn
-                                                    hàng không giới
-                                                    hạn giá trị tối thiểu.</p>
                                             </div>
-                                            <div
-                                                class="group p-6 rounded-2xl bg-white border border-slate-100 hover:border-accent-gold/30 shadow-sm hover:shadow-glow-gold transition-all duration-300 flex flex-col items-center text-center">
-                                                <div
-                                                    class="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                                    <span
-                                                        class="material-symbols-outlined text-3xl text-accent-gold font-light">cake</span>
-                                                </div>
-                                                <h4 class="font-bold text-slate-800 mb-2">Giảm giá 10% sinh nhật</h4>
-                                                <p class="text-xs text-slate-500 leading-relaxed">Quà tặng đặc biệt
-                                                    trong tháng sinh
-                                                    nhật của bạn.</p>
-                                            </div>
-                                            <div
-                                                class="group p-6 rounded-2xl bg-white border border-slate-100 hover:border-accent-gold/30 shadow-sm hover:shadow-glow-gold transition-all duration-300 flex flex-col items-center text-center">
-                                                <div
-                                                    class="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                                    <span
-                                                        class="material-symbols-outlined text-3xl text-accent-gold font-light">stars</span>
-                                                </div>
-                                                <h4 class="font-bold text-slate-800 mb-2">Ưu tiên săn Sale</h4>
-                                                <p class="text-xs text-slate-500 leading-relaxed">Quyền truy cập sớm vào
-                                                    các chương
-                                                    trình khuyến mãi lớn.</p>
+                                        </div>
+
+                                        <!-- ========== ĐẶC QUYỀN CỦA BẠN ========== -->
+                                        <div>
+                                            <h3 class="font-display font-bold text-xl text-slate-800 mb-8 flex items-center"
+                                                style="white-space: nowrap;">
+                                                <span class="flex-shrink-0"
+                                                    style="width: 32px; height: 1px; background: ${accentColor}; margin-right: 16px;"></span>
+                                                Đặc quyền của bạn
+                                                <span class="flex-shrink-0 flex-grow"
+                                                    style="height: 1px; background: #f1f5f9; margin-left: 16px;"></span>
+                                            </h3>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                                                <!-- ==== MEMBER perks ==== -->
+                                                <c:if test="${currentTierKey == 'member'}">
+                                                    <div class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center"
+                                                        style="--hover-glow: rgba(120,144,156,0.3);">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">loyalty</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Tích điểm cơ bản</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Tích 1 điểm
+                                                            cho mỗi 10.000₫ chi tiêu để nâng hạng thành viên.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">campaign</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Thông báo khuyến mãi
+                                                        </h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Nhận thông báo
+                                                            về các chương trình khuyến mãi mới nhất.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">support_agent</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Hỗ trợ tiêu chuẩn</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Được hỗ trợ
+                                                            qua email và chat trong giờ hành chính.</p>
+                                                    </div>
+                                                </c:if>
+
+                                                <!-- ==== SILVER perks ==== -->
+                                                <c:if test="${currentTierKey == 'silver'}">
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">percent</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Giảm 3% mọi đơn</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Tự động áp
+                                                            dụng giảm giá 3% cho mọi đơn hàng.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">cake</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Quà sinh nhật</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Nhận voucher
+                                                            giảm 5% trong tháng sinh nhật của bạn.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">local_shipping</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Giảm phí ship</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Giảm 50% phí
+                                                            vận chuyển cho đơn từ 500.000₫.</p>
+                                                    </div>
+                                                </c:if>
+
+                                                <!-- ==== GOLD perks ==== -->
+                                                <c:if test="${currentTierKey == 'gold'}">
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">local_shipping</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Miễn phí vận chuyển
+                                                        </h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Miễn phí ship
+                                                            cho mọi đơn hàng, không giới hạn giá trị.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">cake</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Giảm 10% sinh nhật
+                                                        </h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Voucher giảm
+                                                            giá 10% đặc biệt trong tháng sinh nhật.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">stars</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Ưu tiên săn Sale</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Quyền truy cập
+                                                            sớm vào các chương trình khuyến mãi lớn.</p>
+                                                    </div>
+                                                </c:if>
+
+                                                <!-- ==== PLATINUM perks ==== -->
+                                                <c:if test="${currentTierKey == 'platinum'}">
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">local_shipping</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Miễn phí vận chuyển
+                                                            VIP</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Miễn phí ship
+                                                            ưu tiên + giao hàng nhanh express.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">redeem</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Giảm 15% sinh nhật
+                                                        </h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Voucher giảm
+                                                            giá 15% + quà tặng đặc biệt trong tháng sinh nhật.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">diamond</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Tư vấn cá nhân</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Được tư vấn
+                                                            style và chăm sóc 1-1 bởi chuyên gia thời trang.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">stars</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Truy cập sớm BST mới
+                                                        </h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Quyền mua sớm
+                                                            24h trước khi bộ sưu tập mới mở bán.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">percent</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Giảm 5% mọi đơn</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Tự động áp
+                                                            dụng giảm giá 5% cho tất cả đơn hàng.</p>
+                                                    </div>
+                                                    <div
+                                                        class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                            style="background: ${iconBg};">
+                                                            <span class="material-symbols-outlined text-3xl font-light"
+                                                                style="color: ${iconColor};">celebration</span>
+                                                        </div>
+                                                        <h4 class="font-bold text-slate-800 mb-2">Sự kiện VIP</h4>
+                                                        <p class="text-xs text-slate-500 leading-relaxed">Được mời tham
+                                                            gia các sự kiện thời trang độc quyền.</p>
+                                                    </div>
+                                                </c:if>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </section>
-                    </div>
-                </main>
+                            </section>
+                        </div>
+                    </main>
 
-                <!-- Footer -->
-                <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
+                    <!-- Footer -->
+                    <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
-            </body>
+                </body>
 
-            </html>
+                </html>
