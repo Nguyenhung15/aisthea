@@ -208,7 +208,7 @@
                                                         Tier</div>
                                                     <h2
                                                         class="font-display text-4xl md:text-5xl font-bold tracking-wider text-white drop-shadow-md">
-                                                        GOLD MEMBER</h2>
+                                                        ${currentTier}</h2>
                                                 </div>
                                             </div>
                                         </div>
@@ -221,26 +221,37 @@
                                                 <span
                                                     class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Tiến
                                                     trình thăng hạng</span>
-                                                <span class="text-2xl font-display font-bold text-slate-800">1500 <span
-                                                        class="text-lg text-slate-400 font-normal">/ 2000
+                                                <span
+                                                    class="text-2xl font-display font-bold text-slate-800">${userPoints}
+                                                    <span class="text-lg text-slate-400 font-normal">/ ${nextTierPoints}
                                                         điểm</span></span>
                                             </div>
                                             <div class="text-right">
-                                                <span
-                                                    class="text-xs font-medium text-accent-gold bg-accent-gold/10 px-3 py-1 rounded-full border border-accent-gold/20">Next:
-                                                    DIAMOND</span>
+                                                <c:if test="${nextTierName != 'MAX'}">
+                                                    <span
+                                                        class="text-xs font-medium text-accent-gold bg-accent-gold/10 px-3 py-1 rounded-full border border-accent-gold/20">Next:
+                                                        ${nextTierName}</span>
+                                                </c:if>
                                             </div>
                                         </div>
                                         <div class="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
                                             <div class="h-full bg-gradient-to-r from-accent-gold via-yellow-400 to-amber-500 rounded-full relative"
-                                                style="width: 75%">
+                                                style="width: ${tierProgress}%">
                                                 <div class="absolute inset-0 bg-white/20 w-full h-full animate-pulse">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="mt-3 text-sm text-slate-500 text-right">Bạn cần thêm <span
-                                                class="font-bold text-slate-800">500 điểm</span> để thăng hạng Diamond
-                                        </p>
+                                        <c:if test="${nextTierName != 'MAX'}">
+                                            <p class="mt-3 text-sm text-slate-500 text-right">Bạn cần thêm <span
+                                                    class="font-bold text-slate-800">${pointsNeeded} điểm</span> để
+                                                thăng hạng ${nextTierName}
+                                            </p>
+                                        </c:if>
+                                        <c:if test="${nextTierName == 'MAX'}">
+                                            <p
+                                                class="mt-3 text-sm text-slate-500 text-right text-accent-gold font-bold">
+                                                Bạn đã đạt hạng thẻ cao nhất!</p>
+                                        </c:if>
                                     </div>
 
                                     <!-- Perks Section -->
