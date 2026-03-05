@@ -5,6 +5,8 @@ import com.aisthea.fashion.service.CategoryService;
 import com.aisthea.fashion.service.ICategoryService;
 import com.aisthea.fashion.service.IProductService;
 import com.aisthea.fashion.service.ProductService;
+import com.aisthea.fashion.service.FeedbackService;
+import com.aisthea.fashion.service.IFeedbackService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -23,11 +25,13 @@ public class ProductServlet extends HttpServlet {
     private static final Logger logger = Logger.getLogger(ProductServlet.class.getName());
     private IProductService productService;
     private ICategoryService categoryService;
+    private IFeedbackService feedbackService;
 
     @Override
     public void init() {
         this.productService = new ProductService();
         this.categoryService = new CategoryService();
+        this.feedbackService = new FeedbackService();
     }
 
     @Override
@@ -413,6 +417,7 @@ public class ProductServlet extends HttpServlet {
         request.setAttribute("product", product);
         request.setAttribute("colorSizes", productService.getColorSizesByProductId(id));
         request.setAttribute("images", productService.getImagesByProductId(id));
+        request.setAttribute("feedbacks", feedbackService.getFeedbacksByProductId(id));
 
         // Build breadcrumb data (same pattern as product list page)
         if (product != null && product.getCategory() != null) {

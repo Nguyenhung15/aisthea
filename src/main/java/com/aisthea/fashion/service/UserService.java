@@ -1,12 +1,10 @@
 package com.aisthea.fashion.service;
 
-import com.aisthea.fashion.dao.DBConnection;
 import com.aisthea.fashion.dao.IUserDAO;
 import com.aisthea.fashion.dao.UserDAO;
 import com.aisthea.fashion.model.LoginResult;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.utils.BCryptUtil;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
@@ -55,46 +53,26 @@ public class UserService implements IUserService {
 
     @Override
     public LoginResult login(String email, String password) {
-        // Step 1: Check DB connection first
-        try (Connection testConn = DBConnection.getConnection()) {
-            if (testConn == null) {
-                System.err.println("❌ LOGIN: Database connection is NULL!");
-                return new LoginResult(null, "Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại.", false);
-            }
-        } catch (Exception e) {
-            System.err.println("❌ LOGIN: Database connection test failed: " + e.getMessage());
-            return new LoginResult(null, "Lỗi kết nối cơ sở dữ liệu: " + e.getMessage(), false);
-        }
-
-        // Step 2: Find user by email
-        System.out.println("LOG: Looking up user with email=[" + email + "]");
         User user = userDAO.findByEmail(email);
 
         if (user == null) {
-            System.out.println("LOG: findByEmail returned NULL for email=[" + email + "]");
             return new LoginResult(null, "Tài khoản không tồn tại.", false);
         }
 
-        System.out.println("LOG: Found user: id=" + user.getUserId() + ", email=" + user.getEmail() + ", active="
-                + user.isActive());
-
-        // Step 3: Check password
         if (!BCryptUtil.checkPassword(password, user.getPassword())) {
-            System.out.println("LOG: Password mismatch for email=[" + email + "]");
             return new LoginResult(null, "Sai mật khẩu. Vui lòng thử lại.", false);
         }
 
-        // Step 4: Check activation & ban
         if (!user.isActive()) {
             return new LoginResult(null, "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email.", false);
         }
+
         if (user.isBanned()) {
-            return new LoginResult(null, "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.", false);
+            String reason = user.getBanReason() != null ? user.getBanReason() : "Vi phạm điều khoản sử dụng.";
+            return new LoginResult(null, "Tài khoản của bạn đã bị khóa. Lý do: " + reason, false);
         }
 
-        // Step 5: Success
         user.setPassword(null);
-        System.out.println("LOG: Login SUCCESS for email=[" + email + "]");
         return new LoginResult(user, "Đăng nhập thành công.", true);
     }
 
@@ -189,11 +167,21 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public boolean toggleUserStatus(int userId) {
+    public boolean banUser(int userId, String reason) {
         try {
-            return userDAO.toggleUserStatus(userId);
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error toggling user status", e);
+            return ((UserDAO) userDAO).banUser(userId, reason);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error banning user ID=" + userId, e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean unbanUser(int userId) {
+        try {
+            return ((UserDAO) userDAO).unbanUser(userId);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error unbanning user ID=" + userId, e);
             return false;
         }
     }

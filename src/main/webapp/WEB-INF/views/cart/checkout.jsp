@@ -262,7 +262,7 @@
                                                             Number</label>
                                                         <input name="cardNumber"
                                                             class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm tracking-widest"
-                                                            placeholder="0000 0000 0000 0000" type="text" />
+                                                            placeholder="XXXX XXXX XXXX XXXX" type="text" />
                                                     </div>
                                                     <div class="grid grid-cols-2 gap-4">
                                                         <div class="space-y-1">

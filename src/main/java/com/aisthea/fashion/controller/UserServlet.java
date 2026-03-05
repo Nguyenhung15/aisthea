@@ -34,8 +34,8 @@ public class UserServlet extends HttpServlet {
                 case "delete":
                     deleteUser(request, response);
                     break;
-                case "toggleStatus":
-                    toggleUserStatus(request, response);
+                case "unban":
+                    unbanUser(request, response);
                     break;
                 default:
                     listUsers(request, response);
@@ -50,14 +50,20 @@ public class UserServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-        if ("update".equals(action)) {
-            try {
-                updateUser(request, response);
-            } catch (Exception e) {
-                throw new ServletException(e);
+        try {
+            switch (action == null ? "" : action) {
+                case "update":
+                    updateUser(request, response);
+                    break;
+                case "ban":
+                    banUser(request, response);
+                    break;
+                default:
+                    doGet(request, response);
+                    break;
             }
-        } else {
-            doGet(request, response);
+        } catch (Exception e) {
+            throw new ServletException(e);
         }
     }
 
@@ -89,7 +95,6 @@ public class UserServlet extends HttpServlet {
         String address = request.getParameter("address");
         String role = request.getParameter("role");
         boolean active = "1".equals(request.getParameter("active"));
-        boolean isBanned = "1".equals(request.getParameter("isBanned"));
 
         User user = userService.selectUser(id);
         if (user == null) {
@@ -104,7 +109,6 @@ public class UserServlet extends HttpServlet {
         user.setAddress(address);
         user.setRole(role);
         user.setActive(active);
-        user.setBanned(isBanned);
 
         userService.updateUser(user);
         response.sendRedirect("user?action=list");
@@ -117,27 +121,20 @@ public class UserServlet extends HttpServlet {
         response.sendRedirect("user?action=list");
     }
 
-    private void toggleUserStatus(HttpServletRequest request, HttpServletResponse response)
+    private void banUser(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        try {
-            int id = Integer.parseInt(request.getParameter("id"));
-            User user = userService.selectUser(id);
-            if (user != null) {
-                boolean result = userService.toggleUserStatus(id);
-                if (result) {
-                    boolean nowBanned = !user.isBanned();
-                    String action = nowBanned ? "BANNED" : "UNBANNED";
-                    request.getSession().setAttribute("successMsg",
-                            "Account for " + user.getFullname() + " has been " + action + " successfully.");
-                    request.getSession().setAttribute("actionName", nowBanned ? "banned" : "unbanned");
-                } else {
-                    request.getSession().setAttribute("errorMsg",
-                            "Unable to update status for " + user.getFullname() + ".");
-                }
-            }
-        } catch (Exception e) {
-            request.getSession().setAttribute("errorMsg", "Error: " + e.getMessage());
-        }
-        response.sendRedirect(request.getContextPath() + "/user?action=list");
+        int id = Integer.parseInt(request.getParameter("id"));
+        String reason = request.getParameter("banReason");
+        if (reason == null || reason.trim().isEmpty())
+            reason = "Vi phạm điều khoản sử dụng.";
+        boolean ok = userService.banUser(id, reason.trim());
+        response.sendRedirect("user?action=list&success=" + (ok ? "banned" : "error"));
+    }
+
+    private void unbanUser(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        boolean ok = userService.unbanUser(id);
+        response.sendRedirect("user?action=list&success=" + (ok ? "unbanned" : "error"));
     }
 }
