@@ -86,6 +86,9 @@ public class CartServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
+            // Load active vouchers for the "pick voucher" panel
+            com.aisthea.fashion.dao.VoucherDAO vDao = new com.aisthea.fashion.dao.VoucherDAO();
+            request.setAttribute("activeVouchers", vDao.findActiveVouchers());
             request.getRequestDispatcher("/WEB-INF/views/cart/checkout.jsp")
                     .forward(request, response);
             return;

@@ -5,6 +5,7 @@ import com.aisthea.fashion.dao.IOrderItemDAO;
 import com.aisthea.fashion.dao.OrderDAO;
 import com.aisthea.fashion.dao.OrderItemDAO;
 import com.aisthea.fashion.dao.UserDAO;
+import com.aisthea.fashion.dao.VoucherDAO;
 import com.aisthea.fashion.model.*;
 import com.aisthea.fashion.dao.DBConnection;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ public class OrderService implements IOrderService {
 
     private IOrderDAO orderDAO;
     private IOrderItemDAO orderItemDAO;
+    private final VoucherDAO voucherDAO = new VoucherDAO();
     private static final Logger logger = Logger.getLogger(OrderService.class.getName());
 
     public OrderService() {
@@ -31,11 +33,50 @@ public class OrderService implements IOrderService {
     @Override
     public Order placeOrder(User user, Cart cart, HttpServletRequest request) throws Exception {
 
+        // ── 1. Đọc voucher từ request / session ──────────────────────────
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        Integer voucherId = null;
+
+        String discountStr = request.getParameter("discountAmount");
+        String voucherIdStr = request.getParameter("voucherId");
+
+        if (discountStr != null && !discountStr.isBlank()) {
+            try {
+                discountAmount = new BigDecimal(discountStr);
+            } catch (Exception ignored) {
+            }
+        }
+        if (voucherIdStr != null && !voucherIdStr.isBlank()) {
+            try {
+                voucherId = Integer.parseInt(voucherIdStr);
+            } catch (Exception ignored) {
+            }
+        }
+
+        // Fallback: lấy từ session nếu form không truyền đủ
+        if (voucherId == null && request.getSession(false) != null) {
+            Voucher sessionVoucher = (Voucher) request.getSession(false).getAttribute("appliedVoucher");
+            BigDecimal sessionDiscount = (BigDecimal) request.getSession(false).getAttribute("appliedDiscount");
+            if (sessionVoucher != null && sessionDiscount != null) {
+                voucherId = sessionVoucher.getVoucherId();
+                discountAmount = sessionDiscount;
+            }
+        }
+
+        // ── 2. Tính tổng tiền sau giảm ───────────────────────────────────
+        BigDecimal cartTotal = cart.getTotalPrice();
+        BigDecimal finalTotal = cartTotal.subtract(discountAmount);
+        if (finalTotal.compareTo(BigDecimal.ZERO) < 0)
+            finalTotal = BigDecimal.ZERO;
+
+        // ── 3. Build Order object ────────────────────────────────────────
         Order newOrder = new Order();
         newOrder.setUserid(user.getUserId());
-        newOrder.setTotalprice(cart.getTotalPrice());
+        newOrder.setTotalprice(finalTotal);
+        newOrder.setDiscountAmount(discountAmount);
+        if (voucherId != null)
+            newOrder.setVoucherId(voucherId);
         newOrder.setStatus("Pending");
-
         newOrder.setFullname(request.getParameter("fullname"));
         newOrder.setEmail(user.getEmail());
         newOrder.setPhone(request.getParameter("phone"));
@@ -48,12 +89,12 @@ public class OrderService implements IOrderService {
             conn.setAutoCommit(false);
 
             int newOrderId = orderDAO.addOrder(newOrder, conn);
-
             if (newOrderId == -1) {
                 throw new SQLException("Không thể tạo đơn hàng. DAO trả về -1.");
             }
             newOrder.setOrderid(newOrderId);
 
+            // ── 4. Order items + stock ───────────────────────────────────
             List<OrderItem> items = new ArrayList<>();
             for (CartItem cartItem : cart.getItems()) {
                 OrderItem orderItem = new OrderItem();
@@ -74,21 +115,31 @@ public class OrderService implements IOrderService {
                     throw new SQLException("Hết hàng cho sản phẩm: " + cartItem.getProductName());
                 }
             }
-
             newOrder.setItems(items);
+
+            // ── 5. Tăng used_count voucher (trong cùng transaction) ──────
+            if (voucherId != null) {
+                voucherDAO.incrementUsedCount(voucherId, conn);
+                logger.info("Voucher ID=" + voucherId + " used_count incremented for order #" + newOrderId);
+            }
+
             conn.commit();
 
-            // Cộng điểm thành viên: 1 điểm cho mỗi 10,000 VND
+            // ── 6. Cộng điểm thành viên (ngoài transaction, fail ok) ────
             try {
-                int pointsEarned = cart.getTotalPrice().divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
-                        .intValue();
+                int pointsEarned = finalTotal.divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN).intValue();
                 if (pointsEarned > 0) {
-                    UserDAO userDAO = new UserDAO();
-                    userDAO.updateMembershipPoints(user.getUserId(), pointsEarned);
-                    logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + user.getUserId());
+                    new UserDAO().updateMembershipPoints(user.getUserId(), pointsEarned);
+                    logger.info("Cộng " + pointsEarned + " điểm cho user ID: " + user.getUserId());
                 }
             } catch (Exception pointsEx) {
                 logger.warning("Đặt hàng thành công nhưng cộng điểm thất bại: " + pointsEx.getMessage());
+            }
+
+            // ── 7. Xoá voucher khỏi session ──────────────────────────────
+            if (request.getSession(false) != null) {
+                request.getSession(false).removeAttribute("appliedVoucher");
+                request.getSession(false).removeAttribute("appliedDiscount");
             }
 
             return newOrder;

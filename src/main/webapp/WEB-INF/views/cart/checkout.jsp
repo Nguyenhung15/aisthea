@@ -94,6 +94,10 @@
 
                     <form action="${pageContext.request.contextPath}/order" method="POST" id="checkoutForm">
                         <input type="hidden" name="action" value="placeorder">
+                        <input type="hidden" name="voucherId" id="voucherIdInput"
+                            value="${not empty sessionScope.appliedVoucher ? sessionScope.appliedVoucher.voucherId : ''}">
+                        <input type="hidden" name="discountAmount" id="discountAmountInput"
+                            value="${not empty sessionScope.appliedDiscount ? sessionScope.appliedDiscount : '0'}">
 
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
                             <!-- Left Section: Shipping & Payment -->
@@ -363,7 +367,7 @@
                                     <div class="space-y-3">
                                         <div class="flex justify-between text-sm">
                                             <span class="text-slate-500">Subtotal</span>
-                                            <span class="text-slate-900">
+                                            <span class="text-slate-900" id="subtotalDisplay">
                                                 <fmt:formatNumber value="${sessionScope.cart.totalPrice}"
                                                     type="currency" currencyCode="VND" maxFractionDigits="0" />
                                             </span>
@@ -372,17 +376,33 @@
                                             <span class="text-slate-500">Shipping (Express)</span>
                                             <span class="text-slate-900">Free</span>
                                         </div>
-                                        <div class="flex justify-between text-sm">
-                                            <span class="text-slate-500">Estimated Tax</span>
-                                            <span class="text-slate-900">Included</span>
-                                        </div>
-                                        <div class="flex justify-between pt-4 border-t border-sky-100">
-                                            <span class="text-xl font-bold text-slate-900">Total</span>
-                                            <span class="text-xl font-bold text-slate-900">
-                                                <fmt:formatNumber value="${sessionScope.cart.totalPrice}"
-                                                    type="currency" currencyCode="VND" maxFractionDigits="0" />
-                                            </span>
-                                        </div>
+                                        <%-- Voucher discount row --%>
+                                            <c:if test="${not empty sessionScope.appliedVoucher}">
+                                                <div class="flex justify-between text-sm" id="discountRow">
+                                                    <span class="text-emerald-600 font-medium">🎟️
+                                                        ${sessionScope.appliedVoucher.code}</span>
+                                                    <span class="text-emerald-600 font-medium" id="discountDisplay">
+                                                        -
+                                                        <fmt:formatNumber value="${sessionScope.appliedDiscount}"
+                                                            type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                    </span>
+                                                </div>
+                                            </c:if>
+                                            <c:if test="${empty sessionScope.appliedVoucher}">
+                                                <div class="flex justify-between text-sm hidden" id="discountRow">
+                                                    <span class="text-emerald-600 font-medium" id="discountCode"></span>
+                                                    <span class="text-emerald-600 font-medium"
+                                                        id="discountDisplay"></span>
+                                                </div>
+                                            </c:if>
+                                            <div class="flex justify-between pt-4 border-t border-sky-100">
+                                                <span class="text-xl font-bold text-slate-900">Total</span>
+                                                <span class="text-xl font-bold text-slate-900" id="totalDisplay">
+                                                    <fmt:formatNumber
+                                                        value="${not empty sessionScope.appliedDiscount ? sessionScope.cart.totalPrice - sessionScope.appliedDiscount : sessionScope.cart.totalPrice}"
+                                                        type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                </span>
+                                            </div>
                                     </div>
                                     <!-- CTA -->
                                     <button type="submit"
@@ -411,91 +431,199 @@
                         onclick="document.getElementById('discount-drawer').classList.add('hidden')"></div>
                     <!-- Drawer Panel -->
                     <div
-                        class="absolute right-0 top-0 h-full w-full md:w-[380px] bg-white/90 backdrop-blur-xl border-l border-[#E3F2FD] shadow-[0_0_50px_rgba(0,0,0,0.1)] transform transition-transform duration-500 ease-out">
+                        class="absolute right-0 top-0 h-full w-full md:w-[380px] bg-white/90 backdrop-blur-xl border-l border-[#E3F2FD] shadow-[0_0_50px_rgba(0,0,0,0.1)]">
                         <div class="flex flex-col h-full">
                             <!-- Header -->
                             <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-                                <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Discounts</h2>
+                                <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Mã Giảm Giá</h2>
                                 <button type="button"
                                     onclick="document.getElementById('discount-drawer').classList.add('hidden')"
                                     class="material-symbols-outlined text-slate-400 hover:text-slate-900 transition-colors p-1">close</button>
                             </div>
-                            <!-- Scrollable Content -->
-                            <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-                                <!-- Promo Input -->
-                                <div class="space-y-3 mb-10">
-                                    <label
-                                        class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold ml-1">Enter
-                                        promo code</label>
-                                    <div class="flex items-center gap-4">
-                                        <input
-                                            class="flex-1 border-0 border-b border-slate-200 focus:ring-0 focus:border-accent-blue text-sm py-3 px-1 bg-transparent uppercase"
-                                            placeholder="PROMO CODE" type="text" />
-                                        <button type="button"
-                                            class="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-blue hover:opacity-70 transition-opacity underline decoration-1 underline-offset-4">Apply</button>
+                            <!-- Content -->
+                            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                                <!-- Input promo code -->
+                                <div class="space-y-3">
+                                    <label class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Nhập
+                                        mã</label>
+                                    <div class="flex items-center gap-3">
+                                        <input id="voucherCodeInput"
+                                            class="flex-1 border-0 border-b border-slate-200 focus:ring-0 focus:border-primary text-sm py-3 px-1 bg-transparent uppercase tracking-widest"
+                                            placeholder="VD: WELCOME10" type="text" />
+                                        <button type="button" onclick="applyVoucherCode()"
+                                            class="text-[10px] uppercase tracking-[0.2em] font-bold text-primary hover:opacity-70 transition-opacity underline">Áp
+                                            dụng</button>
                                     </div>
+                                    <p id="voucherMsg" class="text-xs mt-1 hidden"></p>
                                 </div>
-                                <div class="space-y-6">
-                                    <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-bold ml-1">Your
-                                        Collection</p>
-                                    <!-- Recommended Voucher -->
-                                    <div
-                                        class="p-6 border border-accent-blue/20 bg-accent-blue/[0.02] rounded-lg space-y-3 relative group overflow-hidden">
-                                        <div
-                                            class="absolute top-0 right-0 bg-accent-blue text-white text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-bl-lg">
-                                            Recommended</div>
-                                        <div class="flex justify-between items-end">
-                                            <div>
-                                                <h3 class="text-2xl text-slate-900 font-bold">$50 OFF</h3>
-                                                <p class="text-[11px] text-slate-600 font-medium">Loyalty Anniversary
-                                                    Reward</p>
-                                            </div>
-                                            <button type="button"
-                                                class="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-blue hover:bg-accent-blue hover:text-white border border-accent-blue px-4 py-2 rounded-md transition-all">Use</button>
-                                        </div>
-                                        <div class="pt-2 border-t border-slate-100 flex items-center gap-1.5">
-                                            <span
-                                                class="material-symbols-outlined text-[14px] text-slate-400">schedule</span>
-                                            <p class="text-[9px] text-slate-400 italic">Valid until Mar 15, 2026</p>
-                                        </div>
+
+                                <!-- Applied voucher display -->
+                                <div id="appliedVoucherBox"
+                                    class="${not empty sessionScope.appliedVoucher ? '' : 'hidden'} p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between">
+                                    <div>
+                                        <p class="text-xs font-bold text-emerald-700 uppercase tracking-widest">${not
+                                            empty sessionScope.appliedVoucher ? sessionScope.appliedVoucher.code : ''}
+                                        </p>
+                                        <p class="text-xs text-emerald-600" id="appliedDiscountText"></p>
                                     </div>
-                                    <!-- Regular Voucher -->
-                                    <div
-                                        class="p-6 border border-slate-100 rounded-lg space-y-3 hover:border-accent-blue/30 transition-all">
-                                        <div class="flex justify-between items-end">
-                                            <div>
-                                                <h3 class="text-2xl text-slate-900 font-bold uppercase">10% OFF</h3>
-                                                <p
-                                                    class="text-[11px] text-slate-600 font-medium uppercase tracking-wider">
-                                                    WELCOME20</p>
-                                            </div>
-                                            <button type="button"
-                                                class="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-blue hover:bg-accent-blue hover:text-white border border-accent-blue px-4 py-2 rounded-md transition-all">Use</button>
-                                        </div>
-                                    </div>
-                                    <!-- Ineligible Voucher -->
-                                    <div
-                                        class="p-6 border border-slate-100 rounded-lg space-y-3 grayscale opacity-50 bg-slate-50/50">
-                                        <div class="flex justify-between items-start">
-                                            <div>
-                                                <div class="flex items-center gap-2">
-                                                    <h3 class="text-2xl text-slate-900 font-bold">$200 OFF</h3>
+                                    <button type="button" onclick="removeVoucher()"
+                                        class="text-slate-400 hover:text-red-500 transition-colors">
+                                        <span class="material-symbols-outlined text-lg">close</span>
+                                    </button>
+                                </div>
+
+                                <%-- ── Available Vouchers list ────────────────────── --%>
+                                    <div class="space-y-3 pt-2">
+                                        <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
+                                            Voucher khả dụng</p>
+
+                                        <c:choose>
+                                            <c:when test="${empty activeVouchers}">
+                                                <div class="text-center py-8 text-slate-400 text-xs">
                                                     <span
-                                                        class="material-symbols-outlined text-sm text-slate-400 cursor-help">info</span>
+                                                        class="material-symbols-outlined text-3xl block mb-2 opacity-40">confirmation_number</span>
+                                                    Hiện chưa có voucher nào
                                                 </div>
-                                                <p class="text-[11px] text-slate-500 font-medium">Minimum spend $5,000
-                                                </p>
-                                            </div>
-                                        </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:forEach var="vc" items="${activeVouchers}">
+                                                    <c:set var="canUse"
+                                                        value="${empty vc.minOrderValue or sessionScope.cart.totalPrice >= vc.minOrderValue}" />
+                                                    <div class="voucher-pick-card relative overflow-hidden rounded-xl border-2 transition-all duration-200"
+                                                        style="cursor:${canUse ? 'pointer' : 'not-allowed'};opacity:${canUse ? '1' : '0.6'};border-color:${canUse ? '#e2e8f0' : '#f1f5f9'};background:${canUse ? 'linear-gradient(135deg,#fff 0%,#f8f9ff 100%)' : '#fafafa'};"
+                                                        onclick="${canUse ? 'pickVoucher(this)' : 'void(0)'}"
+                                                        data-code="${vc.code}">
+                                                        <%-- decorative notches --%>
+                                                            <div
+                                                                style="position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;">
+                                                            </div>
+                                                            <div
+                                                                style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;">
+                                                            </div>
+
+                                                            <div
+                                                                style="padding:14px 24px;display:flex;align-items:center;gap:14px;">
+                                                                <%-- icon --%>
+                                                                    <div
+                                                                        style="flex-shrink:0;width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${vc.discountType eq 'PERCENT' ? '#dbeafe' : '#d1fae5'};color:${vc.discountType eq 'PERCENT' ? '#1d4ed8' : '#065f46'};">
+                                                                        <span class="material-symbols-outlined"
+                                                                            style="font-size:1.2rem;">${vc.discountType
+                                                                            eq 'PERCENT' ? 'percent' :
+                                                                            'payments'}</span>
+                                                                    </div>
+                                                                    <%-- info --%>
+                                                                        <div style="flex:1;min-width:0;">
+                                                                            <p
+                                                                                style="font-size:0.82rem;font-weight:800;letter-spacing:2px;color:#1e293b;font-family:monospace;">
+                                                                                ${vc.code}</p>
+                                                                            <p
+                                                                                style="font-size:0.72rem;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                                                                <c:choose>
+                                                                                    <c:when
+                                                                                        test="${not empty vc.description}">
+                                                                                        ${vc.description}</c:when>
+                                                                                    <c:otherwise>
+                                                                                        <c:choose>
+                                                                                            <c:when
+                                                                                                test="${vc.discountType eq 'PERCENT'}">
+                                                                                                Giảm
+                                                                                                ${vc.discountValue}%
+                                                                                                <c:if
+                                                                                                    test="${not empty vc.maxDiscountAmount}">
+                                                                                                    tối đa
+                                                                                                    <fmt:formatNumber
+                                                                                                        value="${vc.maxDiscountAmount}"
+                                                                                                        type="currency"
+                                                                                                        currencyCode="VND"
+                                                                                                        maxFractionDigits="0" />
+                                                                                                </c:if>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>Giảm
+                                                                                                <fmt:formatNumber
+                                                                                                    value="${vc.discountValue}"
+                                                                                                    type="currency"
+                                                                                                    currencyCode="VND"
+                                                                                                    maxFractionDigits="0" />
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </c:otherwise>
+                                                                                </c:choose>
+                                                                            </p>
+                                                                            <div
+                                                                                style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap;">
+                                                                                <c:if
+                                                                                    test="${not empty vc.minOrderValue}">
+                                                                                    <span
+                                                                                        style="font-size:0.66rem;color:#94a3b8;">Đơn
+                                                                                        từ
+                                                                                        <fmt:formatNumber
+                                                                                            value="${vc.minOrderValue}"
+                                                                                            type="currency"
+                                                                                            currencyCode="VND"
+                                                                                            maxFractionDigits="0" />
+                                                                                    </span>
+                                                                                </c:if>
+                                                                                <c:if test="${not empty vc.endDate}">
+                                                                                    <span
+                                                                                        style="font-size:0.66rem;color:#94a3b8;">HSD:
+                                                                                        <fmt:formatDate
+                                                                                            value="${vc.endDate}"
+                                                                                            pattern="dd/MM/yyyy" />
+                                                                                    </span>
+                                                                                </c:if>
+                                                                                <c:if test="${vc.usageLimit > 0}">
+                                                                                    <span
+                                                                                        style="font-size:0.66rem;color:#94a3b8;">Còn
+                                                                                        ${vc.usageLimit - vc.usedCount}
+                                                                                        lượt</span>
+                                                                                </c:if>
+                                                                            </div>
+                                                                            <c:if
+                                                                                test="${!canUse and not empty vc.minOrderValue}">
+                                                                                <p
+                                                                                    style="font-size:0.66rem;color:#ef4444;margin-top:4px;">
+                                                                                    ⚠ Cần mua thêm
+                                                                                    <fmt:formatNumber
+                                                                                        value="${vc.minOrderValue - sessionScope.cart.totalPrice}"
+                                                                                        type="currency"
+                                                                                        currencyCode="VND"
+                                                                                        maxFractionDigits="0" /> để dùng
+                                                                                    mã này
+                                                                                </p>
+                                                                            </c:if>
+                                                                        </div>
+                                                                        <%-- discount badge --%>
+                                                                            <div style="flex-shrink:0;">
+                                                                                <span
+                                                                                    style="display:inline-block;padding:6px 10px;border-radius:8px;font-size:0.88rem;font-weight:800;background:${vc.discountType eq 'PERCENT' ? '#eff6ff' : '#f0fdf4'};color:${vc.discountType eq 'PERCENT' ? '#1d4ed8' : '#065f46'};">
+                                                                                    <c:choose>
+                                                                                        <c:when
+                                                                                            test="${vc.discountType eq 'PERCENT'}">
+                                                                                            ${vc.discountValue}%
+                                                                                        </c:when>
+                                                                                        <c:otherwise>
+                                                                                            <fmt:formatNumber
+                                                                                                value="${vc.discountValue}"
+                                                                                                type="number"
+                                                                                                maxFractionDigits="0" />
+                                                                                            ₫
+                                                                                        </c:otherwise>
+                                                                                    </c:choose>
+                                                                                </span>
+                                                                            </div>
+                                                            </div>
+                                                    </div>
+                                                </c:forEach>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
-                                </div>
                             </div>
                             <!-- Footer -->
                             <div class="p-6 border-t border-slate-100">
                                 <button type="button"
                                     onclick="document.getElementById('discount-drawer').classList.add('hidden')"
                                     class="w-full py-4 border border-slate-900 text-slate-900 text-[10px] uppercase tracking-[0.3em] font-bold rounded-lg hover:bg-slate-900 hover:text-white transition-all duration-300">
-                                    Return to Checkout
+                                    Trở lại Checkout
                                 </button>
                             </div>
                         </div>
@@ -556,6 +684,124 @@
 
                     // Initialize with default check
                     updateSelection('Card');
+
+                    // ── Voucher AJAX ──────────────────────────────────────
+                    const cartTotal = ${ sessionScope.cart.totalPrice };
+
+                    async function applyVoucherCode() {
+                        const code = document.getElementById('voucherCodeInput').value.trim();
+                        const msg = document.getElementById('voucherMsg');
+                        if (!code) { showMsg(msg, 'Vui lòng nhập mã voucher.', false); return; }
+
+                        try {
+                            const res = await fetch('${pageContext.request.contextPath}/voucher?action=apply', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: 'code=' + encodeURIComponent(code) + '&orderTotal=' + cartTotal
+                            });
+                            const data = await res.json();
+                            if (data.ok) {
+                                showMsg(msg, '✅ ' + data.message, true);
+                                applyDiscountToUI(code.toUpperCase(), data.discount);
+                                document.getElementById('voucherIdInput').value = data.voucherId;
+                                document.getElementById('discountAmountInput').value = data.discount;
+                            } else {
+                                showMsg(msg, '❌ ' + data.message, false);
+                            }
+                        } catch (e) {
+                            showMsg(msg, '❌ Lỗi kết nối. Thử lại.', false);
+                        }
+                    }
+
+                    function applyDiscountToUI(code, discountAmt) {
+                        const discountRow = document.getElementById('discountRow');
+                        const discountDisplay = document.getElementById('discountDisplay');
+                        const discountCode = document.getElementById('discountCode');
+                        const totalDisplay = document.getElementById('totalDisplay');
+                        const appliedBox = document.getElementById('appliedVoucherBox');
+
+                        if (discountCode) discountCode.textContent = '🎟️ ' + code;
+                        if (discountDisplay) discountDisplay.textContent = '-' + formatVND(discountAmt);
+                        if (discountRow) discountRow.classList.remove('hidden');
+
+                        const newTotal = Math.max(0, cartTotal - discountAmt);
+                        if (totalDisplay) totalDisplay.textContent = formatVND(newTotal);
+                        if (appliedBox) {
+                            appliedBox.classList.remove('hidden');
+                            const appliedText = document.getElementById('appliedDiscountText');
+                            if (appliedText) appliedText.textContent = 'Giảm ' + formatVND(discountAmt);
+                        }
+                    }
+
+                    function removeVoucher() {
+                        fetch('${pageContext.request.contextPath}/voucher?action=remove', { method: 'POST' })
+                            .then(() => location.reload());
+                    }
+
+                    /** Click on a voucher card → auto-fill code + apply */
+                    function pickVoucher(card) {
+                        const code = card.getAttribute('data-code');
+                        if (!code) return;
+
+                        // Highlight selected card
+                        document.querySelectorAll('.voucher-pick-card').forEach(c => {
+                            c.style.borderColor = '#e2e8f0';
+                            c.style.boxShadow = 'none';
+                        });
+                        card.style.borderColor = '#1d4ed8';
+                        card.style.boxShadow = '0 0 0 3px rgba(29,78,216,0.12)';
+
+                        // Fill the input field
+                        const input = document.getElementById('voucherCodeInput');
+                        if (input) {
+                            input.value = code;
+                            input.dispatchEvent(new Event('input'));
+                        }
+
+                        // Scroll to input so user sees the feedback message
+                        const msg = document.getElementById('voucherMsg');
+                        if (msg) msg.classList.add('hidden');
+
+                        // Trigger apply
+                        applyVoucherCode();
+                    }
+
+                    // Add hover style to voucher pick cards (inline style approach for Tailwind compat)
+                    document.addEventListener('DOMContentLoaded', function () {
+                        document.querySelectorAll('.voucher-pick-card[data-code]').forEach(card => {
+                            if (card.style.cursor === 'pointer') {
+                                card.addEventListener('mouseenter', () => {
+                                    if (card.style.borderColor !== 'rgb(29, 78, 216)') {
+                                        card.style.borderColor = '#94a3b8';
+                                        card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                                    }
+                                });
+                                card.addEventListener('mouseleave', () => {
+                                    if (card.style.borderColor !== 'rgb(29, 78, 216)') {
+                                        card.style.borderColor = '#e2e8f0';
+                                        card.style.boxShadow = 'none';
+                                    }
+                                });
+                            }
+                        });
+                    });
+
+                    function showMsg(el, text, ok) {
+                        if (!el) return;
+                        el.textContent = text;
+                        el.className = 'text-xs mt-1 ' + (ok ? 'text-emerald-600' : 'text-red-500');
+                        el.classList.remove('hidden');
+                    }
+
+                    function formatVND(amount) {
+                        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(amount);
+                    }
+
+                    // Allow Enter key on voucher input
+                    const voucherInput = document.getElementById('voucherCodeInput');
+                    if (voucherInput) {
+                        voucherInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyVoucherCode(); } });
+                    }
 
                     // Validation logic
                     const form = document.getElementById('checkoutForm');

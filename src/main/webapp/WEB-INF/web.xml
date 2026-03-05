@@ -200,7 +200,16 @@
         <servlet-name>FeedbackServlet</servlet-name>
         <url-pattern>/feedback</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>VoucherServlet</servlet-name>
+        <servlet-class>com.aisthea.fashion.controller.VoucherServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>VoucherServlet</servlet-name>
+        <url-pattern>/voucher</url-pattern>
+    </servlet-mapping>
     <!-- HomeServlet mapped to / handles root URL directly -->
+
     <servlet-mapping>
         <servlet-name>Faces Servlet</servlet-name>
         <url-pattern>/faces/*</url-pattern>
