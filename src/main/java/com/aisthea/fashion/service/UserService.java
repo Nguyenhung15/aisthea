@@ -167,9 +167,19 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public boolean toggleUserStatus(int userId) {
+        try {
+            return userDAO.toggleUserStatus(userId);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error toggling user status ID=" + userId, e);
+            return false;
+        }
+    }
+
+    @Override
     public boolean banUser(int userId, String reason) {
         try {
-            return ((UserDAO) userDAO).banUser(userId, reason);
+            return userDAO.banUser(userId, reason);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error banning user ID=" + userId, e);
             return false;
@@ -179,7 +189,7 @@ public class UserService implements IUserService {
     @Override
     public boolean unbanUser(int userId) {
         try {
-            return ((UserDAO) userDAO).unbanUser(userId);
+            return userDAO.unbanUser(userId);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error unbanning user ID=" + userId, e);
             return false;

@@ -25,4 +25,8 @@ public interface IUserDAO {
     boolean activateUserByEmail(String email) throws SQLException;
 
     boolean toggleUserStatus(int userId) throws SQLException;
+
+    boolean banUser(int userId, String reason) throws SQLException;
+
+    boolean unbanUser(int userId) throws SQLException;
 }

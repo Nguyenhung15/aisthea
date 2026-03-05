@@ -201,6 +201,19 @@ public class UserDAO implements IUserDAO {
         return rowDeleted;
     }
 
+    @Override
+    public boolean toggleUserStatus(int userId) throws SQLException {
+        String sql = "UPDATE users SET is_banned = CASE WHEN is_banned = 1 THEN 0 ELSE 1 END, updatedat = GETDATE() WHERE userid = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
     public boolean banUser(int userId, String reason) throws SQLException {
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(BAN_USER_SQL)) {

@@ -37,6 +37,9 @@ public class UserServlet extends HttpServlet {
                 case "unban":
                     unbanUser(request, response);
                     break;
+                case "toggleStatus":
+                    toggleUserStatus(request, response);
+                    break;
                 default:
                     listUsers(request, response);
                     break;
@@ -136,5 +139,12 @@ public class UserServlet extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         boolean ok = userService.unbanUser(id);
         response.sendRedirect("user?action=list&success=" + (ok ? "unbanned" : "error"));
+    }
+
+    private void toggleUserStatus(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        boolean ok = userService.toggleUserStatus(id);
+        response.sendRedirect("user?action=list&success=" + (ok ? "toggled" : "error"));
     }
 }
