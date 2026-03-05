@@ -1,484 +1,529 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-    <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-        <%@ include file="/WEB-INF/views/admin/include/header_admin.jsp" %>
-            <%@ include file="/WEB-INF/views/admin/include/sidebar_admin.jsp" %>
-                <!DOCTYPE html>
-                <html lang="vi">
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+        <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+            <!DOCTYPE html>
+            <html lang="en">
 
-                <head>
-                    <meta charset="UTF-8">
-                    <title>
-                        <c:out value="${empty product ? 'Thêm sản phẩm mới' : 'Sửa sản phẩm'}" />
-                    </title>
-                    <style>
-                        body {
-                            background-color: #f9f9f9;
-                            font-family: "Segoe UI", sans-serif;
-                        }
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>
+                    <c:out value="${empty product ? 'Add Product' : 'Edit Product'}" /> — AISTHÉA Admin
+                </title>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap"
+                    rel="stylesheet">
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+                <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-dashboard.css?v=2">
+                <style>
+                    .lux-form-section {
+                        background: var(--color-white);
+                        border-radius: var(--radius-xl);
+                        box-shadow: var(--shadow-card);
+                        padding: var(--space-xl) var(--space-2xl);
+                        margin-bottom: var(--space-lg);
+                        max-width: 900px;
+                    }
 
-                        .form-container {
-                            margin-left: 240px;
-                            padding: 30px;
-                        }
+                    .lux-form-section__title {
+                        font-family: var(--font-serif);
+                        font-size: 1.1rem;
+                        font-weight: 700;
+                        color: var(--color-primary);
+                        margin-bottom: var(--space-lg);
+                        padding-bottom: var(--space-md);
+                        border-bottom: 1px solid var(--color-border-light);
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
 
-                        h2 {
-                            color: #3e2723;
-                        }
+                    .lux-form-section__title i {
+                        font-size: 0.9rem;
+                        color: var(--color-text-muted);
+                    }
 
-                        hr {
-                            border: 1px solid #d7ccc8;
-                            margin: 15px 0;
-                        }
+                    .lux-form-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: var(--space-lg) var(--space-xl);
+                    }
 
-                        form {
-                            display: flex;
-                            flex-direction: column;
-                            gap: 20px;
-                            max-width: 900px;
-                        }
+                    .lux-form-group {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 6px;
+                    }
 
-                        .form-section {
-                            background: white;
-                            border-radius: 12px;
-                            padding: 20px;
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                        }
+                    .lux-form-group.full-width {
+                        grid-column: 1/-1;
+                    }
 
-                        .form-section h5 {
-                            font-size: 1.1rem;
-                            color: #4e342e;
-                            margin-top: 0;
-                            margin-bottom: 20px;
-                            border-bottom: 1px solid #eee;
-                            padding-bottom: 10px;
-                        }
+                    .lux-form-label {
+                        font-size: 0.78rem;
+                        font-weight: 600;
+                        color: var(--color-text-secondary);
+                        text-transform: uppercase;
+                        letter-spacing: 0.8px;
+                    }
 
-                        .form-group {
-                            display: flex;
-                            flex-direction: column;
-                            gap: 5px;
-                        }
+                    .lux-form-label .required {
+                        color: #dc2626;
+                    }
 
-                        .form-grid {
-                            display: grid;
-                            grid-template-columns: 1fr 1fr;
-                            gap: 15px 20px;
-                        }
+                    .lux-form-input,
+                    .lux-form-select,
+                    .lux-form-textarea {
+                        width: 100%;
+                        padding: 11px 16px;
+                        border: 1.5px solid var(--color-border);
+                        border-radius: var(--radius-md);
+                        font-family: var(--font-sans);
+                        font-size: 0.88rem;
+                        color: var(--color-text-primary);
+                        background: var(--color-white);
+                        outline: none;
+                        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                        box-sizing: border-box;
+                    }
 
-                        .form-grid-full {
-                            grid-column: 1 / -1;
-                        }
+                    .lux-form-textarea {
+                        min-height: 100px;
+                        resize: vertical;
+                    }
 
-                        label {
-                            font-weight: 600;
-                            color: #5d4037;
-                        }
+                    .lux-form-input:focus,
+                    .lux-form-select:focus,
+                    .lux-form-textarea:focus {
+                        border-color: var(--color-primary);
+                        box-shadow: 0 0 0 3px rgba(26, 35, 50, 0.08);
+                    }
 
-                        input[type="text"],
-                        input[type="email"],
-                        input[type="number"],
-                        textarea,
-                        select {
-                            width: 100%;
-                            padding: 9px 12px;
-                            border: 1px solid #ccc;
-                            border-radius: 6px;
-                            font-size: 14px;
-                            box-sizing: border-box;
-                        }
+                    .lux-form-actions {
+                        display: flex;
+                        gap: var(--space-md);
+                        max-width: 900px;
+                    }
 
-                        textarea {
-                            min-height: 80px;
-                        }
+                    .lux-btn-secondary {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: var(--space-sm);
+                        padding: 12px 28px;
+                        background: var(--color-bg);
+                        color: var(--color-text-secondary);
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 600;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        text-decoration: none;
+                    }
 
-                        .image-row,
-                        .stock-row {
-                            display: grid;
-                            gap: 10px;
-                            align-items: center;
-                            margin-bottom: 8px;
-                        }
+                    .lux-btn-secondary:hover {
+                        background: var(--color-border);
+                        color: var(--color-text-primary);
+                    }
 
-                        .image-row {
-                            grid-template-columns: 3fr 1fr 100px 30px;
-                        }
+                    /* Dynamic rows */
+                    .dynamic-row {
+                        display: grid;
+                        gap: 12px;
+                        align-items: center;
+                        margin-bottom: 10px;
+                        padding: 12px 16px;
+                        border: 1px solid var(--color-border-light);
+                        border-radius: var(--radius-md);
+                        transition: border-color 0.2s ease;
+                    }
 
-                        .stock-row {
-                            grid-template-columns: 1fr 1fr 1fr 30px;
-                        }
+                    .dynamic-row:hover {
+                        border-color: var(--color-border);
+                    }
 
-                        .remove-btn {
-                            color: red;
-                            cursor: pointer;
-                            font-weight: bold;
-                            font-size: 20px;
-                            text-align: center;
-                        }
+                    .image-row {
+                        grid-template-columns: 3fr 1.5fr auto 36px;
+                    }
 
-                        .add-btn {
-                            background: #f5f5f5;
-                            border: 1px dashed #ccc;
-                            color: #333;
-                            padding: 8px;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            text-align: center;
-                            font-weight: 600;
-                        }
+                    .stock-row {
+                        grid-template-columns: 1fr 1fr 1fr 36px;
+                    }
 
-                        .add-btn:hover {
-                            background: #eee;
-                        }
+                    .dynamic-row input {
+                        padding: 9px 12px;
+                        border: 1.5px solid var(--color-border);
+                        border-radius: var(--radius-sm);
+                        font-family: var(--font-sans);
+                        font-size: 0.85rem;
+                        outline: none;
+                        box-sizing: border-box;
+                    }
 
-                        .btn-actions {
-                            display: flex;
-                            gap: 10px;
-                            margin-top: 10px;
-                        }
+                    .dynamic-row input:focus {
+                        border-color: var(--color-primary);
+                    }
 
-                        .btn-save {
-                            background: #3e2723;
-                            color: #fff;
-                            padding: 10px 15px;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 15px;
-                            font-weight: 600;
-                        }
+                    .radio-label {
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        font-size: 0.82rem;
+                        color: var(--color-text-secondary);
+                        white-space: nowrap;
+                    }
 
-                        .btn-cancel {
-                            background: #9e9e9e;
-                            color: #fff;
-                            padding: 10px 15px;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 15px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        }
-                    </style>
-                </head>
+                    .remove-btn {
+                        width: 32px;
+                        height: 32px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: var(--radius-sm);
+                        background: var(--color-bg);
+                        color: var(--color-text-muted);
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        font-size: 0.8rem;
+                    }
 
-                <body>
+                    .remove-btn:hover {
+                        background: #fef2f2;
+                        color: #dc2626;
+                    }
 
-                    <div class="form-container">
-                        <h2>
-                            <c:out value="${empty product ? 'Thêm sản phẩm mới' : 'Sửa sản phẩm'}" />
-                        </h2>
-                        <hr>
+                    .add-row-btn {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        background: var(--color-bg);
+                        border: 1.5px dashed var(--color-border);
+                        color: var(--color-text-secondary);
+                        padding: 11px;
+                        border-radius: var(--radius-md);
+                        cursor: pointer;
+                        font-weight: 600;
+                        font-size: 0.85rem;
+                        transition: all 0.2s ease;
+                    }
 
-                        <c:if test="${not empty error}">
-                            <div
-                                style="background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; border: 1px solid #c62828; margin-bottom: 20px; font-weight: 600;">
-                                <strong>Lỗi!</strong> ${error}
-                            </div>
-                        </c:if>
-                        <c:set var="actionUrl" value="${pageContext.request.contextPath}/product?action=insert" />
-                        <c:if test="${not empty product}">
-                            <c:set var="actionUrl" value="${pageContext.request.contextPath}/product?action=update" />
-                        </c:if>
+                    .add-row-btn:hover {
+                        background: var(--color-border-light);
+                        border-color: var(--color-text-muted);
+                        color: var(--color-text-primary);
+                    }
+                </style>
+            </head>
 
-                        <form action="${actionUrl}" method="post">
-                            <%-- Đặt hidden input "id" ở đây --%>
-                                <c:if test="${not empty product}">
-                                    <input type="hidden" name="id" value="${product.productId}">
+            <body class="luxury-admin">
+                <%@ include file="/WEB-INF/views/admin/include/sidebar_admin.jsp" %>
+                    <%@ include file="/WEB-INF/views/admin/include/header_admin.jsp" %>
+
+                        <main class="lux-main">
+                            <div class="lux-content">
+
+                                <!-- Page Header -->
+                                <section class="lux-page-header">
+                                    <div class="lux-page-header__text">
+                                        <h1 class="lux-page-header__title">
+                                            <c:out value="${empty product ? 'New Product' : 'Edit Product'}" />
+                                        </h1>
+                                        <p class="lux-page-header__subtitle">
+                                            <c:choose>
+                                                <c:when test="${not empty product}">Update product details, images and
+                                                    inventory.</c:when>
+                                                <c:otherwise>Add a new product to your catalog.</c:otherwise>
+                                            </c:choose>
+                                        </p>
+                                    </div>
+                                    <div class="lux-page-header__actions">
+                                        <a href="${pageContext.request.contextPath}/product?action=manage"
+                                            class="lux-btn-secondary">
+                                            <i class="fa-solid fa-arrow-left"></i> Back to Products
+                                        </a>
+                                    </div>
+                                </section>
+
+                                <!-- Error Message -->
+                                <c:if test="${not empty error}">
+                                    <div
+                                        style="background:#fef2f2;color:#dc2626;padding:14px 20px;border-radius:var(--radius-md);margin-bottom:var(--space-lg);font-weight:600;font-size:0.88rem;max-width:900px;">
+                                        <i class="fa-solid fa-circle-exclamation" style="margin-right:8px;"></i>${error}
+                                    </div>
                                 </c:if>
 
-                                <div class="form-section">
-                                    <h5>Thông tin cơ bản</h5>
-                                    <div class="form-grid">
-                                        <div class="form-group form-grid-full">
-                                            <label>Tên sản phẩm</label>
-                                            <input type="text" name="name" value="${product.name}" required>
-                                        </div>
-                                        <div class="form-group form-grid-full">
-                                            <label>Mô tả</label>
-                                            <textarea name="description">${product.description}</textarea>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Giá</label>
-                                            <input type="number" name="price" step="1000" value="${product.price}"
-                                                required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Thương hiệu</label>
-                                            <input type="text" name="brand" value="${product.brand}">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Giảm giá (%)</label>
-                                            <input type="number" name="discount" min="0" max="100"
-                                                value="${product.discount}" step="1">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Giới tính</label>
-                                            <select id="genderid" name="genderid" required>
-                                                <option value="">-- Chọn giới tính --</option>
-                                                <option value="1" ${product.category.genderid==1 ? 'selected' : '' }>Nam
-                                                </option>
-                                                <option value="2" ${product.category.genderid==2 ? 'selected' : '' }>Nữ
-                                                </option>
-                                            </select>
+                                <c:set var="actionUrl"
+                                    value="${pageContext.request.contextPath}/product?action=insert" />
+                                <c:if test="${not empty product}">
+                                    <c:set var="actionUrl"
+                                        value="${pageContext.request.contextPath}/product?action=update" />
+                                </c:if>
+
+                                <form action="${actionUrl}" method="post">
+                                    <c:if test="${not empty product}">
+                                        <input type="hidden" name="id" value="${product.productId}">
+                                    </c:if>
+
+                                    <!-- Section 1: Basic Info -->
+                                    <div class="lux-form-section">
+                                        <h3 class="lux-form-section__title"><i class="fa-solid fa-circle-info"></i>
+                                            Basic Information</h3>
+                                        <div class="lux-form-grid">
+                                            <div class="lux-form-group full-width">
+                                                <label class="lux-form-label">Product Name <span
+                                                        class="required">*</span></label>
+                                                <input type="text" name="name" value="${product.name}" required
+                                                    class="lux-form-input" placeholder="Enter product name">
+                                            </div>
+                                            <div class="lux-form-group full-width">
+                                                <label class="lux-form-label">Description</label>
+                                                <textarea name="description" class="lux-form-textarea"
+                                                    placeholder="Enter product description">${product.description}</textarea>
+                                            </div>
+                                            <div class="lux-form-group">
+                                                <label class="lux-form-label">Price (VND) <span
+                                                        class="required">*</span></label>
+                                                <input type="number" name="price" step="1000" value="${product.price}"
+                                                    required class="lux-form-input" placeholder="0">
+                                            </div>
+                                            <div class="lux-form-group">
+                                                <label class="lux-form-label">Brand</label>
+                                                <input type="text" name="brand" value="${product.brand}"
+                                                    class="lux-form-input" placeholder="e.g. AISTHÉA">
+                                            </div>
+                                            <div class="lux-form-group">
+                                                <label class="lux-form-label">Discount (%)</label>
+                                                <input type="number" name="discount" min="0" max="100"
+                                                    value="${product.discount}" step="1" class="lux-form-input"
+                                                    placeholder="0">
+                                            </div>
+                                            <div class="lux-form-group">
+                                                <label class="lux-form-label">Gender <span
+                                                        class="required">*</span></label>
+                                                <select id="genderid" name="genderid" required class="lux-form-select">
+                                                    <option value="">— Select Gender —</option>
+                                                    <option value="1" ${product.category.genderid==1 ? 'selected' : ''
+                                                        }>Nam</option>
+                                                    <option value="2" ${product.category.genderid==2 ? 'selected' : ''
+                                                        }>Nữ</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="form-section">
-                                    <h5>Danh mục sản phẩm</h5>
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label>Danh mục cha</label>
-                                            <select id="parentCategorySelect" name="parentCategory" required>
-                                                <option value="">-- Vui lòng chọn Giới tính trước --</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Danh mục con</label>
-                                            <select id="childCategorySelect" name="categoryid" required>
-                                                <option value="">-- Vui lòng chọn Danh mục cha trước --</option>
-                                            </select>
+                                    <!-- Section 2: Category -->
+                                    <div class="lux-form-section">
+                                        <h3 class="lux-form-section__title"><i class="fa-solid fa-tags"></i> Category
+                                        </h3>
+                                        <div class="lux-form-grid">
+                                            <div class="lux-form-group">
+                                                <label class="lux-form-label">Parent Category <span
+                                                        class="required">*</span></label>
+                                                <select id="parentCategorySelect" name="parentCategory" required
+                                                    class="lux-form-select">
+                                                    <option value="">— Select gender first —</option>
+                                                </select>
+                                            </div>
+                                            <div class="lux-form-group">
+                                                <label class="lux-form-label">Sub Category <span
+                                                        class="required">*</span></label>
+                                                <select id="childCategorySelect" name="categoryid" required
+                                                    class="lux-form-select">
+                                                    <option value="">— Select parent first —</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="form-section">
-                                    <h5>Ảnh sản phẩm</h5>
-                                    <div id="imageContainer">
-                                        <c:forEach var="image" items="${product.images}" varStatus="loop">
-                                            <div class="image-row">
-                                                <input type="text" name="image_url" value="${image.imageUrl}" required>
-                                                <input type="text" name="image_color" value="${image.color}">
-                                                <label class="radio-label">
-                                                    <%-- Sửa: value nên là index để JS dễ xử lý --%>
+                                    <!-- Section 3: Images -->
+                                    <div class="lux-form-section">
+                                        <h3 class="lux-form-section__title"><i class="fa-solid fa-images"></i> Product
+                                            Images</h3>
+                                        <div id="imageContainer">
+                                            <c:forEach var="image" items="${product.images}" varStatus="loop">
+                                                <div class="dynamic-row image-row">
+                                                    <input type="text" name="image_url" value="${image.imageUrl}"
+                                                        placeholder="Image URL" required>
+                                                    <input type="text" name="image_color" value="${image.color}"
+                                                        placeholder="Color">
+                                                    <label class="radio-label">
                                                         <input type="radio" name="image_isprimary" value="${loop.index}"
                                                             ${image.primary ? 'checked' : '' }>
-                                                        Ảnh chính
-                                                </label>
-                                                <span class="remove-btn">X</span>
-                                            </div>
-                                        </c:forEach>
+                                                        Primary
+                                                    </label>
+                                                    <span class="remove-btn"><i class="fa-solid fa-xmark"></i></span>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                        <div class="add-row-btn" id="addImageBtn"><i class="fa-solid fa-plus"></i> Add
+                                            Image</div>
                                     </div>
-                                    <div class="add-btn" id="addImageBtn">+ Thêm ảnh</div>
-                                </div>
 
-                                <div class="form-section">
-                                    <h5>Màu sắc, Kích thước & Tồn kho</h5>
-                                    <div id="stockContainer">
-                                        <c:forEach var="stock" items="${product.colorSizes}">
-                                            <div class="stock-row">
-                                                <input type="text" name="stock_color" value="${stock.color}" required>
-                                                <input type="text" name="stock_size" value="${stock.size}" required>
-                                                <input type="number" name="stock_stock" value="${stock.stock}" min="0"
-                                                    required>
-                                                <span class="remove-btn">X</span>
-                                            </div>
-                                        </c:forEach>
+                                    <!-- Section 4: Stock -->
+                                    <div class="lux-form-section">
+                                        <h3 class="lux-form-section__title"><i class="fa-solid fa-warehouse"></i> Color,
+                                            Size & Stock</h3>
+                                        <div
+                                            style="display:grid;grid-template-columns:1fr 1fr 1fr 36px;gap:12px;padding:0 16px 8px;margin-bottom:4px;">
+                                            <span class="lux-form-label">Color</span>
+                                            <span class="lux-form-label">Size</span>
+                                            <span class="lux-form-label">Stock</span>
+                                            <span></span>
+                                        </div>
+                                        <div id="stockContainer">
+                                            <c:forEach var="stock" items="${product.colorSizes}">
+                                                <div class="dynamic-row stock-row">
+                                                    <input type="text" name="stock_color" value="${stock.color}"
+                                                        placeholder="Color" required>
+                                                    <input type="text" name="stock_size" value="${stock.size}"
+                                                        placeholder="Size" required>
+                                                    <input type="number" name="stock_stock" value="${stock.stock}"
+                                                        min="0" placeholder="0" required>
+                                                    <span class="remove-btn"><i class="fa-solid fa-xmark"></i></span>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                        <div class="add-row-btn" id="addStockBtn"><i class="fa-solid fa-plus"></i> Add
+                                            Variant</div>
                                     </div>
-                                    <div class="add-btn" id="addStockBtn">+ Thêm dòng</div>
-                                </div>
 
-                                <div class="btn-actions">
-                                    <button type="submit" class="btn-save">Lưu sản phẩm</button>
-                                    <a href="${pageContext.request.contextPath}/product?action=manage"
-                                        class="btn-cancel">Hủy</a>
-                                </div>
-                        </form>
-                    </div>
+                                    <!-- Actions -->
+                                    <div class="lux-form-actions">
+                                        <button type="submit" class="lux-btn-primary">
+                                            <i class="fa-solid fa-check"></i>
+                                            <c:out value="${empty product ? 'Create Product' : 'Save Changes'}" />
+                                        </button>
+                                        <a href="${pageContext.request.contextPath}/product?action=manage"
+                                            class="lux-btn-secondary">Cancel</a>
+                                    </div>
+                                </form>
 
-                    <select id="categoryDataSource" style="display: none;">
-                        <c:forEach var="cat" items="${allCategories}">
-                            <option value="${cat.categoryid}" data-gender-id="${cat.genderid}"
-                                data-parent-id="${cat.parentid}" data-index-name="${cat.indexName}">
-                                ${cat.name}
-                            </option>
-                        </c:forEach>
-                    </select>
+                            </div>
+                        </main>
 
-                    <%--===SCRIPT ĐÃ SỬA LỖI HOÀN TOÀN===--%>
+                        <!-- Hidden category data source -->
+                        <select id="categoryDataSource" style="display:none;">
+                            <c:forEach var="cat" items="${allCategories}">
+                                <option value="${cat.categoryid}" data-gender-id="${cat.genderid}"
+                                    data-parent-id="${cat.parentid}" data-index-name="${cat.indexName}">
+                                    ${cat.name}
+                                </option>
+                            </c:forEach>
+                        </select>
+
                         <script>
                             document.addEventListener("DOMContentLoaded", function () {
-
-                                // --- 1. Lấy Elements ---
                                 const genderSelect = document.getElementById("genderid");
                                 const parentSelect = document.getElementById("parentCategorySelect");
                                 const childSelect = document.getElementById("childCategorySelect");
                                 const allCategoryOptions = Array.from(document.querySelectorAll("#categoryDataSource option"));
 
-                                // --- 2. Các hàm xử lý Danh mục ---
+                                function resetSelect(selectElement, defaultText) {
+                                    selectElement.innerHTML = "<option value=''>— " + defaultText + " —</option>";
+                                }
 
-                                // Tải danh mục cha (Logic gốc của bạn - đã đúng)
                                 function populateParentSelect(selectedGenderId) {
-                                    resetSelect(parentSelect, "Chọn danh mục cha");
-                                    resetSelect(childSelect, "Vui lòng chọn Danh mục cha trước");
-                                    if (!selectedGenderId)
-                                        return;
+                                    resetSelect(parentSelect, "Select parent category");
+                                    resetSelect(childSelect, "Select parent first");
+                                    if (!selectedGenderId) return;
 
                                     allCategoryOptions.forEach(option => {
                                         const optionGenderId = option.dataset.genderId;
                                         const optionParentId = option.dataset.parentId;
                                         const isParentCategory = !optionParentId || optionParentId === '0' || optionParentId === 'null' || optionParentId === '';
-
                                         if (optionGenderId === selectedGenderId && isParentCategory) {
                                             parentSelect.appendChild(option.cloneNode(true));
                                         }
                                     });
                                 }
 
-                                // Tải danh mục con (Logic mới bạn yêu cầu: thêm genderId)
                                 function populateChildSelect() {
-                                    resetSelect(childSelect, "Chọn danh mục con");
-
+                                    resetSelect(childSelect, "Select sub category");
                                     const selectedGenderId = genderSelect.value;
                                     const selectedParentOption = parentSelect.options[parentSelect.selectedIndex];
-
-                                    // Phải chọn cả 2 thì mới lọc
-                                    if (!selectedGenderId || !selectedParentOption || !selectedParentOption.value) {
-                                        return;
-                                    }
+                                    if (!selectedGenderId || !selectedParentOption || !selectedParentOption.value) return;
 
                                     const selectedParentIndexName = selectedParentOption.dataset.indexName;
-                                    if (!selectedParentIndexName)
-                                        return;
+                                    if (!selectedParentIndexName) return;
 
                                     allCategoryOptions.forEach(option => {
                                         const optionGenderId = option.dataset.genderId;
                                         const optionParentId = option.dataset.parentId;
-
-                                        // Lọc theo CẢ 2 điều kiện
                                         if (optionGenderId === selectedGenderId && optionParentId === selectedParentIndexName) {
                                             childSelect.appendChild(option.cloneNode(true));
                                         }
                                     });
                                 }
 
-                                // Hàm helper
-                                function resetSelect(selectElement, defaultText) {
-                                    selectElement.innerHTML = `<option value=''>-- ${defaultText} --</option>`;
-                                }
+                                genderSelect.addEventListener("change", function () { populateParentSelect(genderSelect.value); });
+                                parentSelect.addEventListener("change", function () { populateChildSelect(); });
 
-                                // --- 3. Gán Event Listeners ---
-                                genderSelect.addEventListener("change", function () {
-                                    populateParentSelect(genderSelect.value);
-                                });
-
-                                parentSelect.addEventListener("change", function () {
-                                    populateChildSelect();
-                                });
-
-
-                                // --- 4. Xử lý Tồn kho (Thêm required) ---
+                                // Stock rows
                                 const stockContainer = document.getElementById("stockContainer");
-                                const addStockBtn = document.getElementById("addStockBtn");
-                                addStockBtn.addEventListener("click", function () {
-                                    const stockRow = document.createElement("div");
-                                    stockRow.className = "stock-row";
-                                    stockRow.innerHTML = `
-                        <input type="text" name="stock_color" placeholder="Màu sắc (VD: 'Đen')" required>
-                        <input type="text" name="stock_size" placeholder="Size (VD: 'M')" required>
-                        <input type="number" name="stock_stock" placeholder="Tồn kho" min="0" required>
-                        <span class="remove-btn">X</span>
-                    `;
-                                    stockContainer.appendChild(stockRow);
+                                document.getElementById("addStockBtn").addEventListener("click", function () {
+                                    const row = document.createElement("div");
+                                    row.className = "dynamic-row stock-row";
+                                    row.innerHTML = '<input type="text" name="stock_color" placeholder="Color" required><input type="text" name="stock_size" placeholder="Size" required><input type="number" name="stock_stock" placeholder="0" min="0" required><span class="remove-btn"><i class="fa-solid fa-xmark"></i></span>';
+                                    stockContainer.appendChild(row);
                                 });
-
                                 stockContainer.addEventListener("click", function (e) {
-                                    if (e.target.classList.contains("remove-btn")) {
-                                        e.target.parentElement.remove();
+                                    if (e.target.classList.contains("remove-btn") || e.target.closest(".remove-btn")) {
+                                        (e.target.closest(".dynamic-row") || e.target.parentElement).remove();
                                     }
                                 });
 
-                                // --- 5. Xử lý Ảnh (Sửa lỗi 'checked' và 'remove') ---
+                                // Image rows
                                 const imageContainer = document.getElementById("imageContainer");
-                                const addImageBtn = document.getElementById("addImageBtn");
-                                let imageRowIndex = imageContainer.querySelectorAll('.image-row').length;
-
-                                addImageBtn.addEventListener("click", function () {
-                                    const rowIndex = imageRowIndex++;
-                                    const imageRow = document.createElement("div");
-                                    imageRow.className = "image-row";
-
-                                    // Kiểm tra xem đã có ảnh nào chưa
-                                    const isFirstImage = imageContainer.querySelectorAll('input[type="radio"]').length === 0;
-
-                                    // Sửa lỗi: Bỏ dấu \
-                                    imageRow.innerHTML = `
-                        <input type="text" name="image_url" placeholder="Dán URL ảnh vào đây" required>
-                        <input type="text" name="image_color" placeholder="Màu (VD: 'Trắng')">
-                        <label class="radio-label">
-                            <input type="radio" name="image_isprimary" value="${rowIndex}" ${isFirstImage ? 'checked' : ''}>
-                            Ảnh chính
-                        </label>
-                        <span class="remove-btn">X</span>
-                    `;
-                                    imageContainer.appendChild(imageRow);
+                                let imageRowIndex = imageContainer.querySelectorAll('.dynamic-row').length;
+                                document.getElementById("addImageBtn").addEventListener("click", function () {
+                                    const idx = imageRowIndex++;
+                                    const isFirst = imageContainer.querySelectorAll('input[type="radio"]').length === 0;
+                                    const row = document.createElement("div");
+                                    row.className = "dynamic-row image-row";
+                                    row.innerHTML = '<input type="text" name="image_url" placeholder="Paste image URL" required><input type="text" name="image_color" placeholder="Color"><label class="radio-label"><input type="radio" name="image_isprimary" value="' + idx + '"' + (isFirst ? ' checked' : '') + '> Primary</label><span class="remove-btn"><i class="fa-solid fa-xmark"></i></span>';
+                                    imageContainer.appendChild(row);
                                 });
-
                                 imageContainer.addEventListener("click", function (e) {
-                                    if (e.target.classList.contains("remove-btn")) {
-                                        const rowToRemove = e.target.parentElement;
+                                    if (e.target.classList.contains("remove-btn") || e.target.closest(".remove-btn")) {
+                                        const rowToRemove = e.target.closest(".dynamic-row") || e.target.parentElement;
                                         const radio = rowToRemove.querySelector('input[type="radio"]');
-
-                                        let wasChecked = false;
-                                        if (radio) {
-                                            wasChecked = radio.checked;
-                                        }
-
-                                        // Xóa hàng
+                                        const wasChecked = radio ? radio.checked : false;
                                         rowToRemove.remove();
-
-                                        // Nếu hàng bị xóa là "Ảnh chính"
                                         if (wasChecked) {
-                                            // Chọn radio đầu tiên còn lại (nếu có)
                                             const firstRadio = imageContainer.querySelector('input[type="radio"]');
-                                            if (firstRadio) {
-                                                firstRadio.checked = true;
-                                            }
+                                            if (firstRadio) firstRadio.checked = true;
                                         }
                                     }
                                 });
 
-
-                                // --- 6. [ĐÃ SỬA] LOGIC KHI SỬA SẢN PHẨM ---
-
-                                // Kiểm tra chặt chẽ hơn
+                                // Edit mode: restore category selections
                                 const isEditMode = ${ not empty product && not empty product.category
                             };
-
                             if (isEditMode) {
                                 const genderId = "${product.category.genderid}";
                                 const parentId = "${empty parentCategory ? '' : parentCategory.categoryid}";
                                 const childId = "${product.category.categoryid}";
 
                                 if (genderId) {
-                                    // BƯỚC 1: Set giá trị cho select Giới tính
-                                    // (Quan trọng: Phải làm điều này trước, thay vì chỉ dựa vào JSTL)
                                     genderSelect.value = genderId;
-
-                                    // BƯỚC 2: Tải danh mục cha dựa trên giới tính đã chọn
                                     populateParentSelect(genderId);
-
-                                    // BƯỚC 3: Chọn đúng danh mục cha
                                     if (parentId) {
-                                        // TH: Sản phẩm thuộc danh mục con
                                         parentSelect.value = parentId;
                                     } else {
-                                        // TH: Sản phẩm thuộc danh mục cha
                                         parentSelect.value = childId;
                                     }
-
-                                    // BƯỚC 4: Tải danh mục con dựa trên cha đã chọn
                                     populateChildSelect();
-
-                                    // BƯỚC 5: Chọn đúng danh mục con (nếu có)
                                     if (parentId) {
                                         childSelect.value = childId;
                                     }
                                 }
                             }
-
-            });
+        });
                         </script>
-                </body>
+            </body>
 
-                </html>
+            </html>

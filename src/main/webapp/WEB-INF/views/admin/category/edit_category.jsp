@@ -1,187 +1,255 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-        <%@ include file="/WEB-INF/views/admin/include/header_admin.jsp" %>
+        <!DOCTYPE html>
+        <html lang="en">
+
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>
+                <c:choose>
+                    <c:when test="${not empty category}">Edit Category</c:when>
+                    <c:otherwise>Add Category</c:otherwise>
+                </c:choose> — AISTHÉA Admin
+            </title>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link
+                href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap"
+                rel="stylesheet">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+            <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-dashboard.css?v=2">
+            <style>
+                .lux-form-card {
+                    background: var(--color-white);
+                    border-radius: var(--radius-xl);
+                    box-shadow: var(--shadow-card);
+                    padding: var(--space-xl) var(--space-2xl);
+                    max-width: 700px;
+                }
+
+                .lux-form-card__title {
+                    font-family: var(--font-serif);
+                    font-size: 1.3rem;
+                    font-weight: 700;
+                    color: var(--color-primary);
+                    margin-bottom: var(--space-xs);
+                }
+
+                .lux-form-card__subtitle {
+                    font-size: 0.82rem;
+                    color: var(--color-text-muted);
+                    margin-bottom: var(--space-xl);
+                    padding-bottom: var(--space-lg);
+                    border-bottom: 1px solid var(--color-border-light);
+                }
+
+                .lux-form-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: var(--space-lg) var(--space-xl);
+                }
+
+                .lux-form-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                }
+
+                .lux-form-group.full-width {
+                    grid-column: 1/-1;
+                }
+
+                .lux-form-label {
+                    font-size: 0.78rem;
+                    font-weight: 600;
+                    color: var(--color-text-secondary);
+                    text-transform: uppercase;
+                    letter-spacing: 0.8px;
+                }
+
+                .lux-form-label .required {
+                    color: #dc2626;
+                }
+
+                .lux-form-input,
+                .lux-form-select {
+                    width: 100%;
+                    padding: 11px 16px;
+                    border: 1.5px solid var(--color-border);
+                    border-radius: var(--radius-md);
+                    font-family: var(--font-sans);
+                    font-size: 0.88rem;
+                    color: var(--color-text-primary);
+                    background: var(--color-white);
+                    outline: none;
+                    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                    box-sizing: border-box;
+                }
+
+                .lux-form-input:focus,
+                .lux-form-select:focus {
+                    border-color: var(--color-primary);
+                    box-shadow: 0 0 0 3px rgba(26, 35, 50, 0.08);
+                }
+
+                .lux-form-select:disabled {
+                    background: #f9fafb;
+                    color: var(--color-text-muted);
+                }
+
+                .lux-form-actions {
+                    display: flex;
+                    gap: var(--space-md);
+                    margin-top: var(--space-xl);
+                    padding-top: var(--space-lg);
+                    border-top: 1px solid var(--color-border-light);
+                }
+
+                .lux-btn-secondary {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: var(--space-sm);
+                    padding: 12px 28px;
+                    background: var(--color-bg);
+                    color: var(--color-text-secondary);
+                    font-family: var(--font-sans);
+                    font-size: 0.82rem;
+                    font-weight: 600;
+                    border: 1px solid var(--color-border);
+                    border-radius: var(--radius-full);
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-decoration: none;
+                }
+
+                .lux-btn-secondary:hover {
+                    background: var(--color-border);
+                    color: var(--color-text-primary);
+                }
+            </style>
+        </head>
+
+        <body class="luxury-admin">
             <%@ include file="/WEB-INF/views/admin/include/sidebar_admin.jsp" %>
+                <%@ include file="/WEB-INF/views/admin/include/header_admin.jsp" %>
 
-                <!DOCTYPE html>
-                <html lang="vi">
+                    <main class="lux-main">
+                        <div class="lux-content">
 
-                <head>
-                    <meta charset="UTF-8">
-                    <c:choose>
-                        <c:when test="${not empty category}">
-                            <title>Chỉnh sửa danh mục</title>
-                        </c:when>
-                        <c:otherwise>
-                            <title>Thêm danh mục mới</title>
-                        </c:otherwise>
-                    </c:choose>
-                    <style>
-                        body {
-                            background-color: #f9f9f9;
-                            font-family: "Segoe UI", sans-serif;
-                        }
+                            <!-- Page Header -->
+                            <section class="lux-page-header">
+                                <div class="lux-page-header__text">
+                                    <h1 class="lux-page-header__title">
+                                        <c:choose>
+                                            <c:when test="${not empty category}">Edit Category</c:when>
+                                            <c:otherwise>New Category</c:otherwise>
+                                        </c:choose>
+                                    </h1>
+                                    <p class="lux-page-header__subtitle">
+                                        <c:choose>
+                                            <c:when test="${not empty category}">Update category details and hierarchy.
+                                            </c:when>
+                                            <c:otherwise>Create a new product category for your catalog.</c:otherwise>
+                                        </c:choose>
+                                    </p>
+                                </div>
+                                <div class="lux-page-header__actions">
+                                    <a href="${pageContext.request.contextPath}/category" class="lux-btn-secondary">
+                                        <i class="fa-solid fa-arrow-left"></i> Back to Categories
+                                    </a>
+                                </div>
+                            </section>
 
-                        .form-container {
-                            margin-left: 240px;
-                            padding: 30px;
-                        }
+                            <!-- Error Message -->
+                            <c:if test="${not empty errorMsg}">
+                                <div
+                                    style="background:#fef2f2;color:#dc2626;padding:14px 20px;border-radius:var(--radius-md);margin-bottom:var(--space-lg);font-weight:600;font-size:0.88rem;">
+                                    <i class="fa-solid fa-circle-exclamation" style="margin-right:8px;"></i>${errorMsg}
+                                </div>
+                            </c:if>
 
-                        h2 {
-                            color: #3e2723;
-                        }
+                            <div class="lux-form-card">
+                                <h2 class="lux-form-card__title">
+                                    <i class="fa-solid fa-tag" style="margin-right:8px;font-size:1rem;"></i>
+                                    Category Details
+                                </h2>
+                                <p class="lux-form-card__subtitle">Fill in the fields below. Required fields are marked
+                                    with <span style="color:#dc2626;">*</span></p>
 
-                        hr {
-                            border: 1px solid #d7ccc8;
-                            margin: 15px 0;
-                        }
+                                <form action="category" method="post">
+                                    <c:choose>
+                                        <c:when test="${not empty category}">
+                                            <input type="hidden" name="action" value="update" />
+                                            <input type="hidden" name="id"
+                                                value="<c:out value='${category.categoryid}' />" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <input type="hidden" name="action" value="insert" />
+                                        </c:otherwise>
+                                    </c:choose>
 
-                        form {
-                            display: grid;
-                            gap: 15px;
-                            width: 700px;
-                            background: #fff;
-                            border-radius: 8px;
-                            padding: 20px;
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                        }
+                                    <div class="lux-form-group full-width" style="margin-bottom:var(--space-lg);">
+                                        <label class="lux-form-label">Category Name <span
+                                                class="required">*</span></label>
+                                        <input type="text" id="name" name="name"
+                                            value="<c:out value='${category.name}' />" required class="lux-form-input"
+                                            placeholder="e.g. Áo khoác, Quần jeans...">
+                                    </div>
 
-                        .form-grid {
-                            display: grid;
-                            grid-template-columns: 1fr 1fr;
-                            gap: 15px 20px;
-                        }
+                                    <div class="lux-form-grid">
+                                        <div class="lux-form-group">
+                                            <label class="lux-form-label">Type</label>
+                                            <input type="text" id="type" name="type"
+                                                value="<c:out value='${category.type}' />" class="lux-form-input"
+                                                placeholder="e.g. Clothing">
+                                        </div>
+                                        <div class="lux-form-group">
+                                            <label class="lux-form-label">Index Name</label>
+                                            <input type="text" id="indexName" name="indexName"
+                                                value="<c:out value='${category.indexName}' />" class="lux-form-input"
+                                                placeholder="e.g. ao-khoac">
+                                        </div>
+                                        <div class="lux-form-group">
+                                            <label class="lux-form-label">Gender <span class="required">*</span></label>
+                                            <select id="genderid" name="genderid" required class="lux-form-select"
+                                                data-selected-gender="${category.genderid}"
+                                                data-selected-parent="${category.parentid}">
+                                                <option value="">— Select Gender —</option>
+                                                <option value="1" ${category.genderid==1 ? 'selected' : '' }>Nam
+                                                </option>
+                                                <option value="2" ${category.genderid==2 ? 'selected' : '' }>Nữ</option>
+                                                <option value="3" ${category.genderid==3 ? 'selected' : '' }>Khác
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="lux-form-group">
+                                            <label class="lux-form-label">Parent Category</label>
+                                            <select id="parentid" name="parentid" class="lux-form-select">
+                                                <option value="">— None (this is a parent) —</option>
+                                            </select>
+                                        </div>
+                                    </div>
 
-                        .form-group {
-                            display: flex;
-                            flex-direction: column;
-                            gap: 5px;
-                        }
-
-                        label {
-                            font-weight: 600;
-                            color: #5d4037;
-                        }
-
-                        input[type="text"],
-                        input[type="email"],
-                        textarea,
-                        select {
-                            width: 100%;
-                            padding: 9px 12px;
-                            border: 1px solid #ccc;
-                            border-radius: 6px;
-                            font-size: 14px;
-                            box-sizing: border-box;
-                        }
-
-                        select:disabled {
-                            background-color: #e9ecef;
-                        }
-
-                        .btn-save {
-                            background: #3e2723;
-                            color: #fff;
-                            padding: 10px 15px;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 15px;
-                            font-weight: 600;
-                            width: 120px;
-                        }
-
-                        .btn-cancel {
-                            background: #9e9e9e;
-                            color: #fff;
-                            padding: 10px 15px;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-size: 15px;
-                            font-weight: 600;
-                            text-decoration: none;
-                            width: 80px;
-                            text-align: center;
-                        }
-                    </style>
-                </head>
-
-                <body>
-
-                    <div class="form-container">
-
-                        <c:choose>
-                            <c:when test="${not empty category}">
-                                <h2>Chỉnh sửa danh mục</h2>
-                            </c:when>
-                            <c:otherwise>
-                                <h2>Thêm danh mục mới</h2>
-                            </c:otherwise>
-                        </c:choose>
-                        <hr>
-
-                        <c:if test="${not empty errorMsg}">
-                            <p style="color:red;">${errorMsg}</p>
-                        </c:if>
-
-                        <form action="category" method="post">
-                            <c:choose>
-                                <c:when test="${not empty category}">
-                                    <input type="hidden" name="action" value="update" />
-                                    <input type="hidden" name="id" value="<c:out value='${category.categoryid}' />" />
-                                </c:when>
-                                <c:otherwise>
-                                    <input type="hidden" name="action" value="insert" />
-                                </c:otherwise>
-                            </c:choose>
-
-                            <div class="form-group">
-                                <label for="name">Tên danh mục (*)</label>
-                                <input type="text" id="name" name="name" value="<c:out value='${category.name}' />"
-                                    required>
+                                    <div class="lux-form-actions">
+                                        <button type="submit" class="lux-btn-primary">
+                                            <i class="fa-solid fa-check"></i>
+                                            <c:choose>
+                                                <c:when test="${not empty category}">Save Changes</c:when>
+                                                <c:otherwise>Create Category</c:otherwise>
+                                            </c:choose>
+                                        </button>
+                                        <a href="${pageContext.request.contextPath}/category"
+                                            class="lux-btn-secondary">Cancel</a>
+                                    </div>
+                                </form>
                             </div>
 
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="type">Loại (Type)</label>
-                                    <input type="text" id="type" name="type" value="<c:out value='${category.type}' />">
-                                </div>
+                        </div>
+                    </main>
 
-                                <div class="form-group">
-                                    <label for="indexName">Index Name ("index_name")</label>
-                                    <input type="text" id="indexName" name="indexName"
-                                        value="<c:out value='${category.indexName}' />">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="genderid">Giới tính (*)</label>
-                                    <select id="genderid" name="genderid" required
-                                        data-selected-gender="${category.genderid}"
-                                        data-selected-parent="${category.parentid}">
-                                        <option value="">-- Chọn giới tính --</option>
-                                        <option value="1" ${category.genderid==1 ? 'selected' : '' }>Nam</option>
-                                        <option value="2" ${category.genderid==2 ? 'selected' : '' }>Nữ</option>
-                                        <option value="3" ${category.genderid==3 ? 'selected' : '' }>Khác</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="parentid">Danh mục cha</label>
-                                    <select id="parentid" name="parentid">
-                                        <option value="">-- Bỏ trống (nếu đây là Danh mục cha) --</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style="margin-top: 10px;">
-                                <button type="submit" class="btn-save">Lưu lại</button>
-                                <a href="category" class="btn-cancel">Hủy bỏ</a>
-                            </div>
-                        </form>
-                    </div>
-
-                    <select id="categoryDataSource" style="display: none;">
+                    <!-- Hidden data source for parent category JS -->
+                    <select id="categoryDataSource" style="display:none;">
                         <c:forEach var="cat" items="${allCategories}">
                             <option value="${cat.indexName}" data-category-id="${cat.categoryid}"
                                 data-gender-id="${cat.genderid}" data-parent-id="${cat.parentid}"
@@ -193,17 +261,16 @@
 
                     <script>
                         document.addEventListener("DOMContentLoaded", function () {
-
                             const genderSelect = document.getElementById("genderid");
                             const parentSelect = document.getElementById("parentid");
                             const allCategoryOptions = Array.from(document.querySelectorAll("#categoryDataSource option"));
 
                             function resetSelect(selectElement, defaultText) {
-                                selectElement.innerHTML = `<option value=''>-- ${defaultText} --</option>`;
+                                selectElement.innerHTML = "<option value=''>— " + defaultText + " —</option>";
                             }
 
                             function populateParentSelect(selectedGenderId) {
-                                resetSelect(parentSelect, "Bỏ trống (nếu đây là Danh mục cha)");
+                                resetSelect(parentSelect, "None (this is a parent)");
 
                                 const currentCategoryIdInput = document.querySelector("input[name='id']");
                                 const currentCategoryId = currentCategoryIdInput ? currentCategoryIdInput.value : null;
@@ -219,7 +286,6 @@
                                     const optionGenderId = option.dataset.genderId;
                                     const optionParentId = option.dataset.parentId;
                                     const optionCatId = option.dataset.categoryId;
-
                                     const isParentCategory = !optionParentId || optionParentId === '0' || optionParentId === 'null' || optionParentId === '';
 
                                     if (optionGenderId === selectedGenderId && isParentCategory && optionCatId !== currentCategoryId) {
@@ -227,7 +293,6 @@
                                     }
                                 });
                             }
-
 
                             genderSelect.addEventListener("change", function () {
                                 populateParentSelect(genderSelect.value);
@@ -249,9 +314,8 @@
                             } else {
                                 populateParentSelect(genderSelect.value);
                             }
-
                         });
                     </script>
-                </body>
+        </body>
 
-                </html>
+        </html>

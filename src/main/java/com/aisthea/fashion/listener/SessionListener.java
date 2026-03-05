@@ -61,28 +61,37 @@ public class SessionListener implements HttpSessionListener, HttpSessionAttribut
 
     // --- Helper Methods ---
     private void addUserToOnlineList(HttpSessionBindingEvent event) {
-        String username = null;
-        // Kiểm tra nếu attribute là "user" (object) hoặc "username" (string)
+        String identifier = null;
         if ("user".equals(event.getName())) {
             User user = (User) event.getValue();
             if (user != null) {
-                username = user.getUsername(); // Hoặc user.getFullname() tùy bạn
+                // Ưu tiên username, sau đó email, cuối cùng là fullname
+                identifier = user.getUsername();
+                if (identifier == null || identifier.trim().isEmpty()) {
+                    identifier = user.getEmail();
+                }
+                if (identifier == null || identifier.trim().isEmpty()) {
+                    identifier = user.getFullname();
+                }
             }
         } else if ("username".equals(event.getName())) {
-            username = (String) event.getValue();
+            identifier = (String) event.getValue();
         }
 
-        if (username != null) {
-            onlineUsers.add(username);
+        if (identifier != null && !identifier.trim().isEmpty()) {
+            onlineUsers.add(identifier);
+            System.out.println(
+                    "LOG: User added to online list: " + identifier + ". Current total: " + onlineUsers.size());
         }
     }
 
     private void removeUserFromOnlineList(HttpSession session) {
-        // Thử lấy cả "user" và "username" để remove cho chắc chắn
         try {
             User user = (User) session.getAttribute("user");
             if (user != null) {
                 onlineUsers.remove(user.getUsername());
+                onlineUsers.remove(user.getEmail());
+                onlineUsers.remove(user.getFullname());
             }
 
             String username = (String) session.getAttribute("username");
@@ -90,7 +99,7 @@ public class SessionListener implements HttpSessionListener, HttpSessionAttribut
                 onlineUsers.remove(username);
             }
         } catch (Exception e) {
-            // Session có thể đã invalidated, bỏ qua lỗi
+            // Session invalidated
         }
     }
 

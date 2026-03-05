@@ -34,6 +34,9 @@ public class UserServlet extends HttpServlet {
                 case "delete":
                     deleteUser(request, response);
                     break;
+                case "toggleStatus":
+                    toggleUserStatus(request, response);
+                    break;
                 default:
                     listUsers(request, response);
                     break;
@@ -86,6 +89,7 @@ public class UserServlet extends HttpServlet {
         String address = request.getParameter("address");
         String role = request.getParameter("role");
         boolean active = "1".equals(request.getParameter("active"));
+        boolean isBanned = "1".equals(request.getParameter("isBanned"));
 
         User user = userService.selectUser(id);
         if (user == null) {
@@ -100,6 +104,7 @@ public class UserServlet extends HttpServlet {
         user.setAddress(address);
         user.setRole(role);
         user.setActive(active);
+        user.setBanned(isBanned);
 
         userService.updateUser(user);
         response.sendRedirect("user?action=list");
@@ -110,5 +115,29 @@ public class UserServlet extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         userService.deleteUser(id);
         response.sendRedirect("user?action=list");
+    }
+
+    private void toggleUserStatus(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            User user = userService.selectUser(id);
+            if (user != null) {
+                boolean result = userService.toggleUserStatus(id);
+                if (result) {
+                    boolean nowBanned = !user.isBanned();
+                    String action = nowBanned ? "BANNED" : "UNBANNED";
+                    request.getSession().setAttribute("successMsg",
+                            "Account for " + user.getFullname() + " has been " + action + " successfully.");
+                    request.getSession().setAttribute("actionName", nowBanned ? "banned" : "unbanned");
+                } else {
+                    request.getSession().setAttribute("errorMsg",
+                            "Unable to update status for " + user.getFullname() + ".");
+                }
+            }
+        } catch (Exception e) {
+            request.getSession().setAttribute("errorMsg", "Error: " + e.getMessage());
+        }
+        response.sendRedirect(request.getContextPath() + "/user?action=list");
     }
 }

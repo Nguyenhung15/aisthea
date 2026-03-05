@@ -4,6 +4,9 @@
         <param-name>jakarta.faces.PROJECT_STAGE</param-name>
         <param-value>Development</param-value>
     </context-param>
+    <listener>
+        <listener-class>com.aisthea.fashion.listener.SessionListener</listener-class>
+    </listener>
     <filter>
         <filter-name>UrlRewriteFilter</filter-name>
         <filter-class>com.aisthea.fashion.filter.UrlRewriteFilter</filter-class>

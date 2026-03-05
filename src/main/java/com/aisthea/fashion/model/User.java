@@ -14,8 +14,11 @@ public class User {
     private String address;
     private String role;
     private boolean active;
+    private boolean isBanned;
     private String avatar;
     private Date dob;
+    private int membershipPoints;
+    private String banReason;
 
     public User() {
     }
@@ -122,5 +125,29 @@ public class User {
 
     public void setDob(Date dob) {
         this.dob = dob;
+    }
+
+    public boolean isBanned() {
+        return isBanned;
+    }
+
+    public void setBanned(boolean isBanned) {
+        this.isBanned = isBanned;
+    }
+
+    public int getMembershipPoints() {
+        return membershipPoints;
+    }
+
+    public void setMembershipPoints(int membershipPoints) {
+        this.membershipPoints = membershipPoints;
+    }
+
+    public String getBanReason() {
+        return banReason;
+    }
+
+    public void setBanReason(String banReason) {
+        this.banReason = banReason;
     }
 }

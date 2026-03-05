@@ -27,4 +27,6 @@ public interface IUserService {
     boolean activateUser(String email);
 
     User getUserByEmail(String email);
+
+    boolean toggleUserStatus(int userId);
 }
