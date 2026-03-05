@@ -1,262 +1,478 @@
 ﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
   <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-    <!DOCTYPE html>
-    <html lang="en">
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+      <% if (session.getAttribute("user")==null) { response.sendRedirect(request.getContextPath() + "/login" ); return;
+        } %>
+        <!DOCTYPE html>
+        <html lang="vi">
 
-    <head>
-      <meta charset="utf-8" />
-      <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-      <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;family=Playfair+Display:italic,wght@400;700&amp;display=swap"
-        rel="stylesheet" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-      <script id="tailwind-config">
-        tailwind.config = {
-          darkMode: "class",
-          theme: {
-            extend: {
-              colors: {
-                "primary": "#2b8cee",
-                "background-light": "#f6f7f8",
-                "background-dark": "#101922",
+        <head>
+          <meta charset="utf-8" />
+          <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+          <title>Đánh giá sản phẩm | AISTHÉA</title>
+          <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+          <link
+            href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+            rel="stylesheet" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+            rel="stylesheet" />
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+          <script>
+            tailwind.config = {
+              darkMode: "class",
+              theme: {
+                extend: {
+                  colors: {
+                    primary: "#0056b3",
+                    "primary-dark": "#004494",
+                    "accent-gold": "#C5A059",
+                    "glass-light": "rgba(255, 255, 255, 0.7)",
+                    "glass-border": "rgba(255, 255, 255, 0.5)",
+                    "glass-input": "rgba(255, 255, 255, 0.4)",
+                  },
+                  fontFamily: {
+                    display: ["'Playfair Display'", "serif"],
+                    body: ["'Inter'", "sans-serif"],
+                  },
+                  backgroundImage: {
+                    'ethereal-sky': "linear-gradient(180deg, #F8FAFC 0%, #E0F2FE 100%)",
+                  },
+                  boxShadow: {
+                    'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                    'glass-sm': '0 4px 16px 0 rgba(31, 38, 135, 0.05)',
+                    'glow-gold': '0 0 15px rgba(197, 160, 89, 0.3)',
+                  }
+                },
               },
-              fontFamily: {
-                "display": ["Manrope", "sans-serif"],
-                "serif": ["Playfair Display", "serif"]
-              },
-              borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-            },
-          },
-        }
-      </script>
-      <style type="text/tailwindcss">
-        .gradient-bg {
-            background: linear-gradient(to right, #ffffff, #e0f2fe);
-        }
-        .star-rating:hover span {
-            color: #2b8cee;
-        }
-        .star-rating span:hover ~ span {
-            color: #cbd5e1;
-        }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #2b8cee;
-            box-shadow: none;
-        }
-    </style>
-      <title>AISTHÉA | Individual Review Submission</title>
-    </head>
+            };
+          </script>
+          <style>
+            .glass-island {
+              background: rgba(255, 255, 255, 0.65);
+              backdrop-filter: blur(20px);
+              -webkit-backdrop-filter: blur(20px);
+              border: 1px solid rgba(255, 255, 255, 0.8);
+              box-shadow: 0 20px 40px -10px rgba(0, 86, 179, 0.05);
+            }
 
-    <body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
-      <div class="relative flex h-auto min-h-screen w-full flex-col gradient-bg group/design-root overflow-x-hidden">
-        <div class="layout-container flex h-full grow flex-col">
-          <header
-            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/10 px-10 py-4 bg-white/50 backdrop-blur-md sticky top-0 z-50">
-            <div class="flex items-center gap-12">
-              <div class="flex items-center gap-3 text-slate-900">
-                <div class="size-6 text-primary">
-                  <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
-                      fill="currentColor"></path>
-                  </svg>
-                </div>
-                <h2 class="text-slate-900 text-xl font-bold leading-tight tracking-widest uppercase">AISTHÉA</h2>
-              </div>
+            .glass-input {
+              background: rgba(255, 255, 255, 0.4);
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255, 255, 255, 0.6);
+              transition: all 0.3s ease;
+            }
+
+            .glass-input:focus {
+              background: rgba(255, 255, 255, 0.8);
+              border-color: #0056b3;
+              box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);
+              outline: none;
+            }
+
+            .gold-border-glow {
+              box-shadow: 0 0 0 1px #C5A059, 0 0 12px rgba(197, 160, 89, 0.4);
+            }
+
+            .marble-texture {
+              background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+              opacity: 0.4;
+              pointer-events: none;
+            }
+
+            .nav-item-active {
+              color: #0056b3;
+              font-weight: 600;
+            }
+
+            .nav-subitem-active {
+              color: #0056b3;
+              font-weight: 600;
+            }
+
+            ::-webkit-scrollbar {
+              width: 8px;
+            }
+
+            ::-webkit-scrollbar-track {
+              background: transparent;
+            }
+
+            ::-webkit-scrollbar-thumb {
+              background: rgba(0, 86, 179, 0.2);
+              border-radius: 4px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+              background: rgba(0, 86, 179, 0.4);
+            }
+
+            details>summary {
+              list-style: none;
+            }
+
+            details>summary::-webkit-details-marker {
+              display: none;
+            }
+
+            details[open] summary~* {
+              animation: slideDown 0.3s ease-in-out;
+            }
+
+            details[open] summary .chevron {
+              transform: rotate(180deg);
+            }
+
+            @keyframes slideDown {
+              0% {
+                opacity: 0;
+                transform: translateY(-10px);
+              }
+
+              100% {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+
+            /* ── Star Rating ── */
+            .star-rating span {
+              transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+              cursor: pointer;
+            }
+
+            /* ── Product preview card ── */
+            .product-preview-card {
+              background: linear-gradient(135deg, rgba(0, 86, 179, 0.03) 0%, rgba(197, 160, 89, 0.05) 100%);
+              border: 1px solid rgba(0, 86, 179, 0.08);
+              border-radius: 16px;
+              padding: 20px;
+              transition: all 0.3s ease;
+            }
+
+            .product-preview-card:hover {
+              border-color: rgba(0, 86, 179, 0.15);
+              box-shadow: 0 4px 20px rgba(0, 86, 179, 0.06);
+            }
+
+            /* ── Success toast ── */
+            @keyframes fadeInUp {
+              from {
+                opacity: 0;
+                transform: translateY(20px);
+              }
+
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          </style>
+        </head>
+
+        <body
+          class="bg-ethereal-sky font-body min-h-screen text-slate-800 relative selection:bg-primary/20 selection:text-primary">
+          <div class="fixed inset-0 z-0">
+            <div class="absolute inset-0 bg-gradient-to-br from-white via-sky-50 to-blue-100 opacity-80"></div>
+            <div class="absolute inset-0 marble-texture"></div>
+            <div
+              class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2">
             </div>
-            <div class="flex flex-1 justify-end items-center">
-              <button class="p-2 hover:bg-primary/10 rounded-full transition-colors">
-                <span class="material-symbols-outlined text-slate-700">close</span>
-              </button>
+            <div
+              class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-sky-100/30 rounded-full blur-3xl -translate-x-1/4 translate-y-1/4">
             </div>
-          </header>
-          <main class="flex-1 flex items-center justify-center py-16 px-6">
-            <div class="max-w-[640px] w-full">
-              <div class="bg-white/40 backdrop-blur-xl border border-white/80 rounded-2xl p-10 md:p-14 shadow-sm">
-                <div class="text-center mb-12">
-                  <span class="text-primary font-bold tracking-[0.25em] text-[10px] uppercase mb-4 block">Product
-                    Feedback</span>
-                  <h1 class="text-slate-900 text-4xl font-extralight font-serif leading-tight mb-2">Share Your Sensory
-                    Experience</h1>
-                  <p class="text-slate-500 text-sm font-light">Your reflection helps us refine the art of formulation.
-                  </p>
-                </div>
-                <div class="flex items-center gap-4 mb-12 p-4 bg-white/60 rounded-xl border border-white/40"
-                  id="product-preview">
-                  <c:choose>
-                    <c:when test="${not empty orderItems}">
-                      <div class="size-16 rounded-lg bg-slate-100 bg-center bg-cover flex-shrink-0" id="preview-img"
-                        style="background-image: url('${orderItems[0].imageUrl}'); background-size:cover;">
-                      </div>
-                      <div>
-                        <h3 class="text-slate-900 text-sm font-bold uppercase tracking-wider" id="preview-name">
-                          ${orderItems[0].productName}</h3>
-                        <p class="text-slate-400 text-xs font-medium">Đơn hàng #${orderId}</p>
-                      </div>
-                    </c:when>
-                    <c:otherwise>
-                      <div class="size-16 rounded-lg bg-slate-100 flex-shrink-0"></div>
-                      <div>
-                        <p class="text-slate-400 text-xs font-medium">Đơn hàng #${orderId}</p>
-                      </div>
-                    </c:otherwise>
-                  </c:choose>
-                </div>
-                <form class="space-y-10" action="${pageContext.request.contextPath}/feedback" method="POST">
-                  <input type="hidden" name="orderId" value="${orderId}" />
-                  <input type="hidden" name="rating" id="ratingValue" value="0" />
-                  <c:if test="${not empty orderItems}">
+          </div>
 
-                  </c:if>
-                  <input type="hidden" name="orderId" value="${orderId}">
-                  <c:choose>
-                    <c:when test="${not empty orderItems}">
-                      <div style="margin-bottom:16px">
+          <!-- Header -->
+          <jsp:include page="/WEB-INF/views/product/product-list-header.jsp" />
 
+          <main class="relative z-10 max-w-7xl mx-auto px-4 pb-20 mt-8">
+            <div class="flex flex-col lg:flex-row gap-8">
+              <!-- Sidebar -->
+              <jsp:include page="/WEB-INF/views/common/user-sidebar.jsp">
+                <jsp:param name="activeTab" value="order" />
+              </jsp:include>
+
+              <!-- Main Content -->
+              <section class="lg:w-3/4">
+                <div class="glass-island rounded-[32px] p-8 lg:p-12 min-h-[700px] relative overflow-hidden">
+                  <!-- Decorative gradient -->
+                  <div
+                    class="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-b from-blue-50/80 to-transparent rounded-bl-full pointer-events-none">
+                  </div>
+
+                  <div class="relative z-10 max-w-3xl mx-auto">
+                    <!-- Page Header -->
+                    <header class="mb-10 border-b border-slate-200/60 pb-6">
+                      <div class="flex items-center gap-2 mb-3">
+                        <span class="material-symbols-outlined text-accent-gold text-[20px]"
+                          style="font-variation-settings: 'FILL' 1;">rate_review</span>
+                        <span class="text-[10px] font-bold text-accent-gold uppercase tracking-widest">Verified Purchase
+                          Review</span>
                       </div>
-                    </c:when>
-                    <c:otherwise>
-                      <input type="hidden" name="productId" value="">
-                    </c:otherwise>
-                  </c:choose>
-                  <div class="flex flex-col items-center">
-                    <label class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-4">
-                      Rating</label>
-                    <div class="flex gap-2 star-rating cursor-pointer">
-                      <span
-                        class="material-symbols-outlined text-3xl text-slate-300 hover:text-primary transition-colors"
-                        style="font-variation-settings: 'FILL' 0">star</span>
-                      <span
-                        class="material-symbols-outlined text-3xl text-slate-300 hover:text-primary transition-colors"
-                        style="font-variation-settings: 'FILL' 0">star</span>
-                      <span
-                        class="material-symbols-outlined text-3xl text-slate-300 hover:text-primary transition-colors"
-                        style="font-variation-settings: 'FILL' 0">star</span>
-                      <span
-                        class="material-symbols-outlined text-3xl text-slate-300 hover:text-primary transition-colors"
-                        style="font-variation-settings: 'FILL' 0">star</span>
-                      <span
-                        class="material-symbols-outlined text-3xl text-slate-300 hover:text-primary transition-colors"
-                        style="font-variation-settings: 'FILL' 0">star</span>
-                    </div>
+                      <h1 class="font-display font-bold text-3xl text-slate-900 mb-2 tracking-tight">Đánh giá sản phẩm
+                      </h1>
+                      <p class="text-slate-500 font-light text-sm tracking-wide">Chia sẻ trải nghiệm của bạn để giúp
+                        cộng đồng AISTHÉA lựa chọn tốt hơn</p>
+                    </header>
+
+                    <!-- Success Message -->
+                    <c:if test="${not empty sessionScope.feedbackSuccess}">
+                      <div
+                        class="bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl p-4 text-sm flex items-center shadow-sm mb-6"
+                        style="animation: fadeInUp 0.4s ease;">
+                        <span class="material-symbols-outlined mr-3 text-[20px]">check_circle</span>
+                        <span class="font-medium">${sessionScope.feedbackSuccess}</span>
+                      </div>
+                      <c:remove var="feedbackSuccess" scope="session" />
+                    </c:if>
+
+                    <!-- Feedback Form -->
+                    <form action="${pageContext.request.contextPath}/feedback" method="POST" id="feedbackForm"
+                      class="space-y-8">
+                      <input type="hidden" name="orderId" value="${orderId}" />
+                      <input type="hidden" name="rating" id="ratingValue" value="0" />
+                      <input type="hidden" name="productId" id="selectedProductId" value="${orderItems[0].productId}" />
+
+                      <%-- Product Selector Cards --%>
+                        <c:if test="${not empty orderItems}">
+                          <div class="space-y-3">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                              <c:choose>
+                                <c:when test="${fn:length(orderItems) > 1}">Chọn sản phẩm cần đánh giá</c:when>
+                                <c:otherwise>Sản phẩm đánh giá</c:otherwise>
+                              </c:choose>
+                            </label>
+                            <div class="grid grid-cols-1 gap-3" id="productCards">
+                              <c:forEach var="item" items="${orderItems}" varStatus="st">
+                                <div
+                                  class="product-card group relative flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300
+                                           ${st.index == 0 ? 'border-primary bg-primary/[0.03] shadow-sm' : 'border-transparent bg-white/40 hover:bg-white/70 hover:border-slate-200'}"
+                                  data-product-id="${item.productId}" data-product-name="${item.productName}"
+                                  data-product-img="${item.imageUrl}" onclick="selectProduct(this)">
+                                  <!-- Check indicator -->
+                                  <div
+                                    class="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300
+                                            ${st.index == 0 ? 'bg-primary scale-100' : 'bg-slate-200 scale-75 opacity-0 group-hover:opacity-40'}">
+                                    <span class="material-symbols-outlined text-white text-[16px]"
+                                      style="font-variation-settings: 'FILL' 1;">check</span>
+                                  </div>
+                                  <!-- Product image -->
+                                  <div
+                                    class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-white/80 transition-transform duration-300 group-hover:scale-105">
+                                    <img src="${item.imageUrl}" alt="${item.productName}"
+                                      class="w-full h-full object-cover"
+                                      onerror="this.src='https://placehold.co/64x64/f0f2f5/9ca3af?text=N/A'">
+                                  </div>
+                                  <!-- Product info -->
+                                  <div class="flex-1 min-w-0">
+                                    <h4 class="font-display font-bold text-[15px] text-slate-900 mb-1 truncate">
+                                      ${item.productName}</h4>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                      <span
+                                        class="inline-flex items-center gap-1 text-[9px] font-bold text-slate-400 uppercase tracking-wider bg-white/60 px-2.5 py-0.5 rounded-full border border-slate-100">
+                                        <span
+                                          class="material-symbols-outlined text-[12px] text-primary">receipt_long</span>
+                                        Đơn #${orderId}
+                                      </span>
+                                      <span
+                                        class="inline-flex items-center gap-1 text-[9px] font-bold text-accent-gold uppercase tracking-wider">
+                                        <span class="material-symbols-outlined text-[12px]"
+                                          style="font-variation-settings: 'FILL' 1;">verified</span>
+                                        Đã mua
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </c:forEach>
+                            </div>
+                          </div>
+                        </c:if>
+
+                        <%-- Star Rating --%>
+                          <div class="space-y-3">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Đánh giá
+                              chất lượng <span class="text-red-400">*</span></label>
+                            <div class="flex items-center gap-1 star-rating" id="starContainer">
+                              <c:forEach begin="1" end="5" var="i">
+                                <span class="material-symbols-outlined text-4xl text-slate-300 hover:text-accent-gold"
+                                  style="font-variation-settings: 'FILL' 0, 'wght' 300;" data-star="${i}">star</span>
+                              </c:forEach>
+                              <span class="ml-4 text-sm font-medium text-slate-400" id="ratingLabel">Chọn số sao</span>
+                            </div>
+                          </div>
+
+                          <%-- Comment --%>
+                            <div class="space-y-2">
+                              <div class="flex justify-between items-baseline ml-1 mr-1">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Nhận xét chi
+                                  tiết</label>
+                                <span class="text-[10px] text-slate-400 italic">Không bắt buộc</span>
+                              </div>
+                              <div class="relative">
+                                <textarea name="comment" rows="4"
+                                  class="w-full pl-5 pr-5 py-4 glass-input rounded-xl text-slate-800 font-medium resize-none"
+                                  placeholder="Chia sẻ cảm nhận của bạn về chất liệu, kiểu dáng, trải nghiệm sử dụng..."></textarea>
+                              </div>
+                            </div>
+
+                            <%-- Image URL --%>
+                              <div class="space-y-2">
+                                <div class="flex justify-between items-baseline ml-1 mr-1">
+                                  <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Hình ảnh đính
+                                    kèm</label>
+                                  <span class="text-[10px] text-slate-400 italic">URL hình ảnh, không bắt buộc</span>
+                                </div>
+                                <div class="relative">
+                                  <span
+                                    class="material-symbols-outlined absolute left-4 top-3.5 text-slate-400 text-[20px]">add_a_photo</span>
+                                  <input type="text" name="imageUrl"
+                                    class="w-full pl-12 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium"
+                                    placeholder="Dán link hình ảnh sản phẩm thực tế...">
+                                </div>
+                                <p class="text-[10px] text-slate-400 ml-1 tracking-wide">Hình ảnh thực tế giúp cộng đồng
+                                  tham khảo tốt hơn</p>
+                              </div>
+
+                              <%-- Submit --%>
+                                <div class="pt-4 flex flex-col sm:flex-row items-center gap-4">
+                                  <button type="submit" id="submitBtn"
+                                    class="w-full sm:w-auto px-10 py-3.5 bg-primary text-white rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:bg-primary-dark transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">send</span>
+                                    <span class="font-semibold text-sm uppercase tracking-wide">Gửi đánh giá</span>
+                                  </button>
+                                  <a href="${pageContext.request.contextPath}/order"
+                                    class="text-sm text-slate-400 hover:text-primary transition-colors font-medium">
+                                    Quay lại đơn hàng
+                                  </a>
+                                </div>
+
+                                <p class="text-[10px] text-slate-400 text-center leading-relaxed mt-4">
+                                  Đánh giá của bạn sẽ hiển thị trên trang sản phẩm sau khi được xét duyệt bởi đội ngũ
+                                  AISTHÉA.
+                                </p>
+                    </form>
                   </div>
-                  <div class="space-y-3">
-                    <label class="text-slate-500 text-[10px] font-bold uppercase tracking-widest flex justify-between">
-                      Your Reflection
-                      <span class="text-slate-300 normal-case font-normal italic">Optional</span>
-                    </label>
-                    <textarea
-                      class="w-full bg-white/60 border border-slate-200 rounded-xl px-5 py-4 text-slate-800 font-serif text-lg italic placeholder:text-slate-300 placeholder:font-sans placeholder:not-italic resize-none transition-all focus:bg-white"
-                      placeholder="Share your sensory experience..." rows="5"></textarea>
-                  </div>
-                  <div class="space-y-3">
-                    <label class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Aesthetic
-                      Capture</label>
-                    <div
-                      class="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-primary/50 transition-colors group cursor-pointer bg-white/20">
-                      <input class="hidden" id="photo-upload" type="file" />
-                      <label class="cursor-pointer" for="photo-upload">
-                        <span
-                          class="material-symbols-outlined text-slate-400 text-3xl mb-2 group-hover:text-primary transition-colors">add_a_photo</span>
-                        <p class="text-slate-400 text-xs font-medium">Upload high-quality images of your AISTHÉA moment
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-                  <div class="pt-6">
-                    <button
-                      class="w-full bg-slate-900 text-white py-5 rounded-lg text-xs font-bold tracking-[0.3em] uppercase hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 hover:shadow-slate-900/20 active:scale-[0.98]"
-                      type="submit">
-                      Submit Review
-                    </button>
-                    <p class="text-center text-slate-400 text-[10px] font-medium mt-6 uppercase tracking-widest">
-                      By submitting, you agree to our <a class="underline hover:text-primary transition-colors"
-                        href="#">terms of service</a>
-                    </p>
-                  </div>
-                </form>
-              </div>
+                </div>
+              </section>
             </div>
           </main>
-          <footer class="py-12 px-10 text-center">
-            <div class="max-w-[1200px] mx-auto border-t border-primary/5 pt-8">
-              <p class="text-[10px] text-slate-400 font-medium uppercase tracking-[0.2em]"> 2026 AISTHÉA. Individual
-                Feedback Protocol.</p>
-            </div>
-          </footer>
-        </div>
-      </div>
 
-      <script>
-          (function () {
-            var stars = document.querySelectorAll('.star-rating span');
-            var ratingInput = document.getElementById('ratingValue');
+          <!-- Footer -->
+          <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
-            stars.forEach(function (star, idx) {
-              star.addEventListener('click', function () {
-                var val = idx + 1;
-                ratingInput.value = val;
-                stars.forEach(function (s, i) {
-                  s.style.fontVariationSettings = i < val ? "'FILL' 1" : "'FILL' 0";
-                  s.style.color = i < val ? '#2b8cee' : '';
+          <script>
+            (function () {
+              var stars = document.querySelectorAll('.star-rating span[data-star]');
+              var ratingInput = document.getElementById('ratingValue');
+              var ratingLabel = document.getElementById('ratingLabel');
+              var labels = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'Xuất sắc'];
+
+              stars.forEach(function (star, idx) {
+                star.addEventListener('click', function () {
+                  var val = idx + 1;
+                  ratingInput.value = val;
+                  ratingLabel.textContent = labels[val];
+                  ratingLabel.style.color = '#C5A059';
+                  stars.forEach(function (s, i) {
+                    s.style.fontVariationSettings = i < val ? "'FILL' 1, 'wght' 400" : "'FILL' 0, 'wght' 300";
+                    s.style.color = i < val ? '#C5A059' : '#cbd5e1';
+                    s.style.transform = i < val ? 'scale(1.15)' : 'scale(1)';
+                  });
+                });
+
+                star.addEventListener('mouseover', function () {
+                  stars.forEach(function (s, i) {
+                    if (i <= idx) {
+                      s.style.color = '#C5A059';
+                      s.style.fontVariationSettings = "'FILL' 1, 'wght' 400";
+                    }
+                  });
+                  ratingLabel.textContent = labels[idx + 1];
+                });
+
+                star.addEventListener('mouseout', function () {
+                  var cur = parseInt(ratingInput.value) || 0;
+                  stars.forEach(function (s, i) {
+                    s.style.fontVariationSettings = i < cur ? "'FILL' 1, 'wght' 400" : "'FILL' 0, 'wght' 300";
+                    s.style.color = i < cur ? '#C5A059' : '#cbd5e1';
+                    s.style.transform = i < cur ? 'scale(1.15)' : 'scale(1)';
+                  });
+                  ratingLabel.textContent = cur > 0 ? labels[cur] : 'Chọn số sao';
+                  ratingLabel.style.color = cur > 0 ? '#C5A059' : '#94a3b8';
                 });
               });
-              star.addEventListener('mouseover', function () {
-                stars.forEach(function (s, i) {
-                  s.style.color = i <= idx ? '#2b8cee' : '';
-                });
-              });
-              star.addEventListener('mouseout', function () {
-                var cur = parseInt(ratingInput.value) || 0;
-                stars.forEach(function (s, i) {
-                  s.style.color = i < cur ? '#2b8cee' : '';
-                });
-              });
-            });
 
-            // Validate rating before submit
-            var form = document.querySelector('form[action*="feedback"]');
-            if (form) {
+              // Form validation
+              var form = document.getElementById('feedbackForm');
               form.addEventListener('submit', function (e) {
                 if (!ratingInput.value || ratingInput.value === '0') {
                   e.preventDefault();
-                  alert('Vui lòng chọn số sao đánh giá!');
-                }
-                // Also sync textarea to comment field
-                var ta = form.querySelector('textarea');
-                if (ta && !form.querySelector('input[name="comment"]')) {
-                  ta.setAttribute('name', 'comment');
+                  // Shake effect on stars
+                  var container = document.getElementById('starContainer');
+                  container.style.animation = 'none';
+                  container.offsetHeight; // trigger reflow
+                  container.style.animation = 'shake 0.4s ease';
+                  ratingLabel.textContent = 'Vui lòng chọn số sao!';
+                  ratingLabel.style.color = '#ef4444';
                 }
               });
-            }
-          })();
-      </script>
-      <script>
-        // Build product map from server-rendered data
-        var productMap = {};
-      </script>
-      <c:forEach var="item" items="${orderItems}">
-        <script>productMap["${item.productId}"] = { name: "${item.productName}", img: "${item.imageUrl}" };</script>
-      </c:forEach>
-      <script>
-        // Update preview when dropdown changes
-        var sel = document.querySelector('select[name="productId"]');
-        if (sel) {
-          sel.addEventListener('change', function () {
-            var p = productMap[this.value];
-            if (p) {
-              var imgEl = document.getElementById('preview-img');
-              var nameEl = document.getElementById('preview-name');
-              if (imgEl) imgEl.style.backgroundImage = "url('" + p.img + "')";
-              if (nameEl) nameEl.textContent = p.name;
-            }
-          });
-        }
-      </script>
-    </body>
+            })();
 
-    </html>-->
+            // Product card selection
+            function selectProduct(card) {
+              var allCards = document.querySelectorAll('.product-card');
+              allCards.forEach(function (c) {
+                // Reset all cards
+                c.classList.remove('border-primary', 'bg-primary/[0.03]', 'shadow-sm');
+                c.classList.add('border-transparent', 'bg-white/40');
+                // Reset check indicators
+                var check = c.querySelector('.absolute.top-3');
+                if (check) {
+                  check.classList.remove('bg-primary', 'scale-100');
+                  check.classList.add('bg-slate-200', 'scale-75', 'opacity-0');
+                }
+              });
+              // Activate clicked card
+              card.classList.remove('border-transparent', 'bg-white/40');
+              card.classList.add('border-primary', 'bg-primary/[0.03]', 'shadow-sm');
+              var activeCheck = card.querySelector('.absolute.top-3');
+              if (activeCheck) {
+                activeCheck.classList.remove('bg-slate-200', 'scale-75', 'opacity-0');
+                activeCheck.classList.add('bg-primary', 'scale-100');
+              }
+              // Update hidden input
+              document.getElementById('selectedProductId').value = card.getAttribute('data-product-id');
+            }
+
+          </script>
+
+          <style>
+            @keyframes shake {
+
+              0%,
+              100% {
+                transform: translateX(0);
+              }
+
+              20% {
+                transform: translateX(-8px);
+              }
+
+              40% {
+                transform: translateX(8px);
+              }
+
+              60% {
+                transform: translateX(-4px);
+              }
+
+              80% {
+                transform: translateX(4px);
+              }
+            }
+          </style>
+        </body>
+
+        </html>

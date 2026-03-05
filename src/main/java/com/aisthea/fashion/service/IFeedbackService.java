@@ -9,4 +9,12 @@ public interface IFeedbackService {
     boolean addFeedback(Feedback feedback);
 
     boolean canUserReview(int userId, int productId);
+
+    List<Feedback> getAllFeedbacks();
+
+    boolean updateFeedbackStatus(int feedbackId, String status);
+
+    boolean replyToFeedback(int feedbackId, String reply);
+
+    boolean incrementHelpfulCount(int feedbackId);
 }

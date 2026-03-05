@@ -27,4 +27,10 @@ public interface IUserService {
     boolean activateUser(String email);
 
     User getUserByEmail(String email);
+
+    boolean toggleUserStatus(int userId);
+
+    boolean banUser(int userId, String reason);
+
+    boolean unbanUser(int userId);
 }

@@ -68,6 +68,11 @@ public class UserService implements IUserService {
             return new LoginResult(null, "Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email.", false);
         }
 
+        if (user.isBanned()) {
+            String reason = user.getBanReason() != null ? user.getBanReason() : "Vi phạm điều khoản sử dụng.";
+            return new LoginResult(null, "Tài khoản của bạn đã bị khóa. Lý do: " + reason, false);
+        }
+
         user.setPassword(null);
         return new LoginResult(user, "Đăng nhập thành công.", true);
     }
@@ -160,5 +165,35 @@ public class UserService implements IUserService {
             user.setPassword(null);
         }
         return user;
+    }
+
+    @Override
+    public boolean toggleUserStatus(int userId) {
+        try {
+            return userDAO.toggleUserStatus(userId);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error toggling user status ID=" + userId, e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean banUser(int userId, String reason) {
+        try {
+            return userDAO.banUser(userId, reason);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error banning user ID=" + userId, e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean unbanUser(int userId) {
+        try {
+            return userDAO.unbanUser(userId);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error unbanning user ID=" + userId, e);
+            return false;
+        }
     }
 }

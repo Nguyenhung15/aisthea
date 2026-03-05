@@ -33,7 +33,6 @@ public class RegisterServlet extends HttpServlet {
             String password = request.getParameter("password");
             String gender = request.getParameter("gender");
             String phone = request.getParameter("phone");
-            String dobStr = request.getParameter("dob");
 
             if (email == null || email.trim().isEmpty()
                     || password == null || password.trim().isEmpty()
@@ -51,14 +50,6 @@ public class RegisterServlet extends HttpServlet {
             newUser.setGender(gender);
             newUser.setPhone(phone);
             newUser.setAddress(null);
-
-            if (dobStr != null && !dobStr.trim().isEmpty()) {
-                try {
-                    newUser.setDob(java.sql.Date.valueOf(dobStr.trim()));
-                } catch (IllegalArgumentException e) {
-                    newUser.setDob(null);
-                }
-            }
             // Avatar will be null by default - user can upload later
 
             String result = userService.registerUser(newUser);

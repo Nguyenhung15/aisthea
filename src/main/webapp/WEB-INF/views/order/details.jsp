@@ -1,256 +1,244 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-    <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-        <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-            <!DOCTYPE html>
-            <html lang="vi">
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-            <head>
-                <meta charset="UTF-8">
-                <title>Chi tiết Đơn hàng #${order.orderid} - AISTHÉA</title>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <script src="https://cdn.tailwindcss.com"></script>
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-                <style>
-                    body {
-                        font-family: 'Poppins', sans-serif;
-                    }
+<!DOCTYPE html>
+<html lang="en">
 
-                    .modal {
-                        display: none;
-                        position: fixed;
-                        z-index: 50;
-                        inset: 0;
-                        background-color: rgba(0, 0, 0, 0.5);
-                        justify-content: center;
-                        align-items: center;
-                    }
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Order Detail #${order.orderid} | AISTHÉA</title>
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-                    .modal.active {
-                        display: flex;
-                    }
-                </style>
-            </head>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#024acf",
+                        "accent-blue": "#0288D1",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221610",
+                        "sky-subtle": "#E1F5FE",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "serif": ["Playfair Display", "serif"]
+                    },
+                },
+            },
+        }
+    </script>
 
-            <body class="bg-gray-100 min-h-screen flex flex-col">
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(2, 136, 209, 0.1);
+        }
+        .bg-ombre {
+            background: linear-gradient(135deg, #ffffff 0%, #E1F5FE 100%);
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active { display: flex; }
+    </style>
+</head>
 
-                <jsp:include page="/WEB-INF/views/product/product-list-header.jsp" />
+<body class="font-display bg-ombre text-slate-900 min-h-screen">
+    <jsp:include page="/WEB-INF/views/product/product-list-header.jsp" />
 
-                <div class="container mx-auto max-w-6xl p-4 md:p-8 flex-grow">
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <nav class="flex items-center gap-2 text-xs uppercase tracking-widest text-slate-400 mb-10">
+            <a class="hover:text-accent-blue" href="${pageContext.request.contextPath}/order?action=history">History</a>
+            <span class="material-icons-outlined text-sm">chevron_right</span>
+            <span class="text-slate-900 font-medium">Order Detail</span>
+        </nav>
 
-                    <%-- ✅ Thông báo đặt hàng thành công --%>
-                        <c:if test="${param.success == 'true'}">
-                            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-6 rounded-lg shadow-md mb-8"
-                                role="alert">
-                                <div class="flex">
-                                    <div class="py-1"><i class="fa-solid fa-check-circle text-3xl mr-4"></i></div>
-                                    <div>
-                                        <p class="text-xl font-bold">Đặt hàng thành công!</p>
-                                        <p class="text-base">Cảm ơn bạn đã mua sắm tại AISTHÉA. Chúng tôi sẽ xử lý đơn
-                                            hàng của bạn trong thời gian sớm nhất.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </c:if>
+        <%-- Success Alert --%>
+        <c:if test="${param.success == 'true'}">
+            <div class="glass-card border-emerald-100 bg-emerald-50/50 rounded-xl p-6 mb-10 flex items-center gap-4 animate-fade-in">
+                <div class="bg-emerald-500 text-white rounded-full p-2">
+                    <span class="material-symbols-outlined text-lg">check</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-emerald-900">Purchase Successful!</h3>
+                    <p class="text-sm text-emerald-700/80">Thank you for choosing AISTHÉA. Your order is being processed.</p>
+                </div>
+            </div>
+        </c:if>
 
-                        <h1 class="text-3xl font-bold text-gray-800 mb-8">Chi tiết Đơn hàng #${order.orderid}</h1>
-
-                        <div class="flex flex-col lg:flex-row gap-8 items-start">
-
-
-                            <%-- 🛒 Cột trái: sản phẩm --%>
-                                <div class="w-full lg:w-2/3 bg-white rounded-lg shadow-lg p-6">
-                                    <h2 class="text-xl font-semibold text-gray-700 border-b border-gray-200 pb-4 mb-4">
-                                        Danh sách sản phẩm</h2>
-
-                                    <div class="space-y-4">
-                                        <c:forEach var="item" items="${order.items}">
-                                            <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
-
-                                                <img src="${item.imageUrl}" alt="Ảnh sản phẩm"
-                                                    class="w-16 h-16 object-cover rounded-md"
-                                                    onerror="this.src='https://placehold.co/100x100/eee/ccc?text=No+Image'">
-
-                                                <div class="flex-grow">
-                                                    <p class="font-semibold text-gray-800">${item.productName}</p>
-                                                    <p class="text-sm text-gray-500">${item.color} / ${item.size}</p>
-                                                    <p class="text-sm text-gray-500">Số lượng: ${item.quantity}</p>
-                                                </div>
-
-                                                <div class="text-right">
-                                                    <p class="font-semibold text-gray-800">
-                                                        <fmt:formatNumber value="${item.price}" type="currency"
-                                                            currencyCode="VND" maxFractionDigits="0" />
-                                                    </p>
-                                                    <p class="text-sm text-gray-500">Thành tiền:</p>
-                                                    <p class="font-semibold text-gray-600">
-                                                        <fmt:formatNumber value="${item.price * item.quantity}"
-                                                            type="currency" currencyCode="VND" maxFractionDigits="0" />
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </c:forEach>
-                                    </div>
-                                </div>
-
-                                <%-- 💰 Cột phải: Tóm tắt đơn hàng --%>
-                                    <div class="w-full lg:w-1/3">
-                                        <div class="bg-white rounded-lg shadow-lg p-6 sticky top-28">
-                                            <h2
-                                                class="text-xl font-semibold text-gray-700 border-b border-gray-200 pb-4 mb-4">
-                                                Tóm tắt đơn hàng</h2>
-
-                                            <div class="space-y-3 mb-4">
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-600">Ngày đặt:</span>
-                                                    <span class="font-semibold text-gray-800">
-                                                        <fmt:formatDate value="${order.createdat}"
-                                                            pattern="dd/MM/yyyy" />
-                                                    </span>
-                                                </div>
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-600">Trạng thái:</span>
-                                                    <span class="font-semibold text-[#9B774E]">${order.status}</span>
-                                                </div>
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-600">Phí vận chuyển:</span>
-                                                    <span class="font-semibold text-gray-800">Miễn phí</span>
-                                                </div>
-                                            </div>
-
-                                            <div
-                                                class="border-t border-gray-200 pt-4 flex justify-between items-center mb-6">
-                                                <span class="text-lg font-bold text-gray-900">Tổng Cộng:</span>
-                                                <span class="text-2xl font-bold text-[#9B774E]">
-                                                    <fmt:formatNumber value="${order.totalprice}" type="currency"
-                                                        currencyCode="VND" maxFractionDigits="0" />
-                                                </span>
-                                            </div>
-
-                                            <h3
-                                                class="text-lg font-semibold text-gray-700 border-b border-gray-200 pb-3 mb-3">
-                                                Thông tin khách hàng</h3>
-
-                                            <div class="space-y-2 text-gray-700">
-                                                <p><i class="fa-solid fa-user w-5 mr-1"></i> ${order.fullname}</p>
-                                                <p><i class="fa-solid fa-phone w-5 mr-1"></i> ${order.phone}</p>
-                                                <p><i class="fa-solid fa-envelope w-5 mr-1"></i> ${order.email}</p>
-                                                <p><i class="fa-solid fa-location-dot w-5 mr-1"></i> ${order.address}
-                                                </p>
-                                            </div>
-
-                                            <%-- ✅ Nút HỦY ĐƠN HÀNG (màu nâu, mở modal) --%>
-                                                <c:if test="${order.status == 'Pending'}">
-                                                    <button type="button" onclick="openCancelModal()"
-                                                        class="w-full bg-[#9B774E] hover:bg-[#866545] text-white font-semibold py-3 px-6 rounded-lg transition duration-300 mt-6">
-                                                        <i class="fa-solid fa-ban mr-2"></i> Hủy đơn hàng
-                                                    </button>
-                                                </c:if>
-
-                                                <c:if test="${order.status == 'Completed'}">
-                                                    <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
-                                                        class="block w-full text-center bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-lg transition duration-300 mt-6">
-                                                        <i class="fa-regular fa-star mr-2"></i> Đánh giá sản phẩm
-                                                    </a>
-                                                </c:if>
-
-                                                <a href="${pageContext.request.contextPath}/order?action=history"
-                                                    class="block w-full text-center bg-gray-200 text-gray-800 font-semibold px-6 py-3 rounded-lg hover:bg-gray-300 transition duration-300 mt-6">
-                                                    <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại Lịch sử
-                                                </a>
-                                        </div>
-                                    </div>
-                        </div>
+        <div class="flex flex-col lg:flex-row gap-12">
+            <div class="lg:col-span-8 flex-grow space-y-8">
+                <div class="flex items-baseline justify-between gap-4">
+                    <h1 class="font-serif text-4xl font-semibold text-slate-800 tracking-tight">Order #${order.orderid}</h1>
+                    <div class="status-badge ${order.status == 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">
+                        ${order.status}
+                    </div>
                 </div>
 
-                <%-- 🟤 Modal chọn lý do hủy đơn hàng --%>
-                    <div id="cancelModal" class="modal">
-                        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Lý do bạn muốn hủy đơn hàng</h3>
-                            <form id="cancelForm" action="${pageContext.request.contextPath}/order" method="post">
-                                <input type="hidden" name="action" value="cancel">
-                                <input type="hidden" name="orderid" value="${order.orderid}">
-
-                                <div class="space-y-2 mb-4">
-                                    <label class="flex items-center space-x-2">
-                                        <input type="radio" name="reason" value="Đặt nhầm sản phẩm" required
-                                            onchange="toggleOtherReason()">
-                                        <span>Đặt nhầm sản phẩm</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2">
-                                        <input type="radio" name="reason" value="Thay đổi địa chỉ giao hàng"
-                                            onchange="toggleOtherReason()">
-                                        <span>Thay đổi địa chỉ giao hàng</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2">
-                                        <input type="radio" name="reason" value="Thời gian giao hàng quá lâu"
-                                            onchange="toggleOtherReason()">
-                                        <span>Thời gian giao hàng quá lâu</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2">
-                                        <input type="radio" name="reason" value="Tìm thấy giá tốt hơn ở nơi khác"
-                                            onchange="toggleOtherReason()">
-                                        <span>Tìm thấy giá tốt hơn ở nơi khác</span>
-                                    </label>
-                                    <label class="flex items-center space-x-2">
-                                        <input type="radio" name="reason" value="Khác" id="reasonOther"
-                                            onchange="toggleOtherReason()">
-                                        <span>Lý do khác</span>
-                                    </label>
+                <div class="glass-card rounded-xl overflow-hidden">
+                    <div class="p-6 border-b border-sky-50 bg-white/30">
+                        <h2 class="text-xs uppercase tracking-[0.2em] font-bold text-slate-400">Shipment Items</h2>
+                    </div>
+                    <div class="divide-y divide-sky-50">
+                        <c:forEach var="item" items="${order.items}">
+                            <div class="p-6 flex items-center gap-6">
+                                <div class="w-20 h-24 flex-shrink-0 rounded-lg bg-slate-100 overflow-hidden shadow-sm">
+                                    <img class="w-full h-full object-cover" src="${item.imageUrl}" alt="${item.productName}" 
+                                         onerror="this.src='https://placehold.co/100x120?text=No+Image'"/>
                                 </div>
+                                <div class="flex-grow">
+                                    <h3 class="text-sm font-semibold text-slate-900">${item.productName}</h3>
+                                    <p class="text-xs text-slate-500 italic mt-1">${item.color} / Size ${item.size}</p>
+                                    <p class="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">Qty: ${item.quantity}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-bold text-slate-900">
+                                        <fmt:formatNumber value="${item.price * item.quantity}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                    </p>
+                                    <p class="text-[10px] text-slate-400 mt-1">
+                                        <fmt:formatNumber value="${item.price}" type="number" />/unit
+                                    </p>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </div>
+            </div>
 
-                                <%-- ✅ Ô nhập lý do khác (ẩn mặc định) --%>
-                                    <div id="otherReasonBox" class="hidden mb-4">
-                                        <textarea name="otherReasonText" rows="3"
-                                            class="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#9B774E]"
-                                            placeholder="Vui lòng nhập lý do của bạn..."></textarea>
-                                    </div>
-
-                                    <div class="flex justify-end gap-3 mt-6">
-                                        <button type="button" onclick="closeCancelModal()"
-                                            class="px-5 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition">
-                                            Quay lại
-                                        </button>
-                                        <button type="submit"
-                                            class="px-5 py-2 rounded-lg bg-[#9B774E] text-white hover:bg-[#866545] transition">
-                                            Xác nhận hủy
-                                        </button>
-                                    </div>
-                            </form>
+            <div class="w-full lg:w-[400px] space-y-6">
+                <div class="glass-card rounded-xl p-8 border border-slate-200">
+                    <h2 class="font-serif text-2xl font-semibold text-slate-800 mb-6">Order Summary</h2>
+                    
+                    <div class="space-y-4 text-sm mb-8">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Placed Date</span>
+                            <span class="font-medium text-slate-900"><fmt:formatDate value="${order.createdat}" pattern="MMM dd, yyyy" /></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Shipping</span>
+                            <span class="text-emerald-600 font-bold italic">Complimentary</span>
+                        </div>
+                        <div class="pt-4 border-t border-sky-100 flex justify-between items-baseline">
+                            <span class="text-lg font-bold text-slate-900">Total</span>
+                            <span class="text-2xl font-bold text-accent-blue">
+                                <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                            </span>
                         </div>
                     </div>
 
-                    <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
+                    <div class="pt-6 border-t border-slate-100 space-y-4">
+                        <h3 class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">Shipping Information</h3>
+                        <div class="text-xs space-y-2 text-slate-600 leading-relaxed">
+                            <p class="font-bold text-slate-900 text-sm">${order.fullname}</p>
+                            <p><span class="material-icons-outlined text-[14px] align-middle mr-1">phone</span>${order.phone}</p>
+                            <p><span class="material-icons-outlined text-[14px] align-middle mr-1">email</span>${order.email}</p>
+                            <p><span class="material-icons-outlined text-[14px] align-middle mr-1">location_on</span>${order.address}</p>
+                        </div>
+                    </div>
 
-                    <script>
-                        const modal = document.getElementById("cancelModal");
-                        const otherBox = document.getElementById("otherReasonBox");
+                    <div class="mt-10 space-y-3">
+                        <c:if test="${order.status == 'Pending'}">
+                            <button onclick="openCancelModal()" class="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-sm">cancel</span> Cancel Order
+                            </button>
+                        </c:if>
+                        
+                        <c:if test="${order.status == 'Completed'}">
+                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}" class="w-full bg-accent-blue text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-primary transition-all flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-sm">star</span> Write a Review
+                            </a>
+                        </c:if>
 
-                        function openCancelModal() {
-                            modal.classList.add("active");
-                        }
+                        <a href="${pageContext.request.contextPath}/order?action=history" class="w-full bg-slate-900 text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 text-center">
+                            <span class="material-icons-outlined text-sm">arrow_back</span> Back to History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-                        function closeCancelModal() {
-                            modal.classList.remove("active");
-                        }
+    <div id="cancelModal" class="modal">
+        <div class="glass-card bg-white/95 rounded-2xl w-full max-w-md p-8 shadow-2xl animate-scale-in">
+            <h3 class="font-serif text-2xl font-semibold text-slate-800 mb-2">Cancel Order</h3>
+            <p class="text-sm text-slate-500 mb-8">Please tell us why you'd like to cancel this order.</p>
+            
+            <form id="cancelForm" action="${pageContext.request.contextPath}/order" method="post" class="space-y-4">
+                <input type="hidden" name="action" value="cancel">
+                <input type="hidden" name="orderid" value="${order.orderid}">
 
-                        function toggleOtherReason() {
-                            const selected = document.querySelector('input[name="reason"]:checked');
-                            if (selected && selected.value === "Khác") {
-                                otherBox.classList.remove("hidden");
-                            } else {
-                                otherBox.classList.add("hidden");
-                            }
-                        }
+                <div class="space-y-3">
+                    <c:forEach var="reason" items="${['Wrong product selected', 'Shipping address change', 'Delivery time too long', 'Found better price elsewhere', 'Other']}">
+                        <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-accent-blue/30 hover:bg-sky-50/50 cursor-pointer transition-all">
+                            <input type="radio" name="reason" value="${reason}" required onchange="toggleOtherReason()" class="text-accent-blue focus:ring-accent-blue">
+                            <span class="text-sm text-slate-600">${reason}</span>
+                        </label>
+                    </c:forEach>
+                </div>
 
-                        // Khi bấm Back -> quay về lịch sử
-                        if (window.history && window.history.pushState) {
-                            window.history.pushState(null, null, window.location.href);
-                            window.onpopstate = function () {
-                                window.location.href = "${pageContext.request.contextPath}/order?action=history";
-                            };
-                        }
-                    </script>
+                <div id="otherReasonBox" class="hidden mt-4">
+                    <textarea name="otherReasonText" rows="3" class="w-full bg-white/50 border-slate-200 rounded-xl focus:ring-accent-blue focus:border-accent-blue text-sm p-4" placeholder="Please specify your reason..."></textarea>
+                </div>
 
-            </body>
+                <div class="flex gap-3 mt-8">
+                    <button type="button" onclick="closeCancelModal()" class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-400 hover:text-slate-600 transition-colors">Go Back</button>
+                    <button type="submit" class="flex-1 bg-red-500 text-white py-3 rounded-lg text-[10px] uppercase font-bold tracking-widest hover:bg-red-600 shadow-lg shadow-red-200 transition-all">Confirm Cancellation</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-            </html>
+    <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
+
+    <script>
+        const modal = document.getElementById("cancelModal");
+        const otherBox = document.getElementById("otherReasonBox");
+
+        function openCancelModal() { modal.classList.add("active"); }
+        function closeCancelModal() { modal.classList.remove("active"); }
+
+        function toggleOtherReason() {
+            const selected = document.querySelector('input[name="reason"]:checked');
+            if (selected && selected.value === "Other") {
+                otherBox.classList.remove("hidden");
+            } else {
+                otherBox.classList.add("hidden");
+            }
+        }
+
+        // Handle browser back button
+        if (window.history && window.history.pushState) {
+            window.history.pushState(null, null, window.location.href);
+            window.onpopstate = function () {
+                window.location.href = "${pageContext.request.contextPath}/order?action=history";
+            };
+        }
+    </script>
+</body>
+</html>

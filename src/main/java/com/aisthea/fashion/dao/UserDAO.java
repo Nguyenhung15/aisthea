@@ -20,6 +20,8 @@ public class UserDAO implements IUserDAO {
     private static final String UPDATE_PASSWORD_SQL = "UPDATE users SET password = ?, updatedat = GETDATE() WHERE userid = ?";
     private static final String DELETE_USER_SQL = "DELETE FROM Users WHERE userid = ?";
     private static final String ACTIVATE_USER_SQL = "UPDATE users SET active = 1, updatedat = GETDATE() WHERE email = ? AND active = 0";
+    private static final String BAN_USER_SQL = "UPDATE users SET is_banned = 1, ban_reason = ?, updatedat = GETDATE() WHERE userid = ?";
+    private static final String UNBAN_USER_SQL = "UPDATE users SET is_banned = 0, ban_reason = NULL, updatedat = GETDATE() WHERE userid = ?";
 
     private User extractUserFromResultSet(ResultSet rs) throws SQLException {
         User u = new User();
@@ -35,6 +37,11 @@ public class UserDAO implements IUserDAO {
         u.setRole(rs.getString("role"));
         u.setActive(rs.getBoolean("active"));
         u.setDob(rs.getDate("dob"));
+        u.setMembershipPoints(rs.getInt("membership_points"));
+        u.setCreatedAt(rs.getTimestamp("createdat"));
+        u.setUpdatedAt(rs.getTimestamp("updatedat"));
+        u.setBanned(rs.getBoolean("is_banned"));
+        u.setBanReason(rs.getString("ban_reason"));
         return u;
     }
 
@@ -192,6 +199,42 @@ public class UserDAO implements IUserDAO {
             throw e;
         }
         return rowDeleted;
+    }
+
+    @Override
+    public boolean toggleUserStatus(int userId) throws SQLException {
+        String sql = "UPDATE users SET is_banned = CASE WHEN is_banned = 1 THEN 0 ELSE 1 END, updatedat = GETDATE() WHERE userid = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    public boolean banUser(int userId, String reason) throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(BAN_USER_SQL)) {
+            ps.setString(1, reason);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    public boolean unbanUser(int userId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(UNBAN_USER_SQL)) {
+            ps.setInt(1, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override

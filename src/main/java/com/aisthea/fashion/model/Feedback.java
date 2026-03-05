@@ -10,8 +10,14 @@ public class Feedback {
     private int rating;
     private String comment;
     private String username;
+    private String status;
+    private String imageUrl;
+    private int helpfulCount;
+    private String adminReply;
     private Date createdat;
     private Date updatedat;
+    private Date repliedAt;
+    private boolean isVerified;
 
     // Constructors
     public Feedback() {
@@ -77,6 +83,38 @@ public class Feedback {
         this.username = username;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public int getHelpfulCount() {
+        return helpfulCount;
+    }
+
+    public void setHelpfulCount(int helpfulCount) {
+        this.helpfulCount = helpfulCount;
+    }
+
+    public String getAdminReply() {
+        return adminReply;
+    }
+
+    public void setAdminReply(String adminReply) {
+        this.adminReply = adminReply;
+    }
+
     public Date getCreatedat() {
         return createdat;
     }
@@ -93,6 +131,22 @@ public class Feedback {
         this.updatedat = updatedat;
     }
 
+    public Date getRepliedAt() {
+        return repliedAt;
+    }
+
+    public void setRepliedAt(Date repliedAt) {
+        this.repliedAt = repliedAt;
+    }
+
+    public boolean isVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(boolean isVerified) {
+        this.isVerified = isVerified;
+    }
+
     @Override
     public String toString() {
         return "Feedback{"
@@ -101,8 +155,8 @@ public class Feedback {
                 + ", productid=" + productid
                 + ", rating=" + rating
                 + ", comment='" + comment + '\''
-                + ", createdat=" + createdat
-                + ", updatedat=" + updatedat
+                + ", status='" + status + '\''
+                + ", helpfulCount=" + helpfulCount
                 + '}';
     }
 }
