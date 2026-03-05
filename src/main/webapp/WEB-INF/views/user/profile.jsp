@@ -194,6 +194,16 @@
                                             </div>
                                         </c:if>
 
+                                        <c:if test="${param.error == 'invalid_phone'}">
+                                            <div
+                                                class="bg-red-50 border border-red-200 text-red-600 rounded-xl p-4 text-sm flex items-center shadow-sm animate-fadeIn">
+                                                <span
+                                                    class="material-symbols-outlined mr-3 text-[20px]">error_outline</span>
+                                                <span class="font-medium">Số điện thoại không hợp lệ! Vui lòng nhập đúng
+                                                    10 chữ số (0-9).</span>
+                                            </div>
+                                        </c:if>
+
                                         <c:if test="${not empty sessionScope.changePassSuccess}">
                                             <div
                                                 class="bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-xl p-4 text-sm flex items-center shadow-sm animate-fadeIn">
@@ -254,18 +264,23 @@
                                             </div>
 
                                             <div class="space-y-2">
-                                                <label
+                                                <labelb
                                                     class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
                                                     for="phone">Số điện thoại</label>
-                                                <div class="relative group">
-                                                    <input name="phone"
-                                                        class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium"
-                                                        id="phone" type="tel" value="${sessionScope.user.phone}" />
-                                                    <div
-                                                        class="absolute right-4 top-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                                                    <div class="relative group">
+                                                        <input name="phone"
+                                                            class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium"
+                                                            id="phone" type="tel" value="${sessionScope.user.phone}"
+                                                            maxlength="10" />
+                                                        <div
+                                                            class="absolute right-4 top-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                            <span
+                                                                class="material-symbols-outlined text-[18px]">edit</span>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                    <p id="phoneError" class="text-red-500 text-xs mt-1 hidden">SĐT phải
+                                                        có
+                                                        đúng 10 chữ số (0-9).</p>
                                             </div>
 
                                             <div class="space-y-2">
@@ -295,10 +310,11 @@
                                                 <div class="relative">
                                                     <input name="dob"
                                                         class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium cursor-pointer"
-                                                        id="dob" type="date" value="${sessionScope.user.dob}" />
+                                                        id="dob" type="date" value="${sessionScope.user.dob}" max="" />
                                                     <span
                                                         class="material-symbols-outlined absolute right-4 top-3.5 pointer-events-none text-slate-500 text-[20px]">calendar_today</span>
                                                 </div>
+                                                <p id="dobError" class="text-red-500 text-xs mt-1 hidden"></p>
                                             </div>
 
                                         </div>
@@ -345,6 +361,94 @@
                             }
                         });
                     }
+
+                    // Phone validation
+                    const phoneInput = document.getElementById('phone');
+                    const phoneError = document.getElementById('phoneError');
+                    const phoneRegex = /^[0-9]{10}$/;
+
+                    phoneInput.addEventListener('input', () => {
+                        // Only allow digit characters
+                        phoneInput.value = phoneInput.value.replace(/[^0-9]/g, '');
+                        const value = phoneInput.value.trim();
+                        if (value.length > 0 && !phoneRegex.test(value)) {
+                            phoneError.classList.remove('hidden');
+                            phoneInput.classList.add('border-red-400');
+                        } else {
+                            phoneError.classList.add('hidden');
+                            phoneInput.classList.remove('border-red-400');
+                        }
+                    });
+
+                    // Date of Birth validation
+                    const dobInput = document.getElementById('dob');
+                    const dobError = document.getElementById('dobError');
+
+                    // Set max = today to prevent future date input via keyboard
+                    const today = new Date();
+                    const yyyy = today.getFullYear();
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    dobInput.max = `${yyyy}-${mm}-${dd}`;
+
+                    function validateDob() {
+                        const val = dobInput.value;
+                        if (!val) {
+                            dobError.classList.add('hidden');
+                            dobInput.classList.remove('border-red-400');
+                            return true; // Optional field
+                        }
+                        const birthDate = new Date(val);
+                        const now = new Date();
+                        const ageDiff = now.getFullYear() - birthDate.getFullYear();
+                        const monthDiff = now.getMonth() - birthDate.getMonth();
+                        const dayDiff = now.getDate() - birthDate.getDate();
+                        let age = ageDiff;
+                        if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) age--;
+
+                        if (birthDate > now) {
+                            dobError.textContent = 'Ngày sinh không thể là ngày trong tương lai.';
+                            dobError.classList.remove('hidden');
+                            dobInput.classList.add('border-red-400');
+                            return false;
+                        }
+                        if (age < 16) {
+                            dobError.textContent = 'Bạn phải đủ 16 tuổi trở lên.';
+                            dobError.classList.remove('hidden');
+                            dobInput.classList.add('border-red-400');
+                            return false;
+                        }
+                        if (age > 120) {
+                            dobError.textContent = 'Ngày sinh không hợp lệ (tối đa 120 tuổi).';
+                            dobError.classList.remove('hidden');
+                            dobInput.classList.add('border-red-400');
+                            return false;
+                        }
+                        dobError.classList.add('hidden');
+                        dobInput.classList.remove('border-red-400');
+                        return true;
+                    }
+
+                    dobInput.addEventListener('change', validateDob);
+
+                    // Prevent form submit if phone or dob is invalid
+                    document.getElementById('profileForm').addEventListener('submit', function (e) {
+                        let hasError = false;
+
+                        const phoneVal = phoneInput.value.trim();
+                        if (phoneVal.length > 0 && !phoneRegex.test(phoneVal)) {
+                            e.preventDefault();
+                            phoneError.classList.remove('hidden');
+                            phoneInput.focus();
+                            hasError = true;
+                        }
+
+                        if (!validateDob()) {
+                            e.preventDefault();
+                            if (!hasError) dobInput.focus();
+                            hasError = true;
+                        }
+                    });
 
                     // Success URL param handling
                     if (new URLSearchParams(window.location.search).get("success") !== null) {

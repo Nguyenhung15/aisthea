@@ -54,10 +54,16 @@ public class ProfileServlet extends HttpServlet {
         String address = request.getParameter("address");
         String dobStr = request.getParameter("dob");
 
+        // Server-side phone validation: must be empty OR exactly 10 digits
+        if (phone != null && !phone.trim().isEmpty() && !phone.trim().matches("^[0-9]{10}$")) {
+            response.sendRedirect(request.getContextPath() + "/profile?error=invalid_phone");
+            return;
+        }
+
         user.setFullname(fullname);
         user.setEmail(email);
         user.setGender(gender);
-        user.setPhone(phone);
+        user.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
         user.setAddress(address);
 
         if (dobStr != null && !dobStr.isEmpty()) {
