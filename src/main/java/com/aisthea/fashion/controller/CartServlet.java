@@ -39,16 +39,30 @@ public class CartServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        Cart originalCart = (Cart) session.getAttribute("originalCart");
-        if (originalCart != null) {
-            session.setAttribute("cart", originalCart);
-            session.removeAttribute("originalCart");
-            logger.info("Restored original cart for user.");
-        }
+
         String action = request.getParameter("action");
+        String servletPath = request.getServletPath();
+
+        // If no action, but accessing /checkout, set action to checkout
+        if (action == null && "/checkout".equals(servletPath)) {
+            action = "checkout";
+        }
+
         if (action == null) {
             action = "view";
         }
+
+        // Restore original cart ONLY if NOT in checkout flow
+        if (!"checkout".equals(action)) {
+            Cart savedOriginal = (Cart) session.getAttribute("originalCart");
+            if (savedOriginal != null) {
+                // If user is returning to /cart from a "Buy Now" flow, restore their items
+                session.setAttribute("cart", savedOriginal);
+                session.removeAttribute("originalCart");
+                logger.info("Restored original cart for user.");
+            }
+        }
+
         Cart cart = (Cart) session.getAttribute("cart");
         String jspPath = "/WEB-INF/views/cart/cart.jsp";
 
@@ -72,6 +86,9 @@ public class CartServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
+            // Load active vouchers for the "pick voucher" panel
+            com.aisthea.fashion.dao.VoucherDAO vDao = new com.aisthea.fashion.dao.VoucherDAO();
+            request.setAttribute("activeVouchers", vDao.findActiveVouchers());
             request.getRequestDispatcher("/WEB-INF/views/cart/checkout.jsp")
                     .forward(request, response);
             return;

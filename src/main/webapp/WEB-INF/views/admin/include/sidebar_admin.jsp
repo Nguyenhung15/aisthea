@@ -53,6 +53,11 @@
                     <i class="fa-solid fa-star"></i>
                     <span>Reviews</span>
                 </a>
+                <a href="${pageContext.request.contextPath}/voucher?action=list" class="lux-sidebar__link"
+                    data-path="/voucher">
+                    <i class="fa-solid fa-ticket"></i>
+                    <span>Vouchers</span>
+                </a>
             </nav>
 
         </aside>
