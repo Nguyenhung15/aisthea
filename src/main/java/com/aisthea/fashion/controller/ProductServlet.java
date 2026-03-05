@@ -417,9 +417,7 @@ public class ProductServlet extends HttpServlet {
         request.setAttribute("product", product);
         request.setAttribute("colorSizes", productService.getColorSizesByProductId(id));
         request.setAttribute("images", productService.getImagesByProductId(id));
-<<<<<<< HEAD
         request.setAttribute("feedbacks", feedbackService.getFeedbacksByProductId(id));
-=======
 
         // Build breadcrumb data (same pattern as product list page)
         if (product != null && product.getCategory() != null) {
@@ -438,7 +436,6 @@ public class ProductServlet extends HttpServlet {
             }
         }
 
->>>>>>> b98520423198b63a5da1fb416088863592b4647c
         request.getRequestDispatcher("/WEB-INF/views/product/product-detail.jsp").forward(request, response);
     }
 

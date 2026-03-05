@@ -208,12 +208,7 @@
                             <div
                                 class="max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-16 relative z-10">
 
-<<<<<<< HEAD
 
-
-                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-24 relative z-10">
-=======
->>>>>>> b98520423198b63a5da1fb416088863592b4647c
                                 <!-- Left: Images -->
                                 <div class="lg:col-span-7 flex flex-col gap-4">
                                     <div
@@ -408,15 +403,9 @@
                                                 <span
                                                     class="material-symbols-outlined text-slate-400 accordion-icon text-lg">add</span>
                                             </div>
-                                            <div
-<<<<<<< HEAD
-                                                class="hidden group-[.active]:block mt-4 text-xs text-slate-500 leading-relaxed font-medium">
-                                                100% Mongolian Cashmere. Crafted with traditional weaving
-                                                techniques.
-=======
+                                             <div
                                                 class="accordion-content hidden mt-4 text-xs text-slate-500 leading-relaxed font-medium">
                                                 100% Mongolian Cashmere. Crafted with traditional weaving techniques.
->>>>>>> b98520423198b63a5da1fb416088863592b4647c
                                                 <br><br>
                                                 • Hand wash cold or professional dry clean<br>
                                                 • Do not tumble dry<br>
@@ -432,20 +421,11 @@
                                                 <span
                                                     class="material-symbols-outlined text-slate-400 accordion-icon text-lg">add</span>
                                             </div>
-                                            <div
-<<<<<<< HEAD
-                                                class="hidden group-[.active]:block mt-4 text-xs text-slate-500 leading-relaxed font-medium">
-                                                Complimentary express shipping on all orders over $500. Secure
-                                                signature
-                                                delivery.
-                                                Returns accepted within 14 days in original condition with all
-                                                tags
-=======
+                                             <div
                                                 class="accordion-content hidden mt-4 text-xs text-slate-500 leading-relaxed font-medium">
                                                 Complimentary express shipping on all orders over 5.000.000₫. Secure
                                                 signature delivery.
                                                 Returns accepted within 14 days in original condition with all tags
->>>>>>> b98520423198b63a5da1fb416088863592b4647c
                                                 attached.
                                             </div>
                                         </div>
@@ -454,266 +434,84 @@
                                 </div>
                             </div>
 
-<<<<<<< HEAD
-                            <!-- Reviews Section -->
-                            <section class="mt-32 pt-20 border-t border-slate-100">
-                                <%-- Tính rating trung bình --%>
-                                    <c:set var="totalRating" value="0" />
-                                    <c:set var="reviewCount" value="0" />
-                                    <c:forEach var="fb" items="${feedbacks}">
-                                        <c:set var="totalRating" value="${totalRating + fb.rating}" />
-                                        <c:set var="reviewCount" value="${reviewCount + 1}" />
-                                    </c:forEach>
-                                    <c:set var="avgRating" value="${reviewCount > 0 ? totalRating / reviewCount : 0}" />
-
-                                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
-                                        <!-- Left: Summary -->
-                                        <div class="lg:col-span-4 self-start">
-                                            <h2 class="font-serif text-4xl text-slate-900 mb-6">Client
-                                                Experience</h2>
-                                            <div class="flex items-baseline gap-4 mb-2">
-                                                <span class="text-5xl font-serif text-slate-900">
-                                                    <c:choose>
-                                                        <c:when test="${reviewCount > 0}">
-                                                            <fmt:formatNumber value="${avgRating}"
-                                                                maxFractionDigits="1" />
-                                                        </c:when>
-                                                        <c:otherwise>—</c:otherwise>
-                                                    </c:choose>
-                                                </span>
-                                                <div class="flex gap-0.5">
-                                                    <c:forEach begin="1" end="5" var="starIdx">
-                                                        <span
-                                                            class="material-symbols-outlined text-xl ${starIdx <= avgRating ? 'star-filled' : 'text-slate-200'}">star</span>
-                                                    </c:forEach>
-                                                </div>
-                                            </div>
-                                            <p
-                                                class="text-[10px] text-slate-400 font-bold tracking-[0.2em] uppercase mb-8">
-                                                <c:choose>
-                                                    <c:when test="${reviewCount > 0}">${reviewCount} Verified
-                                                        Review${reviewCount > 1 ? 's' : ''}</c:when>
-                                                    <c:otherwise>No Reviews Yet</c:otherwise>
-                                                </c:choose>
-                                            </p>
-                                        </div>
-
-                                        <!-- Right: Feedback list -->
-                                        <div class="lg:col-span-8">
-                                            <c:choose>
-                                                <c:when test="${empty feedbacks}">
-                                                    <div
-                                                        class="flex flex-col items-center justify-center py-16 text-center">
-                                                        <span
-                                                            class="material-symbols-outlined text-4xl text-slate-200 mb-4">rate_review</span>
-                                                        <p class="text-sm text-slate-400 font-medium">Chưa có
-                                                            đánh giá
-                                                            nào cho sản phẩm này.</p>
-                                                        <p
-                                                            class="text-[11px] text-slate-300 mt-1 tracking-wide uppercase font-bold">
-                                                            Be the first to share your experience</p>
-                                                    </div>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <div class="space-y-10">
-                                                        <c:forEach var="fb" items="${feedbacks}">
-                                                            <div class="pb-10 border-b border-slate-50 last:border-0">
-                                                                <!-- Header: Name + Date -->
-                                                                <div class="flex justify-between items-start mb-3">
-                                                                    <span
-                                                                        class="text-sm font-bold text-slate-900 font-serif tracking-tight">
-                                                                        ${not empty fb.username ? fb.username :
-                                                                        'Anonymous'}
-                                                                    </span>
-                                                                    <span
-                                                                        class="text-slate-300 text-[10px] font-bold tracking-widest uppercase">
-                                                                        <fmt:formatDate value="${fb.createdat}"
-                                                                            pattern="dd MMM yyyy" />
-                                                                    </span>
-                                                                </div>
-                                                                <!-- Stars -->
-                                                                <div class="flex gap-0.5 mb-3">
-                                                                    <c:forEach begin="1" end="5" var="s">
-                                                                        <span
-                                                                            class="material-symbols-outlined text-sm ${s <= fb.rating ? 'star-filled' : 'text-slate-200'}">star</span>
-                                                                    </c:forEach>
-                                                                </div>
-                                                                <!-- Comment -->
-                                                                <p
-                                                                    class="text-xs text-slate-500 leading-relaxed font-medium italic">
-                                                                    "${not empty fb.comment ? fb.comment : ''}"
-                                                                </p>
-                                                                <div
-                                                                    class="text-[9px] font-bold tracking-widest text-primary uppercase mt-3">
-                                                                    Maison Verified Buyer
-                                                                </div>
-                                                            </div>
-                                                        </c:forEach>
-                                                    </div>
-                                                </c:otherwise>
-                                            </c:choose>
-=======
                             <!-- ======= REVIEWS SECTION ======= -->
                             <section class="max-w-[1400px] mx-auto mt-32 pt-20 border-t border-slate-100">
-                                <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                                <%-- Tính rating trung bình --%>
+                                <c:set var="totalRating" value="0" />
+                                <c:set var="reviewCount" value="0" />
+                                <c:forEach var="fb" items="${feedbacks}">
+                                    <c:set var="totalRating" value="${totalRating + fb.rating}" />
+                                    <c:set var="reviewCount" value="${reviewCount + 1}" />
+                                </c:forEach>
+                                <c:set var="avgRating" value="${reviewCount > 0 ? totalRating / reviewCount : 0}" />
 
+                                <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
                                     <!-- Left: Summary -->
                                     <div class="lg:col-span-4 sticky top-32 self-start">
                                         <h2 class="font-serif text-4xl text-slate-900 mb-6">Client Reviews</h2>
                                         <div class="flex items-baseline gap-4 mb-4">
-                                            <span class="text-5xl font-serif text-slate-900">4.9</span>
+                                            <span class="text-5xl font-serif text-slate-900">
+                                                <c:choose>
+                                                    <c:when test="${reviewCount > 0}">
+                                                        <fmt:formatNumber value="${avgRating}" maxFractionDigits="1" />
+                                                    </c:when>
+                                                    <c:otherwise>—</c:otherwise>
+                                                </c:choose>
+                                            </span>
                                             <div class="flex gap-0.5">
-                                                <c:forEach begin="1" end="5">
-                                                    <span
-                                                        class="material-symbols-outlined star-filled text-xl">star</span>
+                                                <c:forEach begin="1" end="5" var="starIdx">
+                                                    <span class="material-symbols-outlined text-xl ${starIdx <= avgRating ? 'star-filled' : 'text-slate-200'}">star</span>
                                                 </c:forEach>
                                             </div>
                                         </div>
                                         <p class="text-[10px] text-slate-400 font-bold tracking-[0.2em] uppercase mb-8">
-                                            Based on 42 verified reviews</p>
-
-                                        <!-- Rating Breakdown Bars -->
-                                        <div class="space-y-3 mb-10">
-                                            <div class="flex items-center gap-4 text-xs tracking-wider text-slate-600">
-                                                <span class="w-16 font-semibold">Fit</span>
-                                                <div class="flex-1 h-0.5 bg-slate-200 relative">
-                                                    <div class="absolute h-full bg-slate-800 rating-bar-fill"
-                                                        style="width: 95%"></div>
-                                                </div>
-                                                <span class="w-12 text-right font-medium">True</span>
-                                            </div>
-                                            <div class="flex items-center gap-4 text-xs tracking-wider text-slate-600">
-                                                <span class="w-16 font-semibold">Quality</span>
-                                                <div class="flex-1 h-0.5 bg-slate-200 relative">
-                                                    <div class="absolute h-full bg-slate-800 rating-bar-fill"
-                                                        style="width: 98%"></div>
-                                                </div>
-                                                <span class="w-12 text-right font-medium">High</span>
-                                            </div>
-                                            <div class="flex items-center gap-4 text-xs tracking-wider text-slate-600">
-                                                <span class="w-16 font-semibold">Comfort</span>
-                                                <div class="flex-1 h-0.5 bg-slate-200 relative">
-                                                    <div class="absolute h-full bg-slate-800 rating-bar-fill"
-                                                        style="width: 92%"></div>
-                                                </div>
-                                                <span class="w-12 text-right font-medium">Soft</span>
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            class="px-8 py-3 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-primary transition-all duration-300 w-full lg:w-auto">
-                                            Write a Review
-                                        </button>
+                                            <c:choose>
+                                                <c:when test="${reviewCount > 0}">${reviewCount} Verified Review${reviewCount > 1 ? 's' : ''}</c:when>
+                                                <c:otherwise>No Reviews Yet</c:otherwise>
+                                            </c:choose>
+                                        </p>
                                     </div>
 
-                                    <!-- Right: Review List -->
-                                    <div class="lg:col-span-8 space-y-12">
-                                        <!-- Review 1 -->
-                                        <div class="pb-12 border-b border-slate-100">
-                                            <div class="flex justify-between items-start mb-4">
-                                                <div class="flex items-center gap-3">
-                                                    <h3 class="font-serif font-medium text-lg text-slate-900">Eleanor V.
-                                                    </h3>
-                                                    <span
-                                                        class="bg-blue-50 text-primary text-[9px] px-2 py-0.5 uppercase tracking-wider">Verified
-                                                        Buyer</span>
+                                    <!-- Right: Actual feedback from DB -->
+                                    <div class="lg:col-span-8">
+                                        <c:choose>
+                                            <c:when test="${empty feedbacks}">
+                                                <div class="flex flex-col items-center justify-center py-16 text-center">
+                                                    <span class="material-symbols-outlined text-4xl text-slate-200 mb-4">rate_review</span>
+                                                    <p class="text-sm text-slate-400 font-medium">Chưa có đánh giá nào cho sản phẩm này.</p>
+                                                    <p class="text-[11px] text-slate-300 mt-1 tracking-wide uppercase font-bold">Be the first to share your experience</p>
                                                 </div>
-                                                <span class="text-slate-400 text-xs">2 days ago</span>
-                                            </div>
-                                            <div class="flex gap-0.5 mb-4">
-                                                <c:forEach begin="1" end="5">
-                                                    <span
-                                                        class="material-symbols-outlined star-filled text-sm">star</span>
-                                                </c:forEach>
-                                            </div>
-                                            <h4 class="font-semibold text-slate-800 mb-2">Exquisite Cashmere Quality
-                                            </h4>
-                                            <p class="text-slate-600 font-light leading-relaxed mb-4 text-sm">
-                                                The texture is absolutely divine. It drapes perfectly and feels
-                                                incredibly luxurious against the skin. I was hesitant about the size,
-                                                but the fit guide was spot on. A timeless piece I'll cherish for winters
-                                                to come.
-                                            </p>
-                                            <div class="flex gap-2">
-                                                <span class="text-[10px] text-slate-400 uppercase tracking-widest">Size
-                                                    Purchased: S</span>
-                                                <span class="text-slate-300">|</span>
-                                                <span
-                                                    class="text-[10px] text-slate-400 uppercase tracking-widest">Color:
-                                                    Camel</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Review 2 -->
-                                        <div class="pb-12 border-b border-slate-100">
-                                            <div class="flex justify-between items-start mb-4">
-                                                <div class="flex items-center gap-3">
-                                                    <h3 class="font-serif font-medium text-lg text-slate-900">Isabella
-                                                        M.</h3>
-                                                    <span
-                                                        class="bg-blue-50 text-primary text-[9px] px-2 py-0.5 uppercase tracking-wider">Verified
-                                                        Buyer</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="space-y-10">
+                                                    <c:forEach var="fb" items="${feedbacks}">
+                                                        <div class="pb-10 border-b border-slate-50 last:border-0">
+                                                            <div class="flex justify-between items-start mb-3">
+                                                                <div class="flex items-center gap-3">
+                                                                    <span class="text-sm font-bold text-slate-900 font-serif tracking-tight">
+                                                                        ${not empty fb.username ? fb.username : 'Anonymous'}
+                                                                    </span>
+                                                                    <span class="bg-blue-50 text-primary text-[9px] px-2 py-0.5 uppercase tracking-wider">Verified Buyer</span>
+                                                                </div>
+                                                                <span class="text-slate-300 text-[10px] font-bold tracking-widest uppercase">
+                                                                    <fmt:formatDate value="${fb.createdat}" pattern="dd MMM yyyy" />
+                                                                </span>
+                                                            </div>
+                                                            <div class="flex gap-0.5 mb-3">
+                                                                <c:forEach begin="1" end="5" var="s">
+                                                                    <span class="material-symbols-outlined text-sm ${s <= fb.rating ? 'star-filled' : 'text-slate-200'}">star</span>
+                                                                </c:forEach>
+                                                            </div>
+                                                            <p class="text-xs text-slate-500 leading-relaxed font-medium italic">
+                                                                "${not empty fb.comment ? fb.comment : ''}"
+                                                            </p>
+                                                        </div>
+                                                    </c:forEach>
                                                 </div>
-                                                <span class="text-slate-400 text-xs">1 week ago</span>
-                                            </div>
-                                            <div class="flex gap-0.5 mb-4">
-                                                <c:forEach begin="1" end="4">
-                                                    <span
-                                                        class="material-symbols-outlined star-filled text-sm">star</span>
-                                                </c:forEach>
-                                                <span class="material-symbols-outlined star-filled text-sm"
-                                                    style="font-variation-settings: 'FILL' 1, 'wght' 400; color: #C8A97E;">star_half</span>
-                                            </div>
-                                            <h4 class="font-semibold text-slate-800 mb-2">Beautiful silhouette</h4>
-                                            <p class="text-slate-600 font-light leading-relaxed mb-4 text-sm">
-                                                Stunning piece. The silhouette is very modern yet classic. The only
-                                                reason for 4.5 stars is that the sleeves run slightly long, but easily
-                                                tailorable. The packaging was an experience in itself.
-                                            </p>
-                                            <div class="flex gap-2">
-                                                <span class="text-[10px] text-slate-400 uppercase tracking-widest">Size
-                                                    Purchased: M</span>
-                                                <span class="text-slate-300">|</span>
-                                                <span
-                                                    class="text-[10px] text-slate-400 uppercase tracking-widest">Color:
-                                                    Midnight Blue</span>
-                                            </div>
-                                        </div>
-
-                                        <!-- Review 3 -->
-                                        <div class="pb-0">
-                                            <div class="flex justify-between items-start mb-4">
-                                                <div class="flex items-center gap-3">
-                                                    <h3 class="font-serif font-medium text-lg text-slate-900">Sophie L.
-                                                    </h3>
-                                                    <span
-                                                        class="bg-blue-50 text-primary text-[9px] px-2 py-0.5 uppercase tracking-wider">Verified
-                                                        Buyer</span>
-                                                </div>
-                                                <span class="text-slate-400 text-xs">3 weeks ago</span>
-                                            </div>
-                                            <div class="flex gap-0.5 mb-4">
-                                                <c:forEach begin="1" end="5">
-                                                    <span
-                                                        class="material-symbols-outlined star-filled text-sm">star</span>
-                                                </c:forEach>
-                                            </div>
-                                            <h4 class="font-semibold text-slate-800 mb-2">Worth every penny</h4>
-                                            <p class="text-slate-600 font-light leading-relaxed mb-4 text-sm">
-                                                This is quiet luxury at its finest. No logos, just impeccable material
-                                                and cut. I've received so many compliments. It keeps me warm without
-                                                being bulky.
-                                            </p>
-                                        </div>
-
-                                        <div class="pt-8 flex justify-center">
-                                            <button
-                                                class="text-xs uppercase tracking-[0.2em] font-semibold text-slate-500 hover:text-slate-900 transition-colors border-b border-slate-300 pb-1 hover:border-slate-900">
-                                                Load More Reviews
-                                            </button>
->>>>>>> b98520423198b63a5da1fb416088863592b4647c
-                                        </div>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
+                                </div>
                             </section>
 
                             <!-- ======= COMPLETE THE LOOK ======= -->
@@ -866,35 +664,35 @@
                         <!-- Footer (shared with product-list page) -->
                         <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
-<<<<<<< HEAD
                         <%-- Toast notification khi feedback thành công --%>
-                            <c:if test="${param.feedback eq 'success'}">
-                                <div id="feedbackToast"
-                                    class="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-slate-900 text-white px-6 py-4 shadow-2xl rounded-sm"
-                                    style="animation: slideInToast 0.4s cubic-bezier(0.19,1,0.22,1) both;">
-                                    <span class="material-symbols-outlined text-primary text-xl">check_circle</span>
-                                    <div>
-                                        <p class="text-sm font-bold tracking-wide">Cảm ơn bạn đã đánh giá!</p>
-                                        <p class="text-[11px] text-slate-400 font-medium">Feedback của bạn đã được ghi
-                                            nhận.</p>
-                                    </div>
-                                    <button onclick="document.getElementById('feedbackToast').remove()"
-                                        class="ml-4 text-slate-400 hover:text-white transition-colors">
-                                        <span class="material-symbols-outlined text-base">close</span>
-                                    </button>
+                        <c:if test="${param.feedback eq 'success'}">
+                            <div id="feedbackToast"
+                                class="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-slate-900 text-white px-6 py-4 shadow-2xl rounded-sm"
+                                style="animation: slideInToast 0.4s cubic-bezier(0.19,1,0.22,1) both;">
+                                <span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+                                <div>
+                                    <p class="text-sm font-bold tracking-wide">Cảm ơn bạn đã đánh giá!</p>
+                                    <p class="text-[11px] text-slate-400 font-medium">Feedback của bạn đã được ghi nhận.</p>
                                 </div>
-                                <style>
-                                    @keyframes slideInToast {
-                                        from {
-                                            opacity: 0;
-                                            transform: translateY(20px);
-                                        }
+                                <button onclick="document.getElementById('feedbackToast').remove()"
+                                    class="ml-4 text-slate-400 hover:text-white transition-colors">
+                                    <span class="material-symbols-outlined text-base">close</span>
+                                </button>
+                            </div>
+                            <style>
+                                @keyframes slideInToast {
+                                    from { opacity: 0; transform: translateY(20px); }
+                                    to { opacity: 1; transform: translateY(0); }
+                                }
+                            </style>
+                            <script>
+                                setTimeout(() => {
+                                    const t = document.getElementById('feedbackToast');
+                                    if (t) { t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; setTimeout(() => t.remove(), 500); }
+                                }, 5000);
+                            <\/script>
+                        </c:if>
 
-                                        to {
-                                            opacity: 1;
-                                            transform: translateY(0);
-                                        }
-=======
                         <!-- ======= SCRIPTS ======= -->
                         <script>
                             // ── Accordion ──────────────────────────────────────────────
@@ -1041,186 +839,10 @@
                                         addToCartBtn.innerHTML = '<span>Sold Out</span>';
                                     } else {
                                         addToCartBtn.innerHTML = '<span>Add to Cart</span><span class="material-symbols-outlined text-base">shopping_bag</span>';
->>>>>>> b98520423198b63a5da1fb416088863592b4647c
                                     }
-                                </style>
-                                <script>
-                                    setTimeout(() => {
-                                        const t = document.getElementById('feedbackToast');
-                                        if (t) { t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; setTimeout(() => t.remove(), 500); }
-                                    }, 5000);
-                                </script>
-                            </c:if>
 
-                            <script>
-                                const colorSizeData = [];
-                                <c:forEach var="cs" items="${colorSizes}">
-                                    colorSizeData.push({
-                                        "id": '${not empty cs.productColorSizeId ? cs.productColorSizeId : 0}',
-                                    "color": "${not empty cs.color ? cs.color : ''}",
-                                    "size": "${not empty cs.size ? cs.size : ''}",
-                                    "stock": parseInt('${not empty cs.stock ? cs.stock : 0}')
-            });
-                                </c:forEach>
+                        </script>  <%-- end main script block --%>
 
-                                const colorToImageUrlMap = {};
-                                <c:forEach var="img" items="${images}">
-                                    <c:set var="mappedUrl" value="${img.imageUrl}" />
-                                    <c:if test="${not empty mappedUrl and not fn:startsWith(mappedUrl, 'http') and not fn:startsWith(mappedUrl, '/')}">
-                                        <c:set var="mappedUrl" value="${pageContext.request.contextPath}/uploads/${mappedUrl}" />
-                                    </c:if>
-                                    colorToImageUrlMap["${img.color}"] = "${mappedUrl}";
-                                </c:forEach>
-
-                                const mainImage = document.getElementById('mainImage');
-                                const colorOptions = document.getElementById('color-options');
-                                const sizeOptions = document.getElementById('size-options');
-                                const addToCartBtn = document.getElementById('add-to-cart-btn');
-                                const buyBtn = document.getElementById('buy-now-btn');
-                                const quantityInput = document.getElementById('quantityInput');
-                                const stockInfo = document.getElementById('stock-info');
-                                const stockError = document.getElementById('stock-error');
-
-                                let selectedColor = null;
-                                let selectedSize = null;
-
-                                function getColorHex(name) {
-                                    const map = {
-                                        // English
-                                        "white": "#ffffff", "black": "#0c0c0c", "red": "#e53e3e",
-                                        "blue": "#0047ab", "navy": "#000080", "cerulean": "#007ba7",
-                                        "sky": "#87ceeb", "green": "#2d7a4f", "olive": "#808000",
-                                        "yellow": "#f6d55c", "orange": "#f97316", "pink": "#f472b6",
-                                        "purple": "#7c3aed", "violet": "#8b5cf6", "lavender": "#c4b5fd",
-                                        "brown": "#5d4037", "beige": "#d4be8d", "cream": "#f5f5dc",
-                                        "ivory": "#fffff0", "grey": "#9e9e9e", "gray": "#9e9e9e",
-                                        "charcoal": "#333333", "silver": "#c0c0c0", "gold": "#ffd700",
-                                        "rose": "#f43f5e", "coral": "#ff6b6b", "teal": "#008080",
-                                        "mint": "#98ff98", "lime": "#32cd32", "khaki": "#c3b091",
-                                        "camel": "#c19a6b", "sand": "#c2b280", "tan": "#d2b48c",
-                                        "burgundy": "#800020", "maroon": "#800000", "wine": "#722f37",
-                                        "cobalt": "#0047ab", "indigo": "#4b0082",
-                                        // Vietnamese
-                                        "trắng": "#ffffff", "đen": "#0c0c0c",
-                                        "đỏ": "#e53e3e", "đỏ đậm": "#9b1c1c", "đỏ nhạt": "#fca5a5",
-                                        "xanh": "#0047ab", "xanh dương": "#0047ab", "xanh lam": "#0047ab",
-                                        "xanh lá": "#2d7a4f", "xanh lá cây": "#2d7a4f",
-                                        "xanh navy": "#000080", "xanh đậm": "#1e3a5f",
-                                        "xanh nhạt": "#87ceeb", "xanh ngọc": "#008080",
-                                        "vàng": "#f6d55c", "vàng đồng": "#b8860b", "vàng kim": "#ffd700",
-                                        "vàng be": "#d4be8d", "vàng nhạt": "#fffacd",
-                                        "cam": "#f97316", "cam đất": "#c2410c",
-                                        "hồng": "#f472b6", "hồng đậm": "#ec4899", "hồng nhạt": "#fce7f3",
-                                        "tím": "#7c3aed", "tím đậm": "#4c1d95", "tím nhạt": "#c4b5fd",
-                                        "nâu": "#5d4037", "nâu đất": "#78350f", "nâu nhạt": "#d4be8d",
-                                        "be": "#d4be8d", "kem": "#f5f5dc",
-                                        "xám": "#9e9e9e", "xám đậm": "#4b5563", "xám nhạt": "#e5e7eb",
-                                        "bạc": "#c0c0c0", "rêu": "#808000", "mận": "#722f37"
-                                    };
-                                    const key = name.toLowerCase().trim();
-                                    if (map[key]) return map[key];
-                                    // Fallback: generate a consistent hue from the name string
-                                    let hash = 0;
-                                    for (let i = 0; i < key.length; i++) hash = key.charCodeAt(i) + ((hash << 5) - hash);
-                                    const h = Math.abs(hash) % 360;
-                                    return 'hsl(' + h + ', 55%, 48%)';
-                                }
-
-                                function renderColors() {
-                                    const colors = [...new Set(colorSizeData.map(d => d.color))].filter(c => c !== '');
-                                    colorOptions.innerHTML = colors.map(function (c) {
-                                        return '<label class="cursor-pointer group relative">'
-                                            + '<input type="radio" name="color" value="' + c + '" class="peer sr-only" onchange="selectColor(\'' + c + '\')">'
-                                            + '<div class="w-10 h-10 rounded-full border border-slate-200 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-primary transition-all group-hover:scale-110" '
-                                            + 'style="background-color: ' + getColorHex(c) + '"></div>'
-                                            + '<span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-widest text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">' + c + '</span>'
-                                            + '</label>';
-                                    }).join('');
-                                }
-
-                                function renderSizes() {
-                                    const sizes = [...new Set(colorSizeData.map(d => d.size))].filter(s => s !== '');
-                                    sizeOptions.innerHTML = sizes.map(function (s) {
-                                        return '<label class="cursor-pointer">'
-                                            + '<input type="radio" name="size" value="' + s + '" class="peer sr-only" onchange="selectSize(\'' + s + '\')">'
-                                            + '<div class="h-12 border border-slate-200 flex items-center justify-center text-[11px] font-extrabold text-slate-800 hover:border-primary peer-checked:bg-slate-900 peer-checked:text-white peer-checked:border-slate-900 transition-all uppercase">' + s + '</div>'
-                                            + '</label>';
-                                    }).join('');
-                                }
-
-                                window.selectColor = function (c) {
-                                    selectedColor = c;
-                                    if (colorToImageUrlMap[c]) {
-                                        mainImage.src = colorToImageUrlMap[c];
-                                        document.getElementById('productImageUrlHidden').value = colorToImageUrlMap[c];
-                                    }
-                                    updateUI();
-                                }
-
-                                window.selectSize = function (s) {
-                                    selectedSize = s;
-                                    updateUI();
-                                }
-
-<<<<<<< HEAD
-                                function updateUI() {
-                                    const item = colorSizeData.find(d => d.color === selectedColor && d.size === selectedSize);
-                                    const qty = parseInt(quantityInput.value);
-
-                                    if (item) {
-                                        document.getElementById('selectedPCSId').value = item.id;
-                                        stockInfo.innerText = item.stock > 0 ? ("In Stock: " + item.stock) : "Sold Out";
-
-                                        const outOfStock = item.stock <= 0;
-                                        const overQty = qty > item.stock;
-
-                                        addToCartBtn.disabled = outOfStock || overQty;
-                                        buyBtn.disabled = outOfStock || overQty;
-                                        stockError.classList.toggle('hidden', !overQty);
-
-                                        if (outOfStock) {
-                                            addToCartBtn.innerText = "Sold Out";
-                                        } else {
-                                            addToCartBtn.innerHTML = `<span>Add to Cart</span><span class="material-symbols-outlined text-base">shopping_bag</span>`;
-                                        }
-                                    } else {
-                                        addToCartBtn.disabled = true;
-                                        buyBtn.disabled = true;
-                                        stockInfo.innerText = "";
-                                        stockError.classList.add('hidden');
-                                    }
-                                }
-
-                                window.changeImage = function (img) {
-                                    mainImage.src = img.src;
-                                    document.getElementById('productImageUrlHidden').value = img.src;
-                                }
-
-                                document.getElementById('minusBtn').onclick = () => {
-                                    let v = parseInt(quantityInput.value);
-                                    if (v > 1) {
-                                        quantityInput.value = v - 1;
-                                        document.getElementById('quantityHidden').value = v - 1;
-                                        updateUI();
-                                    }
-                                }
-
-                                document.getElementById('plusBtn').onclick = () => {
-                                    let v = parseInt(quantityInput.value);
-                                    quantityInput.value = v + 1;
-                                    document.getElementById('quantityHidden').value = v + 1;
-                                    updateUI();
-                                }
-
-                                renderColors();
-                                renderSizes();
-                            </script>
-=======
-                            renderColors();
-                            renderSizes();
-                        </script>
-
->>>>>>> b98520423198b63a5da1fb416088863592b4647c
                 </body>
 
                 </html>
