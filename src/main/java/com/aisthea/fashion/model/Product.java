@@ -18,6 +18,7 @@ public class Product {
     private int totalStock; // Total stock across all color/sizes (for listing page)
     private Date createdAt;
     private Date updatedAt;
+    private boolean bestseller; // true = show Best Seller badge
 
     public Product() {
     }
@@ -156,5 +157,13 @@ public class Product {
 
     public void setTotalStock(int totalStock) {
         this.totalStock = totalStock;
+    }
+
+    public boolean isBestseller() {
+        return bestseller;
+    }
+
+    public void setBestseller(boolean bestseller) {
+        this.bestseller = bestseller;
     }
 }

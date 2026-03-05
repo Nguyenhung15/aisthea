@@ -10,6 +10,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.Optional;
@@ -102,8 +103,29 @@ public class CartServlet extends HttpServlet {
                 boolean addSuccess = handleAddAction(request, cart);
 
                 if (addSuccess) {
+                    // AJAX request?
+                    boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                            || "true".equals(request.getParameter("ajax"));
+                    if (isAjax) {
+                        Cart cart2 = getCartFromSession(request);
+                        int cartCount = cart2.getTotalQuantity();
+                        response.setContentType("application/json;charset=UTF-8");
+                        PrintWriter out = response.getWriter();
+                        out.print("{\"success\":true,\"cartCount\":" + cartCount + "}");
+                        out.flush();
+                        return;
+                    }
                     redirectUrl = request.getContextPath() + "/product?action=view&id=" + productId + "&added=true";
                 } else {
+                    boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                            || "true".equals(request.getParameter("ajax"));
+                    if (isAjax) {
+                        response.setContentType("application/json;charset=UTF-8");
+                        PrintWriter out = response.getWriter();
+                        out.print("{\"success\":false,\"message\":\"Out of stock or invalid variant\"}");
+                        out.flush();
+                        return;
+                    }
                     redirectUrl = request.getContextPath() + "/product?action=view&id=" + productId + "&error=stock";
                 }
 

@@ -190,6 +190,62 @@
                             outline-offset: 2px;
                             transform: scale(1.15);
                         }
+
+                        /* ===== PRODUCT BADGES ===== */
+                        @keyframes badgeFadeIn {
+                            from {
+                                opacity: 0;
+                                transform: translateY(-6px) scale(0.92);
+                            }
+
+                            to {
+                                opacity: 1;
+                                transform: translateY(0) scale(1);
+                            }
+                        }
+
+                        .badge {
+                            position: absolute;
+                            z-index: 20;
+                            pointer-events: none;
+                            font-family: 'Manrope', sans-serif;
+                            font-size: 10px;
+                            font-weight: 800;
+                            letter-spacing: 0.08em;
+                            line-height: 1;
+                            padding: 5px 9px;
+                            border-radius: 4px;
+                            animation: badgeFadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+                            white-space: nowrap;
+                            user-select: none;
+                        }
+
+                        /* Discount badge — top-left, coral-red */
+                        .badge-discount {
+                            top: 12px;
+                            left: 12px;
+                            background: #E05252;
+                            color: #ffffff;
+                            animation-delay: 0.05s;
+                        }
+
+                        /* Best Seller badge — top-right, deep navy with gold text */
+                        .badge-bestseller {
+                            top: 12px;
+                            right: 12px;
+                            background: #0f172a;
+                            color: #F0C040;
+                            border: 1px solid rgba(240, 192, 64, 0.35);
+                            animation-delay: 0.12s;
+                        }
+
+                        /* Strikethrough original price */
+                        .price-original {
+                            text-decoration: line-through;
+                            color: #94a3b8;
+                            font-size: 11px;
+                            margin-right: 4px;
+                        }
                     </style>
                 </head>
 
@@ -217,30 +273,46 @@
                                                 href="${pageContext.request.contextPath}/">Home</a>
                                             <span class="mx-2">/</span>
                                         </li>
-                                        <c:if test="${not empty genderLabel}">
-                                            <li class="flex items-center">
-                                                <a class="hover:text-primary transition-colors"
-                                                    href="${pageContext.request.contextPath}/product">${genderLabel}</a>
-                                                <span class="mx-2">/</span>
-                                            </li>
-                                        </c:if>
-                                        <c:if test="${empty genderLabel}">
-                                            <li class="flex items-center">
-                                                <a class="hover:text-primary transition-colors"
-                                                    href="${pageContext.request.contextPath}/product">Collection</a>
-                                                <span class="mx-2">/</span>
-                                            </li>
-                                        </c:if>
-                                        <li class="flex items-center text-primary font-bold"
-                                            style="text-transform: uppercase;">
+                                        <%-- Level 2: Gender --%>
                                             <c:choose>
-                                                <c:when test="${not empty displayCategory}">${displayCategory.name}
+                                                <c:when test="${not empty genderLabel}">
+                                                    <li class="flex items-center">
+                                                        <a class="hover:text-primary transition-colors"
+                                                            href="${pageContext.request.contextPath}/product?genderid=${genderId}">${genderLabel}</a>
+                                                        <span class="mx-2">/</span>
+                                                    </li>
                                                 </c:when>
-                                                <c:when test="${not empty displayCategoryName}">${displayCategoryName}
-                                                </c:when>
-                                                <c:otherwise>All Products</c:otherwise>
+                                                <c:otherwise>
+                                                    <li class="flex items-center">
+                                                        <a class="hover:text-primary transition-colors"
+                                                            href="${pageContext.request.contextPath}/product">Collection</a>
+                                                        <span class="mx-2">/</span>
+                                                    </li>
+                                                </c:otherwise>
                                             </c:choose>
-                                        </li>
+                                            <%-- Level 3: Parent Category (only when a child is selected) --%>
+                                                <c:if test="${not empty parentCategory}">
+                                                    <li class="flex items-center">
+                                                        <a class="hover:text-primary transition-colors"
+                                                            href="${pageContext.request.contextPath}/product?categoryId=${parentCategory.categoryid}">
+                                                            ${parentCategory.name}
+                                                        </a>
+                                                        <span class="mx-2">/</span>
+                                                    </li>
+                                                </c:if>
+                                                <%-- Level 4 (final): Current category or fallback --%>
+                                                    <li class="flex items-center text-primary font-bold"
+                                                        style="text-transform: uppercase;">
+                                                        <c:choose>
+                                                            <c:when test="${not empty displayCategory}">
+                                                                ${displayCategory.name}
+                                                            </c:when>
+                                                            <c:when test="${not empty displayCategoryName}">
+                                                                ${displayCategoryName}
+                                                            </c:when>
+                                                            <c:otherwise>Tất cả sản phẩm</c:otherwise>
+                                                        </c:choose>
+                                                    </li>
                                     </ol>
                                 </nav>
                             </div>
@@ -251,10 +323,11 @@
                                     <h1 class="font-serif text-5xl md:text-6xl text-slate-900 dark:text-white mb-6 tracking-tight uppercase"
                                         style="text-transform: uppercase;">
                                         <c:choose>
+                                            <c:when test="${not empty pageTitle}">${pageTitle}</c:when>
                                             <c:when test="${not empty displayCategory}">${displayCategory.name}</c:when>
                                             <c:when test="${not empty displayCategoryName}">${displayCategoryName}
                                             </c:when>
-                                            <c:otherwise>SUMMER COLLECTION</c:otherwise>
+                                            <c:otherwise>BỘ SƯU TẬP</c:otherwise>
                                         </c:choose>
                                     </h1>
 
@@ -656,12 +729,35 @@
                                                                     </c:if>
                                                                 </a>
 
-                                                                <!-- Badges - Out of Stock -->
-                                                                <c:if test="${p.totalStock <= 0}">
-                                                                    <div
-                                                                        class="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider z-10 pointer-events-none">
-                                                                        Out of Stock</div>
-                                                                </c:if>
+                                                                <%--===BADGES LAYER (outside <a> so they always show)
+                                                                    === --%>
+
+                                                                    <%-- 1. Discount Badge (top-left) --%>
+                                                                        <c:if
+                                                                            test="${not empty p.discount and p.discount > 0}">
+                                                                            <%-- discount đã là % nguyên (vd: 10=10%)
+                                                                                --%>
+                                                                                <span class="badge badge-discount">
+                                                                                    -
+                                                                                    <fmt:formatNumber
+                                                                                        value="${p.discount}"
+                                                                                        maxFractionDigits="0" />%
+                                                                                </span>
+                                                                        </c:if>
+
+                                                                        <%-- 2. Best Seller Badge (top-right) --%>
+                                                                            <c:if test="${p.bestseller}">
+                                                                                <span class="badge badge-bestseller">★
+                                                                                    BEST SELLER</span>
+                                                                            </c:if>
+
+                                                                            <%-- 3. Out of Stock Badge (replaces
+                                                                                discount badge position if OOS) --%>
+                                                                                <c:if test="${p.totalStock <= 0}">
+                                                                                    <span class="badge"
+                                                                                        style="top:12px;left:12px;background:#64748b;color:#fff;">Hết
+                                                                                        hàng</span>
+                                                                                </c:if>
                                                             </div>
 
                                                             <div class="space-y-1 px-1">
@@ -677,23 +773,45 @@
                                                                             <a
                                                                                 href="${pageContext.request.contextPath}/product?action=view&id=${p.productId}">${p.name}</a>
                                                                         </h2>
-                                                                        <div class="flex items-center mt-0.5">
-                                                                            <span
-                                                                                class="text-primary font-semibold text-sm">
-                                                                                <c:choose>
-                                                                                    <c:when test="${not empty p.price}">
+                                                                        <div class="flex items-baseline gap-2 mt-0.5">
+                                                                            <%-- Show struck-through original price only
+                                                                                when discounted --%>
+                                                                                <c:if
+                                                                                    test="${not empty p.discount and p.discount > 0 and not empty p.price}">
+                                                                                    <span class="price-original">
                                                                                         <fmt:formatNumber
                                                                                             value="${p.price}"
                                                                                             type="number"
                                                                                             groupingUsed="true" />₫
-                                                                                    </c:when>
-                                                                                    <c:otherwise>0₫</c:otherwise>
-                                                                                </c:choose>
-                                                                            </span>
+                                                                                    </span>
+                                                                                </c:if>
+                                                                                <span
+                                                                                    class="${not empty p.discount and p.discount > 0 ? 'text-[#E05252]' : 'text-primary'} font-semibold text-sm">
+                                                                                    <c:choose>
+                                                                                        <c:when
+                                                                                            test="${not empty p.price and not empty p.discount and p.discount > 0}">
+                                                                                            <fmt:formatNumber
+                                                                                                value="${p.price * (1 - p.discount / 100)}"
+                                                                                                type="number"
+                                                                                                groupingUsed="true"
+                                                                                                maxFractionDigits="0" />
+                                                                                            ₫
+                                                                                        </c:when>
+                                                                                        <c:when
+                                                                                            test="${not empty p.price}">
+                                                                                            <fmt:formatNumber
+                                                                                                value="${p.price}"
+                                                                                                type="number"
+                                                                                                groupingUsed="true" />₫
+                                                                                        </c:when>
+                                                                                        <c:otherwise>0₫</c:otherwise>
+                                                                                    </c:choose>
+                                                                                </span>
                                                                         </div>
                                                                     </div>
-                                                                    <!-- Cart Icon Button (right side) -->
-                                                                    <a href="${pageContext.request.contextPath}/product?action=view&id=${p.productId}"
+                                                                    <!-- Cart Icon Button → opens Quick Add modal -->
+                                                                    <button type="button"
+                                                                        onclick="event.preventDefault(); openQuickView(${p.productId})"
                                                                         title="Thêm vào giỏ hàng" class="cart-icon-btn"
                                                                         style="flex-shrink:0;">
                                                                         <svg xmlns="http://www.w3.org/2000/svg"
@@ -710,7 +828,7 @@
                                                                             <line x1="17" y1="9" x2="17" y2="13" />
                                                                             <line x1="15" y1="11" x2="19" y2="11" />
                                                                         </svg>
-                                                                    </a>
+                                                                    </button>
                                                                 </div>
                                                                 <!-- Color Swatches -->
                                                                 <div class="flex flex-wrap gap-1.5 pt-2"
@@ -782,12 +900,18 @@
 
                                         <!-- Pagination (Dynamic) -->
                                         <c:if test="${totalPages > 1}">
+                                            <script>
+                                                function changePage(page) {
+                                                    const url = new URL(window.location.href);
+                                                    url.searchParams.set('page', page);
+                                                    window.location.href = url.toString();
+                                                }
+                                            </script>
                                             <div class="mt-16 flex justify-center">
-                                                <nav class="flex items-center space-x-2">
+                                                <nav class="flex items-center space-x-2" aria-label="Pagination">
                                                     <!-- Prev -->
-                                                    <button
-                                                        onclick="changePage(${currentPage > 1 ? currentPage - 1 : 1})"
-                                                        class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors ${currentPage == 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+                                                    <button type="button" onclick="changePage(${currentPage - 1})"
+                                                        class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors ${currentPage == 1 ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}"
                                                         ${currentPage==1 ? 'disabled' : '' }>
                                                         <span
                                                             class="material-icons-outlined text-sm">chevron_left</span>
@@ -795,29 +919,21 @@
 
                                                     <!-- Page Numbers -->
                                                     <c:forEach begin="1" end="${totalPages}" var="i">
-                                                        <button onclick="changePage(${i})"
-                                                            class="w-10 h-10 flex items-center justify-center rounded-full font-medium shadow-sm transition-colors ${currentPage == i ? 'bg-primary text-white shadow-glow' : 'bg-white border border-slate-200 text-slate-600 hover:border-primary hover:text-primary'}">
+                                                        <button type="button" onclick="changePage(${i})"
+                                                            class="w-10 h-10 flex items-center justify-center rounded-full font-medium shadow-sm transition-colors ${currentPage == i ? 'bg-primary text-white shadow-glow pointer-events-none' : 'bg-white border border-slate-200 text-slate-600 hover:border-primary hover:text-primary'}">
                                                             ${i}
                                                         </button>
                                                     </c:forEach>
 
                                                     <!-- Next -->
-                                                    <button
-                                                        onclick="changePage(${currentPage < totalPages ? currentPage + 1 : totalPages})"
-                                                        class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors ${currentPage == totalPages ? 'opacity-50 cursor-not-allowed' : ''}"
+                                                    <button type="button" onclick="changePage(${currentPage + 1})"
+                                                        class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:border-primary hover:text-primary transition-colors ${currentPage == totalPages ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}"
                                                         ${currentPage==totalPages ? 'disabled' : '' }>
                                                         <span
                                                             class="material-icons-outlined text-sm">chevron_right</span>
                                                     </button>
                                                 </nav>
                                             </div>
-                                            <script>
-                                                function changePage(page) {
-                                                    const url = new URL(window.location.href);
-                                                    url.searchParams.set("page", page);
-                                                    window.location.href = url.toString();
-                                                }
-                                            </script>
                                         </c:if>
                                     </div>
                                 </div>
@@ -827,316 +943,633 @@
                     <!-- Global Luxury Footer -->
                     <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
-                    <!-- Quick View Modal -->
-                    <div id="quickViewModal" class="relative z-[100] hidden" aria-labelledby="modal-title" role="dialog"
-                        aria-modal="true">
-                        <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
-                        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-                            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-                                <div
-                                    class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl border border-white/50">
+                    <!-- ====== QUICK ADD TO CART MODAL ====== -->
+                    <div id="quickViewModal" class="fixed inset-0 z-[200] hidden" aria-modal="true" role="dialog">
 
-                                    <!-- Close Button -->
-                                    <div class="absolute right-4 top-4 z-20">
-                                        <button type="button" onclick="closeQuickView()"
-                                            class="rounded-full bg-white/80 p-2 text-slate-400 hover:text-slate-500 hover:bg-white transition-colors">
-                                            <span class="material-icons-outlined">close</span>
-                                        </button>
+                        <!-- Overlay -->
+                        <div id="modalOverlay"
+                            class="fixed inset-0 z-[201] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 opacity-0"
+                            onclick="closeQuickView()">
+
+                            <!-- Modal card — stop click propagation inside -->
+                            <div class="relative w-full max-w-4xl bg-white shadow-2xl rounded-none overflow-hidden flex flex-col md:flex-row min-h-[560px] md:min-h-[600px]"
+                                onclick="event.stopPropagation()">
+
+                                <!-- Close button -->
+                                <button type="button" onclick="closeQuickView()"
+                                    class="absolute top-4 right-4 z-30 p-2 text-slate-400 hover:text-slate-900 transition-colors">
+                                    <span class="material-symbols-outlined text-[24px]">close</span>
+                                </button>
+
+                                <!-- LEFT: Image (1/2) -->
+                                <div class="w-full md:w-1/2 bg-slate-50 relative group flex-shrink-0">
+                                    <div id="qv-image-bg"
+                                        class="h-full w-full bg-center bg-no-repeat bg-cover min-h-[350px] md:min-h-[600px] transition-all duration-500"
+                                        style="background-image:none;">
+                                        <%-- Fallback visible img for non-bg-image display --%>
                                     </div>
 
-                                    <!-- Content with Loading State -->
-                                    <div id="quickViewContent"
-                                        class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 min-h-[400px] flex items-center justify-center">
-                                        <!-- Loading Spinner -->
-                                        <div class="flex flex-col items-center">
-                                            <div
-                                                class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4">
-                                            </div>
-                                            <p class="text-slate-400 text-sm tracking-wide">LOADING AISTHÉA...</p>
-                                        </div>
-                                    </div>
+                                    <!-- Discount badge top-left -->
+                                    <span id="qv-badge-discount"
+                                        class="hidden absolute top-4 left-4 z-10 bg-[#E05252] text-white text-[10px] font-extrabold tracking-widest px-3 py-1.5 pointer-events-none"></span>
+
+                                    <!-- Best Seller badge top-right (offset for close btn) -->
+                                    <span id="qv-badge-bestseller"
+                                        class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-slate-900 text-[#F0C040] text-[10px] font-extrabold tracking-widest px-3 py-1.5 pointer-events-none border border-[#F0C040]/30">
+                                        &#9733; BEST SELLER
+                                    </span>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Scripts -->
-                    <script>
-                        // ===== VIETNAMESE COLOR NAME → HEX MAPPING =====
-                        const COLOR_MAP = {
-                            // Đen / trắng / xám
-                            'den': '#111111', 'đen': '#111111', 'black': '#111111',
-                            'trang': '#FFFFFF', 'trắng': '#FFFFFF', 'white': '#FFFFFF',
-                            'xam': '#9CA3AF', 'xám': '#9CA3AF', 'grey': '#9CA3AF', 'gray': '#9CA3AF',
-                            'xam nhat': '#D1D5DB', 'xám nhạt': '#D1D5DB',
-                            'xam dam': '#6B7280', 'xám đậm': '#6B7280',
-                            // Đỏ
-                            'do': '#EF4444', 'đỏ': '#EF4444', 'red': '#EF4444',
-                            'do dam': '#B91C1C', 'đỏ đậm': '#B91C1C', 'dark red': '#B91C1C',
-                            'do tuoi': '#F87171', 'đỏ tươi': '#F87171',
-                            // Xanh lam
-                            'xanh': '#3B82F6', 'blue': '#3B82F6',
-                            'xanh lam': '#3B82F6', 'xanh dam': '#1D4ED8', 'xanh đậm': '#1D4ED8',
-                            'xanh duong': '#2563EB', 'xanh dương': '#2563EB',
-                            'xanh navy': '#1E3A5F', 'navy': '#1E3A5F',
-                            'xanh nhat': '#93C5FD', 'xanh nhạt': '#93C5FD',
-                            'xanh co': '#22D3EE', 'xanh cổ': '#22D3EE', 'cyan': '#22D3EE',
-                            // Xanh lá
-                            'xanh la': '#22C55E', 'xanh lá': '#22C55E', 'green': '#22C55E',
-                            'xanh la dam': '#15803D', 'xanh lá đậm': '#15803D', 'dark green': '#15803D',
-                            'xanh reu': '#84CC16', 'xanh rêu': '#718096', 'olive': '#718096',
-                            'xanh mint': '#6EE7B7', 'mint': '#6EE7B7',
-                            // Vàng / cam / nâu
-                            'vang': '#EAB308', 'vàng': '#EAB308', 'yellow': '#EAB308',
-                            'vang kem': '#FEF3C7', 'vàng kem': '#FEF3C7', 'cream': '#FEF3C7', 'kem': '#FEF9E7',
-                            'vang nhat': '#FDE68A', 'vàng nhạt': '#FDE68A',
-                            'cam': '#F97316', 'orange': '#F97316',
-                            'cam dat': '#C2410C', 'cam đất': '#C2410C', 'terracotta': '#C2410C',
-                            'nau': '#92400E', 'nâu': '#92400E', 'brown': '#92400E',
-                            'nau nhat': '#D97706', 'nâu nhạt': '#D97706', 'tan': '#D2B48C',
-                            'camel': '#C19A6B', 'be': '#C8A97E', 'bê': '#C8A97E', 'beige': '#F5F5DC',
-                            'sua': '#FEFCE8', 'sữa': '#FEFCE8',
-                            // Hồng / tím
-                            'hong': '#EC4899', 'hồng': '#EC4899', 'pink': '#EC4899',
-                            'hong nhat': '#FBCFE8', 'hồng nhạt': '#FBCFE8', 'light pink': '#FBCFE8',
-                            'hong phan': '#F9A8D4', 'hồng phấn': '#F9A8D4',
-                            'tim': '#8B5CF6', 'tím': '#8B5CF6', 'purple': '#8B5CF6',
-                            'tim nhat': '#DDD6FE', 'tím nhạt': '#DDD6FE', 'lavender': '#E6E6FA',
-                            // Khác
-                            'vang dong': '#B45309', 'vàng đồng': '#B45309', 'gold': '#D4AF37',
-                            'bac': '#C0C0C0', 'bạc': '#C0C0C0', 'silver': '#C0C0C0',
-                        };
+                                <!-- RIGHT: Info (1/2) -->
+                                <div
+                                    class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto custom-scroll">
 
-                        function getColorHex(name) {
-                            if (!name) return '#CCCCCC';
-                            const key = name.trim().toLowerCase();
-                            // Direct match
-                            if (COLOR_MAP[key]) return COLOR_MAP[key];
-                            // Partial match (e.g. "xanh lam đậm" → "xanh dam")
-                            for (const [k, v] of Object.entries(COLOR_MAP)) {
-                                if (key.includes(k) || k.includes(key)) return v;
-                            }
-                            return '#CCCCCC'; // fallback: light gray
-                        }
+                                    <!-- Loader -->
+                                    <div id="qv-loader" class="flex flex-col items-center justify-center py-20">
+                                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-3">
+                                        </div>
+                                        <p class="text-slate-400 text-[10px] tracking-widest uppercase">Loading
+                                            AISTHÉA...</p>
+                                    </div>
 
-                        // Initialize all swatch backgrounds on page load
-                        document.addEventListener('DOMContentLoaded', function () {
-                            document.querySelectorAll('.color-swatch').forEach(function (btn) {
-                                const name = btn.getAttribute('data-color-name');
-                                btn.style.backgroundColor = getColorHex(name);
-                            });
-                        });
+                                    <!-- Content -->
+                                    <div id="qv-content" class="hidden">
 
-                        // New version of changeProductImage that also handles swatch highlight
-                        function changeProductImageWithHex(productId, imageUrl, swatchBtn) {
-                            if (!imageUrl) return;
-                            const swatchContainer = document.querySelector('#swatches-' + productId);
-                            if (!swatchContainer) return;
-                            const productCard = swatchContainer.closest('.group');
-                            if (!productCard) return;
-                            const imgContainer = productCard.querySelector('.relative.w-full');
-                            if (imgContainer) {
-                                const imgs = imgContainer.querySelectorAll('img');
-                                if (imgs.length > 0) {
-                                    imgs[0].src = imageUrl;
-                                    imgs[0].classList.remove('group-hover:opacity-0');
-                                    if (imgs.length > 1) imgs[1].style.display = 'none';
+                                        <!-- Header block -->
+                                        <div class="mb-8">
+                                            <p id="qv-brand"
+                                                class="text-xs uppercase tracking-[0.2em] text-slate-400 mb-2 font-medium">
+                                                AISTHÉA Exclusive</p>
+                                            <h2 id="qv-name"
+                                                class="font-serif text-4xl text-slate-900 mb-2 leading-tight"></h2>
+                                            <p id="qv-sku"
+                                                class="text-xs text-slate-400 font-light tracking-widest uppercase"></p>
+                                        </div>
+
+                                        <!-- Price -->
+                                        <div class="mb-8 flex items-baseline gap-3">
+                                            <span id="qv-price" class="text-2xl font-light text-slate-900"></span>
+                                            <span id="qv-price-original"
+                                                class="text-lg font-light text-slate-300 line-through hidden"></span>
+                                        </div>
+
+                                        <!-- Color selection -->
+                                        <div class="mb-8">
+                                            <p
+                                                class="text-[10px] uppercase tracking-widest text-slate-500 mb-4 font-semibold">
+                                                Select Color
+                                                <span id="qv-selected-color-label"
+                                                    class="ml-1 normal-case tracking-normal text-slate-800"></span>
+                                            </p>
+                                            <div id="qv-colors" class="flex gap-4"></div>
+                                        </div>
+
+                                        <!-- Size selection -->
+                                        <div class="mb-10">
+                                            <div class="flex justify-between items-center mb-4">
+                                                <p
+                                                    class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">
+                                                    Select Size</p>
+                                            </div>
+                                            <div id="qv-sizes" class="grid grid-cols-5 gap-2"></div>
+                                            <p id="qv-size-error" class="hidden text-[10px] text-red-500 mt-2">Please
+                                                select a size.</p>
+                                        </div>
+
+                                        <!-- Actions -->
+                                        <div class="space-y-6">
+                                            <button id="qv-add-btn" type="button" onclick="quickAddToCart()"
+                                                class="w-full bg-slate-900 text-white py-5 text-[10px] font-bold tracking-[0.3em] uppercase hover:bg-slate-800 transition-colors duration-300 disabled:opacity-40 disabled:cursor-not-allowed">
+                                                Add to Cart
+                                            </button>
+                                            <div class="text-center">
+                                                <a id="qv-detail-link" href="#"
+                                                    class="inline-block text-[10px] uppercase tracking-[0.15em] text-slate-400 border-b border-slate-200 pb-1 hover:text-slate-900 hover:border-slate-900 transition-all duration-300">
+                                                    View full details
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                    </div><%-- /qv-content --%>
+                                </div>
+                            </div><%-- /card --%>
+                        </div><%-- /overlay --%>
+                    </div><%-- /quickViewModal --%>
+
+                        <!-- Quick View JS -->
+                        <script>
+                            (function () {
+                                const CTX = '${pageContext.request.contextPath}';
+                                let qvData = null;      // full product data from server
+                                let selectedColor = null;
+                                let selectedPcsId = null;
+                                let selectedImageUrl = '';
+
+                                /* ---------- OPEN ---------- */
+                                window.openQuickView = function (productId) {
+                                    const modal = document.getElementById('quickViewModal');
+                                    const overlay = document.getElementById('modalOverlay');
+
+                                    // reset state
+                                    document.getElementById('qv-loader').classList.remove('hidden');
+                                    document.getElementById('qv-content').classList.add('hidden');
+                                    document.getElementById('qv-image-bg').style.backgroundImage = 'none';
+                                    selectedColor = null; selectedPcsId = null;
+
+                                    modal.classList.remove('hidden');
+                                    document.body.style.overflow = 'hidden';
+
+                                    // animate in
+                                    requestAnimationFrame(() => {
+                                        overlay.classList.remove('opacity-0');
+                                    });
+
+                                    // fetch data
+                                    fetch(CTX + '/product?action=quickview&id=' + productId, {
+                                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                                    })
+                                        .then(r => r.json())
+                                        .then(data => {
+                                            qvData = data;
+                                            renderModal(data);
+                                        })
+                                        .catch(() => {
+                                            document.getElementById('qv-loader').innerHTML =
+                                                '<p class="text-slate-400 text-sm">Không thể tải sản phẩm. Thử lại.</p>';
+                                        });
+                                };
+
+                                /* ---------- CLOSE ---------- */
+                                window.closeQuickView = function () {
+                                    const modal = document.getElementById('quickViewModal');
+                                    const overlay = document.getElementById('modalOverlay');
+                                    overlay.classList.add('opacity-0');
+                                    setTimeout(() => {
+                                        modal.classList.add('hidden');
+                                        document.body.style.overflow = '';
+                                    }, 300);
+                                };
+
+                                /* ---------- RENDER ---------- */
+                                function renderModal(d) {
+                                    // text fields
+                                    document.getElementById('qv-brand').textContent = d.brand || 'AISTHÉA';
+                                    document.getElementById('qv-name').textContent = d.name || '';
+                                    document.getElementById('qv-sku').textContent = 'SKU: ' + (d.productId || '');
+                                    document.getElementById('qv-detail-link').href = CTX + '/product?action=view&id=' + d.productId;
+
+                                    // price
+                                    const fmt = v => new Intl.NumberFormat('vi-VN').format(Math.round(v));
+                                    const rawPrice = d.price || 0;
+                                    const disc = d.discount || 0;  // already %
+                                    const salePrice = disc > 0 ? rawPrice * (1 - disc / 100) : rawPrice;
+
+                                    document.getElementById('qv-price').textContent = fmt(salePrice) + '₫';
+                                    const origEl = document.getElementById('qv-price-original');
+                                    if (disc > 0) {
+                                        origEl.textContent = fmt(rawPrice) + '₫';
+                                        origEl.classList.remove('hidden');
+                                        document.getElementById('qv-price').className = 'text-2xl font-light text-[#E05252]';
+                                    } else {
+                                        origEl.classList.add('hidden');
+                                        document.getElementById('qv-price').className = 'text-2xl font-light text-slate-900';
+                                    }
+
+                                    // badges
+                                    const discBadge = document.getElementById('qv-badge-discount');
+                                    if (disc > 0) {
+                                        discBadge.textContent = '-' + Math.round(disc) + '%';
+                                        discBadge.classList.remove('hidden');
+                                    } else {
+                                        discBadge.classList.add('hidden');
+                                    }
+                                    const bsBadge = document.getElementById('qv-badge-bestseller');
+                                    d.bestseller ? bsBadge.classList.remove('hidden') : bsBadge.classList.add('hidden');
+
+                                    // gather unique colors
+                                    const colorMap = {};   // color -> {pcsId, stock, imageUrl}
+                                    const colorImageMap = {}; // color -> imageUrl
+                                    if (d.images) {
+                                        d.images.forEach(img => {
+                                            if (img.color) colorImageMap[img.color.toLowerCase()] = img.imageUrl;
+                                        });
+                                    }
+                                    if (d.colorSizes) {
+                                        d.colorSizes.forEach(cs => {
+                                            const key = cs.color ? cs.color.toLowerCase() : 'default';
+                                            if (!colorMap[key]) colorMap[key] = [];
+                                            colorMap[key].push(cs);
+                                        });
+                                    }
+
+                                    // render color swatches
+                                    const colorsDiv = document.getElementById('qv-colors');
+                                    colorsDiv.innerHTML = '';
+                                    const colorNames = Object.keys(colorMap);
+                                    colorNames.forEach((c, idx) => {
+                                        const hex = window.getColorHex ? window.getColorHex(c) : '#CCCCCC';
+                                        const btn = document.createElement('button');
+                                        btn.type = 'button';
+                                        btn.title = colorMap[c][0].color || c;
+                                        btn.dataset.color = c;
+                                        btn.className = 'w-7 h-7 rounded-full border-2 border-white shadow transition-all hover:scale-105 hover:ring-2 hover:ring-primary hover:ring-offset-1';
+                                        btn.style.backgroundColor = hex;
+                                        btn.onclick = () => selectColor(c, colorMap, colorImageMap, d.images);
+                                        colorsDiv.appendChild(btn);
+                                        if (idx === 0) { // auto-select first
+                                            setTimeout(() => selectColor(c, colorMap, colorImageMap, d.images), 10);
+                                        }
+                                    });
+
+                                    // main image — use background-image
+                                    if (d.images && d.images.length > 0) {
+                                        selectedImageUrl = d.images[0].imageUrl;
+                                        document.getElementById('qv-image-bg').style.backgroundImage =
+                                            'url("' + selectedImageUrl + '")';
+                                    }
+
+                                    // show content
+                                    document.getElementById('qv-loader').classList.add('hidden');
+                                    document.getElementById('qv-content').classList.remove('hidden');
                                 }
+
+                                /* ---------- SELECT COLOR ---------- */
+                                function selectColor(color, colorMap, colorImageMap, allImages) {
+                                    selectedColor = color;
+                                    selectedPcsId = null;
+                                    document.getElementById('qv-selected-color-label').textContent =
+                                        colorMap[color][0].color || color;
+
+                                    // ring
+                                    document.getElementById('qv-colors').querySelectorAll('button').forEach(b => {
+                                        if (b.dataset.color === color) {
+                                            b.style.boxShadow = '0 0 0 2px white, 0 0 0 4px #024acf';
+                                            b.style.transform = 'scale(1.15)';
+                                        } else {
+                                            b.style.boxShadow = '';
+                                            b.style.transform = '';
+                                        }
+                                    });
+
+                                    // switch main image via background-image
+                                    const imgUrl = colorImageMap[color];
+                                    if (imgUrl) {
+                                        selectedImageUrl = imgUrl;
+                                        document.getElementById('qv-image-bg').style.backgroundImage = 'url("' + imgUrl + '")';
+                                    } else if (qvData && qvData.images && qvData.images.length > 0) {
+                                        selectedImageUrl = qvData.images[0].imageUrl;
+                                        document.getElementById('qv-image-bg').style.backgroundImage = 'url("' + selectedImageUrl + '")';
+                                    }
+
+                                    // render sizes
+                                    const sizesDiv = document.getElementById('qv-sizes');
+                                    sizesDiv.innerHTML = '';
+                                    colorMap[color].forEach(cs => {
+                                        const oos = cs.stock <= 0;
+                                        const btn = document.createElement('button');
+                                        btn.type = 'button';
+                                        btn.dataset.pcsid = cs.productColorSizeId;
+                                        btn.dataset.size = cs.size;
+                                        btn.disabled = oos;
+                                        btn.className = oos
+                                            ? 'aspect-square border border-slate-100 bg-slate-50 flex items-center justify-center text-xs font-medium text-slate-300 cursor-not-allowed'
+                                            : 'aspect-square border border-slate-200 flex items-center justify-center text-xs font-medium hover:border-slate-900 transition-colors';
+                                        if (oos) {
+                                            btn.innerHTML = '<span class="relative">' + cs.size +
+                                                '<span class="absolute inset-0 flex items-center justify-center"><span class="w-full h-[1px] bg-slate-200 rotate-45"></span></span></span>';
+                                        } else {
+                                            btn.textContent = cs.size;
+                                            btn.onclick = () => selectSize(btn, cs.productColorSizeId);
+                                        }
+                                        sizesDiv.appendChild(btn);
+                                    });
+                                }
+
+                                /* ---------- SELECT SIZE ---------- */
+                                function selectSize(btn, pcsId) {
+                                    selectedPcsId = pcsId;
+                                    document.getElementById('qv-size-error').classList.add('hidden');
+                                    document.getElementById('qv-sizes').querySelectorAll('button:not(:disabled)').forEach(b => {
+                                        b.className = b === btn
+                                            ? 'aspect-square border border-slate-900 bg-slate-900 text-white flex items-center justify-center text-xs font-medium'
+                                            : 'aspect-square border border-slate-200 flex items-center justify-center text-xs font-medium hover:border-slate-900 transition-colors';
+                                    });
+                                }
+
+                                /* ---------- ADD TO CART ---------- */
+                                window.quickAddToCart = function () {
+                                    if (!selectedPcsId) {
+                                        document.getElementById('qv-size-error').classList.remove('hidden');
+                                        return;
+                                    }
+                                    const btn = document.getElementById('qv-add-btn');
+                                    btn.disabled = true;
+                                    btn.textContent = 'Đang thêm...';
+
+                                    const body = new URLSearchParams({
+                                        action: 'add',
+                                        productId: qvData.productId,
+                                        productColorSizeId: selectedPcsId,
+                                        quantity: 1,
+                                        imageUrl: selectedImageUrl,
+                                        ajax: 'true'
+                                    });
+
+                                    fetch(CTX + '/cart', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        },
+                                        body: body.toString()
+                                    })
+                                        .then(r => r.json())
+                                        .then(res => {
+                                            if (res.success) {
+                                                btn.textContent = '✓ Đã thêm vào giỏ!';
+                                                btn.className = btn.className.replace('bg-slate-900', 'bg-green-600');
+                                                // update cart badge
+                                                const badge = document.querySelector('.cart-count-badge');
+                                                if (badge) badge.textContent = res.cartCount;
+                                                setTimeout(() => {
+                                                    btn.disabled = false;
+                                                    btn.textContent = 'Thêm vào giỏ hàng';
+                                                    btn.className = btn.className.replace('bg-green-600', 'bg-slate-900');
+                                                    closeQuickView();
+                                                }, 1800);
+                                            } else {
+                                                btn.textContent = 'Hết hàng!';
+                                                btn.className = btn.className.replace('bg-slate-900', 'bg-red-500');
+                                                setTimeout(() => {
+                                                    btn.disabled = false;
+                                                    btn.textContent = 'Thêm vào giỏ hàng';
+                                                    btn.className = btn.className.replace('bg-red-500', 'bg-slate-900');
+                                                }, 2000);
+                                            }
+                                        })
+                                        .catch(() => {
+                                            btn.disabled = false;
+                                            btn.textContent = 'Lỗi kết nối!';
+                                            setTimeout(() => { btn.textContent = 'Thêm vào giỏ hàng'; }, 2000);
+                                        });
+                                };
+                            })();
+                        </script>
+
+                        <!-- Scripts -->
+                        <script>
+                            // ===== VIETNAMESE COLOR NAME → HEX MAPPING =====
+                            const COLOR_MAP = {
+                                // Đen / trắng / xám
+                                'den': '#111111', 'đen': '#111111', 'black': '#111111',
+                                'trang': '#FFFFFF', 'trắng': '#FFFFFF', 'white': '#FFFFFF',
+                                'xam': '#9CA3AF', 'xám': '#9CA3AF', 'grey': '#9CA3AF', 'gray': '#9CA3AF',
+                                'xam nhat': '#D1D5DB', 'xám nhạt': '#D1D5DB',
+                                'xam dam': '#6B7280', 'xám đậm': '#6B7280',
+                                // Đỏ
+                                'do': '#EF4444', 'đỏ': '#EF4444', 'red': '#EF4444',
+                                'do dam': '#B91C1C', 'đỏ đậm': '#B91C1C', 'dark red': '#B91C1C',
+                                'do tuoi': '#F87171', 'đỏ tươi': '#F87171',
+                                // Xanh lam
+                                'xanh': '#3B82F6', 'blue': '#3B82F6',
+                                'xanh lam': '#3B82F6', 'xanh dam': '#1D4ED8', 'xanh đậm': '#1D4ED8',
+                                'xanh duong': '#2563EB', 'xanh dương': '#2563EB',
+                                'xanh navy': '#1E3A5F', 'navy': '#1E3A5F',
+                                'xanh nhat': '#93C5FD', 'xanh nhạt': '#93C5FD',
+                                'xanh co': '#22D3EE', 'xanh cổ': '#22D3EE', 'cyan': '#22D3EE',
+                                // Xanh lá
+                                'xanh la': '#22C55E', 'xanh lá': '#22C55E', 'green': '#22C55E',
+                                'xanh la dam': '#15803D', 'xanh lá đậm': '#15803D', 'dark green': '#15803D',
+                                'xanh reu': '#84CC16', 'xanh rêu': '#718096', 'olive': '#718096',
+                                'xanh mint': '#6EE7B7', 'mint': '#6EE7B7',
+                                // Vàng / cam / nâu
+                                'vang': '#EAB308', 'vàng': '#EAB308', 'yellow': '#EAB308',
+                                'vang kem': '#FEF3C7', 'vàng kem': '#FEF3C7', 'cream': '#FEF3C7', 'kem': '#FEF9E7',
+                                'vang nhat': '#FDE68A', 'vàng nhạt': '#FDE68A',
+                                'cam': '#F97316', 'orange': '#F97316',
+                                'cam dat': '#C2410C', 'cam đất': '#C2410C', 'terracotta': '#C2410C',
+                                'nau': '#92400E', 'nâu': '#92400E', 'brown': '#92400E',
+                                'nau nhat': '#D97706', 'nâu nhạt': '#D97706', 'tan': '#D2B48C',
+                                'camel': '#C19A6B', 'be': '#C8A97E', 'bê': '#C8A97E', 'beige': '#F5F5DC',
+                                'sua': '#FEFCE8', 'sữa': '#FEFCE8',
+                                // Hồng / tím
+                                'hong': '#EC4899', 'hồng': '#EC4899', 'pink': '#EC4899',
+                                'hong nhat': '#FBCFE8', 'hồng nhạt': '#FBCFE8', 'light pink': '#FBCFE8',
+                                'hong phan': '#F9A8D4', 'hồng phấn': '#F9A8D4',
+                                'tim': '#8B5CF6', 'tím': '#8B5CF6', 'purple': '#8B5CF6',
+                                'tim nhat': '#DDD6FE', 'tím nhạt': '#DDD6FE', 'lavender': '#E6E6FA',
+                                // Khác
+                                'vang dong': '#B45309', 'vàng đồng': '#B45309', 'gold': '#D4AF37',
+                                'bac': '#C0C0C0', 'bạc': '#C0C0C0', 'silver': '#C0C0C0',
+                            };
+
+                            function getColorHex(name) {
+                                if (!name) return '#CCCCCC';
+                                const key = name.trim().toLowerCase();
+                                // Direct match
+                                if (COLOR_MAP[key]) return COLOR_MAP[key];
+                                // Partial match (e.g. "xanh lam đậm" → "xanh dam")
+                                for (const [k, v] of Object.entries(COLOR_MAP)) {
+                                    if (key.includes(k) || k.includes(key)) return v;
+                                }
+                                return '#CCCCCC'; // fallback: light gray
                             }
-                            // Toggle active class on swatches
-                            swatchContainer.querySelectorAll('.color-swatch').forEach(function (s) {
-                                s.classList.remove('swatch-active');
+
+                            // Initialize all swatch backgrounds on page load
+                            document.addEventListener('DOMContentLoaded', function () {
+                                document.querySelectorAll('.color-swatch').forEach(function (btn) {
+                                    const name = btn.getAttribute('data-color-name');
+                                    btn.style.backgroundColor = getColorHex(name);
+                                });
                             });
-                            if (swatchBtn) {
-                                swatchBtn.classList.add('swatch-active');
-                            }
-                        }
 
-                        // ===== ACCORDION TOGGLE =====
-                        function toggleAccordion(btn) {
-                            const section = btn.closest('.filter-section');
-                            const content = section.querySelector('.accordion-content');
-                            const icon = btn.querySelector('.material-icons-outlined');
-
-                            if (content.style.display === 'none' || content.classList.contains('accordion-collapsed')) {
-                                content.style.display = '';
-                                content.classList.remove('accordion-collapsed');
-                                icon.textContent = 'expand_less';
-                            } else {
-                                content.style.display = 'none';
-                                content.classList.add('accordion-collapsed');
-                                icon.textContent = 'expand_more';
-                            }
-                        }
-
-                        // Toggle child categories visibility
-                        function toggleChildren(btn) {
-                            const parentGroup = btn.closest('.category-parent-group');
-                            const childrenList = parentGroup.querySelector('.children-list');
-                            const icon = btn.querySelector('.material-icons-outlined');
-
-                            if (childrenList.classList.contains('hidden')) {
-                                childrenList.classList.remove('hidden');
-                                icon.textContent = 'expand_less';
-                            } else {
-                                childrenList.classList.add('hidden');
-                                icon.textContent = 'expand_more';
-                            }
-                        }
-
-                        // Auto-expand parent groups that have a selected child
-                        document.addEventListener('DOMContentLoaded', function () {
-                            document.querySelectorAll('.children-list input[type="radio"]:checked').forEach(function (radio) {
-                                const childrenList = radio.closest('.children-list');
-                                if (childrenList) {
-                                    childrenList.classList.remove('hidden');
-                                    const parentGroup = childrenList.closest('.category-parent-group');
-                                    if (parentGroup) {
-                                        const icon = parentGroup.querySelector('button[onclick="toggleChildren(this)"] .material-icons-outlined');
-                                        if (icon) icon.textContent = 'expand_less';
+                            // New version of changeProductImage that also handles swatch highlight
+                            function changeProductImageWithHex(productId, imageUrl, swatchBtn) {
+                                if (!imageUrl) return;
+                                const swatchContainer = document.querySelector('#swatches-' + productId);
+                                if (!swatchContainer) return;
+                                const productCard = swatchContainer.closest('.group');
+                                if (!productCard) return;
+                                const imgContainer = productCard.querySelector('.relative.w-full');
+                                if (imgContainer) {
+                                    const imgs = imgContainer.querySelectorAll('img');
+                                    if (imgs.length > 0) {
+                                        imgs[0].src = imageUrl;
+                                        imgs[0].classList.remove('group-hover:opacity-0');
+                                        if (imgs.length > 1) imgs[1].style.display = 'none';
                                     }
                                 }
-                            });
-                        });
-
-                        // ===== PRICE FILTER =====
-                        function updatePriceLabel(value) {
-                            const formatted = new Intl.NumberFormat('vi-VN').format(value) + '\u20ab';
-                            document.getElementById('priceLabel').textContent = formatted;
-                        }
-
-                        function clearPrice() {
-                            const input = document.getElementById('priceRangeInput');
-                            if (input) input.disabled = true;
-                            document.getElementById('filterForm').submit();
-                        }
-
-                        // ===== CATEGORY CLEAR =====
-                        function clearCategory() {
-                            const radios = document.getElementsByName('categoryId');
-                            for (let i = 0; i < radios.length; i++) radios[i].checked = false;
-                            document.getElementById('filterForm').submit();
-                        }
-
-                        // ===== CATEGORY CHANGE (with gender conflict resolution) =====
-                        function handleCategoryChange(radio) {
-                            const selectedGender = parseInt(radio.getAttribute('data-genderid'));
-                            const form = document.getElementById('filterForm');
-
-                            // Get the current genderid hidden input (if any)
-                            const genderInput = form.querySelector('input[name="genderid"]');
-                            const categoryIndexInput = form.querySelector('input[name="categoryIndex"]');
-
-                            if (genderInput) {
-                                const currentGender = parseInt(genderInput.value);
-                                // If gender conflicts, clear the old context (categoryIndex + genderid)
-                                // so the controller uses only the new categoryId (which carries its own gender in DB)
-                                if (currentGender !== selectedGender) {
-                                    genderInput.remove();
-                                    if (categoryIndexInput) categoryIndexInput.remove();
-                                }
-                            }
-
-                            // Also reset price/color/size when switching gender context (fresh navigation)
-                            const priceInput = form.querySelector('input[name="maxPrice"]');
-                            const colorInput = form.querySelector('input[name="color"]');
-                            const sizeInput = form.querySelector('input[name="size"]');
-                            if (priceInput) priceInput.disabled = true;
-                            if (colorInput) colorInput.value = '';
-                            if (sizeInput) sizeInput.value = '';
-
-                            form.submit();
-                        }
-
-                        // ===== COLOR FILTER =====
-                        function selectColorFilter(btn) {
-                            const selectedColor = btn.getAttribute('data-color');
-                            const currentColor = document.getElementById('colorFilterInput').value;
-
-                            // Toggle: click same color again to deselect
-                            if (currentColor === selectedColor) {
-                                document.getElementById('colorFilterInput').value = '';
-                            } else {
-                                document.getElementById('colorFilterInput').value = selectedColor;
-                            }
-                            document.getElementById('filterForm').submit();
-                        }
-
-                        function clearColorFilter() {
-                            document.getElementById('colorFilterInput').value = '';
-                            document.getElementById('filterForm').submit();
-                        }
-
-                        // ===== SIZE FILTER =====
-                        function selectSizeFilter(btn) {
-                            const selectedSize = btn.getAttribute('data-size');
-                            const currentSize = document.getElementById('sizeFilterInput').value;
-
-                            // Toggle: click same size again to deselect
-                            if (currentSize === selectedSize) {
-                                document.getElementById('sizeFilterInput').value = '';
-                            } else {
-                                document.getElementById('sizeFilterInput').value = selectedSize;
-                            }
-                            document.getElementById('filterForm').submit();
-                        }
-
-                        function clearSizeFilter() {
-                            document.getElementById('sizeFilterInput').value = '';
-                            document.getElementById('filterForm').submit();
-                        }
-
-                        // ===== QUICK VIEW =====
-                        function quickView(productId) {
-                            const modal = document.getElementById('quickViewModal');
-                            const content = document.getElementById('quickViewContent');
-                            modal.classList.remove('hidden');
-                            content.innerHTML = '<div class="flex flex-col items-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div><p class="text-slate-400 text-sm tracking-wide">LOADING...</p></div>';
-                            fetch('${pageContext.request.contextPath}/product?action=view&id=' + productId)
-                                .then(r => r.text())
-                                .then(html => {
-                                    content.innerHTML = '<div class="prose max-w-none">' + html + '</div>';
-                                    content.querySelectorAll('script').forEach(s => s.remove());
-                                })
-                                .catch(() => {
-                                    content.innerHTML = '<p class="text-red-500 text-center">Failed to load product details.</p>';
+                                // Toggle active class on swatches
+                                swatchContainer.querySelectorAll('.color-swatch').forEach(function (s) {
+                                    s.classList.remove('swatch-active');
                                 });
-                        }
-
-                        function closeQuickView() {
-                            document.getElementById('quickViewModal').classList.add('hidden');
-                        }
-
-                        document.getElementById('quickViewModal').addEventListener('click', function (e) {
-                            if (e.target === this.firstElementChild) closeQuickView();
-                        });
-
-                        // ===== PRODUCT IMAGE SWATCH =====
-                        function changeProductImage(productId, imageUrl) {
-                            if (!imageUrl) return;
-                            const swatchContainer = document.querySelector('#swatches-' + productId);
-                            if (!swatchContainer) return;
-                            const productCard = swatchContainer.closest('.group');
-                            if (!productCard) return;
-                            const imgContainer = productCard.querySelector('.relative.w-full');
-                            if (imgContainer) {
-                                const imgs = imgContainer.querySelectorAll('img');
-                                if (imgs.length > 0) {
-                                    imgs[0].src = imageUrl;
-                                    imgs[0].classList.remove('group-hover:opacity-0');
-                                    if (imgs.length > 1) imgs[1].style.display = 'none';
+                                if (swatchBtn) {
+                                    swatchBtn.classList.add('swatch-active');
                                 }
                             }
-                            // Highlight active swatch
-                            swatchContainer.querySelectorAll('button').forEach(s => {
-                                s.classList.remove('ring-2', 'ring-offset-1');
-                                s.style.boxShadow = '';
-                            });
-                            if (event && event.currentTarget) {
-                                event.currentTarget.style.boxShadow = '0 0 0 2px white, 0 0 0 4px #024acf';
+
+                            // ===== ACCORDION TOGGLE =====
+                            function toggleAccordion(btn) {
+                                const section = btn.closest('.filter-section');
+                                const content = section.querySelector('.accordion-content');
+                                const icon = btn.querySelector('.material-icons-outlined');
+
+                                if (content.style.display === 'none' || content.classList.contains('accordion-collapsed')) {
+                                    content.style.display = '';
+                                    content.classList.remove('accordion-collapsed');
+                                    icon.textContent = 'expand_less';
+                                } else {
+                                    content.style.display = 'none';
+                                    content.classList.add('accordion-collapsed');
+                                    icon.textContent = 'expand_more';
+                                }
                             }
-                        }
-                    </script>
+
+                            // Toggle child categories visibility
+                            function toggleChildren(btn) {
+                                const parentGroup = btn.closest('.category-parent-group');
+                                const childrenList = parentGroup.querySelector('.children-list');
+                                const icon = btn.querySelector('.material-icons-outlined');
+
+                                if (childrenList.classList.contains('hidden')) {
+                                    childrenList.classList.remove('hidden');
+                                    icon.textContent = 'expand_less';
+                                } else {
+                                    childrenList.classList.add('hidden');
+                                    icon.textContent = 'expand_more';
+                                }
+                            }
+
+                            // Auto-expand parent groups that have a selected child
+                            document.addEventListener('DOMContentLoaded', function () {
+                                document.querySelectorAll('.children-list input[type="radio"]:checked').forEach(function (radio) {
+                                    const childrenList = radio.closest('.children-list');
+                                    if (childrenList) {
+                                        childrenList.classList.remove('hidden');
+                                        const parentGroup = childrenList.closest('.category-parent-group');
+                                        if (parentGroup) {
+                                            const icon = parentGroup.querySelector('button[onclick="toggleChildren(this)"] .material-icons-outlined');
+                                            if (icon) icon.textContent = 'expand_less';
+                                        }
+                                    }
+                                });
+                            });
+
+                            // ===== PRICE FILTER =====
+                            function updatePriceLabel(value) {
+                                const formatted = new Intl.NumberFormat('vi-VN').format(value) + '\u20ab';
+                                document.getElementById('priceLabel').textContent = formatted;
+                            }
+
+                            function clearPrice() {
+                                const input = document.getElementById('priceRangeInput');
+                                if (input) input.disabled = true;
+                                document.getElementById('filterForm').submit();
+                            }
+
+                            // ===== CATEGORY CLEAR =====
+                            function clearCategory() {
+                                const radios = document.getElementsByName('categoryId');
+                                for (let i = 0; i < radios.length; i++) radios[i].checked = false;
+                                document.getElementById('filterForm').submit();
+                            }
+
+                            // ===== CATEGORY CHANGE (with gender conflict resolution) =====
+                            function handleCategoryChange(radio) {
+                                const selectedGender = parseInt(radio.getAttribute('data-genderid'));
+                                const form = document.getElementById('filterForm');
+
+                                // Get the current genderid hidden input (if any)
+                                const genderInput = form.querySelector('input[name="genderid"]');
+                                const categoryIndexInput = form.querySelector('input[name="categoryIndex"]');
+
+                                if (genderInput) {
+                                    const currentGender = parseInt(genderInput.value);
+                                    // If gender conflicts, clear the old context (categoryIndex + genderid)
+                                    // so the controller uses only the new categoryId (which carries its own gender in DB)
+                                    if (currentGender !== selectedGender) {
+                                        genderInput.remove();
+                                        if (categoryIndexInput) categoryIndexInput.remove();
+                                    }
+                                }
+
+                                // Also reset price/color/size when switching gender context (fresh navigation)
+                                const priceInput = form.querySelector('input[name="maxPrice"]');
+                                const colorInput = form.querySelector('input[name="color"]');
+                                const sizeInput = form.querySelector('input[name="size"]');
+                                if (priceInput) priceInput.disabled = true;
+                                if (colorInput) colorInput.value = '';
+                                if (sizeInput) sizeInput.value = '';
+
+                                form.submit();
+                            }
+
+                            // ===== COLOR FILTER =====
+                            function selectColorFilter(btn) {
+                                const selectedColor = btn.getAttribute('data-color');
+                                const currentColor = document.getElementById('colorFilterInput').value;
+
+                                // Toggle: click same color again to deselect
+                                if (currentColor === selectedColor) {
+                                    document.getElementById('colorFilterInput').value = '';
+                                } else {
+                                    document.getElementById('colorFilterInput').value = selectedColor;
+                                }
+                                document.getElementById('filterForm').submit();
+                            }
+
+                            function clearColorFilter() {
+                                document.getElementById('colorFilterInput').value = '';
+                                document.getElementById('filterForm').submit();
+                            }
+
+                            // ===== SIZE FILTER =====
+                            function selectSizeFilter(btn) {
+                                const selectedSize = btn.getAttribute('data-size');
+                                const currentSize = document.getElementById('sizeFilterInput').value;
+
+                                // Toggle: click same size again to deselect
+                                if (currentSize === selectedSize) {
+                                    document.getElementById('sizeFilterInput').value = '';
+                                } else {
+                                    document.getElementById('sizeFilterInput').value = selectedSize;
+                                }
+                                document.getElementById('filterForm').submit();
+                            }
+
+                            function clearSizeFilter() {
+                                document.getElementById('sizeFilterInput').value = '';
+                                document.getElementById('filterForm').submit();
+                            }
+
+                            // ===== (Legacy quick details removed to prevent conflicts) =====
+
+                            // ===== PRODUCT IMAGE SWATCH =====
+                            function changeProductImage(productId, imageUrl) {
+                                if (!imageUrl) return;
+                                const swatchContainer = document.querySelector('#swatches-' + productId);
+                                if (!swatchContainer) return;
+                                const productCard = swatchContainer.closest('.group');
+                                if (!productCard) return;
+                                const imgContainer = productCard.querySelector('.relative.w-full');
+                                if (imgContainer) {
+                                    const imgs = imgContainer.querySelectorAll('img');
+                                    if (imgs.length > 0) {
+                                        imgs[0].src = imageUrl;
+                                        imgs[0].classList.remove('group-hover:opacity-0');
+                                        if (imgs.length > 1) imgs[1].style.display = 'none';
+                                    }
+                                }
+                                // Highlight active swatch
+                                swatchContainer.querySelectorAll('button').forEach(s => {
+                                    s.classList.remove('ring-2', 'ring-offset-1');
+                                    s.style.boxShadow = '';
+                                });
+                                if (event && event.currentTarget) {
+                                    event.currentTarget.style.boxShadow = '0 0 0 2px white, 0 0 0 4px #024acf';
+                                }
+                            }
+                        </script>
 
                 </body>
 

@@ -16,19 +16,20 @@ public class ProductDAO implements IProductDAO {
 
     private static final Logger logger = Logger.getLogger(ProductDAO.class.getName());
     private static final String INSERT_SQL = """
-                INSERT INTO Products (name, description, price, categoryid, brand, discount, createdat, updatedat)
-                VALUES (?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())
+                INSERT INTO Products (name, description, price, categoryid, brand, discount, is_bestseller, createdat, updatedat)
+                VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())
             """;
     private static final String SELECT_BY_ID = "SELECT * FROM Products WHERE productid = ?";
     private static final String SELECT_ALL = "SELECT * FROM Products";
     private static final String SELECT_ALL_OPTIMIZED = """
             SELECT
-                p.productid, p.name, p.description, p.price, p.brand, p.discount,
+                p.productid, p.name, p.description, p.price, p.brand, p.discount, p.is_bestseller,
                 p.createdat, p.updatedat, p.categoryid,
                 c.name AS category_name, c.type AS category_type,
                 c.genderid AS category_genderid, c.parentid AS category_parentid,
                 c.INDEX_name AS category_index,
-                img.imageurl AS image_url, img.color AS image_color, img.isprimary AS image_isprimary,
+                img.imageid AS image_id, img.imageurl AS image_url, img.color AS image_color, img.isprimary AS image_isprimary,
+                img.createdat AS image_createdat, img.updatedat AS image_updatedat,
                 (SELECT COALESCE(SUM(pcs.stock), 0) FROM product_color_size pcs WHERE pcs.productid = p.productid) AS total_stock
             FROM
                 Products p
@@ -40,18 +41,19 @@ public class ProductDAO implements IProductDAO {
             """;
     private static final String UPDATE_SQL = """
                 UPDATE Products
-                SET name = ?, description = ?, price = ?, categoryid = ?, brand = ?, discount = ?, updatedat = GETDATE()
+                SET name = ?, description = ?, price = ?, categoryid = ?, brand = ?, discount = ?, is_bestseller = ?, updatedat = GETDATE()
                 WHERE productid = ?
             """;
     private static final String DELETE_SQL = "DELETE FROM Products WHERE productid = ?";
     private static final String SELECT_BY_PARENT_CATEGORY_OPTIMIZED = """
             SELECT
-                p.productid, p.name, p.description, p.price, p.brand, p.discount,
+                p.productid, p.name, p.description, p.price, p.brand, p.discount, p.is_bestseller,
                 p.createdat, p.updatedat, p.categoryid,
                 c.name AS category_name, c.type AS category_type,
                 c.genderid AS category_genderid, c.parentid AS category_parentid,
                 c.INDEX_name AS category_index,
-                img.imageurl AS image_url, img.color AS image_color, img.isprimary AS image_isprimary,
+                img.imageid AS image_id, img.imageurl AS image_url, img.color AS image_color, img.isprimary AS image_isprimary,
+                img.createdat AS image_createdat, img.updatedat AS image_updatedat,
                 (SELECT COALESCE(SUM(pcs.stock), 0) FROM product_color_size pcs WHERE pcs.productid = p.productid) AS total_stock
             FROM
                 Products p
@@ -88,6 +90,7 @@ public class ProductDAO implements IProductDAO {
                 ps.setInt(4, product.getCategory().getCategoryid());
                 ps.setString(5, product.getBrand());
                 ps.setBigDecimal(6, product.getDiscount());
+                ps.setBoolean(7, product.isBestseller());
 
                 int rows = ps.executeUpdate();
                 if (rows > 0) {
@@ -167,6 +170,7 @@ public class ProductDAO implements IProductDAO {
                     product.setPrice(rs.getBigDecimal("price"));
                     product.setBrand(rs.getString("brand"));
                     product.setDiscount(rs.getBigDecimal("discount"));
+                    product.setBestseller(rs.getBoolean("is_bestseller"));
                     product.setCreatedAt(rs.getTimestamp("createdat"));
                     product.setUpdatedAt(rs.getTimestamp("updatedat"));
                     product.setCategory(category);
@@ -198,6 +202,7 @@ public class ProductDAO implements IProductDAO {
                     p.setPrice(rs.getBigDecimal("price"));
                     p.setBrand(rs.getString("brand"));
                     p.setDiscount(rs.getBigDecimal("discount"));
+                    p.setBestseller(rs.getBoolean("is_bestseller"));
                     p.setCreatedAt(rs.getTimestamp("createdat"));
                     p.setUpdatedAt(rs.getTimestamp("updatedat"));
                     p.setTotalStock(rs.getInt("total_stock"));
@@ -220,9 +225,12 @@ public class ProductDAO implements IProductDAO {
                 String imageUrl = rs.getString("image_url");
                 if (imageUrl != null && !imageUrl.isBlank()) {
                     ProductImage img = new ProductImage();
+                    img.setImageId(rs.getInt("image_id"));
                     img.setImageUrl(imageUrl);
                     img.setColor(rs.getString("image_color"));
                     img.setPrimary(rs.getBoolean("image_isprimary"));
+                    img.setCreatedAt(rs.getTimestamp("image_createdat"));
+                    img.setUpdatedAt(rs.getTimestamp("image_updatedat"));
                     img.setProduct(p);
                     p.getImages().add(img);
                 }
@@ -258,6 +266,7 @@ public class ProductDAO implements IProductDAO {
                         p.setPrice(rs.getBigDecimal("price"));
                         p.setBrand(rs.getString("brand"));
                         p.setDiscount(rs.getBigDecimal("discount"));
+                        p.setBestseller(rs.getBoolean("is_bestseller"));
                         p.setCreatedAt(rs.getTimestamp("createdat"));
                         p.setUpdatedAt(rs.getTimestamp("updatedat"));
                         p.setTotalStock(rs.getInt("total_stock"));
@@ -280,9 +289,12 @@ public class ProductDAO implements IProductDAO {
                     String imageUrl = rs.getString("image_url");
                     if (imageUrl != null && !imageUrl.isBlank()) {
                         ProductImage img = new ProductImage();
+                        img.setImageId(rs.getInt("image_id"));
                         img.setImageUrl(imageUrl);
                         img.setColor(rs.getString("image_color"));
                         img.setPrimary(rs.getBoolean("image_isprimary"));
+                        img.setCreatedAt(rs.getTimestamp("image_createdat"));
+                        img.setUpdatedAt(rs.getTimestamp("image_updatedat"));
                         img.setProduct(p);
                         p.getImages().add(img);
                     }
@@ -311,7 +323,8 @@ public class ProductDAO implements IProductDAO {
                 ps.setInt(4, product.getCategory().getCategoryid());
                 ps.setString(5, product.getBrand());
                 ps.setBigDecimal(6, product.getDiscount());
-                ps.setInt(7, product.getProductId());
+                ps.setBoolean(7, product.isBestseller());
+                ps.setInt(8, product.getProductId());
 
                 int rows = ps.executeUpdate();
                 if (rows == 0) {

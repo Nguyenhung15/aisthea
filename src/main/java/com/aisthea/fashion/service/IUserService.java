@@ -27,4 +27,8 @@ public interface IUserService {
     boolean activateUser(String email);
 
     User getUserByEmail(String email);
+
+    boolean banUser(int userId, String reason);
+
+    boolean unbanUser(int userId);
 }

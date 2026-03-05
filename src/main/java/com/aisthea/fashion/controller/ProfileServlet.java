@@ -52,12 +52,23 @@ public class ProfileServlet extends HttpServlet {
         String gender = request.getParameter("gender");
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
+        String dobStr = request.getParameter("dob");
 
         user.setFullname(fullname);
         user.setEmail(email);
         user.setGender(gender);
         user.setPhone(phone);
         user.setAddress(address);
+
+        if (dobStr != null && !dobStr.isEmpty()) {
+            try {
+                user.setDob(java.sql.Date.valueOf(dobStr));
+            } catch (IllegalArgumentException e) {
+                user.setDob(null);
+            }
+        } else {
+            user.setDob(null);
+        }
 
         Part filePart = request.getPart("avatar");
         String oldAvatar = user.getAvatar();
