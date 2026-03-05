@@ -29,4 +29,6 @@ public interface IUserDAO {
     boolean banUser(int userId, String reason) throws SQLException;
 
     boolean unbanUser(int userId) throws SQLException;
+
+    boolean updateMembershipPoints(int userId, int pointsToAdd) throws SQLException;
 }
