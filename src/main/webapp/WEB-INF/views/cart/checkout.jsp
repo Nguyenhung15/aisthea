@@ -294,14 +294,14 @@
                                                 <!-- QR Section -->
                                                 <div id="qrSection"
                                                     class="hidden border border-sky-100 rounded-xl p-6 text-center animate-fade-in">
-                                                    <p class="text-sm text-slate-600 mb-4 font-medium">Scan QR to pay:
-                                                    </p>
-                                                    <img src="${pageContext.request.contextPath}/assets/img/qr-payment.png"
-                                                        alt="QR Code"
-                                                        class="mx-auto w-48 h-48 object-contain mb-4 ring-8 ring-white rounded-lg shadow-sm">
-                                                    <p class="text-xs text-slate-500">Content: <span
-                                                            class="font-bold text-slate-900">AISTHEA -
-                                                            ${sessionScope.user.fullname}</span></p>
+                                                    <div class="mb-4">
+                                                        <span
+                                                            class="material-symbols-outlined text-accent-blue text-5xl animate-pulse">qr_code_scanner</span>
+                                                    </div>
+                                                    <p class="text-sm text-slate-600 mb-2 font-medium">Professional QR
+                                                        Payment</p>
+                                                    <p class="text-xs text-slate-500">You will be securely redirected to
+                                                        PayOS to scan and pay with any Banking App.</p>
                                                 </div>
 
                                                 <!-- COD Section -->
@@ -566,13 +566,7 @@
                             const selected = checkedRadio.value;
 
                             if (selected === 'QR') {
-                                e.preventDefault();
-                                alert("Please scan QR to transfer.\nAfter completed, press OK to continue.");
-                                setTimeout(() => {
-                                    if (confirm("Confirm your transfer successfully?")) {
-                                        form.submit();
-                                    }
-                                }, 500);
+                                // Unified PayOS flow - just submit the form
                                 return;
                             }
 
