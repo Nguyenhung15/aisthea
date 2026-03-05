@@ -337,36 +337,34 @@
                                         <c:set var="priceIsActive"
                                             value="${not empty param.maxPrice and param.maxPrice != '500000000'}" />
                                         <c:set var="hasActiveFilters"
-                                            value="${not empty param.categoryId or priceIsActive or not empty param.color or not empty param.size}" />
+                                            value="${not empty param.categoryId or priceIsActive or not empty param.color or not empty param.size or not empty param.search}" />
                                         <c:if test="${hasActiveFilters}">
                                             <div class="flex items-center flex-wrap gap-3">
                                                 <span
                                                     class="text-sm font-medium text-slate-500 mr-2 uppercase tracking-wide">Active
                                                     Filters:</span>
 
-                                                <%-- Category chip: only when user picked via sidebar
-                                                    (param.categoryId), not URL path --%>
-                                                    <c:if
-                                                        test="${not empty param.categoryId and not empty displayCategory}">
+                                                <%-- Search chip --%>
+                                                    <c:if test="${not empty param.search}">
                                                         <span
-                                                            class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-medium bg-primary-light text-white shadow-sm hover:shadow-md transition-shadow cursor-default">
-                                                            ${displayCategory.name}
-                                                            <button type="button" onclick="clearCategory()"
+                                                            class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-medium bg-primary text-white shadow-sm hover:shadow-md transition-shadow cursor-default">
+                                                            Search: "${param.search}"
+                                                            <a href="${pageContext.request.contextPath}/product"
                                                                 class="ml-2 hover:text-white/80 transition-colors">
                                                                 <span
                                                                     class="material-icons-outlined text-[14px]">close</span>
-                                                            </button>
+                                                            </a>
                                                         </span>
                                                     </c:if>
 
-                                                    <%-- Price chip: only show when price is NOT the default max --%>
-                                                        <c:if test="${priceIsActive}">
+                                                    <%-- Category chip: only when user picked via sidebar
+                                                        (param.categoryId), not URL path --%>
+                                                        <c:if
+                                                            test="${not empty param.categoryId and not empty displayCategory}">
                                                             <span
                                                                 class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-medium bg-primary-light text-white shadow-sm hover:shadow-md transition-shadow cursor-default">
-                                                                Max:
-                                                                <fmt:formatNumber value="${param.maxPrice}"
-                                                                    type="number" groupingUsed="true" />₫
-                                                                <button type="button" onclick="clearPrice()"
+                                                                ${displayCategory.name}
+                                                                <button type="button" onclick="clearCategory()"
                                                                     class="ml-2 hover:text-white/80 transition-colors">
                                                                     <span
                                                                         class="material-icons-outlined text-[14px]">close</span>
@@ -374,12 +372,15 @@
                                                             </span>
                                                         </c:if>
 
-                                                        <%-- Color chip --%>
-                                                            <c:if test="${not empty param.color}">
+                                                        <%-- Price chip: only show when price is NOT the default max
+                                                            --%>
+                                                            <c:if test="${priceIsActive}">
                                                                 <span
                                                                     class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-medium bg-primary-light text-white shadow-sm hover:shadow-md transition-shadow cursor-default">
-                                                                    Màu: ${param.color}
-                                                                    <button type="button" onclick="clearColorFilter()"
+                                                                    Max:
+                                                                    <fmt:formatNumber value="${param.maxPrice}"
+                                                                        type="number" groupingUsed="true" />₫
+                                                                    <button type="button" onclick="clearPrice()"
                                                                         class="ml-2 hover:text-white/80 transition-colors">
                                                                         <span
                                                                             class="material-icons-outlined text-[14px]">close</span>
@@ -387,13 +388,13 @@
                                                                 </span>
                                                             </c:if>
 
-                                                            <%-- Size chip --%>
-                                                                <c:if test="${not empty param.size}">
+                                                            <%-- Color chip --%>
+                                                                <c:if test="${not empty param.color}">
                                                                     <span
                                                                         class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-medium bg-primary-light text-white shadow-sm hover:shadow-md transition-shadow cursor-default">
-                                                                        Size: ${param.size}
+                                                                        Màu: ${param.color}
                                                                         <button type="button"
-                                                                            onclick="clearSizeFilter()"
+                                                                            onclick="clearColorFilter()"
                                                                             class="ml-2 hover:text-white/80 transition-colors">
                                                                             <span
                                                                                 class="material-icons-outlined text-[14px]">close</span>
@@ -401,9 +402,23 @@
                                                                     </span>
                                                                 </c:if>
 
-                                                                <a href="${pageContext.request.contextPath}/product"
-                                                                    class="text-xs text-slate-500 hover:text-primary underline ml-2 transition-colors">Xóa
-                                                                    tất cả</a>
+                                                                <%-- Size chip --%>
+                                                                    <c:if test="${not empty param.size}">
+                                                                        <span
+                                                                            class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-medium bg-primary-light text-white shadow-sm hover:shadow-md transition-shadow cursor-default">
+                                                                            Size: ${param.size}
+                                                                            <button type="button"
+                                                                                onclick="clearSizeFilter()"
+                                                                                class="ml-2 hover:text-white/80 transition-colors">
+                                                                                <span
+                                                                                    class="material-icons-outlined text-[14px]">close</span>
+                                                                            </button>
+                                                                        </span>
+                                                                    </c:if>
+
+                                                                    <a href="${pageContext.request.contextPath}/product"
+                                                                        class="text-xs text-slate-500 hover:text-primary underline ml-2 transition-colors">Xóa
+                                                                        tất cả</a>
                                             </div>
                                         </c:if>
                                 </div>
@@ -671,22 +686,69 @@
                                                 ${not empty totalRecords ? totalRecords : fn:length(productList)}
                                                 results</span>
                                             <div class="flex items-center space-x-2">
-                                                <span class="text-sm text-slate-500">Sort by:</span>
-                                                <select name="sort" onchange="this.form.submit()"
-                                                    class="text-sm font-medium border-none bg-transparent focus:ring-0 text-slate-800 cursor-pointer pl-1 dark:text-slate-200">
-                                                    <option value="featured" ${param.sort=='featured' ? 'selected' : ''
-                                                        }>
-                                                        Featured</option>
-                                                    <option value="price_asc" ${param.sort=='price_asc' ? 'selected'
-                                                        : '' }>
-                                                        Price: Low to High</option>
-                                                    <option value="price_desc" ${param.sort=='price_desc' ? 'selected'
-                                                        : '' }>
-                                                        Price: High to Low</option>
-                                                    <option value="newest" ${param.sort=='newest' ? 'selected' : '' }>
-                                                        Newest
-                                                    </option>
-                                                </select>
+                                                <span class="text-sm text-slate-500 font-medium tracking-wide">Sort
+                                                    by:</span>
+                                                <div class="relative inline-block text-left" id="customSortDropdown">
+                                                    <button type="button" onclick="toggleSortMenu()"
+                                                        class="flex items-center gap-3 group px-4 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 focus:outline-none">
+                                                        <span
+                                                            class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest"
+                                                            id="currentSortLabel">
+                                                            <c:choose>
+                                                                <c:when test="${param.sort == 'price_asc'}">Low to High
+                                                                </c:when>
+                                                                <c:when test="${param.sort == 'price_desc'}">High to Low
+                                                                </c:when>
+                                                                <c:when test="${param.sort == 'newest'}">Newest</c:when>
+                                                                <c:otherwise>Featured</c:otherwise>
+                                                            </c:choose>
+                                                        </span>
+                                                        <span
+                                                            class="material-icons-outlined text-[18px] text-slate-400 group-hover:text-primary transition-transform duration-300"
+                                                            id="sortChevron">expand_more</span>
+                                                    </button>
+
+                                                    <!-- Dropdown Menu -->
+                                                    <div id="sortMenu"
+                                                        class="absolute right-0 mt-2 w-56 origin-top-right rounded-xl bg-white dark:bg-slate-800 shadow-lift border border-slate-100 dark:border-slate-700 focus:outline-none z-[100] transform scale-95 opacity-0 invisible transition-all duration-300">
+                                                        <div class="py-2 px-1" role="none">
+                                                            <button type="button" onclick="handleSortSelect('featured')"
+                                                                class="w-full text-left px-4 py-3 text-[13px] font-bold uppercase tracking-wider ${empty param.sort or param.sort == 'featured' ? 'text-primary bg-primary/5' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'} rounded-lg transition-colors flex items-center justify-between">
+                                                                <span>Featured</span>
+                                                                <c:if
+                                                                    test="${empty param.sort or param.sort == 'featured'}">
+                                                                    <span
+                                                                        class="material-icons-outlined text-[16px]">check</span>
+                                                                </c:if>
+                                                            </button>
+                                                            <button type="button"
+                                                                onclick="handleSortSelect('price_asc')"
+                                                                class="w-full text-left px-4 py-3 text-[13px] font-bold uppercase tracking-wider ${param.sort == 'price_asc' ? 'text-primary bg-primary/5' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'} rounded-lg transition-colors flex items-center justify-between">
+                                                                <span>Price: Low to High</span>
+                                                                <c:if test="${param.sort == 'price_asc'}"><span
+                                                                        class="material-icons-outlined text-[16px]">check</span>
+                                                                </c:if>
+                                                            </button>
+                                                            <button type="button"
+                                                                onclick="handleSortSelect('price_desc')"
+                                                                class="w-full text-left px-4 py-3 text-[13px] font-bold uppercase tracking-wider ${param.sort == 'price_desc' ? 'text-primary bg-primary/5' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'} rounded-lg transition-colors flex items-center justify-between">
+                                                                <span>Price: High to Low</span>
+                                                                <c:if test="${param.sort == 'price_desc'}"><span
+                                                                        class="material-icons-outlined text-[16px]">check</span>
+                                                                </c:if>
+                                                            </button>
+                                                            <button type="button" onclick="handleSortSelect('newest')"
+                                                                class="w-full text-left px-4 py-3 text-[13px] font-bold uppercase tracking-wider ${param.sort == 'newest' ? 'text-primary bg-primary/5' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'} rounded-lg transition-colors flex items-center justify-between">
+                                                                <span>Newest</span>
+                                                                <c:if test="${param.sort == 'newest'}"><span
+                                                                        class="material-icons-outlined text-[16px]">check</span>
+                                                                </c:if>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" name="sort" id="sortHiddenInput"
+                                                    value="${not empty param.sort ? param.sort : 'featured'}" />
                                             </div>
                                         </div>
 
@@ -1569,7 +1631,44 @@
                                     event.currentTarget.style.boxShadow = '0 0 0 2px white, 0 0 0 4px #024acf';
                                 }
                             }
+
+                            // ===== CUSTOM SORT DROPDOWN =====
+                            function toggleSortMenu() {
+                                const menu = document.getElementById('sortMenu');
+                                const chevron = document.getElementById('sortChevron');
+                                const isVisible = !menu.classList.contains('invisible');
+
+                                if (isVisible) {
+                                    menu.classList.add('opacity-0', 'invisible', 'scale-95');
+                                    menu.classList.remove('opacity-100', 'visible', 'scale-100');
+                                    chevron.style.transform = 'rotate(0deg)';
+                                } else {
+                                    menu.classList.remove('opacity-0', 'invisible', 'scale-95');
+                                    menu.classList.add('opacity-100', 'visible', 'scale-100');
+                                    chevron.style.transform = 'rotate(180deg)';
+                                }
+                            }
+
+                            function handleSortSelect(value) {
+                                document.getElementById('sortHiddenInput').value = value;
+                                document.getElementById('filterForm').submit();
+                            }
+
+                            // Close dropdown when clicking outside
+                            document.addEventListener('click', function (event) {
+                                const dropdown = document.getElementById('customSortDropdown');
+                                const menu = document.getElementById('sortMenu');
+                                const chevron = document.getElementById('sortChevron');
+
+                                if (dropdown && !dropdown.contains(event.target)) {
+                                    menu.classList.add('opacity-0', 'invisible', 'scale-95');
+                                    menu.classList.remove('opacity-100', 'visible', 'scale-100');
+                                    if (chevron) chevron.style.transform = 'rotate(0deg)';
+                                }
+                            });
                         </script>
+
+
 
                 </body>
 

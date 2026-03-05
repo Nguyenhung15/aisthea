@@ -38,23 +38,94 @@ public class FeedbackServlet extends HttpServlet {
             response.setContentType("text/html;charset=UTF-8");
             java.io.PrintWriter out = response.getWriter();
             out.println("<html><body style='font-family:monospace;padding:24px'>");
-            out.println("<h2>🛠 Feedback Debug - DB Query</h2>");
+            out.println("<h2>🛠 Feedback Debug - DB Management (V2.0 - SAFE DAO)</h2>");
+
             try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection()) {
+                // Test DAO directly
+                out.println("<h3>DAO Test:</h3>");
+                try {
+                    List<Feedback> testList = feedbackService.getFeedbacksByProductId(14);
+                    out.println("getFeedbacksByProductId(14) returned: <b>" + testList.size() + "</b> rows<br/>");
+                    for (Feedback f : testList) {
+                        out.println("- ID=" + f.getFeedbackid() + " | Rating=" + f.getRating() + " | Comment="
+                                + f.getComment() + " | User=" + f.getUsername() + "<br/>");
+                    }
+
+                    List<Feedback> allList = feedbackService.getAllFeedbacks();
+                    out.println("getAllFeedbacks() returned: <b>" + allList.size() + "</b> rows<br/>");
+                } catch (Exception e) {
+                    out.println("<pre style='color:red'>DAO Error: " + e.getMessage() + "\n");
+                    e.printStackTrace(out);
+                    out.println("</pre>");
+                }
+
+                out.println("<hr/>");
+
+                // RUN MIGRATION IF REQUESTED
+                if ("migrate".equals(request.getParameter("cmd"))) {
+                    out.println(
+                            "<div style='background:#fef3c7;padding:12px;border:1px solid #f59e0b;margin-bottom:20px'>");
+                    out.println("<b>Running Migration...</b><br/>");
+                    String[] queries = {
+                            "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[feedback]') AND name = 'is_verified') ALTER TABLE [feedback] ADD [is_verified] BIT DEFAULT 0;",
+                            "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[feedback]') AND name = 'image_url') ALTER TABLE [feedback] ADD [image_url] NVARCHAR(500) NULL;",
+                            "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[feedback]') AND name = 'helpful_count') ALTER TABLE [feedback] ADD [helpful_count] INT DEFAULT 0;",
+                            "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[feedback]') AND name = 'admin_reply') ALTER TABLE [feedback] ADD [admin_reply] NVARCHAR(MAX) NULL;",
+                            "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[feedback]') AND name = 'replied_at') ALTER TABLE [feedback] ADD [replied_at] DATETIME NULL;",
+                            "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[feedback]') AND name = 'updatedat') ALTER TABLE [feedback] ADD [updatedat] DATETIME DEFAULT GETDATE();"
+                    };
+                    for (String q : queries) {
+                        try (java.sql.Statement s = conn.createStatement()) {
+                            s.execute(q);
+                            out.println("✅ Executed: " + q.substring(0, Math.min(60, q.length())) + "...<br/>");
+                        } catch (Exception ex) {
+                            out.println("❌ Failed: " + q + " | Error: " + ex.getMessage() + "<br/>");
+                        }
+                    }
+                    out.println("</div>");
+                }
+
+                out.println(
+                        "<a href='?debug=1&cmd=migrate' style='background:#2563eb;color:white;padding:8px 16px;text-decoration:none;border-radius:4px'>Run Schema Migration</a>");
+                out.println("<hr/>");
+
+                // Schema info
+                java.sql.ResultSetMetaData meta = null;
+                out.println("<h3>Bảng Feedback - All Columns:</h3>");
+                try (java.sql.PreparedStatement ps = conn.prepareStatement("SELECT TOP 1 * FROM feedback");
+                        java.sql.ResultSet rs = ps.executeQuery()) {
+                    meta = rs.getMetaData();
+                    out.println("<p><b>Columns:</b> ");
+                    for (int i = 1; i <= meta.getColumnCount(); i++) {
+                        out.print(meta.getColumnName(i) + (i < meta.getColumnCount() ? ", " : ""));
+                    }
+                    out.println("</p>");
+                }
+
                 // All feedback records
                 out.println("<h3>Tất cả records trong bảng feedback:</h3>");
                 out.println("<table border='1' cellpadding='6' style='border-collapse:collapse'>");
-                out.println(
-                        "<tr style='background:#e5e7eb'><th>feedbackid</th><th>userid</th><th>productid</th><th>rating</th><th>comment</th><th>status</th><th>createdat</th></tr>");
+                out.println("<tr style='background:#e5e7eb'>");
+                if (meta != null) {
+                    for (int i = 1; i <= meta.getColumnCount(); i++) {
+                        out.println("<th>" + meta.getColumnName(i) + "</th>");
+                    }
+                }
+                out.println("</tr>");
+
                 try (java.sql.PreparedStatement ps = conn
                         .prepareStatement("SELECT * FROM feedback ORDER BY feedbackid DESC");
                         java.sql.ResultSet rs = ps.executeQuery()) {
                     int cnt = 0;
                     while (rs.next()) {
                         cnt++;
-                        out.println("<tr><td>" + rs.getInt("feedbackid") + "</td><td>" + rs.getInt("userid")
-                                + "</td><td>" + rs.getInt("productid") + "</td><td>" + rs.getInt("rating")
-                                + "</td><td>" + rs.getString("comment") + "</td><td><b>" + rs.getString("status")
-                                + "</b></td><td>" + rs.getTimestamp("createdat") + "</td></tr>");
+                        out.println("<tr>");
+                        if (meta != null) {
+                            for (int i = 1; i <= meta.getColumnCount(); i++) {
+                                out.println("<td>" + rs.getObject(i) + "</td>");
+                            }
+                        }
+                        out.println("</tr>");
                     }
                     out.println("</table><p><b>Total: " + cnt + " rows</b></p>");
                 }
@@ -134,6 +205,20 @@ public class FeedbackServlet extends HttpServlet {
         }
 
         User user = (User) session.getAttribute("user");
+        String action = request.getParameter("action");
+
+        if ("incrementHelpful".equals(action)) {
+            try {
+                int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
+                boolean success = feedbackService.incrementHelpfulCount(feedbackId);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\": " + success + "}");
+                return;
+            } catch (Exception e) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+        }
 
         try {
             String productIdStr = request.getParameter("productId");
@@ -154,12 +239,16 @@ public class FeedbackServlet extends HttpServlet {
 
             int productId = Integer.parseInt(productIdStr.trim());
             int rating = (ratingStr != null && !ratingStr.isEmpty()) ? Integer.parseInt(ratingStr) : 1;
+            String imageUrl = request.getParameter("imageUrl");
 
             Feedback feedback = new Feedback();
             feedback.setUserid(user.getUserId());
             feedback.setProductid(productId);
             feedback.setRating(rating);
             feedback.setComment(comment != null ? comment : "");
+            feedback.setImageUrl(imageUrl);
+            feedback.setStatus("Visible");
+
             boolean saved = feedbackService.addFeedback(feedback);
             log.info("[Feedback] saved=" + saved);
 

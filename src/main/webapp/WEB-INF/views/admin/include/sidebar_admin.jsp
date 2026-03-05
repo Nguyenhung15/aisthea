@@ -48,13 +48,18 @@
                     <i class="fa-solid fa-users"></i>
                     <span>Customers</span>
                 </a>
+                <a href="${pageContext.request.contextPath}/admin/feedback" class="lux-sidebar__link"
+                    data-path="/admin/feedback">
+                    <i class="fa-solid fa-star"></i>
+                    <span>Reviews</span>
+                </a>
             </nav>
 
         </aside>
 
         <style>
             .lux-sidebar__logo-container {
-                margin-top: -30px;
+                margin-top: 10px;
                 /* Đã đẩy lên 10px */
                 margin-left: 10px;
                 margin-bottom: var(--space-3xl);

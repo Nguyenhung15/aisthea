@@ -136,12 +136,37 @@ public class ProductServlet extends HttpServlet {
         String sortParam = request.getParameter("sort");
         String colorParam = request.getParameter("color");
         String sizeParam = request.getParameter("size");
+        String searchParam = request.getParameter("search");
 
         List<Product> list;
 
         try {
-            // If categoryIndex + genderid from UrlRewriteFilter (e.g. /men/ao_thun)
-            if (categoryIndexParam != null && !categoryIndexParam.isBlank()
+            // Priority 1: General Keyword Search
+            if (searchParam != null && !searchParam.isBlank()) {
+                final String keyword = searchParam.trim().toLowerCase();
+                list = productService.getAllProducts().stream()
+                        .filter(p -> {
+                            // Match by product name
+                            if (p.getName() != null && p.getName().toLowerCase().contains(keyword))
+                                return true;
+                            // Match by brand
+                            if (p.getBrand() != null && p.getBrand().toLowerCase().contains(keyword))
+                                return true;
+                            // Match by description
+                            if (p.getDescription() != null && p.getDescription().toLowerCase().contains(keyword))
+                                return true;
+                            // Match by category name
+                            if (p.getCategory() != null && p.getCategory().getName() != null
+                                    && p.getCategory().getName().toLowerCase().contains(keyword))
+                                return true;
+                            return false;
+                        })
+                        .collect(Collectors.toList());
+                request.setAttribute("pageTitle", "KẾT QUẢ TÌM KIẾM: \"" + searchParam + "\"");
+            }
+            // Priority 2: If categoryIndex + genderid from UrlRewriteFilter (e.g.
+            // /men/ao_thun)
+            else if (categoryIndexParam != null && !categoryIndexParam.isBlank()
                     && genderIdParam != null && !genderIdParam.isBlank()) {
                 int genderId = Integer.parseInt(genderIdParam);
                 list = productService.getProductsByParentCategory(categoryIndexParam, genderId);

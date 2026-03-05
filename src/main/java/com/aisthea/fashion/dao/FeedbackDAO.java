@@ -11,18 +11,21 @@ public class FeedbackDAO implements IFeedbackDAO {
 
     private static final Logger logger = Logger.getLogger(FeedbackDAO.class.getName());
 
-    private static final String SELECT_BY_PRODUCT_ID = "SELECT f.feedbackid, f.userid, f.productid, f.rating, f.comment, f.status, f.createdat, f.updatedat, "
-            +
-            "       u.fullname, u.username AS uname " +
-            "FROM feedback f " +
-            "LEFT JOIN users u ON f.userid = u.userid " +
-            "WHERE f.productid = ? AND LOWER(f.status) = 'visible' " +
-            "ORDER BY f.createdat DESC";
-    private static final String INSERT_FEEDBACK = "INSERT INTO feedback (userid, productid, rating, comment, createdat, updatedat) VALUES (?, ?, ?, ?, GETDATE(), GETDATE())";
+    private static final String SELECT_BY_PRODUCT_ID = "SELECT f.*, u.fullname, u.username AS uname "
+            + "FROM feedback f "
+            + "LEFT JOIN users u ON f.userid = u.userid "
+            + "WHERE f.productid = ? "
+            + "ORDER BY f.createdat DESC";
     private static final String CHECK_PURCHASE = "SELECT TOP 1 1 FROM orders o " +
             "JOIN orderitems oi ON o.orderid = oi.orderid " +
             "JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid " +
             "WHERE o.userid = ? AND pcs.productid = ? AND o.status = 'Completed'";
+
+    private static final String SELECT_ALL_FOR_ADMIN = "SELECT f.*, u.fullname, u.username AS uname, p.name as product_name "
+            + "FROM feedback f "
+            + "LEFT JOIN users u ON f.userid = u.userid "
+            + "LEFT JOIN products p ON f.productid = p.productid "
+            + "ORDER BY f.createdat DESC";
 
     @Override
     public List<Feedback> getFeedbacksByProductId(int productId) throws SQLException {
@@ -33,29 +36,13 @@ public class FeedbackDAO implements IFeedbackDAO {
             ps.setInt(1, productId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Feedback f = new Feedback();
-                    f.setFeedbackid(rs.getInt("feedbackid"));
-                    f.setUserid(rs.getInt("userid"));
-                    f.setProductid(rs.getInt("productid"));
-                    f.setRating(rs.getInt("rating"));
-                    f.setComment(rs.getString("comment"));
-                    // Ưu tiên fullname, fallback về username DB
-                    String displayName = rs.getString("fullname");
-                    if (displayName == null || displayName.isBlank()) {
-                        displayName = rs.getString("uname");
+                    Feedback f = mapResultSetToFeedback(rs);
+                    // Filter in Java code if SQL filter is not reliable
+                    if (f.getStatus() == null || f.getStatus().isBlank() || f.getStatus().equalsIgnoreCase("Visible")) {
+                        list.add(f);
                     }
-                    if (displayName == null || displayName.isBlank()) {
-                        displayName = "Anonymous";
-                    }
-                    f.setUsername(displayName);
-                    f.setCreatedat(rs.getTimestamp("createdat"));
-                    f.setUpdatedat(rs.getTimestamp("updatedat"));
-                    list.add(f);
-                    logger.info("[FeedbackDAO] Loaded feedback id=" + f.getFeedbackid() + " rating=" + f.getRating()
-                            + " user=" + displayName);
                 }
             }
-            logger.info("[FeedbackDAO] Total feedbacks loaded: " + list.size());
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "[FeedbackDAO] SQL Error loading feedbacks for productId=" + productId, e);
             throw e;
@@ -63,15 +50,93 @@ public class FeedbackDAO implements IFeedbackDAO {
         return list;
     }
 
+    private Feedback mapResultSetToFeedback(ResultSet rs) throws SQLException {
+        Feedback f = new Feedback();
+        ResultSetMetaData meta = rs.getMetaData();
+        List<String> labels = new ArrayList<>();
+        int colCount = meta.getColumnCount();
+        for (int i = 1; i <= colCount; i++) {
+            labels.add(meta.getColumnLabel(i).toLowerCase());
+        }
+
+        // Basic fields
+        if (labels.contains("feedbackid"))
+            f.setFeedbackid(rs.getInt("feedbackid"));
+        if (labels.contains("userid"))
+            f.setUserid(rs.getInt("userid"));
+        if (labels.contains("productid"))
+            f.setProductid(rs.getInt("productid"));
+        if (labels.contains("rating"))
+            f.setRating(rs.getInt("rating"));
+        if (labels.contains("comment"))
+            f.setComment(rs.getString("comment"));
+        if (labels.contains("status"))
+            f.setStatus(rs.getString("status"));
+
+        // Status filter fallback (if not filtered in SQL)
+        String st = f.getStatus();
+        if (st != null && !st.isBlank() && !st.equalsIgnoreCase("Visible") && !st.equalsIgnoreCase("Hidden")) {
+            // If it has some other status, maybe we should skip?
+            // But let's follow the 'Visible' rule.
+        }
+
+        // Optional/Additional fields
+        if (labels.contains("is_verified"))
+            f.setVerified(rs.getBoolean("is_verified"));
+        else if (labels.contains("isverified"))
+            f.setVerified(rs.getBoolean("isverified"));
+
+        if (labels.contains("image_url"))
+            f.setImageUrl(rs.getString("image_url"));
+        if (labels.contains("helpful_count"))
+            f.setHelpfulCount(rs.getInt("helpful_count"));
+        if (labels.contains("admin_reply"))
+            f.setAdminReply(rs.getString("admin_reply"));
+        if (labels.contains("replied_at"))
+            f.setRepliedAt(rs.getTimestamp("replied_at"));
+        if (labels.contains("createdat"))
+            f.setCreatedat(rs.getTimestamp("createdat"));
+        if (labels.contains("updatedat"))
+            f.setUpdatedat(rs.getTimestamp("updatedat"));
+
+        // Display name logic
+        String displayName = null;
+        if (labels.contains("fullname"))
+            displayName = rs.getString("fullname");
+        if (displayName == null || displayName.isBlank()) {
+            if (labels.contains("uname"))
+                displayName = rs.getString("uname");
+            else if (labels.contains("username"))
+                displayName = rs.getString("username");
+        }
+        if (displayName == null || displayName.isBlank()) {
+            displayName = "Anonymous";
+        }
+        f.setUsername(displayName);
+
+        return f;
+    }
+
     @Override
     public boolean addFeedback(Feedback feedback) throws SQLException {
+        // Use only guaranteed columns: userid, productid, rating, comment, status,
+        // createdat
+        String sql = "INSERT INTO feedback (userid, productid, rating, comment, status, createdat) " +
+                "VALUES (?, ?, ?, ?, 'Visible', GETDATE())";
+
         try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(INSERT_FEEDBACK)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, feedback.getUserid());
             ps.setInt(2, feedback.getProductid());
             ps.setInt(3, feedback.getRating());
             ps.setString(4, feedback.getComment());
-            return ps.executeUpdate() > 0;
+
+            boolean success = ps.executeUpdate() > 0;
+            logger.info("[FeedbackDAO] Simple insert success: " + success + " for product " + feedback.getProductid());
+            return success;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "[FeedbackDAO] Simple insert FAILED: " + e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -84,6 +149,49 @@ public class FeedbackDAO implements IFeedbackDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
+        }
+    }
+
+    public List<Feedback> getAllFeedbacks() throws SQLException {
+        List<Feedback> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_ALL_FOR_ADMIN);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Feedback f = mapResultSetToFeedback(rs);
+                list.add(f);
+            }
+        }
+        return list;
+    }
+
+    public boolean updateFeedbackStatus(int feedbackId, String status) throws SQLException {
+        String sql = "UPDATE feedback SET status = ?, updatedat = GETDATE() WHERE feedbackid = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, feedbackId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean replyToFeedback(int feedbackId, String reply) throws SQLException {
+        String sql = "UPDATE feedback SET admin_reply = ?, replied_at = GETDATE(), updatedat = GETDATE() WHERE feedbackid = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, reply);
+            ps.setInt(2, feedbackId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    @Override
+    public boolean incrementHelpfulCount(int feedbackId) throws SQLException {
+        String sql = "UPDATE feedback SET helpful_count = helpful_count + 1 WHERE feedbackid = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, feedbackId);
+            return ps.executeUpdate() > 0;
         }
     }
 }

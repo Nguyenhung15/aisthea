@@ -47,4 +47,44 @@ public class FeedbackService implements IFeedbackService {
             return false;
         }
     }
+
+    @Override
+    public List<Feedback> getAllFeedbacks() {
+        try {
+            return feedbackDAO.getAllFeedbacks();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error getting all feedbacks", e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    public boolean updateFeedbackStatus(int feedbackId, String status) {
+        try {
+            return feedbackDAO.updateFeedbackStatus(feedbackId, status);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error updating feedback status", e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean replyToFeedback(int feedbackId, String reply) {
+        try {
+            return feedbackDAO.replyToFeedback(feedbackId, reply);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error replying to feedback", e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean incrementHelpfulCount(int feedbackId) {
+        try {
+            return feedbackDAO.incrementHelpfulCount(feedbackId);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error incrementing helpful count", e);
+            return false;
+        }
+    }
 }
