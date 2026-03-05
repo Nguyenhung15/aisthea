@@ -18,6 +18,9 @@ public class Order {
     private String phone;
     private String address;
     private String paymentMethod;
+    private Integer voucherId; // nullable
+    private java.math.BigDecimal discountAmount;
+    private String giftMessage;
 
     private List<OrderItem> items;
 
@@ -118,5 +121,29 @@ public class Order {
 
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public Integer getVoucherId() {
+        return voucherId;
+    }
+
+    public void setVoucherId(Integer voucherId) {
+        this.voucherId = voucherId;
+    }
+
+    public java.math.BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(java.math.BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public String getGiftMessage() {
+        return giftMessage;
+    }
+
+    public void setGiftMessage(String giftMessage) {
+        this.giftMessage = giftMessage;
     }
 }

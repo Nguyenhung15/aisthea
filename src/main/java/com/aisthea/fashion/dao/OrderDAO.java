@@ -12,8 +12,8 @@ public class OrderDAO implements IOrderDAO {
 
     private static final Logger logger = Logger.getLogger(OrderDAO.class.getName());
 
-    private static final String INSERT_ORDER = "INSERT INTO orders (userid, totalprice, status, fullname, email, phone, address, payment_method) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String INSERT_ORDER = "INSERT INTO orders (userid, totalprice, status, fullname, email, phone, address, payment_method, voucherid, discountamount, gift_message) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_ORDERS_BY_USERID = "SELECT * FROM orders WHERE userid = ? ORDER BY createdat DESC";
     private static final String SELECT_ORDER_BY_ID = "SELECT * FROM orders WHERE orderid = ? AND userid = ?";
     private static final String UPDATE_ORDER_STATUS = "UPDATE orders SET status = ?, updatedat = GETDATE() WHERE orderid = ?";
@@ -35,6 +35,16 @@ public class OrderDAO implements IOrderDAO {
             psOrder.setString(7, order.getAddress());
             psOrder.setString(8, order.getPaymentMethod());
 
+            // nullable voucher
+            if (order.getVoucherId() != null) {
+                psOrder.setInt(9, order.getVoucherId());
+            } else {
+                psOrder.setNull(9, java.sql.Types.INTEGER);
+            }
+            psOrder.setBigDecimal(10,
+                    order.getDiscountAmount() != null ? order.getDiscountAmount() : java.math.BigDecimal.ZERO);
+            psOrder.setString(11, order.getGiftMessage());
+
             psOrder.executeUpdate();
 
             try (ResultSet rs = psOrder.getGeneratedKeys()) {
@@ -51,7 +61,8 @@ public class OrderDAO implements IOrderDAO {
     @Override
     public List<Order> getOrdersByUserId(int userId) throws SQLException {
         List<Order> orders = new ArrayList<>();
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(SELECT_ORDERS_BY_USERID)) {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_ORDERS_BY_USERID)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -65,7 +76,8 @@ public class OrderDAO implements IOrderDAO {
     @Override
     public Order getOrderById(int orderId, int userId) throws SQLException {
         Order order = null;
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(SELECT_ORDER_BY_ID)) {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_ORDER_BY_ID)) {
             ps.setInt(1, orderId);
             ps.setInt(2, userId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -79,7 +91,8 @@ public class OrderDAO implements IOrderDAO {
 
     @Override
     public boolean updateOrderStatus(int orderId, String status) throws SQLException {
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(UPDATE_ORDER_STATUS)) {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(UPDATE_ORDER_STATUS)) {
             ps.setString(1, status);
             ps.setInt(2, orderId);
             return ps.executeUpdate() > 0;
@@ -110,6 +123,10 @@ public class OrderDAO implements IOrderDAO {
             order.setPhone(rs.getString("phone"));
             order.setAddress(rs.getString("address"));
             order.setPaymentMethod(rs.getString("payment_method"));
+            int voucherId = rs.getInt("voucherid");
+            order.setVoucherId(rs.wasNull() ? null : voucherId);
+            order.setDiscountAmount(rs.getBigDecimal("discountamount"));
+            order.setGiftMessage(rs.getString("gift_message"));
         } catch (SQLException e) {
             logger.warning("Không thể đọc đầy đủ thông tin giao hàng (có thể từ listOrders): " + e.getMessage());
         }
@@ -120,7 +137,8 @@ public class OrderDAO implements IOrderDAO {
     @Override
     public List<Order> getAllOrders() throws SQLException {
         List<Order> orders = new ArrayList<>();
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(SELECT_ALL_ORDERS)) {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_ALL_ORDERS)) {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -134,7 +152,8 @@ public class OrderDAO implements IOrderDAO {
     @Override
     public Order getAdminOrderById(int orderId) throws SQLException {
         Order order = null;
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(SELECT_ADMIN_ORDER_BY_ID)) {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(SELECT_ADMIN_ORDER_BY_ID)) {
             ps.setInt(1, orderId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -147,7 +166,8 @@ public class OrderDAO implements IOrderDAO {
 
     @Override
     public boolean deleteOrder(int orderId) throws SQLException {
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(DELETE_ORDER)) {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(DELETE_ORDER)) {
             ps.setInt(1, orderId);
             return ps.executeUpdate() > 0;
         }

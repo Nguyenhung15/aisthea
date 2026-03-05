@@ -9,9 +9,9 @@ public class FeedbackDAO implements IFeedbackDAO {
 
     private static final String SELECT_BY_PRODUCT_ID = "SELECT f.*, u.fullname FROM feedback f " +
             "JOIN users u ON f.userid = u.userid " +
-            "WHERE f.productid = ? AND f.status = 'Visible' " +
+            "WHERE f.productid = ? " +
             "ORDER BY f.createdat DESC";
-    private static final String INSERT_FEEDBACK = "INSERT INTO feedback (userid, productid, rating, comment, status, createdat, updatedat) VALUES (?, ?, ?, ?, 'Visible', GETDATE(), GETDATE())";
+    private static final String INSERT_FEEDBACK = "INSERT INTO feedback (userid, productid, rating, comment, createdat, updatedat) VALUES (?, ?, ?, ?, GETDATE(), GETDATE())";
     private static final String CHECK_PURCHASE = "SELECT TOP 1 1 FROM orders o " +
             "JOIN orderitems oi ON o.orderid = oi.orderid " +
             "JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid " +

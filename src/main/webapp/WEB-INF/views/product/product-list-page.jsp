@@ -1167,12 +1167,12 @@
                                     colorsDiv.innerHTML = '';
                                     const colorNames = Object.keys(colorMap);
                                     colorNames.forEach((c, idx) => {
-                                        const hex = resolveHex(c);
+                                        const hex = window.getColorHex ? window.getColorHex(c) : '#CCCCCC';
                                         const btn = document.createElement('button');
                                         btn.type = 'button';
                                         btn.title = colorMap[c][0].color || c;
                                         btn.dataset.color = c;
-                                        btn.className = 'w-7 h-7 rounded-full border-2 border-white shadow transition-all hover:scale-105';
+                                        btn.className = 'w-7 h-7 rounded-full border-2 border-white shadow transition-all hover:scale-105 hover:ring-2 hover:ring-primary hover:ring-offset-1';
                                         btn.style.backgroundColor = hex;
                                         btn.onclick = () => selectColor(c, colorMap, colorImageMap, d.images);
                                         colorsDiv.appendChild(btn);
@@ -1313,16 +1313,6 @@
                                             setTimeout(() => { btn.textContent = 'Thêm vào giỏ hàng'; }, 2000);
                                         });
                                 };
-
-                                /* ---------- HEX RESOLVER ---------- */
-                                function resolveHex(name) {
-                                    if (!name) return '#9CA3AF';
-                                    const n = name.toLowerCase().trim();
-                                    const MAP = window.COLOR_MAP || {};
-                                    if (MAP[n]) return MAP[n];
-                                    if (/^#([0-9a-f]{3}){1,2}$/i.test(n)) return n;
-                                    return '#9CA3AF';
-                                }
                             })();
                         </script>
 
@@ -1552,30 +1542,7 @@
                                 document.getElementById('filterForm').submit();
                             }
 
-                            // ===== QUICK VIEW =====
-                            function quickView(productId) {
-                                const modal = document.getElementById('quickViewModal');
-                                const content = document.getElementById('quickViewContent');
-                                modal.classList.remove('hidden');
-                                content.innerHTML = '<div class="flex flex-col items-center"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div><p class="text-slate-400 text-sm tracking-wide">LOADING...</p></div>';
-                                fetch('${pageContext.request.contextPath}/product?action=view&id=' + productId)
-                                    .then(r => r.text())
-                                    .then(html => {
-                                        content.innerHTML = '<div class="prose max-w-none">' + html + '</div>';
-                                        content.querySelectorAll('script').forEach(s => s.remove());
-                                    })
-                                    .catch(() => {
-                                        content.innerHTML = '<p class="text-red-500 text-center">Failed to load product details.</p>';
-                                    });
-                            }
-
-                            function closeQuickView() {
-                                document.getElementById('quickViewModal').classList.add('hidden');
-                            }
-
-                            document.getElementById('quickViewModal').addEventListener('click', function (e) {
-                                if (e.target === this.firstElementChild) closeQuickView();
-                            });
+                            // ===== (Legacy quick details removed to prevent conflicts) =====
 
                             // ===== PRODUCT IMAGE SWATCH =====
                             function changeProductImage(productId, imageUrl) {
