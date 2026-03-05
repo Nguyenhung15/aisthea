@@ -22,7 +22,7 @@ public class UserDAO implements IUserDAO {
     private static final String ACTIVATE_USER_SQL = "UPDATE users SET active = 1, updatedat = GETDATE() WHERE email = ? AND active = 0";
     private static final String BAN_USER_SQL = "UPDATE users SET is_banned = 1, ban_reason = ?, updatedat = GETDATE() WHERE userid = ?";
     private static final String UNBAN_USER_SQL = "UPDATE users SET is_banned = 0, ban_reason = NULL, updatedat = GETDATE() WHERE userid = ?";
-    private static final String UPDATE_MEMBERSHIP_POINTS_SQL = "UPDATE users SET membership_points = membership_points + ?, updatedat = GETDATE() WHERE userid = ?";
+    private static final String UPDATE_MEMBERSHIP_POINTS_SQL = "UPDATE users SET membership_points = ISNULL(membership_points, 0) + ?, updatedat = GETDATE() WHERE userid = ?";
 
     private User extractUserFromResultSet(ResultSet rs) throws SQLException {
         User u = new User();
@@ -38,11 +38,7 @@ public class UserDAO implements IUserDAO {
         u.setRole(rs.getString("role"));
         u.setActive(rs.getBoolean("active"));
         u.setDob(rs.getDate("dob"));
-        try {
-            u.setMembershipPoints(rs.getInt("membership_points"));
-        } catch (SQLException e) {
-            u.setMembershipPoints(0);
-        }
+        u.setMembershipPoints(rs.getInt("membership_points"));
         u.setCreatedAt(rs.getTimestamp("createdat"));
         u.setUpdatedAt(rs.getTimestamp("updatedat"));
         u.setBanned(rs.getBoolean("is_banned"));

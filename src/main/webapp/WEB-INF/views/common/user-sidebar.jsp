@@ -6,41 +6,41 @@
                     <%@ page import="java.math.BigDecimal" %>
                         <%@ page import="java.util.List" %>
                             <% User sessionUser=(User) session.getAttribute("user"); int points=0; String
-                                currentTier="SILVER MEMBER" ; int nextTierPoints=500; String nextTierName="GOLD" ; int
-                                progress=0; if (sessionUser !=null) { OrderService os=new OrderService(); List<Order>
-                                orders = os.getOrderHistory(sessionUser.getUserId());
-                                BigDecimal totalSpent = BigDecimal.ZERO;
-                                for (Order o : orders) {
-                                if ("Completed".equalsIgnoreCase(o.getStatus()) ||
-                                "Delivered".equalsIgnoreCase(o.getStatus())) {
-                                if (o.getTotalprice() != null) {
-                                totalSpent = totalSpent.add(o.getTotalprice());
-                                }
-                                }
-                                }
-                                // 1 điểm = 10,000 VND
-                                points = totalSpent.divide(new BigDecimal(10000)).intValue();
-
-                                if (points >= 5000) {
-                                currentTier = "DIAMOND MEMBER";
-                                nextTierPoints = 5000;
+                                currentTier="MEMBER" ; int nextTierPoints=2000; String nextTierName="SILVER" ; int
+                                progress=0; String badgeBgClass="from-zinc-50 to-zinc-100 border-zinc-200/50" ; String
+                                badgeTextClass="text-zinc-600" ; if (sessionUser !=null) {
+                                points=sessionUser.getMembershipPoints(); if (points>= 15000) {
+                                currentTier = "PLATINUM MEMBER";
+                                nextTierPoints = 15000;
                                 nextTierName = "MAX";
                                 progress = 100;
-                                } else if (points >= 2000) {
-                                currentTier = "PLATINUM MEMBER";
-                                nextTierPoints = 5000;
-                                nextTierName = "DIAMOND";
-                                progress = (points * 100) / 5000;
-                                } else if (points >= 500) {
+                                badgeBgClass="from-indigo-50 to-indigo-100 border-indigo-200/50";
+                                badgeTextClass="text-indigo-600";
+                                } else if (points >= 5000) {
                                 currentTier = "GOLD MEMBER";
-                                nextTierPoints = 2000;
+                                nextTierPoints = 15000;
                                 nextTierName = "PLATINUM";
+                                progress = ((points - 5000) * 100) / 10000;
+                                badgeBgClass="from-amber-50 to-amber-100 border-amber-200/50";
+                                badgeTextClass="text-amber-600";
+                                } else if (points >= 2000) {
+                                currentTier = "SILVER MEMBER";
+                                nextTierPoints = 5000;
+                                nextTierName = "GOLD";
+                                progress = ((points - 2000) * 100) / 3000;
+                                badgeBgClass="from-slate-100 to-slate-200 border-slate-300/50";
+                                badgeTextClass="text-slate-600";
+                                } else {
+                                currentTier = "MEMBER";
+                                nextTierPoints = 2000;
+                                nextTierName = "SILVER";
+                                if (points > 0) {
                                 progress = (points * 100) / 2000;
                                 } else {
-                                currentTier = "SILVER MEMBER";
-                                nextTierPoints = 500;
-                                nextTierName = "GOLD";
-                                progress = (points * 100) / 500;
+                                progress = 0;
+                                }
+                                badgeBgClass="from-zinc-50 to-zinc-100 border-zinc-200/50";
+                                badgeTextClass="text-zinc-600";
                                 }
                                 }
                                 request.setAttribute("userPoints", points);
@@ -48,6 +48,8 @@
                                 request.setAttribute("nextTierPoints", nextTierPoints);
                                 request.setAttribute("nextTierName", nextTierName);
                                 request.setAttribute("tierProgress", progress);
+                                request.setAttribute("badgeBgClass", badgeBgClass);
+                                request.setAttribute("badgeTextClass", badgeTextClass);
                                 request.setAttribute("pointsNeeded", nextTierPoints > points ? nextTierPoints - points :
                                 0);
                                 %>
@@ -78,11 +80,11 @@
                                                 <c:out value="${sessionScope.user.fullname}" default="Khách hàng" />
                                             </h2>
                                             <div
-                                                class="flex items-center space-x-2 bg-gradient-to-r from-amber-50 to-amber-100 px-3 py-1 rounded-full border border-amber-200/50 mb-4">
+                                                class="flex items-center space-x-2 bg-gradient-to-r ${badgeBgClass} px-3 py-1 rounded-full border mb-4">
                                                 <span
-                                                    class="material-symbols-outlined text-accent-gold text-[16px]">stars</span>
+                                                    class="material-symbols-outlined ${badgeTextClass} text-[16px]">loyalty</span>
                                                 <span
-                                                    class="text-xs font-bold text-accent-gold tracking-wide uppercase">${currentTier}</span>
+                                                    class="text-xs font-bold ${badgeTextClass} tracking-wide uppercase">${currentTier}</span>
                                             </div>
                                             <!-- Points Progress -->
                                             <div class="w-full px-2">
@@ -99,7 +101,7 @@
                                                 <c:if test="${nextTierName != 'MAX'}">
                                                     <p class="mt-2 text-[10px] text-center text-slate-500 font-medium">
                                                         ${pointsNeeded} points to <span
-                                                            class="text-accent-gold font-bold">${nextTierName}</span>
+                                                            class="${badgeTextClass} font-bold">${nextTierName}</span>
                                                     </p>
                                                 </c:if>
                                                 <c:if test="${nextTierName == 'MAX'}">

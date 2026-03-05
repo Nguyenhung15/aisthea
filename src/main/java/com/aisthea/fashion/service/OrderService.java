@@ -78,19 +78,6 @@ public class OrderService implements IOrderService {
             newOrder.setItems(items);
             conn.commit();
 
-            // Cộng điểm thành viên: 1 điểm cho mỗi 10,000 VND
-            try {
-                int pointsEarned = cart.getTotalPrice().divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
-                        .intValue();
-                if (pointsEarned > 0) {
-                    UserDAO userDAO = new UserDAO();
-                    userDAO.updateMembershipPoints(user.getUserId(), pointsEarned);
-                    logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + user.getUserId());
-                }
-            } catch (Exception pointsEx) {
-                logger.warning("Đặt hàng thành công nhưng cộng điểm thất bại: " + pointsEx.getMessage());
-            }
-
             return newOrder;
 
         } catch (Exception e) {
@@ -98,15 +85,13 @@ public class OrderService implements IOrderService {
                 try {
                     conn.rollback();
                 } catch (SQLException ex) {
-                    logger.log(Level.SEVERE, "Lỗi khi rollback", ex);
+                    ex.printStackTrace();
                 }
             }
-            logger.log(Level.SEVERE, "Lỗi khi đặt hàng", e);
             throw e;
         } finally {
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(true);
                     conn.close();
                 } catch (SQLException e) {
                     e.printStackTrace();
@@ -124,6 +109,7 @@ public class OrderService implements IOrderService {
             }
             return orders;
         } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi khi lấy lịch sử đơn hàng", e);
             e.printStackTrace();
             return new ArrayList<>();
         }
@@ -139,6 +125,7 @@ public class OrderService implements IOrderService {
             }
             return order;
         } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi khi lấy chi tiết đơn hàng", e);
             e.printStackTrace();
             return null;
         }
@@ -149,6 +136,7 @@ public class OrderService implements IOrderService {
         try {
             return orderDAO.getAllOrders();
         } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi khi lấy tất cả đơn hàng", e);
             e.printStackTrace();
             return new ArrayList<>();
         }
@@ -157,6 +145,22 @@ public class OrderService implements IOrderService {
     @Override
     public boolean updateOrderStatus(int orderId, String newStatus) {
         try {
+            // Nếu đơn hàng được cập nhật thành 'Completed', cộng điểm cho user
+            if ("Completed".equalsIgnoreCase(newStatus)) {
+                Order order = orderDAO.getAdminOrderById(orderId);
+                // Chỉ cộng điểm nếu đơn hàng đang ở trạng thái khác 'Completed' (tránh cộng
+                // nhiều lần)
+                if (order != null && !"Completed".equalsIgnoreCase(order.getStatus())) {
+                    int pointsEarned = order.getTotalprice().divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
+                            .intValue();
+                    if (pointsEarned > 0) {
+                        UserDAO userDAO = new UserDAO();
+                        userDAO.updateMembershipPoints(order.getUserid(), pointsEarned);
+                        logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + order.getUserid()
+                                + " từ đơn hàng #" + orderId);
+                    }
+                }
+            }
             return orderDAO.updateOrderStatus(orderId, newStatus);
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi khi cập nhật trạng thái đơn hàng", e);
