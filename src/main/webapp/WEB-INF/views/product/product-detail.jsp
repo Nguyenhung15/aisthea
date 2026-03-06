@@ -882,16 +882,61 @@
                                     let selectedColor = null;
                                     let selectedSize = null;
 
+                                    // ===== VIETNAMESE COLOR NAME → HEX MAPPING (Synced with listing page) =====
+                                    const COLOR_MAP = {
+                                        // Đen / trắng / xám
+                                        'den': '#111111', 'đen': '#111111', 'black': '#111111',
+                                        'trang': '#FFFFFF', 'trắng': '#FFFFFF', 'white': '#FFFFFF',
+                                        'xam': '#9CA3AF', 'xám': '#9CA3AF', 'grey': '#9CA3AF', 'gray': '#9CA3AF',
+                                        'xam nhat': '#D1D5DB', 'xám nhạt': '#D1D5DB',
+                                        'xam dam': '#6B7280', 'xám đậm': '#6B7280',
+                                        // Đỏ
+                                        'do': '#EF4444', 'đỏ': '#EF4444', 'red': '#EF4444',
+                                        'do dam': '#B91C1C', 'đỏ đậm': '#B91C1C', 'dark red': '#B91C1C',
+                                        'do tuoi': '#F87171', 'đỏ tươi': '#F87171',
+                                        // Xanh lam
+                                        'xanh': '#3B82F6', 'blue': '#3B82F6',
+                                        'xanh lam': '#3B82F6', 'xanh dam': '#1D4ED8', 'xanh đậm': '#1D4ED8',
+                                        'xanh duong': '#2563EB', 'xanh dương': '#2563EB',
+                                        'xanh navy': '#1E3A5F', 'navy': '#1E3A5F',
+                                        'xanh nhat': '#93C5FD', 'xanh nhạt': '#93C5FD',
+                                        'xanh co': '#22D3EE', 'xanh cổ': '#22D3EE', 'cyan': '#22D3EE',
+                                        // Xanh lá
+                                        'xanh la': '#22C55E', 'xanh lá': '#22C55E', 'green': '#22C55E',
+                                        'xanh la dam': '#15803D', 'xanh lá đậm': '#15803D', 'dark green': '#15803D',
+                                        'xanh reu': '#84CC16', 'xanh rêu': '#718096', 'olive': '#718096',
+                                        'xanh mint': '#6EE7B7', 'mint': '#6EE7B7',
+                                        // Vàng / cam / nâu
+                                        'vang': '#EAB308', 'vàng': '#EAB308', 'yellow': '#EAB308',
+                                        'vang kem': '#FEF3C7', 'vàng kem': '#FEF3C7', 'cream': '#FEF3C7', 'kem': '#FEF9E7',
+                                        'vang nhat': '#FDE68A', 'vàng nhạt': '#FDE68A',
+                                        'cam': '#F97316', 'orange': '#F97316',
+                                        'cam dat': '#C2410C', 'cam đất': '#C2410C', 'terracotta': '#C2410C',
+                                        'nau': '#92400E', 'nâu': '#92400E', 'brown': '#92400E',
+                                        'nau nhat': '#D97706', 'nâu nhạt': '#D97706', 'tan': '#D2B48C',
+                                        'camel': '#C19A6B', 'be': '#C8A97E', 'bê': '#C8A97E', 'beige': '#F5F5DC',
+                                        'sua': '#FEFCE8', 'sữa': '#FEFCE8',
+                                        // Hồng / tím
+                                        'hong': '#EC4899', 'hồng': '#EC4899', 'pink': '#EC4899',
+                                        'hong nhat': '#FBCFE8', 'hồng nhạt': '#FBCFE8', 'light pink': '#FBCFE8',
+                                        'hong phan': '#F9A8D4', 'hồng phấn': '#F9A8D4',
+                                        'tim': '#8B5CF6', 'tím': '#8B5CF6', 'purple': '#8B5CF6',
+                                        'tim nhat': '#DDD6FE', 'tím nhạt': '#DDD6FE', 'lavender': '#E6E6FA',
+                                        // Khác
+                                        'vang dong': '#B45309', 'vàng đồng': '#B45309', 'gold': '#D4AF37',
+                                        'bac': '#C0C0C0', 'bạc': '#C0C0C0', 'silver': '#C0C0C0',
+                                    };
+
                                     function getColorHex(name) {
-                                        const map = {
-                                            "white": "#ffffff", "black": "#0c0c0c", "red": "#e53e3e",
-                                            "blue": "#0047ab", "navy": "#000080", "cerulean": "#007ba7",
-                                            "royal blue": "#4169e1", "sky blue": "#87ceeb",
-                                            "green": "#2d7a4f", "yellow": "#f6d55c", "orange": "#f97316", "pink": "#f472b6",
-                                            "purple": "#7c3aed", "brown": "#5d4037", "beige": "#d4be8d", "grey": "#9e9e9e"
-                                        };
-                                        const key = name.toLowerCase().trim();
-                                        if (map[key]) return map[key];
+                                        if (!name) return '#CCCCCC';
+                                        const key = name.trim().toLowerCase();
+                                        // Direct match
+                                        if (COLOR_MAP[key]) return COLOR_MAP[key];
+                                        // Partial match (e.g. "xanh lam đậm" → "xanh dam")
+                                        for (const [k, v] of Object.entries(COLOR_MAP)) {
+                                            if (key.includes(k) || k.includes(key)) return v;
+                                        }
+                                        // Final fallback to hash-based for unknown colors
                                         let hash = 0;
                                         for (let i = 0; i < key.length; i++) hash = key.charCodeAt(i) + ((hash << 5) - hash);
                                         const h = Math.abs(hash) % 360;
@@ -939,29 +984,97 @@
                                         updateUI();
                                     }
 
+                                    // ── Quantity Listeners ───────────────────────────────────
+                                    const minusBtn = document.getElementById('minusBtn');
+                                    const plusBtn = document.getElementById('plusBtn');
+                                    const quantityHidden = document.getElementById('quantityHidden');
+
+                                    if (minusBtn && plusBtn && quantityInput) {
+                                        minusBtn.addEventListener('click', function () {
+                                            let current = parseInt(quantityInput.value) || 1;
+                                            if (current > 1) {
+                                                quantityInput.value = current - 1;
+                                                if (quantityHidden) quantityHidden.value = current - 1;
+                                                updateUI();
+                                            }
+                                        });
+
+                                        plusBtn.addEventListener('click', function () {
+                                            const item = colorSizeData.find(d => d.color === selectedColor && d.size === selectedSize);
+                                            const maxStock = item ? item.stock : 0;
+                                            let current = parseInt(quantityInput.value) || 1;
+                                            if (current < maxStock) {
+                                                quantityInput.value = current + 1;
+                                                if (quantityHidden) quantityHidden.value = current + 1;
+                                                updateUI();
+                                            }
+                                        });
+                                    }
+
                                     function updateUI() {
                                         const item = colorSizeData.find(d => d.color === selectedColor && d.size === selectedSize);
-                                        if (!item) return;
 
+                                        // PCS ID hidden input
                                         const pcsIdInput = document.getElementById('selectedPCSId');
-                                        if (pcsIdInput) pcsIdInput.value = item.id;
+                                        if (item && pcsIdInput) {
+                                            pcsIdInput.value = item.id;
+                                        }
 
-                                        if (stockInfo) stockInfo.innerText = item.stock > 0 ? ("In Stock: " + item.stock) : "Sold Out";
+                                        if (!item) {
+                                            if (stockInfo) stockInfo.innerText = "Vui lòng chọn Màu & Size";
+                                            if (addToCartBtn) addToCartBtn.disabled = true;
+                                            if (buyBtn) buyBtn.disabled = true;
+                                            return;
+                                        }
 
-                                        const qty = quantityInput ? parseInt(quantityInput.value) : 1;
+                                        if (stockInfo) {
+                                            stockInfo.innerText = item.stock > 0 ? ("Còn hàng: " + item.stock) : "Hết hàng";
+                                            stockInfo.className = item.stock > 0
+                                                ? "text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400"
+                                                : "text-[10px] font-bold uppercase tracking-[0.15em] text-red-500";
+                                        }
+
+                                        let qty = parseInt(quantityInput.value) || 1;
                                         const outOfStock = item.stock <= 0;
-                                        const overQty = qty > item.stock;
+
+                                        // Correct quantity if it exceeds stock
+                                        if (!outOfStock && qty > item.stock) {
+                                            qty = item.stock;
+                                            quantityInput.value = qty;
+                                            if (quantityHidden) quantityHidden.value = qty;
+                                        }
+
+                                        // Disable buttons based on limits
+                                        if (minusBtn) minusBtn.disabled = qty <= 1 || outOfStock;
+                                        if (plusBtn) plusBtn.disabled = qty >= item.stock || outOfStock;
 
                                         if (addToCartBtn) {
-                                            addToCartBtn.disabled = outOfStock || overQty;
+                                            addToCartBtn.disabled = outOfStock;
                                             if (outOfStock) {
-                                                addToCartBtn.innerHTML = '<span>Sold Out</span>';
+                                                addToCartBtn.innerHTML = '<span>Hết hàng</span>';
+                                                addToCartBtn.classList.add('bg-slate-200', 'text-slate-400');
+                                                addToCartBtn.classList.remove('bg-primary', 'text-white');
                                             } else {
-                                                addToCartBtn.innerHTML = '<span>Add to Cart</span><span class="material-symbols-outlined text-base">shopping_bag</span>';
+                                                addToCartBtn.innerHTML = '<span>Thêm vào giỏ hàng</span><span class="material-symbols-outlined text-base">shopping_bag</span>';
+                                                addToCartBtn.classList.remove('bg-slate-200', 'text-slate-400');
+                                                addToCartBtn.classList.add('bg-primary', 'text-white');
                                             }
                                         }
-                                        if (buyBtn) buyBtn.disabled = outOfStock || overQty;
-                                        if (stockError) stockError.classList.toggle('hidden', !overQty);
+
+                                        if (buyBtn) {
+                                            buyBtn.disabled = outOfStock;
+                                            buyBtn.innerHTML = outOfStock ? 'Cháy hàng' : 'Mua ngay';
+                                            if (outOfStock) {
+                                                buyBtn.classList.add('opacity-50');
+                                            } else {
+                                                buyBtn.classList.remove('opacity-50');
+                                            }
+                                        }
+
+                                        if (stockError) {
+                                            const overQty = !outOfStock && qty > item.stock;
+                                            stockError.classList.toggle('hidden', !overQty);
+                                        }
                                     }
 
                                     // ── Helpful Button AJAX ───────────────────────────
