@@ -91,136 +91,170 @@
                     </nav>
 
                     <%-- Success Alert --%>
-                        <c:if test="${param.success == 'true' || param.payment == 'success'}">
-                            <div
-                                class="glass-card border-emerald-100 bg-emerald-50/50 rounded-xl p-6 mb-10 flex items-center gap-4 animate-fade-in">
-                                <div class="bg-emerald-500 text-white rounded-full p-2">
-                                    <span class="material-symbols-outlined text-lg">check</span>
+                        <%-- Success Alert --%>
+                            <c:if
+                                test="${(param.success == 'true' || param.payment == 'success') && order.status != 'Cancelled'}">
+                                <div
+                                    class="glass-card border-emerald-100 bg-emerald-100 rounded-xl p-6 mb-10 flex items-center gap-4 animate-fade-in shadow-lg shadow-emerald-100/50">
+                                    <div class="bg-emerald-500 text-white rounded-full p-2">
+                                        <span class="material-symbols-outlined text-lg">check</span>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <h3 class="font-bold text-emerald-900">Purchase Successful!</h3>
+                                        <p class="text-sm text-emerald-700/80">Thank you for choosing AISTHÉA. Your
+                                            order is
+                                            being processed.</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="font-bold text-emerald-900">Purchase Successful!</h3>
-                                    <p class="text-sm text-emerald-700/80">Thank you for choosing AISTHÉA. Your order is
-                                        being processed.</p>
-                                </div>
-                            </div>
-                        </c:if>
+                            </c:if>
 
-                        <div class="flex flex-col lg:flex-row gap-12">
-                            <div class="lg:col-span-8 flex-grow space-y-8">
-                                <div class="flex items-baseline justify-between gap-4">
-                                    <h1 class="font-serif text-4xl font-semibold text-slate-800 tracking-tight">Order
-                                        #${order.orderid}</h1>
+                            <%-- Error/Cancel Alert --%>
+                                <c:if test="${not empty error}">
                                     <div
-                                        class="status-badge ${order.status == 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}">
-                                        ${order.status}
+                                        class="glass-card border-red-100 bg-red-100 rounded-xl p-6 mb-10 flex items-center gap-4 animate-fade-in shadow-lg shadow-red-100/50">
+                                        <div class="bg-red-500 text-white rounded-full p-2">
+                                            <span class="material-symbols-outlined text-lg">priority_high</span>
+                                        </div>
+                                        <div class="flex-grow">
+                                            <h3 class="font-bold text-red-900">Notice</h3>
+                                            <p class="text-sm text-red-700/80">${error}</p>
+                                        </div>
                                     </div>
-                                </div>
+                                </c:if>
 
-                                <div class="glass-card rounded-xl overflow-hidden">
-                                    <div class="p-6 border-b border-sky-50 bg-white/30">
-                                        <h2 class="text-xs uppercase tracking-[0.2em] font-bold text-slate-400">Shipment
-                                            Items</h2>
+                                <div class="flex flex-col lg:flex-row gap-12">
+                                    <div class="lg:col-span-8 flex-grow space-y-8">
+                                        <div class="flex items-baseline justify-between gap-4">
+                                            <h1 class="font-serif text-4xl font-semibold text-slate-800 tracking-tight">
+                                                Order
+                                                #${order.orderid}</h1>
+                                            <div class="status-badge 
+                                        ${order.status == 'Pending' ? 'bg-amber-100 text-amber-700' : ''}
+                                        ${order.status == 'Paid' ? 'bg-blue-100 text-blue-700' : ''}
+                                        ${order.status == 'Processing' ? 'bg-indigo-100 text-indigo-700' : ''}
+                                        ${order.status == 'Completed' ? 'bg-emerald-100 text-emerald-700' : ''}
+                                        ${order.status == 'Cancelled' ? 'bg-red-100 text-red-700' : ''}">
+                                                ${order.status}
+                                            </div>
+                                        </div>
+
+                                        <div class="glass-card rounded-xl overflow-hidden">
+                                            <div class="p-6 border-b border-sky-50 bg-white/30">
+                                                <h2 class="text-xs uppercase tracking-[0.2em] font-bold text-slate-400">
+                                                    Shipment
+                                                    Items</h2>
+                                            </div>
+                                            <div class="divide-y divide-sky-50">
+                                                <c:forEach var="item" items="${order.items}">
+                                                    <div class="p-6 flex items-center gap-6">
+                                                        <div
+                                                            class="w-20 h-24 flex-shrink-0 rounded-lg bg-slate-100 overflow-hidden shadow-sm">
+                                                            <img class="w-full h-full object-cover"
+                                                                src="${item.imageUrl}" alt="${item.productName}"
+                                                                onerror="this.src='https://placehold.co/100x120?text=No+Image'" />
+                                                        </div>
+                                                        <div class="flex-grow">
+                                                            <h3 class="text-sm font-semibold text-slate-900">
+                                                                ${item.productName}
+                                                            </h3>
+                                                            <p class="text-xs text-slate-500 italic mt-1">${item.color}
+                                                                / Size
+                                                                ${item.size}</p>
+                                                            <p
+                                                                class="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">
+                                                                Qty: ${item.quantity}</p>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <p class="text-sm font-bold text-slate-900">
+                                                                <fmt:formatNumber value="${item.price * item.quantity}"
+                                                                    type="currency" currencyCode="VND"
+                                                                    maxFractionDigits="0" />
+                                                            </p>
+                                                            <p class="text-[10px] text-slate-400 mt-1">
+                                                                <fmt:formatNumber value="${item.price}" type="number" />
+                                                                /unit
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </c:forEach>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="divide-y divide-sky-50">
-                                        <c:forEach var="item" items="${order.items}">
-                                            <div class="p-6 flex items-center gap-6">
+
+                                    <div class="w-full lg:w-[400px] space-y-6">
+                                        <div class="glass-card rounded-xl p-8 border border-slate-200">
+                                            <h2 class="font-serif text-2xl font-semibold text-slate-800 mb-6">Order
+                                                Summary</h2>
+
+                                            <div class="space-y-4 text-sm mb-8">
+                                                <div class="flex justify-between">
+                                                    <span class="text-slate-500">Placed Date</span>
+                                                    <span class="font-medium text-slate-900">
+                                                        <fmt:formatDate value="${order.createdat}"
+                                                            pattern="MMM dd, yyyy" />
+                                                    </span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-slate-500">Shipping</span>
+                                                    <span class="text-emerald-600 font-bold italic">Complimentary</span>
+                                                </div>
                                                 <div
-                                                    class="w-20 h-24 flex-shrink-0 rounded-lg bg-slate-100 overflow-hidden shadow-sm">
-                                                    <img class="w-full h-full object-cover" src="${item.imageUrl}"
-                                                        alt="${item.productName}"
-                                                        onerror="this.src='https://placehold.co/100x120?text=No+Image'" />
+                                                    class="pt-4 border-t border-sky-100 flex justify-between items-baseline">
+                                                    <span class="text-lg font-bold text-slate-900">Total</span>
+                                                    <span class="text-2xl font-bold text-accent-blue">
+                                                        <fmt:formatNumber value="${order.totalprice}" type="currency"
+                                                            currencyCode="VND" maxFractionDigits="0" />
+                                                    </span>
                                                 </div>
-                                                <div class="flex-grow">
-                                                    <h3 class="text-sm font-semibold text-slate-900">${item.productName}
-                                                    </h3>
-                                                    <p class="text-xs text-slate-500 italic mt-1">${item.color} / Size
-                                                        ${item.size}</p>
-                                                    <p
-                                                        class="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">
-                                                        Qty: ${item.quantity}</p>
-                                                </div>
-                                                <div class="text-right">
-                                                    <p class="text-sm font-bold text-slate-900">
-                                                        <fmt:formatNumber value="${item.price * item.quantity}"
-                                                            type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                            </div>
+
+                                            <div class="pt-6 border-t border-slate-100 space-y-4">
+                                                <h3
+                                                    class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">
+                                                    Shipping Information</h3>
+                                                <div class="text-xs space-y-2 text-slate-600 leading-relaxed">
+                                                    <p class="font-bold text-slate-900 text-sm">${order.fullname}</p>
+                                                    <p><span
+                                                            class="material-icons-outlined text-[14px] align-middle mr-1">phone</span>${order.phone}
                                                     </p>
-                                                    <p class="text-[10px] text-slate-400 mt-1">
-                                                        <fmt:formatNumber value="${item.price}" type="number" />/unit
+                                                    <p><span
+                                                            class="material-icons-outlined text-[14px] align-middle mr-1">email</span>${order.email}
+                                                    </p>
+                                                    <p><span
+                                                            class="material-icons-outlined text-[14px] align-middle mr-1">location_on</span>${order.address}
                                                     </p>
                                                 </div>
                                             </div>
-                                        </c:forEach>
+
+                                            <div class="mt-10 space-y-3">
+                                                <c:if test="${order.status == 'Pending'}">
+                                                    <button onclick="openCancelModal()"
+                                                        class="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2">
+                                                        <span class="material-symbols-outlined text-sm">cancel</span>
+                                                        Cancel
+                                                        Order
+                                                    </button>
+                                                </c:if>
+
+                                                <c:if test="${order.status == 'Completed'}">
+                                                    <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
+                                                        class="w-full bg-accent-blue text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-primary transition-all flex items-center justify-center gap-2">
+                                                        <span class="material-symbols-outlined text-sm">star</span>
+                                                        Write a
+                                                        Review
+                                                    </a>
+                                                </c:if>
+
+                                                <a href="${pageContext.request.contextPath}/order?action=history"
+                                                    class="w-full bg-slate-900 text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 text-center">
+                                                    <span class="material-icons-outlined text-sm">arrow_back</span> Back
+                                                    to
+                                                    History
+                                                </a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="w-full lg:w-[400px] space-y-6">
-                                <div class="glass-card rounded-xl p-8 border border-slate-200">
-                                    <h2 class="font-serif text-2xl font-semibold text-slate-800 mb-6">Order Summary</h2>
-
-                                    <div class="space-y-4 text-sm mb-8">
-                                        <div class="flex justify-between">
-                                            <span class="text-slate-500">Placed Date</span>
-                                            <span class="font-medium text-slate-900">
-                                                <fmt:formatDate value="${order.createdat}" pattern="MMM dd, yyyy" />
-                                            </span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-slate-500">Shipping</span>
-                                            <span class="text-emerald-600 font-bold italic">Complimentary</span>
-                                        </div>
-                                        <div class="pt-4 border-t border-sky-100 flex justify-between items-baseline">
-                                            <span class="text-lg font-bold text-slate-900">Total</span>
-                                            <span class="text-2xl font-bold text-accent-blue">
-                                                <fmt:formatNumber value="${order.totalprice}" type="currency"
-                                                    currencyCode="VND" maxFractionDigits="0" />
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="pt-6 border-t border-slate-100 space-y-4">
-                                        <h3 class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">
-                                            Shipping Information</h3>
-                                        <div class="text-xs space-y-2 text-slate-600 leading-relaxed">
-                                            <p class="font-bold text-slate-900 text-sm">${order.fullname}</p>
-                                            <p><span
-                                                    class="material-icons-outlined text-[14px] align-middle mr-1">phone</span>${order.phone}
-                                            </p>
-                                            <p><span
-                                                    class="material-icons-outlined text-[14px] align-middle mr-1">email</span>${order.email}
-                                            </p>
-                                            <p><span
-                                                    class="material-icons-outlined text-[14px] align-middle mr-1">location_on</span>${order.address}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-10 space-y-3">
-                                        <c:if test="${order.status == 'Pending'}">
-                                            <button onclick="openCancelModal()"
-                                                class="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2">
-                                                <span class="material-symbols-outlined text-sm">cancel</span> Cancel
-                                                Order
-                                            </button>
-                                        </c:if>
-
-                                        <c:if test="${order.status == 'Completed'}">
-                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
-                                                class="w-full bg-accent-blue text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-primary transition-all flex items-center justify-center gap-2">
-                                                <span class="material-symbols-outlined text-sm">star</span> Write a
-                                                Review
-                                            </a>
-                                        </c:if>
-
-                                        <a href="${pageContext.request.contextPath}/order?action=history"
-                                            class="w-full bg-slate-900 text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 text-center">
-                                            <span class="material-icons-outlined text-sm">arrow_back</span> Back to
-                                            History
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                 </main>
 
                 <div id="cancelModal" class="modal">

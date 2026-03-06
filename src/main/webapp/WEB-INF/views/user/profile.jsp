@@ -226,8 +226,47 @@
 
                                     <form id="profileForm" action="${pageContext.request.contextPath}/updateProfile"
                                         method="post" enctype="multipart/form-data" class="space-y-8">
-                                        <input type="file" id="avatarInput" name="avatar" accept="image/*"
-                                            style="display:none;">
+
+                                        <!-- Avatar Section -->
+                                        <div class="flex flex-col items-center justify-center mb-10">
+                                            <div class="relative group">
+                                                <div
+                                                    class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative bg-slate-100">
+                                                    <c:choose>
+                                                        <c:when
+                                                            test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
+                                                            <img id="avatarPreview"
+                                                                src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
+                                                                class="w-full h-full object-cover" alt="Avatar">
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <img id="avatarPreview"
+                                                                src="${pageContext.request.contextPath}/images/ava_default.png"
+                                                                class="w-full h-full object-cover" alt="Avatar">
+                                                        </c:otherwise>
+                                                    </c:choose>
+
+                                                    <!-- Edit Overlay -->
+                                                    <div onclick="document.getElementById('avatarInput').click()"
+                                                        class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                                        <span
+                                                            class="material-symbols-outlined text-white text-3xl">photo_camera</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Hidden Input -->
+                                                <input type="file" id="avatarInput" name="avatar" accept="image/*"
+                                                    class="hidden">
+
+                                                <div
+                                                    class="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-md border border-slate-100 text-primary">
+                                                    <span class="material-symbols-outlined text-xl">edit</span>
+                                                </div>
+                                            </div>
+                                            <p
+                                                class="mt-4 text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                                                Thay đổi ảnh đại diện</p>
+                                        </div>
 
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
 
@@ -345,19 +384,13 @@
                 <script>
                     // Preview Image when selecting avatar file
                     const avatarInput = document.getElementById("avatarInput");
+                    const avatarPreview = document.getElementById("avatarPreview");
 
-                    if (avatarInput) {
+                    if (avatarInput && avatarPreview) {
                         avatarInput.addEventListener("change", e => {
                             const file = e.target.files[0];
                             if (file) {
-                                let preview = document.getElementById("avatarPreview");
-                                let placeholder = document.getElementById("avatarPlaceholder");
-
-                                if (placeholder) {
-                                    placeholder.classList.add("hidden");
-                                }
-                                preview.classList.remove("hidden");
-                                preview.src = URL.createObjectURL(file);
+                                avatarPreview.src = URL.createObjectURL(file);
                             }
                         });
                     }

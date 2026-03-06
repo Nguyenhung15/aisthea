@@ -266,10 +266,15 @@
                                                 document.getElementById('hiddenPhone').value = phone;
                                                 document.getElementById('hiddenAddress').value = address;
 
-                                                document.getElementById('newAddressForm').classList.add('hidden');
+                                                const formContainer = document.getElementById('newAddressForm');
+                                                formContainer.classList.add('hidden');
 
-                                                const inputs = document.getElementById('newAddressForm').querySelectorAll('input[type="text"], input[type="tel"]');
-                                                inputs.forEach(inp => inp.required = false); // disable required when hidden
+                                                const inputs = formContainer.querySelectorAll('input, select, textarea');
+                                                inputs.forEach(inp => {
+                                                    inp.required = false;
+                                                    // Also remove browser validation errors
+                                                    inp.setCustomValidity("");
+                                                });
 
                                                 // Reset styles
                                                 document.querySelectorAll('.address-option').forEach(el => {
@@ -281,10 +286,15 @@
                                             }
 
                                             function toggleNewAddressForm(element) {
-                                                document.getElementById('newAddressForm').classList.remove('hidden');
+                                                const formContainer = document.getElementById('newAddressForm');
+                                                formContainer.classList.remove('hidden');
 
-                                                const inputs = document.getElementById('newAddressForm').querySelectorAll('input[type="text"], input[type="tel"]');
-                                                inputs.forEach(inp => inp.required = true); // require when shown
+                                                const inputs = formContainer.querySelectorAll('input, select, textarea');
+                                                inputs.forEach(inp => {
+                                                    if (inp.id !== 'saveNewAddress') {
+                                                        inp.required = true;
+                                                    }
+                                                });
 
                                                 updateHiddenFieldsFromNew();
 

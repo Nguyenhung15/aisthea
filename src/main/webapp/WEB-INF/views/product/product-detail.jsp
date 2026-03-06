@@ -371,8 +371,8 @@
                                                         class="w-12 h-full flex items-center justify-center hover:bg-slate-50 text-slate-900 transition-colors disabled:opacity-30">
                                                         <i class="fa-solid fa-minus text-[10px]"></i>
                                                     </button>
-                                                    <input type="text" id="quantityInput" value="1" readonly
-                                                        class="w-12 h-full text-center border-0 text-sm font-bold text-slate-900 focus:ring-0 cursor-default">
+                                                    <input type="text" id="quantityInput" value="1"
+                                                        class="w-12 h-full text-center border-0 text-sm font-bold text-slate-900 focus:ring-0">
                                                     <button type="button" id="plusBtn"
                                                         class="w-12 h-full flex items-center justify-center hover:bg-slate-50 text-slate-900 transition-colors disabled:opacity-30">
                                                         <i class="fa-solid fa-plus text-[10px]"></i>
@@ -1009,6 +1009,32 @@
                                                 updateUI();
                                             }
                                         });
+
+                                        quantityInput.addEventListener('input', function () {
+                                            const item = colorSizeData.find(d => d.color === selectedColor && d.size === selectedSize);
+                                            const maxStock = item ? item.stock : 1;
+                                            let val = parseInt(this.value);
+
+                                            if (isNaN(val)) return; // Allow temporary empty type
+
+                                            if (val > maxStock) {
+                                                val = maxStock;
+                                                this.value = val;
+                                            } else if (val < 1) {
+                                                val = 1;
+                                                this.value = val;
+                                            }
+                                            if (quantityHidden) quantityHidden.value = val;
+                                            updateUI();
+                                        });
+
+                                        quantityInput.addEventListener('blur', function () {
+                                            if (!this.value || isNaN(parseInt(this.value))) {
+                                                this.value = 1;
+                                                if (quantityHidden) quantityHidden.value = 1;
+                                                updateUI();
+                                            }
+                                        });
                                     }
 
                                     function updateUI() {
@@ -1040,6 +1066,10 @@
                                         // Correct quantity if it exceeds stock
                                         if (!outOfStock && qty > item.stock) {
                                             qty = item.stock;
+                                            quantityInput.value = qty;
+                                            if (quantityHidden) quantityHidden.value = qty;
+                                        } else if (!outOfStock && qty < 1) {
+                                            qty = 1;
                                             quantityInput.value = qty;
                                             if (quantityHidden) quantityHidden.value = qty;
                                         }

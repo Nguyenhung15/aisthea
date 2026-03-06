@@ -129,7 +129,7 @@ public class OrderServlet extends HttpServlet {
     }
 
     private void viewOrderDetails(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
+            throws Exception {
         try {
             String orderIdStr = request.getParameter("orderid");
             if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
@@ -157,6 +157,21 @@ public class OrderServlet extends HttpServlet {
                         sendOrderEmail(updatedOrder);
                     }
                 }
+            } else if ("cancel".equalsIgnoreCase(paymentStatus)) {
+                Order orderBeforeUpdate = orderService.getOrderDetails(orderId, user.getUserId());
+                if (orderBeforeUpdate != null && "Pending".equalsIgnoreCase(orderBeforeUpdate.getStatus())) {
+                    logger.info("Payment cancelled detected for order " + orderId + ". Cancelling order.");
+                    orderService.cancelOrder(orderId, user.getUserId());
+                    request.setAttribute("error",
+                            "Thanh toán QR đã bị hủy. Đơn hàng của bạn không thành công. Bạn có thể kiểm tra lại giỏ hàng.");
+                }
+            }
+
+            // If payment was success, clear the cart now (it wasn't cleared during
+            // placeOrder for QR)
+            if ("success".equalsIgnoreCase(paymentStatus)) {
+                request.getSession().setAttribute("cart", new com.aisthea.fashion.model.Cart());
+                request.getSession().removeAttribute("originalCart");
             }
 
             Order order = orderService.getOrderDetails(orderId, user.getUserId());
@@ -231,8 +246,9 @@ public class OrderServlet extends HttpServlet {
                         .create(paymentData);
                 String checkoutUrl = checkoutResponse.getCheckoutUrl();
 
-                session.setAttribute("cart", new Cart());
-                session.removeAttribute("originalCart");
+                // Note: We DO NOT clear the cart here for QR payment.
+                // It will be cleared in doGet when the user returns with payment=success.
+                // This allows the user to try again if they cancel or the payment fails.
 
                 response.sendRedirect(checkoutUrl);
                 return;
