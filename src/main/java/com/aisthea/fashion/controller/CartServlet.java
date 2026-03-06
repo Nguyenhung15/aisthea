@@ -89,7 +89,21 @@ public class CartServlet extends HttpServlet {
             // Load active vouchers for the "pick voucher" panel
             com.aisthea.fashion.dao.VoucherDAO vDao = new com.aisthea.fashion.dao.VoucherDAO();
             request.setAttribute("activeVouchers", vDao.findActiveVouchers());
+
+            // Load user addresses
+            com.aisthea.fashion.model.User user = (com.aisthea.fashion.model.User) session.getAttribute("user");
+            if (user != null) {
+                com.aisthea.fashion.dao.UserAddressDAO addressDao = new com.aisthea.fashion.dao.UserAddressDAO();
+                java.util.List<com.aisthea.fashion.model.UserAddress> addrs = addressDao.getByUserId(user.getUserId());
+                System.out.println(">>> CHECKOUT: Loading addresses for UserID = " + user.getUserId() + " | Found: "
+                        + addrs.size());
+                request.setAttribute("userAddresses", addrs);
+            } else {
+                System.out.println(">>> CHECKOUT: User is NULL in session!");
+            }
+
             request.getRequestDispatcher("/WEB-INF/views/cart/checkout.jsp")
+
                     .forward(request, response);
             return;
         }

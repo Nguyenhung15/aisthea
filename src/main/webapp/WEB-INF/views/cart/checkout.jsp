@@ -118,66 +118,265 @@
                                         Shipping Details</h2>
                                     <div class="glass-card rounded-xl p-8 space-y-6">
                                         <!-- Address Book Selection -->
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="space-y-4" id="addressSelectionContainer">
+                                            <c:choose>
+                                                <c:when test="${not empty userAddresses}">
+                                                    <c:forEach var="addr" items="${userAddresses}">
+                                                        <label
+                                                            class="address-option relative flex p-4 rounded-lg border-2 cursor-pointer transition-all ${addr.isDefault ? 'border-accent-blue bg-white/50' : 'border-slate-200 bg-white/20'}"
+                                                            onclick="selectAddress('${addr.fullName}', '${addr.phone}', '${addr.detailedAddress}', this)">
+                                                            <div class="flex items-center gap-4 w-full">
+                                                                <input type="radio" name="addressSelection"
+                                                                    value="${addr.addressId}"
+                                                                    class="text-accent-blue focus:ring-accent-blue"
+                                                                    ${addr.isDefault ? 'checked' : '' } />
+                                                                <div class="flex flex-col flex-1">
+                                                                    <div class="flex justify-between items-center mb-1">
+                                                                        <span
+                                                                            class="font-bold text-slate-800">${addr.fullName}
+                                                                            <span
+                                                                                class="font-normal text-slate-500 text-sm ml-2">|
+                                                                                ${addr.phone}</span></span>
+                                                                        <c:if test="${addr.isDefault}"><span
+                                                                                class="text-[10px] uppercase tracking-widest bg-accent-blue text-white px-2 py-0.5 rounded-full">Default</span>
+                                                                        </c:if>
+                                                                    </div>
+                                                                    <span
+                                                                        class="text-sm text-slate-600">${addr.detailedAddress}</span>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    </c:forEach>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <!-- Default profile address if no saved address records yet -->
+                                                    <label
+                                                        class="address-option relative flex p-4 rounded-lg border-2 border-accent-blue bg-white/50 cursor-pointer"
+                                                        onclick="selectAddress('${sessionScope.user.fullname}', '${sessionScope.user.phone}', '${sessionScope.user.address}', this)">
+                                                        <div class="flex items-center gap-4 w-full">
+                                                            <input type="radio" name="addressSelection" value="profile"
+                                                                class="text-accent-blue focus:ring-accent-blue"
+                                                                checked />
+                                                            <div class="flex flex-col flex-1">
+                                                                <div class="flex justify-between items-center mb-1">
+                                                                    <span
+                                                                        class="font-bold text-slate-800">${sessionScope.user.fullname}
+                                                                        <span
+                                                                            class="font-normal text-slate-500 text-sm ml-2">|
+                                                                            ${sessionScope.user.phone}</span></span>
+                                                                </div>
+                                                                <span
+                                                                    class="text-sm text-slate-600">${sessionScope.user.address}</span>
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                </c:otherwise>
+                                            </c:choose>
+
+                                            <!-- Add New Address Option -->
                                             <label
-                                                class="relative flex p-4 rounded-lg border-2 border-accent-blue bg-white/50 cursor-pointer">
-                                                <div class="flex flex-col">
-                                                    <span
-                                                        class="text-[10px] tracking-[0.2em] font-semibold uppercase text-accent-blue mb-2">Default
-                                                        Address</span>
-                                                    <span class="font-medium">${sessionScope.user.fullname}</span>
-                                                    <span
-                                                        class="text-sm text-slate-500">${sessionScope.user.address}</span>
-                                                    <span class="text-sm text-slate-500">Phone:
-                                                        ${sessionScope.user.phone}</span>
+                                                class="address-option relative flex p-4 rounded-lg border-2 border-slate-200 bg-white/20 cursor-pointer transition-all"
+                                                onclick="toggleNewAddressForm(this)">
+                                                <div class="flex items-center gap-4 w-full">
+                                                    <input type="radio" name="addressSelection" value="new"
+                                                        class="text-accent-blue focus:ring-accent-blue"
+                                                        id="newAddressRadio" />
+                                                    <span class="font-bold text-slate-800 flex items-center gap-2">
+                                                        Add new address
+                                                    </span>
                                                 </div>
-                                                <span
-                                                    class="material-icons-outlined text-accent-blue ml-auto">check_circle</span>
                                             </label>
                                         </div>
-                                        <div class="flex items-center gap-2 text-accent-blue cursor-pointer group">
-                                            <a href="${pageContext.request.contextPath}/address"
-                                                class="flex items-center gap-2">
-                                                <span class="material-icons-outlined text-lg">add</span>
-                                                <span
-                                                    class="text-sm font-medium border-b border-transparent group-hover:border-accent-blue">Add
-                                                    Address</span>
-                                            </a>
-                                        </div>
 
-                                        <!-- Hidden identity fields for backend -->
-                                        <input type="hidden" name="fullname" value="${sessionScope.user.fullname}">
-                                        <input type="hidden" name="phone" value="${sessionScope.user.phone}">
-                                        <input type="hidden" name="address" value="${sessionScope.user.address}">
-
-                                        <!-- Form Fields -->
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div class="flex items-center gap-2 mt-4">
-                                                <input
-                                                    class="w-4 h-4 text-accent-blue border-slate-300 rounded focus:ring-accent-blue"
-                                                    id="ship_different" type="checkbox" />
-                                                <label class="text-sm text-slate-600" for="ship_different">Purchasing as
-                                                    a gift?</label>
-                                            </div>
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 hidden">
+                                        <!-- Hidden New Address Form -->
+                                        <div id="newAddressForm"
+                                            class="hidden mt-4 p-5 border border-sky-100 bg-slate-50 rounded-xl space-y-4">
+                                            <p class="text-sm font-semibold text-slate-800">New Address Details</p>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div class="space-y-1">
                                                     <label
                                                         class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Full
                                                         Name</label>
-                                                    <input
-                                                        class="w-full bg-white/50 border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue"
-                                                        placeholder="Enter recipient name" type="text" />
+                                                    <input id="newFullName"
+                                                        class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
+                                                        type="text" placeholder="John Doe"
+                                                        oninput="updateHiddenFieldsFromNew()" required />
                                                 </div>
                                                 <div class="space-y-1">
                                                     <label
                                                         class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Phone
                                                         Number</label>
-                                                    <input
-                                                        class="w-full bg-white/50 border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue"
-                                                        placeholder="Enter recipient phone" type="tel" />
+                                                    <input id="newPhone"
+                                                        class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
+                                                        type="tel" placeholder="0912345678"
+                                                        oninput="updateHiddenFieldsFromNew()" required />
                                                 </div>
                                             </div>
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div class="space-y-1">
+                                                    <label
+                                                        class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Tỉnh/Thành
+                                                        Phố</label>
+                                                    <select id="newProvince" required
+                                                        onchange="updateHiddenFieldsFromNew()"
+                                                        class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm">
+                                                        <option value="">Chọn Tỉnh/Thành Phố</option>
+                                                    </select>
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <label
+                                                        class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Phường/Xã</label>
+                                                    <select id="newWard" required disabled
+                                                        onchange="updateHiddenFieldsFromNew()"
+                                                        class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm">
+                                                        <option value="">Chọn Phường/Xã</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <label
+                                                    class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Số
+                                                    Nhà, Tên Đường</label>
+                                                <input id="newDetailedAddress" required
+                                                    oninput="updateHiddenFieldsFromNew()"
+                                                    class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
+                                                    type="text" placeholder="VD: Số 12 Đường Lê Lợi, Lô B Tòa nhà..." />
+                                            </div>
+                                            <div class="flex items-center gap-2 mt-2">
+                                                <input
+                                                    class="w-4 h-4 text-accent-blue border-slate-300 rounded focus:ring-accent-blue"
+                                                    id="saveNewAddress" name="saveNewAddress" type="checkbox"
+                                                    value="true" />
+                                                <label class="text-xs text-slate-600 font-medium"
+                                                    for="saveNewAddress">Lưu địa chỉ này vào sổ địa chỉ</label>
+                                            </div>
                                         </div>
+
+                                        <!-- Hidden identity fields for backend -->
+                                        <input type="hidden" name="fullname" id="hiddenFullname"
+                                            value="${sessionScope.user.fullname}">
+                                        <input type="hidden" name="phone" id="hiddenPhone"
+                                            value="${sessionScope.user.phone}">
+                                        <input type="hidden" name="address" id="hiddenAddress"
+                                            value="${sessionScope.user.address}">
+
+                                        <script>
+                                            function selectAddress(name, phone, address, element) {
+                                                document.getElementById('hiddenFullname').value = name;
+                                                document.getElementById('hiddenPhone').value = phone;
+                                                document.getElementById('hiddenAddress').value = address;
+
+                                                document.getElementById('newAddressForm').classList.add('hidden');
+
+                                                const inputs = document.getElementById('newAddressForm').querySelectorAll('input[type="text"], input[type="tel"]');
+                                                inputs.forEach(inp => inp.required = false); // disable required when hidden
+
+                                                // Reset styles
+                                                document.querySelectorAll('.address-option').forEach(el => {
+                                                    el.classList.remove('border-accent-blue', 'bg-white/50');
+                                                    el.classList.add('border-slate-200', 'bg-white/20');
+                                                });
+                                                element.classList.add('border-accent-blue', 'bg-white/50');
+                                                element.classList.remove('border-slate-200', 'bg-white/20');
+                                            }
+
+                                            function toggleNewAddressForm(element) {
+                                                document.getElementById('newAddressForm').classList.remove('hidden');
+
+                                                const inputs = document.getElementById('newAddressForm').querySelectorAll('input[type="text"], input[type="tel"]');
+                                                inputs.forEach(inp => inp.required = true); // require when shown
+
+                                                updateHiddenFieldsFromNew();
+
+                                                // Reset styles
+                                                document.querySelectorAll('.address-option').forEach(el => {
+                                                    el.classList.remove('border-accent-blue', 'bg-white/50');
+                                                    el.classList.add('border-slate-200', 'bg-white/20');
+                                                });
+                                                element.classList.add('border-accent-blue', 'bg-white/50');
+                                                element.classList.remove('border-slate-200', 'bg-white/20');
+                                            }
+
+                                            let allProvincesData = [];
+
+                                            async function fetchAllData() {
+                                                try {
+                                                    const response = await fetch('https://provinces.open-api.vn/api/?depth=3');
+                                                    allProvincesData = await response.json();
+                                                    populateProvinces();
+                                                } catch (error) {
+                                                    console.error('Lỗi tải dữ liệu địa chỉ:', error);
+                                                }
+                                            }
+
+                                            function populateProvinces() {
+                                                const provSelect = document.getElementById('newProvince');
+                                                if (!provSelect) return;
+                                                provSelect.innerHTML = '<option value="">Chọn Tỉnh/Thành Phố</option>';
+                                                allProvincesData.forEach(p => {
+                                                    const opt = document.createElement('option');
+                                                    opt.value = p.name;
+                                                    opt.setAttribute('data-code', p.code);
+                                                    opt.textContent = p.name;
+                                                    provSelect.appendChild(opt);
+                                                });
+                                            }
+
+                                            document.getElementById('newProvince').addEventListener('change', function () {
+                                                const wardSelect = document.getElementById('newWard');
+                                                wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                                                wardSelect.disabled = true;
+
+                                                if (!this.value) return;
+
+                                                const code = parseInt(this.options[this.selectedIndex].getAttribute('data-code'));
+                                                const province = allProvincesData.find(p => p.code === code);
+                                                if (!province || !province.districts) return;
+
+                                                const allWards = [];
+                                                province.districts.forEach(d => {
+                                                    if (d.wards) d.wards.forEach(w => allWards.push(w));
+                                                });
+                                                allWards.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+
+                                                allWards.forEach(w => {
+                                                    const opt = document.createElement('option');
+                                                    opt.value = w.name;
+                                                    opt.textContent = w.name;
+                                                    wardSelect.appendChild(opt);
+                                                });
+                                                wardSelect.disabled = false;
+                                                updateHiddenFieldsFromNew();
+                                            });
+
+                                            function updateHiddenFieldsFromNew() {
+                                                if (document.getElementById('newAddressRadio').checked) {
+                                                    document.getElementById('hiddenFullname').value = document.getElementById('newFullName').value;
+                                                    document.getElementById('hiddenPhone').value = document.getElementById('newPhone').value;
+
+                                                    let street = document.getElementById('newDetailedAddress').value;
+                                                    let ward = document.getElementById('newWard').value;
+                                                    let province = document.getElementById('newProvince').value;
+
+                                                    let customAddress = street;
+                                                    if (ward && ward.trim() !== '') customAddress += ", " + ward;
+                                                    if (province && province.trim() !== '') customAddress += ", " + province;
+
+                                                    document.getElementById('hiddenAddress').value = customAddress;
+                                                }
+                                            }
+
+                                            window.addEventListener('DOMContentLoaded', () => {
+                                                fetchAllData();
+                                                const checkedInput = document.querySelector('input[name="addressSelection"]:checked');
+                                                if (checkedInput && checkedInput.value !== 'new') {
+                                                    const parent = checkedInput.closest('.address-option');
+                                                    if (parent) {
+                                                        parent.click(); // apply the default
+                                                    }
+                                                }
+                                            });
+                                        </script>
                                     </div>
                                 </section>
                                 <!-- Shipping Method Section -->

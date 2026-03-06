@@ -187,6 +187,23 @@ public class OrderServlet extends HttpServlet {
         try {
             Order newOrder = orderService.placeOrder(user, cart, request);
 
+            String saveNewAddress = request.getParameter("saveNewAddress");
+            if ("true".equals(saveNewAddress)) {
+                try {
+                    com.aisthea.fashion.model.UserAddress newAddr = new com.aisthea.fashion.model.UserAddress();
+                    newAddr.setUserId(user.getUserId());
+                    newAddr.setFullName(request.getParameter("fullname"));
+                    newAddr.setPhone(request.getParameter("phone"));
+                    newAddr.setDetailedAddress(request.getParameter("address"));
+                    newAddr.setDefault(false);
+                    com.aisthea.fashion.dao.UserAddressDAO addrDao = new com.aisthea.fashion.dao.UserAddressDAO();
+                    addrDao.insert(newAddr);
+                } catch (Exception ignored) {
+                    // Ignore explicitly if saving new address fails, order still placed
+                    logger.warning("Failed to save new address during checkout: " + ignored.getMessage());
+                }
+            }
+
             if ("QR".equalsIgnoreCase(newOrder.getPaymentMethod())) {
                 String baseUrl = PayOSConfig.getBaseUrl(request);
                 String returnUrl = baseUrl + "/order?action=view&orderid=" + newOrder.getOrderid() + "&payment=success";
