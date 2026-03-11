@@ -126,14 +126,20 @@ public class AnalyticsDAO {
 
     public List<Map<String, Object>> getTopSellingProducts(int top) {
         List<Map<String, Object>> list = new ArrayList<>();
-        String sql = "SELECT TOP (?) product_name, SUM(quantity) as t_qty, SUM(quantity * price) as t_rev FROM orderitems GROUP BY product_name ORDER BY t_qty DESC";
+        String sql = "SELECT TOP (?) COALESCE(p.name, oi.product_name) as display_name, "
+                + "SUM(oi.quantity) as t_qty, SUM(oi.quantity * oi.price) as t_rev "
+                + "FROM orderitems oi "
+                + "LEFT JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid "
+                + "LEFT JOIN Products p ON pcs.productid = p.productid "
+                + "GROUP BY COALESCE(p.name, oi.product_name) "
+                + "ORDER BY t_qty DESC";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, top);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     Map<String, Object> m = new HashMap<>();
-                    m.put("name", rs.getString("product_name"));
+                    m.put("name", rs.getString("display_name"));
                     m.put("totalQty", rs.getInt("t_qty"));
                     m.put("totalRevenue", rs.getBigDecimal("t_rev"));
                     list.add(m);
@@ -146,7 +152,12 @@ public class AnalyticsDAO {
     }
 
     public String getTopSellingProductName() {
-        String sql = "SELECT TOP 1 product_name FROM orderitems GROUP BY product_name ORDER BY SUM(quantity) DESC";
+        String sql = "SELECT TOP 1 COALESCE(p.name, oi.product_name) "
+                + "FROM orderitems oi "
+                + "LEFT JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid "
+                + "LEFT JOIN Products p ON pcs.productid = p.productid "
+                + "GROUP BY COALESCE(p.name, oi.product_name) "
+                + "ORDER BY SUM(oi.quantity) DESC";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {

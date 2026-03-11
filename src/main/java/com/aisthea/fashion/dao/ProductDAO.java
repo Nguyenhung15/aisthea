@@ -3,8 +3,6 @@ package com.aisthea.fashion.dao;
 import com.aisthea.fashion.model.*;
 import java.sql.*;
 import java.util.*;
-import java.math.BigDecimal;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -406,6 +404,50 @@ public class ProductDAO implements IProductDAO {
             printSQLException(e);
         }
         return deleted;
+    }
+
+    @Override
+    public List<Product> getTopExpensiveProducts(int limit) throws SQLException {
+        String sql = "SELECT TOP " + limit + " p.*, c.name as category_name "
+                + "FROM Products p JOIN Categories c ON p.categoryid = c.categoryid "
+                + "ORDER BY p.price DESC";
+        List<Product> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Product p = new Product();
+                p.setProductId(rs.getInt("productid"));
+                p.setName(rs.getString("name"));
+                p.setPrice(rs.getBigDecimal("price"));
+                p.setBrand(rs.getString("brand"));
+                Category c = new Category();
+                c.setName(rs.getString("category_name"));
+                p.setCategory(c);
+                list.add(p);
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public String getInventorySummary() throws SQLException {
+        String sql = "SELECT TOP 30 p.name, p.price, c.name as cat_name, p.brand "
+                + "FROM Products p JOIN Categories c ON p.categoryid = c.categoryid "
+                + "ORDER BY p.price DESC";
+        StringBuilder sb = new StringBuilder();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                sb.append("- Tên: ").append(rs.getString("name"))
+                  .append(" | Loại: ").append(rs.getString("cat_name"))
+                  .append(" | Hiệu: ").append(rs.getString("brand"))
+                  .append(" | Giá: ").append(String.format("%,.0f VNĐ", rs.getBigDecimal("price")))
+                  .append("\n");
+            }
+        }
+        return sb.toString();
     }
 
     private void printSQLException(SQLException ex) {

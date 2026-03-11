@@ -92,6 +92,119 @@
                     .btn-cancel-delete:hover {
                         background: var(--color-border);
                     }
+
+                    /* ── Filter Bar ── */
+                    .prod-filter-bar {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 12px;
+                        align-items: center;
+                        padding: 16px 0 0;
+                    }
+
+                    .prod-filter-bar__input {
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                        color: var(--color-text-primary);
+                        padding: 9px 16px 9px 38px;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        background: var(--color-bg);
+                        outline: none;
+                        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                        min-width: 200px;
+                    }
+
+                    .prod-filter-bar__input:focus {
+                        border-color: var(--color-primary);
+                        box-shadow: 0 0 0 3px rgba(26, 35, 50, 0.08);
+                    }
+
+                    .prod-filter-bar__input::placeholder {
+                        color: var(--color-text-muted);
+                    }
+
+                    .prod-filter-bar__select {
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                        color: var(--color-primary);
+                        padding: 9px 36px 9px 16px;
+                        border: 1.5px solid var(--color-primary);
+                        border-radius: var(--radius-full);
+                        background: var(--color-white);
+                        cursor: pointer;
+                        outline: none;
+                        appearance: none;
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231a2332' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+                        background-repeat: no-repeat;
+                        background-position: right 14px center;
+                        background-size: 12px;
+                        transition: all 0.2s ease;
+                        letter-spacing: 0.3px;
+                    }
+
+                    .prod-filter-bar__select:hover,
+                    .prod-filter-bar__select:focus {
+                        background-color: var(--color-primary);
+                        color: var(--color-white);
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+                    }
+
+                    .prod-filter-bar__reset {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 9px 20px;
+                        font-family: var(--font-sans);
+                        font-size: 0.78rem;
+                        font-weight: 600;
+                        letter-spacing: 0.5px;
+                        color: var(--color-text-secondary);
+                        background: transparent;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    }
+
+                    .prod-filter-bar__reset:hover {
+                        background: var(--color-bg);
+                        color: var(--color-primary);
+                        border-color: var(--color-primary);
+                    }
+
+                    .prod-filter-bar__group {
+                        position: relative;
+                        display: inline-flex;
+                        align-items: center;
+                    }
+
+                    .prod-filter-bar__icon {
+                        position: absolute;
+                        left: 14px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: var(--color-text-muted);
+                        font-size: 0.78rem;
+                        pointer-events: none;
+                    }
+
+                    .prod-filter-bar__count {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-width: 22px;
+                        height: 22px;
+                        padding: 0 6px;
+                        font-size: 0.7rem;
+                        font-weight: 700;
+                        color: var(--color-white);
+                        background: var(--color-primary);
+                        border-radius: var(--radius-full);
+                        margin-left: 8px;
+                    }
                 </style>
             </head>
 
@@ -117,59 +230,53 @@
                                     </div>
                                 </section>
 
-                                <!-- Search Bar -->
-                                <div
-                                    style="background:var(--color-white);border-radius:var(--radius-xl);box-shadow:var(--shadow-card);padding:var(--space-md) var(--space-xl);margin-bottom:var(--space-lg);">
-                                    <form action="${pageContext.request.contextPath}/product" method="GET"
-                                        style="display:flex;align-items:center;gap:12px;">
-                                        <input type="hidden" name="action" value="manage">
-                                        <div style="position:relative;flex:1;max-width:400px;">
-                                            <i class="fa-solid fa-magnifying-glass"
-                                                style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:0.85rem;"></i>
-                                            <input type="text" name="searchName"
-                                                value="<c:out value='${param.searchName}'/>"
-                                                placeholder="Search products by name..."
-                                                style="width:100%;padding:10px 16px 10px 40px;border:1.5px solid var(--color-border);border-radius:var(--radius-full);font-family:var(--font-sans);font-size:0.85rem;color:var(--color-text-primary);background:var(--color-bg);outline:none;">
-                                        </div>
-                                        <button type="submit" class="lux-btn-primary"
-                                            style="padding:10px 24px;font-size:0.78rem;">
-                                            Search
-                                        </button>
-                                        <c:if test="${not empty param.searchName}">
-                                            <a href="${pageContext.request.contextPath}/product?action=manage"
-                                                style="font-size:0.82rem;color:var(--color-text-muted);font-weight:500;white-space:nowrap;">
-                                                <i class="fa-solid fa-xmark" style="margin-right:4px;"></i>Clear
-                                            </a>
-                                        </c:if>
-                                    </form>
-                                </div>
-
                                 <!-- Products Table Card -->
                                 <div
                                     style="background:var(--color-white);border-radius:var(--radius-xl);box-shadow:var(--shadow-card);overflow:hidden;">
+
+                                    <!-- Header + Filter Bar -->
+                                    <div style="padding:var(--space-xl);border-bottom:1px solid var(--color-border-light);">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                                            <div>
+                                                <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;color:var(--color-primary);margin:0;">Product Catalog</h2>
+                                                <p style="font-size:0.82rem;color:var(--color-text-muted);margin:4px 0 0;">Manage your product inventory and pricing</p>
+                                            </div>
+                                            <span class="prod-filter-bar__count" id="prodCount" title="Showing products"></span>
+                                        </div>
+
+                                        <!-- Filter Bar -->
+                                        <div class="prod-filter-bar">
+                                            <span class="prod-filter-bar__group">
+                                                <i class="fa-solid fa-magnifying-glass prod-filter-bar__icon"></i>
+                                                <input type="text" id="filterProdName" class="prod-filter-bar__input" placeholder="Search product name...">
+                                            </span>
+
+                                            <select id="filterProdCategory" class="prod-filter-bar__select">
+                                                <option value="">All Categories</option>
+                                            </select>
+
+                                            <button type="button" id="btnProdReset" class="prod-filter-bar__reset">
+                                                <i class="fa-solid fa-rotate-left"></i> Reset
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <table style="width:100%;border-collapse:collapse;">
                                         <thead>
                                             <tr style="background:var(--color-bg);">
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Product</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Category</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Price</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:center;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Stock</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Actions</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Product</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Category</th>
+                                                <th style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Price</th>
+                                                <th style="padding:14px 20px;text-align:center;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Stock</th>
+                                                <th style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="prodTableBody">
                                             <c:forEach var="p" items="${productList}">
-                                                <tr style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
+                                                <tr class="prod-row"
+                                                    data-name="${p.name}"
+                                                    data-category="${p.category.name}"
+                                                    style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
                                                     onmouseover="this.style.background='var(--color-bg)'"
                                                     onmouseout="this.style.background='transparent'">
                                                     <td style="padding:14px 20px;">
@@ -224,13 +331,9 @@
                                                         </c:if>
                                                     </td>
                                                     <td style="padding:14px 20px;text-align:center;">
-                                                        <c:set var="totalStock" value="0" />
-                                                        <c:forEach var="pcs" items="${p.colorSizes}">
-                                                            <c:set var="totalStock" value="${totalStock + pcs.stock}" />
-                                                        </c:forEach>
                                                         <span
-                                                            class="lux-badge ${totalStock > 10 ? 'lux-badge--success' : totalStock > 0 ? 'lux-badge--warning' : 'lux-badge--danger'}">
-                                                            ${totalStock}
+                                                            class="lux-badge ${p.totalStock > 10 ? 'lux-badge--success' : p.totalStock > 0 ? 'lux-badge--warning' : 'lux-badge--danger'}">
+                                                            ${p.totalStock}
                                                         </span>
                                                     </td>
                                                     <td style="padding:14px 20px;text-align:right;">
@@ -268,6 +371,12 @@
                                             </c:if>
                                         </tbody>
                                     </table>
+
+                                    <!-- No results message -->
+                                    <div id="prodNoResults" style="display:none;padding:40px 20px;text-align:center;color:var(--color-text-muted);font-size:0.9rem;">
+                                        <i class="fa-solid fa-bag-shopping" style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.3;"></i>
+                                        No products match your filter criteria.
+                                    </div>
                                 </div>
 
                             </div>
@@ -298,25 +407,81 @@
 
                         <script>
                             document.addEventListener('DOMContentLoaded', function () {
-                                const modal = document.getElementById('deleteModal');
-                                const modalProductName = document.getElementById('modalProductName');
-                                const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-                                const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-                                const deleteLinks = document.querySelectorAll('.link-delete');
+                                var modal = document.getElementById('deleteModal');
+                                var modalProductName = document.getElementById('modalProductName');
+                                var confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+                                var cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+                                var deleteLinks = document.querySelectorAll('.link-delete');
 
-                                deleteLinks.forEach(link => {
+                                deleteLinks.forEach(function(link) {
                                     link.addEventListener('click', function (event) {
                                         event.preventDefault();
-                                        const deleteUrl = this.href;
-                                        const productName = this.dataset.productName;
-                                        modalProductName.textContent = productName;
-                                        confirmDeleteBtn.href = deleteUrl;
+                                        modalProductName.textContent = this.dataset.productName;
+                                        confirmDeleteBtn.href = this.href;
                                         modal.style.display = 'flex';
                                     });
                                 });
 
                                 cancelDeleteBtn.addEventListener('click', function () { modal.style.display = 'none'; });
                                 modal.addEventListener('click', function (event) { if (event.target === modal) modal.style.display = 'none'; });
+
+                                // ── Product Filter JS ──
+                                var filterName     = document.getElementById('filterProdName');
+                                var filterCategory = document.getElementById('filterProdCategory');
+                                var btnReset       = document.getElementById('btnProdReset');
+                                var tbody          = document.getElementById('prodTableBody');
+                                var noResults      = document.getElementById('prodNoResults');
+                                var prodCount      = document.getElementById('prodCount');
+
+                                // Build category dropdown from existing data
+                                var catSet = {};
+                                var rows = tbody.querySelectorAll('tr.prod-row');
+                                for (var i = 0; i < rows.length; i++) {
+                                    var c = rows[i].getAttribute('data-category');
+                                    if (c) catSet[c] = true;
+                                }
+                                var cats = Object.keys(catSet).sort();
+                                for (var j = 0; j < cats.length; j++) {
+                                    var opt = document.createElement('option');
+                                    opt.value = cats[j];
+                                    opt.textContent = cats[j];
+                                    filterCategory.appendChild(opt);
+                                }
+
+                                function applyFilters() {
+                                    var fName = filterName.value.trim().toLowerCase();
+                                    var fCat  = filterCategory.value;
+                                    var visibleCount = 0;
+
+                                    for (var k = 0; k < rows.length; k++) {
+                                        var row = rows[k];
+                                        var show = true;
+
+                                        if (fName && (row.getAttribute('data-name') || '').toLowerCase().indexOf(fName) === -1) {
+                                            show = false;
+                                        }
+                                        if (fCat && row.getAttribute('data-category') !== fCat) {
+                                            show = false;
+                                        }
+
+                                        row.style.display = show ? '' : 'none';
+                                        if (show) visibleCount++;
+                                    }
+
+                                    noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
+                                    prodCount.textContent = visibleCount;
+                                }
+
+                                filterName.addEventListener('input', applyFilters);
+                                filterCategory.addEventListener('change', applyFilters);
+
+                                btnReset.addEventListener('click', function() {
+                                    filterName.value = '';
+                                    filterCategory.value = '';
+                                    applyFilters();
+                                });
+
+                                applyFilters();
                             });
                         </script>
             </body>

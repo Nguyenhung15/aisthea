@@ -276,7 +276,7 @@
                                             <div class="lux-form-group full-width">
                                                 <label class="lux-form-label">Product Name <span
                                                         class="required">*</span></label>
-                                                <input type="text" name="name" value="${product.name}" required
+                                                <input type="text" name="name" value="<c:out value='${product.name}' />" required
                                                     class="lux-form-input" placeholder="Enter product name">
                                             </div>
                                             <div class="lux-form-group full-width">
@@ -501,8 +501,7 @@
                                 });
 
                                 // Edit mode: restore category selections
-                                const isEditMode = ${ not empty product && not empty product.category
-                            };
+                                const isEditMode = ${not empty product && not empty product.category ? 'true' : 'false'};
                             if (isEditMode) {
                                 const genderId = "${product.category.genderid}";
                                 const parentId = "${empty parentCategory ? '' : parentCategory.categoryid}";
