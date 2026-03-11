@@ -22,5 +22,6 @@ public interface IOrderDAO {
     boolean deleteOrder(int orderId) throws SQLException;
 
     boolean updateOrderStatus(int orderId, String status, Connection conn) throws SQLException;
-
+    
+    List<Order> getFilteredOrders(String orderId, String status, String customerName, String date) throws SQLException;
 }

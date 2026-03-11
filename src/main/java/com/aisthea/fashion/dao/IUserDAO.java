@@ -31,4 +31,8 @@ public interface IUserDAO {
     boolean unbanUser(int userId) throws SQLException;
 
     boolean updateMembershipPoints(int userId, int pointsToAdd) throws SQLException;
+
+    void updateLastActive(int userId);
+
+    int countOnlineAdmins(int secondsThreshold);
 }

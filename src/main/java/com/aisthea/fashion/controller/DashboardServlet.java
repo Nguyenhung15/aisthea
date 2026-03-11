@@ -4,7 +4,6 @@ import com.aisthea.fashion.dao.AnalyticsDAO;
 import com.aisthea.fashion.listener.SessionListener;
 import com.aisthea.fashion.model.User;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,8 +16,6 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-@WebServlet(name = "DashboardServlet", urlPatterns = { "/dashboard", "/admin/dashboard" })
 public class DashboardServlet extends HttpServlet {
 
     private static final Logger logger = Logger.getLogger(DashboardServlet.class.getName());
@@ -101,7 +98,14 @@ public class DashboardServlet extends HttpServlet {
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error in DashboardServlet GET", e);
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            if (!response.isCommitted()) {
+                response.setContentType("text/plain");
+                response.setCharacterEncoding("UTF-8");
+                response.setStatus(500);
+                try (PrintWriter out = response.getWriter()) {
+                    e.printStackTrace(out);
+                }
+            }
         }
     }
 

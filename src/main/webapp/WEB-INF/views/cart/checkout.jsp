@@ -696,10 +696,9 @@
                                             </c:when>
                                             <c:otherwise>
                                                 <c:forEach var="vc" items="${activeVouchers}">
-                                                    <c:set var="canUse"
-                                                        value="${empty vc.minOrderValue or sessionScope.cart.totalPrice >= vc.minOrderValue}" />
-                                                    <div class="voucher-pick-card relative overflow-hidden rounded-xl border-2 transition-all duration-200"
-                                                        style="cursor:${canUse ? 'pointer' : 'not-allowed'};opacity:${canUse ? '1' : '0.6'};border-color:${canUse ? '#e2e8f0' : '#f1f5f9'};background:${canUse ? 'linear-gradient(135deg,#fff 0%,#f8f9ff 100%)' : '#fafafa'};"
+                                                    <c:set var="canUse" value="${empty vc.minOrderValue or sessionScope.cart.totalPrice >= vc.minOrderValue}" />
+                                                    <div class="voucher-pick-card relative overflow-hidden rounded-xl border-2 transition-all duration-200 ${canUse ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-60'}"
+                                                        style="border-color:${canUse ? '#e2e8f0' : '#f1f5f9'}; background:${canUse ? 'linear-gradient(135deg,#fff 0%,#f8f9ff 100%)' : '#fafafa'};"
                                                         onclick="${canUse ? 'pickVoucher(this)' : 'void(0)'}"
                                                         data-code="${vc.code}">
                                                         <%-- decorative notches --%>
@@ -709,7 +708,7 @@
                                                             <div
                                                                 style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;">
                                                             </div>
-
+ 
                                                             <div
                                                                 style="padding:14px 24px;display:flex;align-items:center;gap:14px;">
                                                                 <%-- icon --%>
@@ -764,7 +763,7 @@
                                                                                     test="${not empty vc.minOrderValue}">
                                                                                     <span
                                                                                         style="font-size:0.66rem;color:#94a3b8;">Đơn
-                                                                                        từ
+                                                                                         từ
                                                                                         <fmt:formatNumber
                                                                                             value="${vc.minOrderValue}"
                                                                                             type="currency"
@@ -804,7 +803,8 @@
                                                                         <%-- discount badge --%>
                                                                             <div style="flex-shrink:0;">
                                                                                 <span
-                                                                                    style="display:inline-block;padding:6px 10px;border-radius:8px;font-size:0.88rem;font-weight:800;background:${vc.discountType eq 'PERCENT' ? '#eff6ff' : '#f0fdf4'};color:${vc.discountType eq 'PERCENT' ? '#1d4ed8' : '#065f46'};">
+                                                                                    class="inline-block px-2.5 py-1.5 rounded-lg text-sm font-extrabold"
+                                                                                    style="background:${vc.discountType eq 'PERCENT' ? '#eff6ff' : '#f0fdf4'};color:${vc.discountType eq 'PERCENT' ? '#1d4ed8' : '#065f46'};">
                                                                                     <c:choose>
                                                                                         <c:when
                                                                                             test="${vc.discountType eq 'PERCENT'}">
@@ -820,6 +820,9 @@
                                                                                     </c:choose>
                                                                                 </span>
                                                                             </div>
+                                                                    </div>
+                                                    </div>
+                                                  </div>
                                                             </div>
                                                     </div>
                                                 </c:forEach>

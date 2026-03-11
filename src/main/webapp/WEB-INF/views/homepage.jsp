@@ -301,6 +301,9 @@
 
                     </div><%-- end overflow-x-hidden wrapper --%>
 
+                    <%-- AI Chatbox Widget --%>
+                    <jsp:include page="/WEB-INF/views/common/chatbox-widget.jsp" />
+
         </body>
 
         </html>

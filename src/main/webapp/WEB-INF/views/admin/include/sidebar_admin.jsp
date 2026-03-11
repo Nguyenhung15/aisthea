@@ -58,6 +58,11 @@
                     <i class="fa-solid fa-ticket"></i>
                     <span>Vouchers</span>
                 </a>
+                <a href="${pageContext.request.contextPath}/chat?action=manage" class="lux-sidebar__link"
+                    data-path="/chat">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>AI Chats</span>
+                </a>
             </nav>
 
         </aside>

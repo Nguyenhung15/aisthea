@@ -342,4 +342,15 @@ public class OrderService implements IOrderService {
             return new ArrayList<>();
         }
     }
+
+    @Override
+    public List<Order> getFilteredOrders(String orderId, String status, String customerName, String date) {
+        try {
+            return orderDAO.getFilteredOrders(orderId, status, customerName, date);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi khi lọc đơn hàng", e);
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 }

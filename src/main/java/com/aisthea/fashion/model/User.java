@@ -22,6 +22,7 @@ public class User {
     private Timestamp updatedAt;
     private boolean isBanned;
     private String banReason;
+    private Timestamp lastActive;
 
     public User() {
     }
@@ -168,5 +169,13 @@ public class User {
 
     public void setBanReason(String banReason) {
         this.banReason = banReason;
+    }
+
+    public Timestamp getLastActive() {
+        return lastActive;
+    }
+
+    public void setLastActive(Timestamp lastActive) {
+        this.lastActive = lastActive;
     }
 }

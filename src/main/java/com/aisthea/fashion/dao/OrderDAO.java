@@ -172,4 +172,56 @@ public class OrderDAO implements IOrderDAO {
             return ps.executeUpdate() > 0;
         }
     }
+
+    @Override
+    public List<Order> getFilteredOrders(String orderId, String status, String customerName, String date)
+            throws SQLException {
+        List<Order> orders = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM orders WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+
+        if (orderId != null && !orderId.trim().isEmpty()) {
+            try {
+                sql.append(" AND orderid = ?");
+                params.add(Integer.parseInt(orderId.trim()));
+            } catch (NumberFormatException e) {
+                // Ignore invalid ID filter
+            }
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND status = ?");
+            params.add(status.trim());
+        }
+        if (customerName != null && !customerName.trim().isEmpty()) {
+            sql.append(" AND fullname LIKE ?");
+            params.add("%" + customerName.trim() + "%");
+        }
+        if (date != null && !date.trim().isEmpty()) {
+            sql.append(" AND CAST(createdat AS DATE) = ?");
+            params.add(date.trim()); // Expecting 'YYYY-MM-DD'
+        }
+
+        sql.append(" ORDER BY createdat DESC");
+        
+        System.out.println(">>> SQL Filter: " + sql.toString());
+        System.out.println(">>> Params: " + params);
+
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) {
+                System.err.println(">>> DB ERROR: Connection is NULL!");
+                return orders;
+            }
+            try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < params.size(); i++) {
+                    ps.setObject(i + 1, params.get(i));
+                }
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        orders.add(mapResultSetToOrder(rs));
+                    }
+                }
+            }
+        }
+        return orders;
+    }
 }

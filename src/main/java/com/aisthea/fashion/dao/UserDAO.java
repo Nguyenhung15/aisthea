@@ -43,6 +43,9 @@ public class UserDAO implements IUserDAO {
         u.setUpdatedAt(rs.getTimestamp("updatedat"));
         u.setBanned(rs.getBoolean("is_banned"));
         u.setBanReason(rs.getString("ban_reason"));
+        try {
+            u.setLastActive(rs.getTimestamp("last_active"));
+        } catch (SQLException e) { /* Column might not exist in all queries */ }
         return u;
     }
 
@@ -263,5 +266,38 @@ public class UserDAO implements IUserDAO {
             e.printStackTrace();
             throw e;
         }
+    }
+
+    @Override
+    public void updateLastActive(int userId) {
+        String sql = "UPDATE users SET last_active = GETDATE() WHERE userid = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("[UserDAO] updateLastActive error: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public int countOnlineAdmins(int secondsThreshold) {
+        String sql = "SELECT COUNT(*) FROM users " +
+                     "WHERE (role = 'ADMIN' OR role = 'STAFF') " +
+                     "AND last_active >= DATEADD(second, ?, GETDATE())";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, -secondsThreshold);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int c = rs.getInt(1);
+                    System.out.println("[UserDAO] countOnlineAdmins = " + c + " for threshold " + (-secondsThreshold));
+                    return c;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDAO] countOnlineAdmins error: " + e.getMessage());
+        }
+        return 0;
     }
 }

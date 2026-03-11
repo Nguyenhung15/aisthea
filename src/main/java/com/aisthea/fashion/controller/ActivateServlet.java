@@ -3,7 +3,6 @@ package com.aisthea.fashion.controller;
 import com.aisthea.fashion.service.IUserService;
 import com.aisthea.fashion.service.UserService;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 

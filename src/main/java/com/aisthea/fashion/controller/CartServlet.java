@@ -7,7 +7,6 @@ import com.aisthea.fashion.model.ProductColorSize;
 import com.aisthea.fashion.service.IProductService;
 import com.aisthea.fashion.service.ProductService;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.io.PrintWriter;

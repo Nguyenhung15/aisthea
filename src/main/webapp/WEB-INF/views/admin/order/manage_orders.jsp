@@ -48,9 +48,154 @@
                         color: var(--color-success-text);
                     }
 
+                    .status-Paid {
+                        background: #d1fae5;
+                        color: #065f46;
+                    }
+
                     .status-Cancelled {
                         background: #fef2f2;
                         color: #dc2626;
+                    }
+
+                    /* ── Filter Bar ── */
+                    .order-filter-bar {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 12px;
+                        align-items: center;
+                        padding: 16px 0 0;
+                    }
+
+                    .order-filter-bar__label {
+                        font-size: 0.72rem;
+                        font-weight: 600;
+                        color: var(--color-text-muted);
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    }
+
+                    .order-filter-bar__input {
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                        color: var(--color-text-primary);
+                        padding: 9px 16px 9px 38px;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        background: var(--color-bg);
+                        outline: none;
+                        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                        min-width: 160px;
+                    }
+
+                    .order-filter-bar__input:focus {
+                        border-color: var(--color-primary);
+                        box-shadow: 0 0 0 3px rgba(26, 35, 50, 0.08);
+                    }
+
+                    .order-filter-bar__input::placeholder {
+                        color: var(--color-text-muted);
+                    }
+
+                    .order-filter-bar__select {
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                        color: var(--color-primary);
+                        padding: 9px 36px 9px 16px;
+                        border: 1.5px solid var(--color-primary);
+                        border-radius: var(--radius-full);
+                        background: var(--color-white);
+                        cursor: pointer;
+                        outline: none;
+                        appearance: none;
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231a2332' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+                        background-repeat: no-repeat;
+                        background-position: right 14px center;
+                        background-size: 12px;
+                        transition: all 0.2s ease;
+                        letter-spacing: 0.3px;
+                    }
+
+                    .order-filter-bar__select:hover,
+                    .order-filter-bar__select:focus {
+                        background-color: var(--color-primary);
+                        color: var(--color-white);
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+                    }
+
+                    .order-filter-bar__date {
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                        color: var(--color-text-primary);
+                        padding: 9px 16px;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        background: var(--color-bg);
+                        outline: none;
+                        cursor: pointer;
+                        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                    }
+
+                    .order-filter-bar__date:focus {
+                        border-color: var(--color-primary);
+                        box-shadow: 0 0 0 3px rgba(26, 35, 50, 0.08);
+                    }
+
+                    .order-filter-bar__reset {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 9px 20px;
+                        font-family: var(--font-sans);
+                        font-size: 0.78rem;
+                        font-weight: 600;
+                        letter-spacing: 0.5px;
+                        color: var(--color-text-secondary);
+                        background: transparent;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    }
+
+                    .order-filter-bar__reset:hover {
+                        background: var(--color-bg);
+                        color: var(--color-primary);
+                        border-color: var(--color-primary);
+                    }
+
+                    .order-filter-bar__group {
+                        position: relative;
+                        display: inline-flex;
+                        align-items: center;
+                    }
+
+                    .order-filter-bar__icon {
+                        position: absolute;
+                        left: 14px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: var(--color-text-muted);
+                        font-size: 0.78rem;
+                        pointer-events: none;
+                    }
+
+                    .order-filter-bar__count {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-width: 22px;
+                        height: 22px;
+                        padding: 0 6px;
+                        font-size: 0.7rem;
+                        font-weight: 700;
+                        color: var(--color-white);
+                        background: var(--color-primary);
+                        border-radius: var(--radius-full);
+                        margin-left: 8px;
                     }
                 </style>
             </head>
@@ -83,80 +228,98 @@
                                 <!-- Orders Table Card -->
                                 <div
                                     style="background:var(--color-white);border-radius:var(--radius-xl);box-shadow:var(--shadow-card);overflow:hidden;">
-                                    <div
-                                        style="padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--color-border-light);display:flex;justify-content:space-between;align-items:center;">
-                                        <div>
-                                            <h2
-                                                style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;color:var(--color-primary);margin:0;">
-                                                All Orders</h2>
-                                            <p style="font-size:0.82rem;color:var(--color-text-muted);margin:4px 0 0;">
-                                                Complete order history and management</p>
+
+                                    <!-- Header + Filter Controls -->
+                                    <div style="padding:var(--space-xl);border-bottom:1px solid var(--color-border-light);">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                                            <div>
+                                                <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;color:var(--color-primary);margin:0;">
+                                                    All Orders</h2>
+                                                <p style="font-size:0.82rem;color:var(--color-text-muted);margin:4px 0 0;">
+                                                    Complete order history and management</p>
+                                            </div>
+                                            <span class="order-filter-bar__count" id="orderCount" title="Showing orders"></span>
+                                        </div>
+
+                                        <!-- Filter Bar -->
+                                        <div class="order-filter-bar">
+                                            <span class="order-filter-bar__group">
+                                                <i class="fa-solid fa-magnifying-glass order-filter-bar__icon"></i>
+                                                <input type="text" id="filterOrderId" class="order-filter-bar__input" placeholder="Search #ID">
+                                            </span>
+
+                                            <span class="order-filter-bar__group">
+                                                <i class="fa-solid fa-user order-filter-bar__icon"></i>
+                                                <input type="text" id="filterCustomer" class="order-filter-bar__input" placeholder="Customer name">
+                                            </span>
+
+                                            <select id="filterStatus" class="order-filter-bar__select">
+                                                <option value="">All Statuses</option>
+                                                <option value="Pending">Pending</option>
+                                                <option value="Processing">Processing</option>
+                                                <option value="Shipped">Shipped</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="Paid">Paid</option>
+                                                <option value="Cancelled">Cancelled</option>
+                                            </select>
+
+                                            <input type="date" id="filterDate" class="order-filter-bar__date">
+
+                                            <button type="button" id="btnReset" class="order-filter-bar__reset">
+                                                <i class="fa-solid fa-rotate-left"></i> Reset
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
                                     <table style="width:100%;border-collapse:collapse;">
                                         <thead>
                                             <tr style="background:var(--color-bg);">
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
                                                     Order</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
                                                     Customer</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
                                                     Date</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
+                                                <th style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
                                                     Total</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:center;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
+                                                <th style="padding:14px 20px;text-align:center;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
                                                     Status</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
+                                                <th style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
                                                     Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="orderTableBody">
                                             <c:forEach var="order" items="${orderList}">
-                                                <tr style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
+                                                <tr class="order-row"
+                                                    data-orderid="${order.orderid}"
+                                                    data-customer="${order.fullname}"
+                                                    data-status="${order.status}"
+                                                    data-date="<fmt:formatDate value='${order.createdat}' pattern='yyyy-MM-dd'/>"
+                                                    style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
                                                     onmouseover="this.style.background='var(--color-bg)'"
                                                     onmouseout="this.style.background='transparent'">
                                                     <td style="padding:16px 20px;">
-                                                        <span
-                                                            style="font-weight:700;font-size:0.88rem;color:var(--color-primary);">#${order.orderid}</span>
+                                                        <span style="font-weight:700;font-size:0.88rem;color:var(--color-primary);">#${order.orderid}</span>
                                                     </td>
                                                     <td style="padding:16px 20px;">
-                                                        <div
-                                                            style="font-weight:600;font-size:0.88rem;color:var(--color-text-primary);">
-                                                            ${order.fullname}</div>
-                                                        <div
-                                                            style="font-size:0.78rem;color:var(--color-text-muted);margin-top:2px;">
-                                                            ${order.phone}</div>
-                                                        <div
-                                                            style="font-size:0.75rem;color:var(--color-text-muted);margin-top:1px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                                            ${order.address}</div>
+                                                        <div style="font-weight:600;font-size:0.88rem;color:var(--color-text-primary);">${order.fullname}</div>
+                                                        <div style="font-size:0.78rem;color:var(--color-text-muted);margin-top:2px;">${order.phone}</div>
+                                                        <div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:1px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${order.address}</div>
                                                     </td>
-                                                    <td
-                                                        style="padding:16px 20px;font-size:0.85rem;color:var(--color-text-secondary);">
-                                                        <fmt:formatDate value="${order.createdat}"
-                                                            pattern="dd/MM/yyyy" />
+                                                    <td style="padding:16px 20px;font-size:0.85rem;color:var(--color-text-secondary);">
+                                                        <fmt:formatDate value="${order.createdat}" pattern="dd/MM/yyyy" />
                                                         <div style="font-size:0.75rem;color:var(--color-text-muted);">
-                                                            <fmt:formatDate value="${order.createdat}"
-                                                                pattern="HH:mm" />
+                                                            <fmt:formatDate value="${order.createdat}" pattern="HH:mm" />
                                                         </div>
                                                     </td>
                                                     <td style="padding:16px 20px;text-align:right;">
-                                                        <span
-                                                            style="font-weight:700;font-size:0.92rem;color:var(--color-primary);">
-                                                            <fmt:formatNumber value="${order.totalprice}"
-                                                                type="currency" currencyCode="VND"
-                                                                maxFractionDigits="0" />
+                                                        <span style="font-weight:700;font-size:0.92rem;color:var(--color-primary);">
+                                                            <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                         </span>
                                                     </td>
                                                     <td style="padding:16px 20px;text-align:center;">
-                                                        <span
-                                                            class="status-badge status-${order.status}">${order.status}</span>
+                                                        <span class="status-badge status-${order.status}">${order.status}</span>
                                                     </td>
                                                     <td style="padding:16px 20px;text-align:right;">
                                                         <div style="display:flex;gap:8px;justify-content:flex-end;">
@@ -167,8 +330,7 @@
                                                                 title="View Details">
                                                                 <i class="fa-solid fa-eye"></i>
                                                             </a>
-                                                            <c:if
-                                                                test="${order.status == 'Cancelled' || order.status == 'Completed'}">
+                                                            <c:if test="${order.status == 'Cancelled' || order.status == 'Completed'}">
                                                                 <a href="${pageContext.request.contextPath}/order?action=adminDelete&id=${order.orderid}"
                                                                     onclick="return confirm('Are you sure you want to permanently delete order #${order.orderid}?')"
                                                                     style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-text-secondary);transition:all 0.2s ease;font-size:0.82rem;"
@@ -182,22 +344,81 @@
                                                     </td>
                                                 </tr>
                                             </c:forEach>
-                                            <c:if test="${empty orderList}">
-                                                <tr>
-                                                    <td colspan="6"
-                                                        style="padding:40px 20px;text-align:center;color:var(--color-text-muted);font-size:0.9rem;">
-                                                        <i class="fa-solid fa-box-open"
-                                                            style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.3;"></i>
-                                                        No orders found.
-                                                    </td>
-                                                </tr>
-                                            </c:if>
                                         </tbody>
                                     </table>
+
+                                    <!-- No results message (shown/hidden by JS) -->
+                                    <div id="noResultsMsg" style="display:none;padding:40px 20px;text-align:center;color:var(--color-text-muted);font-size:0.9rem;">
+                                        <i class="fa-solid fa-box-open" style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.3;"></i>
+                                        No records match your search criteria.
+                                    </div>
                                 </div>
 
                             </div>
                         </main>
+
+            <script>
+            (function() {
+                var filterOrderId  = document.getElementById('filterOrderId');
+                var filterCustomer = document.getElementById('filterCustomer');
+                var filterStatus   = document.getElementById('filterStatus');
+                var filterDate     = document.getElementById('filterDate');
+                var btnReset       = document.getElementById('btnReset');
+                var tbody          = document.getElementById('orderTableBody');
+                var noResultsMsg   = document.getElementById('noResultsMsg');
+                var orderCount     = document.getElementById('orderCount');
+
+                function applyFilters() {
+                    var fId       = filterOrderId.value.trim().replace('#','');
+                    var fCustomer = filterCustomer.value.trim().toLowerCase();
+                    var fStatus   = filterStatus.value;
+                    var fDate     = filterDate.value;
+
+                    var rows = tbody.querySelectorAll('tr.order-row');
+                    var visibleCount = 0;
+
+                    for (var i = 0; i < rows.length; i++) {
+                        var row = rows[i];
+                        var show = true;
+
+                        if (fId && row.getAttribute('data-orderid') !== fId) {
+                            show = false;
+                        }
+                        if (fCustomer && (row.getAttribute('data-customer') || '').toLowerCase().indexOf(fCustomer) === -1) {
+                            show = false;
+                        }
+                        if (fStatus && row.getAttribute('data-status') !== fStatus) {
+                            show = false;
+                        }
+                        if (fDate && row.getAttribute('data-date') !== fDate) {
+                            show = false;
+                        }
+
+                        row.style.display = show ? '' : 'none';
+                        if (show) visibleCount++;
+                    }
+
+                    noResultsMsg.style.display = (visibleCount === 0) ? 'block' : 'none';
+                    orderCount.textContent = visibleCount;
+                }
+
+                filterOrderId.addEventListener('input', applyFilters);
+                filterCustomer.addEventListener('input', applyFilters);
+                filterStatus.addEventListener('change', applyFilters);
+                filterDate.addEventListener('change', applyFilters);
+
+                btnReset.addEventListener('click', function() {
+                    filterOrderId.value = '';
+                    filterCustomer.value = '';
+                    filterStatus.value = '';
+                    filterDate.value = '';
+                    applyFilters();
+                });
+
+                // Initial count on page load
+                applyFilters();
+            })();
+            </script>
             </body>
 
             </html>

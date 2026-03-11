@@ -22,4 +22,8 @@ public interface IProductDAO {
 
     List<Product> getProductsByParentCategory(String parentIndex, int genderId) throws SQLException;
 
+    List<Product> getTopExpensiveProducts(int limit) throws SQLException;
+
+    String getInventorySummary() throws SQLException;
+
 }

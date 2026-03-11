@@ -138,6 +138,119 @@
                     .btn-cancel-delete:hover {
                         background: var(--color-border);
                     }
+
+                    /* ── Filter Bar ── */
+                    .cat-filter-bar {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 12px;
+                        align-items: center;
+                        padding: 16px 0 0;
+                    }
+
+                    .cat-filter-bar__input {
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                        color: var(--color-text-primary);
+                        padding: 9px 16px 9px 38px;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        background: var(--color-bg);
+                        outline: none;
+                        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                        min-width: 200px;
+                    }
+
+                    .cat-filter-bar__input:focus {
+                        border-color: var(--color-primary);
+                        box-shadow: 0 0 0 3px rgba(26, 35, 50, 0.08);
+                    }
+
+                    .cat-filter-bar__input::placeholder {
+                        color: var(--color-text-muted);
+                    }
+
+                    .cat-filter-bar__select {
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                        color: var(--color-primary);
+                        padding: 9px 36px 9px 16px;
+                        border: 1.5px solid var(--color-primary);
+                        border-radius: var(--radius-full);
+                        background: var(--color-white);
+                        cursor: pointer;
+                        outline: none;
+                        appearance: none;
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231a2332' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+                        background-repeat: no-repeat;
+                        background-position: right 14px center;
+                        background-size: 12px;
+                        transition: all 0.2s ease;
+                        letter-spacing: 0.3px;
+                    }
+
+                    .cat-filter-bar__select:hover,
+                    .cat-filter-bar__select:focus {
+                        background-color: var(--color-primary);
+                        color: var(--color-white);
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+                    }
+
+                    .cat-filter-bar__reset {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 9px 20px;
+                        font-family: var(--font-sans);
+                        font-size: 0.78rem;
+                        font-weight: 600;
+                        letter-spacing: 0.5px;
+                        color: var(--color-text-secondary);
+                        background: transparent;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    }
+
+                    .cat-filter-bar__reset:hover {
+                        background: var(--color-bg);
+                        color: var(--color-primary);
+                        border-color: var(--color-primary);
+                    }
+
+                    .cat-filter-bar__group {
+                        position: relative;
+                        display: inline-flex;
+                        align-items: center;
+                    }
+
+                    .cat-filter-bar__icon {
+                        position: absolute;
+                        left: 14px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: var(--color-text-muted);
+                        font-size: 0.78rem;
+                        pointer-events: none;
+                    }
+
+                    .cat-filter-bar__count {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-width: 22px;
+                        height: 22px;
+                        padding: 0 6px;
+                        font-size: 0.7rem;
+                        font-weight: 700;
+                        color: var(--color-white);
+                        background: var(--color-primary);
+                        border-radius: var(--radius-full);
+                        margin-left: 8px;
+                    }
                 </style>
             </head>
 
@@ -175,44 +288,61 @@
                                 <!-- Category Table Card -->
                                 <div
                                     style="background:var(--color-white);border-radius:var(--radius-xl);box-shadow:var(--shadow-card);overflow:hidden;">
-                                    <div
-                                        style="padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--color-border-light);">
-                                        <h2
-                                            style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;color:var(--color-primary);margin:0;">
-                                            All Categories</h2>
-                                        <p style="font-size:0.82rem;color:var(--color-text-muted);margin:4px 0 0;">
-                                            Parent categories are highlighted with a side indicator</p>
+
+                                    <!-- Header + Filter Bar -->
+                                    <div style="padding:var(--space-xl);border-bottom:1px solid var(--color-border-light);">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                                            <div>
+                                                <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;color:var(--color-primary);margin:0;">All Categories</h2>
+                                                <p style="font-size:0.82rem;color:var(--color-text-muted);margin:4px 0 0;">Parent categories are highlighted with a side indicator</p>
+                                            </div>
+                                            <span class="cat-filter-bar__count" id="catCount" title="Showing categories"></span>
+                                        </div>
+
+                                        <!-- Filter Bar -->
+                                        <div class="cat-filter-bar">
+                                            <span class="cat-filter-bar__group">
+                                                <i class="fa-solid fa-magnifying-glass cat-filter-bar__icon"></i>
+                                                <input type="text" id="filterCatName" class="cat-filter-bar__input" placeholder="Search category name...">
+                                            </span>
+
+                                            <select id="filterCatGender" class="cat-filter-bar__select">
+                                                <option value="">All Genders</option>
+                                                <option value="1">Nam</option>
+                                                <option value="2">Nữ</option>
+                                                <option value="3">Khác</option>
+                                            </select>
+
+                                            <select id="filterCatType" class="cat-filter-bar__select">
+                                                <option value="">All Types</option>
+                                                <option value="parent">Parent</option>
+                                                <option value="sub">Sub-category</option>
+                                            </select>
+
+                                            <button type="button" id="btnCatReset" class="cat-filter-bar__reset">
+                                                <i class="fa-solid fa-rotate-left"></i> Reset
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <table style="width:100%;border-collapse:collapse;">
                                         <thead>
                                             <tr style="background:var(--color-bg);">
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    ID</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Name</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Type</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Gender</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Parent</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Created</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Actions</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">ID</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Name</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Type</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Gender</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Parent</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Created</th>
+                                                <th style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="catTableBody">
                                             <c:forEach var="cat" items="${list}">
-                                                <tr class="${empty cat.parentid ? 'parent-row' : ''}"
+                                                <tr class="cat-row ${empty cat.parentid ? 'parent-row' : ''}"
+                                                    data-name="${cat.name}"
+                                                    data-gender="${cat.genderid}"
+                                                    data-isparent="${empty cat.parentid ? 'parent' : 'sub'}"
                                                     style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
                                                     onmouseover="this.style.background='var(--color-bg)'"
                                                     onmouseout="this.style.background='${empty cat.parentid ? 'rgba(26,35,50,0.02)' : 'transparent'}'">
@@ -295,6 +425,12 @@
                                             </c:if>
                                         </tbody>
                                     </table>
+
+                                    <!-- No results message -->
+                                    <div id="catNoResults" style="display:none;padding:40px 20px;text-align:center;color:var(--color-text-muted);font-size:0.9rem;">
+                                        <i class="fa-solid fa-tags" style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.3;"></i>
+                                        No categories match your filter criteria.
+                                    </div>
                                 </div>
 
                             </div>
@@ -325,25 +461,75 @@
 
                         <script>
                             document.addEventListener('DOMContentLoaded', function () {
-                                const modal = document.getElementById('deleteModal');
-                                const modalCategoryName = document.getElementById('modalCategoryName');
-                                const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-                                const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-                                const deleteLinks = document.querySelectorAll('.link-delete');
+                                var modal = document.getElementById('deleteModal');
+                                var modalCategoryName = document.getElementById('modalCategoryName');
+                                var confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+                                var cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+                                var deleteLinks = document.querySelectorAll('.link-delete');
 
-                                deleteLinks.forEach(link => {
+                                deleteLinks.forEach(function(link) {
                                     link.addEventListener('click', function (event) {
                                         event.preventDefault();
-                                        const deleteUrl = this.href;
-                                        const categoryName = this.dataset.categoryName;
-                                        modalCategoryName.textContent = categoryName;
-                                        confirmDeleteBtn.href = deleteUrl;
+                                        modalCategoryName.textContent = this.dataset.categoryName;
+                                        confirmDeleteBtn.href = this.href;
                                         modal.style.display = 'flex';
                                     });
                                 });
 
                                 cancelDeleteBtn.addEventListener('click', function () { modal.style.display = 'none'; });
                                 modal.addEventListener('click', function (event) { if (event.target === modal) modal.style.display = 'none'; });
+
+                                // ── Category Filter JS ──
+                                var filterName   = document.getElementById('filterCatName');
+                                var filterGender = document.getElementById('filterCatGender');
+                                var filterType   = document.getElementById('filterCatType');
+                                var btnReset     = document.getElementById('btnCatReset');
+                                var tbody        = document.getElementById('catTableBody');
+                                var noResults    = document.getElementById('catNoResults');
+                                var catCount     = document.getElementById('catCount');
+
+                                var rows = tbody.querySelectorAll('tr.cat-row');
+
+                                function applyFilters() {
+                                    var fName   = filterName.value.trim().toLowerCase();
+                                    var fGender = filterGender.value;
+                                    var fType   = filterType.value;
+                                    var visibleCount = 0;
+
+                                    for (var i = 0; i < rows.length; i++) {
+                                        var row = rows[i];
+                                        var show = true;
+
+                                        if (fName && (row.getAttribute('data-name') || '').toLowerCase().indexOf(fName) === -1) {
+                                            show = false;
+                                        }
+                                        if (fGender && row.getAttribute('data-gender') !== fGender) {
+                                            show = false;
+                                        }
+                                        if (fType && row.getAttribute('data-isparent') !== fType) {
+                                            show = false;
+                                        }
+
+                                        row.style.display = show ? '' : 'none';
+                                        if (show) visibleCount++;
+                                    }
+
+                                    noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
+                                    catCount.textContent = visibleCount;
+                                }
+
+                                filterName.addEventListener('input', applyFilters);
+                                filterGender.addEventListener('change', applyFilters);
+                                filterType.addEventListener('change', applyFilters);
+
+                                btnReset.addEventListener('click', function() {
+                                    filterName.value = '';
+                                    filterGender.value = '';
+                                    filterType.value = '';
+                                    applyFilters();
+                                });
+
+                                applyFilters();
                             });
                         </script>
             </body>

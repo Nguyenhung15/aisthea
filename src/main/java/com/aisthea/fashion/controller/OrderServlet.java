@@ -39,7 +39,7 @@ public class OrderServlet extends HttpServlet {
     }
 
     private boolean isAdmin(User user) {
-        return "ADMIN".equals(user.getRole());
+        return "ADMIN".equals(user.getRole()) || "STAFF".equals(user.getRole());
     }
 
     @Override
@@ -301,8 +301,13 @@ public class OrderServlet extends HttpServlet {
             return;
         }
 
-        List<Order> allOrders = orderService.getAllOrders();
-        request.setAttribute("orderList", allOrders);
+        String orderId = request.getParameter("orderId");
+        String status = request.getParameter("status");
+        String customerName = request.getParameter("customerName");
+        String date = request.getParameter("date");
+
+        List<Order> filteredOrders = orderService.getFilteredOrders(orderId, status, customerName, date);
+        request.setAttribute("orderList", filteredOrders);
         request.getRequestDispatcher("/WEB-INF/views/admin/order/manage_orders.jsp").forward(request, response);
     }
 

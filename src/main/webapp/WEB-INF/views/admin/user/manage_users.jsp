@@ -119,6 +119,119 @@
                         background: var(--color-primary-hover);
                         transform: translateY(-2px);
                     }
+
+                    /* ── Filter Bar ── */
+                    .user-filter-bar {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 12px;
+                        align-items: center;
+                        padding: 16px 0 0;
+                    }
+
+                    .user-filter-bar__input {
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                        color: var(--color-text-primary);
+                        padding: 9px 16px 9px 38px;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        background: var(--color-bg);
+                        outline: none;
+                        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                        min-width: 200px;
+                    }
+
+                    .user-filter-bar__input:focus {
+                        border-color: var(--color-primary);
+                        box-shadow: 0 0 0 3px rgba(26, 35, 50, 0.08);
+                    }
+
+                    .user-filter-bar__input::placeholder {
+                        color: var(--color-text-muted);
+                    }
+
+                    .user-filter-bar__select {
+                        font-family: var(--font-sans);
+                        font-size: 0.82rem;
+                        font-weight: 500;
+                        color: var(--color-primary);
+                        padding: 9px 36px 9px 16px;
+                        border: 1.5px solid var(--color-primary);
+                        border-radius: var(--radius-full);
+                        background: var(--color-white);
+                        cursor: pointer;
+                        outline: none;
+                        appearance: none;
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%231a2332' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+                        background-repeat: no-repeat;
+                        background-position: right 14px center;
+                        background-size: 12px;
+                        transition: all 0.2s ease;
+                        letter-spacing: 0.3px;
+                    }
+
+                    .user-filter-bar__select:hover,
+                    .user-filter-bar__select:focus {
+                        background-color: var(--color-primary);
+                        color: var(--color-white);
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+                    }
+
+                    .user-filter-bar__reset {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 9px 20px;
+                        font-family: var(--font-sans);
+                        font-size: 0.78rem;
+                        font-weight: 600;
+                        letter-spacing: 0.5px;
+                        color: var(--color-text-secondary);
+                        background: transparent;
+                        border: 1px solid var(--color-border);
+                        border-radius: var(--radius-full);
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    }
+
+                    .user-filter-bar__reset:hover {
+                        background: var(--color-bg);
+                        color: var(--color-primary);
+                        border-color: var(--color-primary);
+                    }
+
+                    .user-filter-bar__group {
+                        position: relative;
+                        display: inline-flex;
+                        align-items: center;
+                    }
+
+                    .user-filter-bar__icon {
+                        position: absolute;
+                        left: 14px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        color: var(--color-text-muted);
+                        font-size: 0.78rem;
+                        pointer-events: none;
+                    }
+
+                    .user-filter-bar__count {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-width: 22px;
+                        height: 22px;
+                        padding: 0 6px;
+                        font-size: 0.7rem;
+                        font-weight: 700;
+                        color: var(--color-white);
+                        background: var(--color-primary);
+                        border-radius: var(--radius-full);
+                        margin-left: 8px;
+                    }
                 </style>
             </head>
 
@@ -165,43 +278,65 @@
                                 <!-- Users Table Card -->
                                 <div
                                     style="background:var(--color-white);border-radius:var(--radius-xl);box-shadow:var(--shadow-card);overflow:hidden;">
-                                    <div
-                                        style="padding:var(--space-lg) var(--space-xl);border-bottom:1px solid var(--color-border-light);display:flex;justify-content:space-between;align-items:center;">
-                                        <div>
-                                            <h2
-                                                style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;color:var(--color-primary);margin:0;">
-                                                Customer Directory</h2>
-                                            <p style="font-size:0.82rem;color:var(--color-text-muted);margin:4px 0 0;">
-                                                Total registered member accounts</p>
+
+                                    <!-- Header + Filter Bar -->
+                                    <div style="padding:var(--space-xl);border-bottom:1px solid var(--color-border-light);">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                                            <div>
+                                                <h2 style="font-family:var(--font-serif);font-size:1.3rem;font-weight:700;color:var(--color-primary);margin:0;">
+                                                    Customer Directory</h2>
+                                                <p style="font-size:0.82rem;color:var(--color-text-muted);margin:4px 0 0;">
+                                                    Total registered member accounts</p>
+                                            </div>
+                                            <span class="user-filter-bar__count" id="userCount" title="Showing users"></span>
+                                        </div>
+
+                                        <!-- Filter Bar -->
+                                        <div class="user-filter-bar">
+                                            <span class="user-filter-bar__group">
+                                                <i class="fa-solid fa-magnifying-glass user-filter-bar__icon"></i>
+                                                <input type="text" id="filterSearch" class="user-filter-bar__input" placeholder="Search name or email...">
+                                            </span>
+
+                                            <select id="filterRole" class="user-filter-bar__select">
+                                                <option value="">All Roles</option>
+                                                <option value="ADMIN">Admin</option>
+                                                <option value="STAFF">Staff</option>
+                                                <option value="USER">User</option>
+                                            </select>
+
+                                            <select id="filterStatus" class="user-filter-bar__select">
+                                                <option value="">All Statuses</option>
+                                                <option value="Active">Active</option>
+                                                <option value="Banned">Banned</option>
+                                                <option value="Pending">Pending Activation</option>
+                                            </select>
+
+                                            <button type="button" id="btnReset" class="user-filter-bar__reset">
+                                                <i class="fa-solid fa-rotate-left"></i> Reset
+                                            </button>
                                         </div>
                                     </div>
 
                                     <table style="width:100%;border-collapse:collapse;">
                                         <thead>
                                             <tr style="background:var(--color-bg);">
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    ID</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    User</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Contact</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Role</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Status</th>
-                                                <th
-                                                    style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">
-                                                    Actions</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">ID</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">User</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Contact</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Role</th>
+                                                <th style="padding:14px 20px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Status</th>
+                                                <th style="padding:14px 20px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;">Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="userTableBody">
                                             <c:forEach var="u" items="${users}">
-                                                <tr style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
+                                                <tr class="user-row"
+                                                    data-name="${u.fullname}"
+                                                    data-email="${u.email}"
+                                                    data-role="${u.role}"
+                                                    data-status="${u.banned ? 'Banned' : (u.active ? 'Active' : 'Pending')}"
+                                                    style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
                                                     onmouseover="this.style.background='var(--color-bg)'"
                                                     onmouseout="this.style.background='transparent'">
                                                     <td
@@ -293,6 +428,12 @@
                                             </c:forEach>
                                         </tbody>
                                     </table>
+
+                                    <!-- No results message -->
+                                    <div id="noResultsMsg" style="display:none;padding:40px 20px;text-align:center;color:var(--color-text-muted);font-size:0.9rem;">
+                                        <i class="fa-solid fa-users-slash" style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.3;"></i>
+                                        No customers match your search criteria.
+                                    </div>
                                 </div>
 
                             </div>
@@ -315,11 +456,11 @@
 
                         <script>
                             function confirmStatusToggle(userId, fullname, isBanned) {
-                                const overlay = document.getElementById('luxModalOverlay');
-                                const icon = document.getElementById('modalIcon');
-                                const title = document.getElementById('modalTitle');
-                                const text = document.getElementById('modalText');
-                                const confirmBtn = document.getElementById('modalConfirmBtn');
+                                var overlay = document.getElementById('luxModalOverlay');
+                                var icon = document.getElementById('modalIcon');
+                                var title = document.getElementById('modalTitle');
+                                var text = document.getElementById('modalText');
+                                var confirmBtn = document.getElementById('modalConfirmBtn');
 
                                 if (isBanned) {
                                     icon.innerHTML = '<i class="fa-solid fa-user-check"></i>';
@@ -340,6 +481,64 @@
                             function closeModal() {
                                 document.getElementById('luxModalOverlay').classList.remove('active');
                             }
+
+                            // ── Customer Filter JS ──
+                            (function() {
+                                var filterSearch = document.getElementById('filterSearch');
+                                var filterRole   = document.getElementById('filterRole');
+                                var filterStatus = document.getElementById('filterStatus');
+                                var btnReset     = document.getElementById('btnReset');
+                                var tbody        = document.getElementById('userTableBody');
+                                var noResultsMsg = document.getElementById('noResultsMsg');
+                                var userCount    = document.getElementById('userCount');
+
+                                function applyFilters() {
+                                    var fSearch = filterSearch.value.trim().toLowerCase();
+                                    var fRole   = filterRole.value;
+                                    var fStatus = filterStatus.value;
+
+                                    var rows = tbody.querySelectorAll('tr.user-row');
+                                    var visibleCount = 0;
+
+                                    for (var i = 0; i < rows.length; i++) {
+                                        var row = rows[i];
+                                        var show = true;
+
+                                        if (fSearch) {
+                                            var name  = (row.getAttribute('data-name')  || '').toLowerCase();
+                                            var email = (row.getAttribute('data-email') || '').toLowerCase();
+                                            if (name.indexOf(fSearch) === -1 && email.indexOf(fSearch) === -1) {
+                                                show = false;
+                                            }
+                                        }
+                                        if (fRole && row.getAttribute('data-role') !== fRole) {
+                                            show = false;
+                                        }
+                                        if (fStatus && row.getAttribute('data-status') !== fStatus) {
+                                            show = false;
+                                        }
+
+                                        row.style.display = show ? '' : 'none';
+                                        if (show) visibleCount++;
+                                    }
+
+                                    noResultsMsg.style.display = (visibleCount === 0) ? 'block' : 'none';
+                                    userCount.textContent = visibleCount;
+                                }
+
+                                filterSearch.addEventListener('input', applyFilters);
+                                filterRole.addEventListener('change', applyFilters);
+                                filterStatus.addEventListener('change', applyFilters);
+
+                                btnReset.addEventListener('click', function() {
+                                    filterSearch.value = '';
+                                    filterRole.value = '';
+                                    filterStatus.value = '';
+                                    applyFilters();
+                                });
+
+                                applyFilters();
+                            })();
                         </script>
             </body>
 
