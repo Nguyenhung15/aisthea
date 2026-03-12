@@ -231,6 +231,79 @@
                         opacity: 0.7;
                     }
 
+                    .aisthea-chat-product-card {
+                        margin: 12px 0;
+                        background: #fff;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 4px;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                        width: 100%;
+                        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+                        transition: transform 0.2s, box-shadow 0.2s;
+                    }
+                    .aisthea-chat-product-card:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+                    }
+                    .aisthea-product-img-link {
+                        display: block;
+                        width: 100%;
+                        background: #f8fafc;
+                        position: relative;
+                        overflow: hidden;
+                        padding-top: 100%; /* 1:1 Aspect Ratio */
+                    }
+                    .aisthea-product-card-img {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        transition: transform 0.5s;
+                    }
+                    .aisthea-chat-product-card:hover .aisthea-product-card-img {
+                        transform: scale(1.1);
+                    }
+                    .aisthea-product-card-info {
+                        padding: 12px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                    }
+                    .aisthea-product-card-name {
+                        font-weight: 700;
+                        font-size: 0.9rem;
+                        color: #1e293b;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                    .aisthea-product-card-price {
+                        font-weight: 600;
+                        color: #B2967D; /* Luxury brown brand color from your theme */
+                        font-size: 0.85rem;
+                    }
+                    .aisthea-product-card-btn {
+                        margin-top: 8px;
+                        padding: 8px;
+                        background: #0f172a;
+                        color: #fff;
+                        text-align: center;
+                        text-decoration: none;
+                        font-size: 0.75rem;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        transition: background 0.2s;
+                    }
+                    .aisthea-product-card-btn:hover {
+                        background: #334155;
+                        color: #fff;
+                    }
+
                     .aisthea-typing {
                         align-self: flex-start;
                         display: flex;
@@ -658,7 +731,54 @@
 
                             if (sender !== 'CUSTOMER') {
                                 try {
+                                    // 1. Bold text
                                     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                                    
+                                    // 2. Specialized Product Card [product_card:ID|NAME|PRICE|IMAGE]
+                                    text = text.replace(/\[product_card:(.*?)\]/g, function(match, content) {
+                                        var parts = content.split('|');
+                                        if (parts.length < 4) return '';
+                                        
+                                        var id = parts[0].trim();
+                                        var name = parts[1].trim();
+                                        var price = parts[2].trim();
+                                        var img = parts[3].trim();
+                                        
+                                        var detailUrl = ctxPath + '/product?action=view&id=' + id;
+                                        
+                                        // Final Image URL construction
+                                        var finalImgUrl = img;
+                                        if (!img.startsWith('http') && !img.startsWith('/')) {
+                                            finalImgUrl = ctxPath + '/' + img;
+                                        } else if (img.startsWith('/') && !img.startsWith(ctxPath)) {
+                                            finalImgUrl = ctxPath + img;
+                                        }
+
+                                        return '<div class="aisthea-chat-product-card">' +
+                                               '  <a href="' + detailUrl + '" class="aisthea-product-img-link">' +
+                                               '    <img src="' + finalImgUrl + '" class="aisthea-product-card-img" ' +
+                                               '         onerror="this.src=\'' + ctxPath + '/assets/images/defaults/no-image.svg\'" />' +
+                                               '  </a>' +
+                                               '  <div class="aisthea-product-card-info">' +
+                                               '    <div class="aisthea-product-card-name">' + name + '</div>' +
+                                               '    <div class="aisthea-product-card-price">' + price + '</div>' +
+                                               '    <a href="' + detailUrl + '" class="aisthea-product-card-btn">Xem chi tiết</a>' +
+                                               '  </div>' +
+                                               '</div>';
+                                    });
+
+                                    // 3. Fallback for legacy tags if AI still uses them
+                                    text = text.replace(/\[img:(.*?)\]/g, ''); // Hide raw [img] tags as we use cards
+                                    text = text.replace(/\[img:(.*?)\]/g, ''); // Duplicate catch to be safe
+                                    
+                                    // Handle any remaining Markdown links
+                                    text = text.replace(/\[(.*?)\]\((.*?)\)/g, function(match, label, url) {
+                                        var finalUrl = url.trim();
+                                        if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
+                                        return '<a href="' + finalUrl + '" class="aisthea-chat-link">' + label + ' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8em"></i></a>';
+                                    });
+
+                                    // 4. New lines
                                     text = text.replace(/\n/g, '<br>');
                                 } catch (e) {
                                     console.error('[ChatWidget] Regex error:', e, text);

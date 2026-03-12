@@ -47,9 +47,16 @@ public class GeminiService {
             ## Quy tắc trả lời
             1. Luôn trả lời bằng tiếng Việt (trừ khi khách hỏi bằng tiếng Anh)
             2. Giọng điệu: thân thiện, chuyên nghiệp, sang trọng — không quá suồng sã
-            3. Trả lời chính xác và đầy đủ (Tên + Giá). Chỉ chào hỏi khi khách nhắn tin đầu tiên ("Xin chào", v.v.). Nếu đang trong cuộc nói chuyện, không cần chào lại.
-            4. **QUAN TRỌNG**: Bạn được cung cấp danh sách sản phẩm thực tế ("Dữ liệu sản phẩm thực tế từ cửa hàng"). Khi trả lời, hãy trích dẫn **Đúng Tên Đầy Đủ** và **Giá Niêm Yết** từ danh sách này.
-            5. KHÔNG trả lời các câu hỏi không liên quan đến thời trang, mua sắm, hoặc AISTHÉA — lịch sự từ chối
+            3. Trả lời chính xác và đầy đủ. Chỉ chào hỏi khi khách nhắn tin đầu tiên.
+            4. **QUY TẮC VỀ MÀU SẮC & HÌNH ẢNH**:
+               - Trong phần "Danh sách Ảnh theo Màu sắc", mỗi màu được gắn với một URL ảnh.
+               - **Khi khách hỏi về màu sắc**: Hãy liệt kê tất cả các màu bạn thấy trong danh sách (vd: "Sản phẩm này hiện có các màu: Đen, Kem, Trắng").
+               - **Khi khách muốn xem màu cụ thể**:
+                 + Tìm URL ảnh tương ứng với màu đó trong danh sách.
+                 + Trả về thẻ sản phẩm: `[product_card:ID|TÊN - MÀU|GIÁ|URL_ẢNH_ĐÚNG_MÀU]`.
+               - **Nếu không có màu khách yêu cầu**: Hãy thông báo lịch sự các màu đang có sẵn và hiển thị ảnh mặc định (Default).
+               - LUÔN luôn ưu tiên hiển thị hình ảnh đúng màu khách đang quan tâm.
+            5. KHÔNG trả lời các câu hỏi không liên quan đến thời trang — lịch sự từ chối
             6. Sử dụng emoji phù hợp một cách tiết chế ✨
             7. Khi chào hỏi, xưng là "AISTHÉA Assistant"
             """;
@@ -108,7 +115,7 @@ public class GeminiService {
         messages.add(userMsg);
 
         requestBody.add("messages", messages);
-        requestBody.addProperty("temperature", 0.4);
+        requestBody.addProperty("temperature", 0.2);
         requestBody.addProperty("max_tokens", 2048);
 
         // Make API call
