@@ -53,8 +53,14 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public LoginResult login(String email, String password) {
-        User user = userDAO.findByEmail(email);
+    public LoginResult login(String identifier, String password) {
+        // Try to find by email first
+        User user = userDAO.findByEmail(identifier);
+        
+        // If not found by email, try to find by username
+        if (user == null) {
+            user = userDAO.findByUsername(identifier);
+        }
 
         if (user == null) {
             return new LoginResult(null, "Tài khoản không tồn tại.", false);

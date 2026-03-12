@@ -11,10 +11,9 @@ import java.io.IOException;
 
 public class TierDetailServlet extends HttpServlet {
 
-    // Tier thresholds (points)
-    private static final int SILVER_THRESHOLD = 2000;
-    private static final int GOLD_THRESHOLD = 5000;
-    private static final int PLATINUM_THRESHOLD = 15000;
+    private static final int SILVER_THRESHOLD = 200;
+    private static final int GOLD_THRESHOLD = 1000;
+    private static final int PLATINUM_THRESHOLD = 5000;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -30,8 +29,117 @@ public class TierDetailServlet extends HttpServlet {
         // Refresh user data from DB to get latest membership_points
         try {
             UserDAO userDAO = new UserDAO();
+
+            // --- Auto Migration for Point History ---
+            if ("migrate".equals(request.getParameter("cmd"))) {
+                try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
+                        java.sql.Statement stmt = conn.createStatement()) {
+                    String sql = "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'membership_point') " +
+                            "CREATE TABLE [dbo].[membership_point] (" +
+                            "[history_id] INT IDENTITY(1,1) PRIMARY KEY, " +
+                            "[userid] INT NOT NULL, " +
+                            "[points_earned] INT NOT NULL, " +
+                            "[reason] NVARCHAR(255) NULL, " +
+                            "[createdat] DATETIME DEFAULT GETDATE(), " +
+                            "CONSTRAINT FK_MembershipPoint_User FOREIGN KEY (userid) REFERENCES users(userid) ON DELETE CASCADE"
+                            +
+                            ");";
+                    stmt.execute(sql);
+                    System.out.println("[TierDetailServlet] Migration executed successfully.");
+                } catch (Exception e) {
+                    System.err.println("[TierDetailServlet] Migration failed: " + e.getMessage());
+                }
+            }
+            // ----------------------------------------
+
             User freshUser = userDAO.selectUser(user.getUserId());
+
+            // --- HỆ THỐNG TỰ ĐỘNG RESET ĐIỂM 6 THÁNG ---
+            // Quy tắc: Reset vào 01/01 và 01/07 hàng năm
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            int year = cal.get(java.util.Calendar.YEAR);
+            int month = cal.get(java.util.Calendar.MONTH); // 0-indexed (0=Jan, 6=July)
+
+            java.util.Calendar windowStart = java.util.Calendar.getInstance();
+            windowStart.set(year, month < 6 ? 0 : 6, 1, 0, 0, 0);
+            windowStart.set(java.util.Calendar.MILLISECOND, 0);
+
+            try {
+                java.sql.Timestamp lastReset = userDAO.getLastSystemResetDate();
+                if (lastReset == null || lastReset.before(windowStart.getTime())) {
+                    String reason = "PERIODIC_SYSTEM_RESET_CYCLE_" + (month < 6 ? "01_01_" : "01_07_") + year;
+                    userDAO.resetMembershipPoints(reason);
+                    // After reset, re-fetch user
+                    freshUser = userDAO.selectUser(user.getUserId());
+                    System.out.println("[SYSTEM] Membership points reset automatic successfully.");
+                } else {
+                    // --- RECOVERY LOGIC: Recoup points from missed orders in current cycle ---
+                    if (freshUser != null) {
+                        try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection()) {
+                            // Find all completed/paid orders this cycle for this user
+                            java.util.List<Integer> recoveredOrderIds = new java.util.ArrayList<>();
+                            try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                                    "SELECT orderid, totalprice FROM Orders " +
+                                    "WHERE userid = ? AND (status = 'Completed' OR status = 'Paid') " +
+                                    "AND createdat >= ?")) {
+                                ps.setInt(1, user.getUserId());
+                                ps.setTimestamp(2, new java.sql.Timestamp(windowStart.getTimeInMillis()));
+                                try (java.sql.ResultSet rs = ps.executeQuery()) {
+                                    while (rs.next()) {
+                                        int oid = rs.getInt("orderid");
+                                        // Check if this specific order is already in history
+                                        try (java.sql.PreparedStatement checkPs = conn.prepareStatement(
+                                                "SELECT history_id FROM membership_point WHERE userid = ? AND reason LIKE ?")) {
+                                            checkPs.setInt(1, user.getUserId());
+                                            checkPs.setString(2, "%Order #" + oid + "%");
+                                            try (java.sql.ResultSet checkRs = checkPs.executeQuery()) {
+                                                if (!checkRs.next()) {
+                                                    // Order not logged! Award points.
+                                                    int pointsToAdd = rs.getBigDecimal("totalprice").divide(new java.math.BigDecimal("10000"), 0, java.math.RoundingMode.DOWN).intValue();
+                                                    if (pointsToAdd > 0) {
+                                                        userDAO.updateMembershipPoints(user.getUserId(), pointsToAdd, "Recovered points from Order #" + oid);
+                                                        System.out.println("[SYSTEM] Auto-recovered " + pointsToAdd + " points for Order #" + oid);
+                                                        recoveredOrderIds.add(oid);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // If we recovered anything OR if points table doesn't match history sum, sync it
+                            int totalInHistory = 0;
+                            try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                                    "SELECT SUM(points_earned) FROM membership_point " +
+                                    "WHERE userid = ? AND createdat >= ? AND reason NOT LIKE 'PERIODIC_SYSTEM_RESET%'")) {
+                                ps.setInt(1, user.getUserId());
+                                ps.setTimestamp(2, new java.sql.Timestamp(windowStart.getTimeInMillis()));
+                                try (java.sql.ResultSet rs = ps.executeQuery()) {
+                                    if (rs.next()) totalInHistory = rs.getInt(1);
+                                }
+                            }
+
+                            if (freshUser.getMembershipPoints() != totalInHistory) {
+                                try (java.sql.PreparedStatement ups = conn.prepareStatement(
+                                        "UPDATE Users SET membership_points = ?, updatedat = GETDATE() WHERE userid = ?")) {
+                                    ups.setInt(1, totalInHistory);
+                                    ups.setInt(2, user.getUserId());
+                                    ups.executeUpdate();
+                                    freshUser.setMembershipPoints(totalInHistory);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("[SYSTEM] Error checking/resetting membership points: " + e.getMessage());
+            }
+            // ------------------------------------------
+
             if (freshUser != null) {
+                // Do not store password hash in session for security reasons
+                freshUser.setPassword(null);
                 user = freshUser;
                 session.setAttribute("user", freshUser);
             }
@@ -150,7 +258,15 @@ public class TierDetailServlet extends HttpServlet {
         request.setAttribute("badgeColor", badgeColor);
         request.setAttribute("badgeBorder", badgeBorder);
         request.setAttribute("iconBg", iconBg);
-        request.setAttribute("iconColor", iconColor);
+        // Fetch point history
+        try {
+            com.aisthea.fashion.dao.PointHistoryDAO historyDAO = new com.aisthea.fashion.dao.PointHistoryDAO();
+            java.util.List<com.aisthea.fashion.model.PointHistory> history = historyDAO
+                    .getPointHistoryByUserId(user.getUserId());
+            request.setAttribute("pointHistory", history);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         request.getRequestDispatcher("/WEB-INF/views/user/tier_details.jsp").forward(request, response);
     }

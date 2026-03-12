@@ -32,7 +32,13 @@ public interface IUserDAO {
 
     boolean updateMembershipPoints(int userId, int pointsToAdd) throws SQLException;
 
+    boolean updateMembershipPoints(int userId, int pointsToAdd, String reason) throws SQLException;
+
     void updateLastActive(int userId);
 
     int countOnlineAdmins(int secondsThreshold);
+
+    boolean resetMembershipPoints(String reason) throws SQLException;
+    
+    java.sql.Timestamp getLastSystemResetDate() throws SQLException;
 }

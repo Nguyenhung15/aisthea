@@ -30,6 +30,18 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
+        // Refresh user in session
+        try {
+            User user = (User) session.getAttribute("user");
+            User freshUser = new com.aisthea.fashion.dao.UserDAO().selectUser(user.getUserId());
+            if (freshUser != null) {
+                freshUser.setPassword(null);
+                session.setAttribute("user", freshUser);
+            }
+        } catch (Exception e) {
+            // Ignore refresh errors
+        }
+
         String jspPath = "/WEB-INF/views/user/profile.jsp";
 
         request.getRequestDispatcher(jspPath).forward(request, response);

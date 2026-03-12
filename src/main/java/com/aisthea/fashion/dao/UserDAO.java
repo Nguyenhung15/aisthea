@@ -10,19 +10,19 @@ import java.util.List;
 
 public class UserDAO implements IUserDAO {
 
-    private static final String INSERT_USER_SQL = "INSERT INTO users (username, password, fullname, email, gender, phone, avatar, address, role, active, createdat, updatedat, dob) "
+    private static final String INSERT_USER_SQL = "INSERT INTO Users (username, password, fullname, email, gender, phone, avatar, address, role, active, createdat, updatedat, dob) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, GETDATE(), GETDATE(), ?)";
     private static final String SELECT_BY_ID_SQL = "SELECT * FROM Users WHERE userid = ?";
-    private static final String FIND_BY_EMAIL_SQL = "SELECT * FROM users WHERE email = ?";
-    private static final String FIND_BY_USERNAME_SQL = "SELECT * FROM users WHERE username = ?";
+    private static final String FIND_BY_EMAIL_SQL = "SELECT * FROM Users WHERE email = ?";
+    private static final String FIND_BY_USERNAME_SQL = "SELECT * FROM Users WHERE username = ?";
     private static final String SELECT_ALL_SQL = "SELECT * FROM Users ORDER BY createdat DESC";
     private static final String UPDATE_USER_SQL = "UPDATE Users SET username=?, fullname=?, email=?, gender=?, phone=?, avatar=?, address=?, role=?, active=?, dob=?, updatedat = GETDATE() WHERE userid=?";
-    private static final String UPDATE_PASSWORD_SQL = "UPDATE users SET password = ?, updatedat = GETDATE() WHERE userid = ?";
+    private static final String UPDATE_PASSWORD_SQL = "UPDATE Users SET password = ?, updatedat = GETDATE() WHERE userid = ?";
     private static final String DELETE_USER_SQL = "DELETE FROM Users WHERE userid = ?";
-    private static final String ACTIVATE_USER_SQL = "UPDATE users SET active = 1, updatedat = GETDATE() WHERE email = ? AND active = 0";
-    private static final String BAN_USER_SQL = "UPDATE users SET is_banned = 1, ban_reason = ?, updatedat = GETDATE() WHERE userid = ?";
-    private static final String UNBAN_USER_SQL = "UPDATE users SET is_banned = 0, ban_reason = NULL, updatedat = GETDATE() WHERE userid = ?";
-    private static final String UPDATE_MEMBERSHIP_POINTS_SQL = "UPDATE users SET membership_points = ISNULL(membership_points, 0) + ?, updatedat = GETDATE() WHERE userid = ?";
+    private static final String ACTIVATE_USER_SQL = "UPDATE Users SET active = 1, updatedat = GETDATE() WHERE email = ? AND active = 0";
+    private static final String BAN_USER_SQL = "UPDATE Users SET is_banned = 1, ban_reason = ?, updatedat = GETDATE() WHERE userid = ?";
+    private static final String UNBAN_USER_SQL = "UPDATE Users SET is_banned = 0, ban_reason = NULL, updatedat = GETDATE() WHERE userid = ?";
+    private static final String UPDATE_MEMBERSHIP_POINTS_SQL = "UPDATE Users SET membership_points = ISNULL(membership_points, 0) + ?, updatedat = GETDATE() WHERE userid = ?";
 
     private User extractUserFromResultSet(ResultSet rs) throws SQLException {
         User u = new User();
@@ -45,7 +45,8 @@ public class UserDAO implements IUserDAO {
         u.setBanReason(rs.getString("ban_reason"));
         try {
             u.setLastActive(rs.getTimestamp("last_active"));
-        } catch (SQLException e) { /* Column might not exist in all queries */ }
+        } catch (SQLException e) {
+            /* Column might not exist in all queries */ }
         return u;
     }
 
@@ -257,14 +258,45 @@ public class UserDAO implements IUserDAO {
 
     @Override
     public boolean updateMembershipPoints(int userId, int pointsToAdd) throws SQLException {
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(UPDATE_MEMBERSHIP_POINTS_SQL)) {
-            ps.setInt(1, pointsToAdd);
-            ps.setInt(2, userId);
-            return ps.executeUpdate() > 0;
+        return updateMembershipPoints(userId, pointsToAdd, "Reward Points");
+    }
+
+    @Override
+    public boolean updateMembershipPoints(int userId, int pointsToAdd, String reason) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Update points in users table
+            try (PreparedStatement ps = conn.prepareStatement(UPDATE_MEMBERSHIP_POINTS_SQL)) {
+                ps.setInt(1, pointsToAdd);
+                ps.setInt(2, userId);
+                ps.executeUpdate();
+            }
+
+            // 2. Add to point history table
+            String insertHistorySql = "INSERT INTO membership_point (userid, points_earned, reason, createdat) VALUES (?, ?, ?, GETDATE())";
+            try (PreparedStatement ps = conn.prepareStatement(insertHistorySql)) {
+                ps.setInt(1, userId);
+                ps.setInt(2, pointsToAdd);
+                ps.setString(3, reason);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
         } catch (SQLException e) {
+            if (conn != null) {
+                conn.rollback();
+            }
             e.printStackTrace();
             throw e;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
         }
     }
 
@@ -272,7 +304,7 @@ public class UserDAO implements IUserDAO {
     public void updateLastActive(int userId) {
         String sql = "UPDATE users SET last_active = GETDATE() WHERE userid = ?";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -281,17 +313,53 @@ public class UserDAO implements IUserDAO {
     }
 
     @Override
+    public boolean resetMembershipPoints(String reason) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Reset points for all users
+            String resetPointsSql = "UPDATE Users SET membership_points = 0, updatedat = GETDATE()";
+            try (PreparedStatement ps = conn.prepareStatement(resetPointsSql)) {
+                ps.executeUpdate();
+            }
+
+            // 2. Log the reset action in membership_point for all users
+            String logResetSql = "INSERT INTO membership_point (userid, points_earned, reason, createdat) " +
+                    "SELECT userid, 0, ?, GETDATE() FROM Users";
+            try (PreparedStatement ps = conn.prepareStatement(logResetSql)) {
+                ps.setString(1, reason);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) {
+                conn.rollback();
+            }
+            e.printStackTrace();
+            throw e;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
+    }
+
+    @Override
     public int countOnlineAdmins(int secondsThreshold) {
         String sql = "SELECT COUNT(*) FROM users " +
-                     "WHERE (role = 'ADMIN' OR role = 'STAFF') " +
-                     "AND last_active >= DATEADD(second, ?, GETDATE())";
+                "WHERE (role = 'ADMIN' OR role = 'STAFF') " +
+                "AND last_active >= DATEADD(second, ?, GETDATE())";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, -secondsThreshold);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     int c = rs.getInt(1);
-                    System.out.println("[UserDAO] countOnlineAdmins = " + c + " for threshold " + (-secondsThreshold));
                     return c;
                 }
             }
@@ -299,5 +367,18 @@ public class UserDAO implements IUserDAO {
             System.err.println("[UserDAO] countOnlineAdmins error: " + e.getMessage());
         }
         return 0;
+    }
+
+    @Override
+    public java.sql.Timestamp getLastSystemResetDate() throws SQLException {
+        String sql = "SELECT MAX(createdat) FROM membership_point WHERE reason LIKE 'PERIODIC_SYSTEM_RESET%'";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getTimestamp(1);
+            }
+        }
+        return null;
     }
 }

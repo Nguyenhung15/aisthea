@@ -125,16 +125,7 @@ public class OrderService implements IOrderService {
 
             conn.commit();
 
-            // ── 6. Cộng điểm thành viên (ngoài transaction, fail ok) ────
-            try {
-                int pointsEarned = finalTotal.divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN).intValue();
-                if (pointsEarned > 0) {
-                    new UserDAO().updateMembershipPoints(user.getUserId(), pointsEarned);
-                    logger.info("Cộng " + pointsEarned + " điểm cho user ID: " + user.getUserId());
-                }
-            } catch (Exception pointsEx) {
-                logger.warning("Đặt hàng thành công nhưng cộng điểm thất bại: " + pointsEx.getMessage());
-            }
+            // Points are added when order is Paid or Completed to avoid duplication.
 
             // ── 7. Xoá voucher khỏi session ──────────────────────────────
             if (request.getSession(false) != null) {
@@ -209,19 +200,19 @@ public class OrderService implements IOrderService {
     @Override
     public boolean updateOrderStatus(int orderId, String newStatus) {
         try {
-            // Nếu đơn hàng được cập nhật thành 'Completed', cộng điểm cho user
-            if ("Completed".equalsIgnoreCase(newStatus)) {
+            // Check if status requires points (Paid or Completed)
+            boolean isPayingStatus = "Completed".equalsIgnoreCase(newStatus) || "Paid".equalsIgnoreCase(newStatus);
+            if (isPayingStatus) {
                 Order order = orderDAO.getAdminOrderById(orderId);
-                // Chỉ cộng điểm nếu đơn hàng đang ở trạng thái khác 'Completed' (tránh cộng
-                // nhiều lần)
-                if (order != null && !"Completed".equalsIgnoreCase(order.getStatus())) {
+                // Only add points if transitioning from a non-paying status to avoid duplication
+                if (order != null && !"Completed".equalsIgnoreCase(order.getStatus()) && !"Paid".equalsIgnoreCase(order.getStatus())) {
                     int pointsEarned = order.getTotalprice().divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
                             .intValue();
                     if (pointsEarned > 0) {
                         UserDAO userDAO = new UserDAO();
-                        userDAO.updateMembershipPoints(order.getUserid(), pointsEarned);
+                        userDAO.updateMembershipPoints(order.getUserid(), pointsEarned, "Points from " + newStatus + " Order #" + orderId);
                         logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + order.getUserid()
-                                + " từ đơn hàng #" + orderId);
+                                + " từ đơn hàng #" + orderId + " (Status: " + newStatus + ")");
                     }
                 }
             }

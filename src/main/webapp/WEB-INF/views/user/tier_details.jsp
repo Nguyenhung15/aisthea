@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
         <% if (session.getAttribute("user")==null) { response.sendRedirect(request.getContextPath() + "/login" );
             return; } %>
 
@@ -19,12 +20,12 @@
                     <c:set var="iconBg" value="rgba(120, 144, 156, 0.1)" />
                     <c:set var="iconColor" value="#546E7A" />
                     <c:set var="nextTierName" value="SILVER" />
-                    <c:set var="nextTierPoints" value="2000" />
-                    <c:set var="tierProgress" value="${userPoints > 0 ? (userPoints * 100 / 2000) : 0}" />
-                    <c:set var="pointsNeeded" value="${2000 - userPoints}" />
+                    <c:set var="nextTierPoints" value="200" />
+                    <c:set var="tierProgress" value="${userPoints > 0 ? (userPoints * 100 / 200) : 0}" />
+                    <c:set var="pointsNeeded" value="${200 - userPoints}" />
 
                     <%-- Recalculate tier from points --%>
-                        <c:if test="${userPoints >= 15000}">
+                        <c:if test="${userPoints >= 5000}">
                             <c:set var="currentTier" value="PLATINUM" />
                             <c:set var="currentTierKey" value="platinum" />
                             <c:set var="cardGradient"
@@ -36,11 +37,11 @@
                             <c:set var="iconBg" value="rgba(121, 134, 203, 0.1)" />
                             <c:set var="iconColor" value="#3F51B5" />
                             <c:set var="nextTierName" value="MAX" />
-                            <c:set var="nextTierPoints" value="15000" />
+                            <c:set var="nextTierPoints" value="5000" />
                             <c:set var="tierProgress" value="100" />
                             <c:set var="pointsNeeded" value="0" />
                         </c:if>
-                        <c:if test="${userPoints >= 5000 && userPoints < 15000}">
+                        <c:if test="${userPoints >= 1000 && userPoints < 5000}">
                             <c:set var="currentTier" value="GOLD" />
                             <c:set var="currentTierKey" value="gold" />
                             <c:set var="cardGradient"
@@ -52,11 +53,11 @@
                             <c:set var="iconBg" value="rgba(197, 160, 89, 0.1)" />
                             <c:set var="iconColor" value="#C5A059" />
                             <c:set var="nextTierName" value="PLATINUM" />
-                            <c:set var="nextTierPoints" value="15000" />
-                            <c:set var="tierProgress" value="${(userPoints - 5000) * 100 / 10000}" />
-                            <c:set var="pointsNeeded" value="${15000 - userPoints}" />
+                            <c:set var="nextTierPoints" value="5000" />
+                            <c:set var="tierProgress" value="${(userPoints - 1000) * 100 / 4000}" />
+                            <c:set var="pointsNeeded" value="${5000 - userPoints}" />
                         </c:if>
-                        <c:if test="${userPoints >= 2000 && userPoints < 5000}">
+                        <c:if test="${userPoints >= 200 && userPoints < 1000}">
                             <c:set var="currentTier" value="SILVER" />
                             <c:set var="currentTierKey" value="silver" />
                             <c:set var="cardGradient"
@@ -67,9 +68,9 @@
                             <c:set var="iconBg" value="rgba(144, 164, 174, 0.1)" />
                             <c:set var="iconColor" value="#607D8B" />
                             <c:set var="nextTierName" value="GOLD" />
-                            <c:set var="nextTierPoints" value="5000" />
-                            <c:set var="tierProgress" value="${(userPoints - 2000) * 100 / 3000}" />
-                            <c:set var="pointsNeeded" value="${5000 - userPoints}" />
+                            <c:set var="nextTierPoints" value="1000" />
+                            <c:set var="tierProgress" value="${(userPoints - 200) * 100 / 800}" />
+                            <c:set var="pointsNeeded" value="${1000 - userPoints}" />
                         </c:if>
 
                         <!DOCTYPE html>
@@ -333,6 +334,57 @@
                                                     </c:if>
                                                 </div>
 
+                                                <!-- ========== LỊCH SỬ TÍCH ĐIỂM ========== -->
+                                                <div class="mb-12 px-2">
+                                                    <h3 class="font-display font-bold text-xl text-slate-800 mb-6 flex items-center"
+                                                        style="white-space: nowrap;">
+                                                        <span class="flex-shrink-0"
+                                                            style="width: 32px; height: 1px; background: ${accentColor}; margin-right: 16px;"></span>
+                                                        Lịch sử tích điểm
+                                                        <span class="flex-shrink-0 flex-grow"
+                                                            style="height: 1px; background: #f1f5f9; margin-left: 16px;"></span>
+                                                    </h3>
+                                                    
+                                                    <div class="bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl overflow-hidden shadow-sm">
+                                                        <table class="w-full text-left border-collapse">
+                                                            <thead>
+                                                                <tr class="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-wider">
+                                                                    <th class="px-6 py-4 font-semibold">Ngày giao dịch</th>
+                                                                    <th class="px-6 py-4 font-semibold">Lý do</th>
+                                                                    <th class="px-6 py-4 font-semibold text-right">Điểm cộng</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody class="divide-y divide-slate-100/50">
+                                                                <c:choose>
+                                                                    <c:when test="${not empty pointHistory}">
+                                                                        <c:forEach var="item" items="${pointHistory}">
+                                                                            <tr class="hover:bg-white/30 transition-colors">
+                                                                                <td class="px-6 py-4 text-sm text-slate-600">
+                                                                                    <c:set var="createdAt" value="${item.createdAt}" />
+                                                                                    <fmt:formatDate value="${createdAt}" pattern="dd/MM/yyyy HH:mm" />
+                                                                                </td>
+                                                                                <td class="px-6 py-4 text-sm font-medium text-slate-700">
+                                                                                    ${item.reason}
+                                                                                </td>
+                                                                                <td class="px-6 py-4 text-sm font-bold text-right" style="color: ${accentColor};">
+                                                                                    +${item.pointsEarned}
+                                                                                </td>
+                                                                            </tr>
+                                                                        </c:forEach>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <tr>
+                                                                            <td colspan="3" class="px-6 py-10 text-center text-slate-400 italic text-sm">
+                                                                                Chưa có lịch sử tích điểm nào.
+                                                                            </td>
+                                                                        </tr>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
                                                 <!-- ========== CÁCH TÍCH ĐIỂM ========== -->
                                                 <div class="mb-12 px-2">
                                                     <div
@@ -347,9 +399,15 @@
                                                                 class="font-bold text-slate-700">10.000₫</span> bạn chi
                                                             tiêu mua
                                                             hàng sẽ tích được <span class="font-bold text-slate-700">1
-                                                                điểm</span>. Điểm được cộng tự động sau khi đặt hàng
-                                                            thành công.
+                                                                điểm</span>. Điểm được cộng tự động sau khi đơn hàng
+                                                            hoàn thành.
                                                         </p>
+                                                        <div class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-100 flex items-start gap-3">
+                                                            <span class="material-symbols-outlined text-amber-600 text-lg">event_repeat</span>
+                                                            <p class="text-xs text-amber-800 leading-relaxed uppercase tracking-wider font-semibold">
+                                                                Chu kỳ xếp hạng: Điểm tích lũy sẽ được làm mới (về 0) vào ngày 01/01 và 01/07 hàng năm để bắt đầu chu kỳ mới.
+                                                            </p>
+                                                        </div>
                                                         <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
                                                             <div class="text-center p-3 rounded-xl border"
                                                                 style="background: ${currentTierKey == 'member' ? 'rgba(120,144,156,0.08)' : '#f8fafc'}; border-color: ${currentTierKey == 'member' ? 'rgba(120,144,156,0.3)' : '#f1f5f9'};">
@@ -358,7 +416,7 @@
                                                                     Member</div>
                                                                 <div class="font-bold"
                                                                     style="color: ${currentTierKey == 'member' ? '#37474F' : '#64748b'};">
-                                                                    0 - 1.999</div>
+                                                                    0 - 199</div>
                                                                 <div class="text-xs text-slate-400">điểm</div>
                                                             </div>
                                                             <div class="text-center p-3 rounded-xl border"
@@ -368,7 +426,7 @@
                                                                     Silver</div>
                                                                 <div class="font-bold"
                                                                     style="color: ${currentTierKey == 'silver' ? '#455A64' : '#64748b'};">
-                                                                    2.000 - 4.999</div>
+                                                                    200 - 999</div>
                                                                 <div class="text-xs text-slate-400">điểm</div>
                                                             </div>
                                                             <div class="text-center p-3 rounded-xl border"
@@ -378,7 +436,7 @@
                                                                     Gold</div>
                                                                 <div class="font-bold"
                                                                     style="color: ${currentTierKey == 'gold' ? '#8A6E2F' : '#64748b'};">
-                                                                    5.000 - 14.999</div>
+                                                                    1.000 - 4.999</div>
                                                                 <div class="text-xs text-slate-400">điểm</div>
                                                             </div>
                                                             <div class="text-center p-3 rounded-xl border"
@@ -388,7 +446,7 @@
                                                                     Platinum</div>
                                                                 <div class="font-bold"
                                                                     style="color: ${currentTierKey == 'platinum' ? '#303F9F' : '#64748b'};">
-                                                                    15.000+</div>
+                                                                    5.000+</div>
                                                                 <div class="text-xs text-slate-400">điểm</div>
                                                             </div>
                                                         </div>

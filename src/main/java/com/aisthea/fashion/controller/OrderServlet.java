@@ -123,6 +123,9 @@ public class OrderServlet extends HttpServlet {
 
     private void showOrderHistory(HttpServletRequest request, HttpServletResponse response, User user)
             throws ServletException, IOException {
+        // Refresh user in session to ensure rank/points are up to date in sidebar
+        refreshSessionUser(request);
+        
         List<Order> orderList = orderService.getOrderHistory(user.getUserId());
         request.setAttribute("orderList", orderList);
         request.getRequestDispatcher("/WEB-INF/views/order/history.jsp").forward(request, response);
@@ -144,6 +147,7 @@ public class OrderServlet extends HttpServlet {
             int orderId = Integer.parseInt(orderIdStr);
             logger.info("Viewing order details for ID: " + orderId);
 
+            Order order = null; // Declare order here
             // Check for payment status from PayOS return URL
             String paymentStatus = request.getParameter("payment");
             if ("success".equalsIgnoreCase(paymentStatus)) {
@@ -152,9 +156,9 @@ public class OrderServlet extends HttpServlet {
                     logger.info("Payment success detected for order " + orderId + ". Updating status to Paid.");
                     orderService.updateOrderStatus(orderId, "Paid");
                     // Refresh order data and send confirmation email
-                    Order updatedOrder = orderService.getOrderDetails(orderId, user.getUserId());
-                    if (updatedOrder != null) {
-                        sendOrderEmail(updatedOrder);
+                    order = orderService.getOrderDetails(orderId, user.getUserId()); // Assign to declared 'order'
+                    if (order != null) {
+                        sendOrderEmail(order);
                     }
                 }
             } else if ("cancel".equalsIgnoreCase(paymentStatus)) {
@@ -167,14 +171,21 @@ public class OrderServlet extends HttpServlet {
                 }
             }
 
+            // Always refresh user session when viewing details to ensure tier/points are current
+            refreshSessionUser(request);
+            user = (User) request.getSession().getAttribute("user");
+
+            // If 'order' was not updated in the payment status blocks, fetch it now
+            if (order == null) {
+                order = orderService.getOrderDetails(orderId, user.getUserId());
+            }
+
             // If payment was success, clear the cart now (it wasn't cleared during
             // placeOrder for QR)
             if ("success".equalsIgnoreCase(paymentStatus)) {
                 request.getSession().setAttribute("cart", new com.aisthea.fashion.model.Cart());
                 request.getSession().removeAttribute("originalCart");
             }
-
-            Order order = orderService.getOrderDetails(orderId, user.getUserId());
 
             if (order != null) {
                 request.setAttribute("order", order);
@@ -258,6 +269,13 @@ public class OrderServlet extends HttpServlet {
 
             session.setAttribute("cart", new Cart());
             session.removeAttribute("originalCart");
+
+            // Refresh session user after placing order
+            User freshUser = new com.aisthea.fashion.dao.UserDAO().selectUser(user.getUserId());
+            if (freshUser != null) {
+                freshUser.setPassword(null);
+                session.setAttribute("user", freshUser);
+            }
 
             response.sendRedirect(
                     request.getContextPath() + "/order?action=view&id=" + newOrder.getOrderid() + "&success=true");
@@ -460,6 +478,24 @@ public class OrderServlet extends HttpServlet {
 
         } catch (Exception e) {
             logger.warning("Gửi mail cho đơn hàng #" + order.getOrderid() + " thất bại: " + e.getMessage());
+        }
+    }
+
+    private void refreshSessionUser(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            User user = (User) session.getAttribute("user");
+            if (user != null) {
+                try {
+                    User freshUser = new com.aisthea.fashion.dao.UserDAO().selectUser(user.getUserId());
+                    if (freshUser != null) {
+                        freshUser.setPassword(null);
+                        session.setAttribute("user", freshUser);
+                    }
+                } catch (Exception e) {
+                    logger.warning("Failed to refresh session user: " + e.getMessage());
+                }
+            }
         }
     }
 }
