@@ -44,11 +44,14 @@ public class ChatServlet extends HttpServlet {
 
     private static final List<String> serverLogs = Collections.synchronizedList(new ArrayList<>());
     private static final Map<Integer, Long> adminActivity = new ConcurrentHashMap<>();
-    private static final java.text.SimpleDateFormat ISO_FORMAT = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    private static final java.text.SimpleDateFormat ISO_FORMAT = new java.text.SimpleDateFormat(
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
     private static void logTrace(String msg) {
         String logLine = new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date()) + " - " + msg;
         serverLogs.add(logLine);
-        if (serverLogs.size() > 100) serverLogs.remove(0);
+        if (serverLogs.size() > 100)
+            serverLogs.remove(0);
         System.out.println(logLine);
     }
 
@@ -183,7 +186,11 @@ public class ChatServlet extends HttpServlet {
                                 "lastMessage", c.getLastMessage() != null ? c.getLastMessage() : "",
                                 "lastActive", c.getUpdatedAt() != null ? ISO_FORMAT.format(c.getUpdatedAt()) : ""));
                     }
-                    out.print(gson.toJson(safeMap("conversations", result)));
+                    out.print(gson.toJson(safeMap(
+                            "conversations", result, 
+                            "onlineCount", adminActivity.size(),
+                            "serverTime", System.currentTimeMillis()
+                    )));
                     break;
                 }
                 case "admin": {
@@ -435,29 +442,46 @@ public class ChatServlet extends HttpServlet {
         int convoId = chatMessageDAO.findOrCreateConversation(user.getUserId());
         String dbCT = chatMessageDAO.getChatType(convoId);
         String dbST = chatMessageDAO.getConversationStatus(convoId);
-        logTrace("handleHandoff start. UserID=" + user.getUserId() + ", convoId=" + convoId + " (Current DB: " + dbCT + "/" + dbST + ")");
+        logTrace("handleHandoff start. UserID=" + user.getUserId() + ", convoId=" + convoId + " (Current DB: " + dbCT
+                + "/" + dbST + ")");
 
-        // In-memory online check for admins (within 300 seconds)
+        // In-memory online check for admins (within 5 minutes)
         long currentTime = System.currentTimeMillis();
         int onlineCount = 0;
         List<Integer> activeAdminIds = new ArrayList<>();
-        logTrace("handleHandoff online check. adminActivitySize=" + adminActivity.size() + ", currentTime=" + currentTime);
-        for (Map.Entry<Integer, Long> entry : adminActivity.entrySet()) {
-            long diff = currentTime - entry.getValue();
-            logTrace("Admin " + entry.getKey() + " lastSeen: " + entry.getValue() + " (diff: " + diff + "ms)");
-            if (activeAdminIds.size() < 10) { // Limit trace
-                activeAdminIds.add(entry.getKey());
-            }
-            if (diff <= 120000) { // 2 minutes
-                onlineCount++;
+        
+        // Refresh currentUser info from DB to ensure role is up to date
+        if (userDAO != null) {
+            User freshUser = userDAO.selectUser(user.getUserId());
+            if (freshUser != null) {
+                user.setRole(freshUser.getRole());
+                request.getSession().setAttribute("user", user);
             }
         }
-        logTrace("handleHandoff Final onlineCount=" + onlineCount + ", activeCount=" + activeAdminIds.size());
 
+        logTrace("handleHandoff online check. adminActivitySize=" + adminActivity.size());
+        for (Map.Entry<Integer, Long> entry : adminActivity.entrySet()) {
+            long diff = currentTime - entry.getValue();
+            if (diff <= 300000) { // Keep online for 5 minutes of inactivity
+                onlineCount++;
+                activeAdminIds.add(entry.getKey());
+                logTrace("Admin " + entry.getKey() + " is ONLINE (diff: " + diff + "ms)");
+            }
+        }
+
+        // Fallback: check DB if memory map is empty
+        if (onlineCount == 0 && userDAO != null) {
+            onlineCount = userDAO.countOnlineAdmins(300);
+            logTrace("Fallback to DB check: onlineCount=" + onlineCount);
+        }
+
+        // DEBUG: If still zero, we might want to force it for testing, 
+        // but let's stick to showing a clear error first.
         if (onlineCount <= 0) {
-            String msg = "Hiện tại các nhân viên hỗ trợ của AISTHÉA đều đang không trực. AI sẽ tiếp tục hỗ trợ bạn, hoặc bạn có thể để lại lời nhắn nhé! 🙏";
+            String msg = "Hiện tại các nhân viên hỗ trợ của AISTHÉA đều đang không trực (hoặc chưa hoạt động trong 5 phút qua). AI sẽ tiếp tục hỗ trợ bạn nhé! 🙏";
             int msgId = chatMessageDAO.saveMessageReturnId(convoId, "AI", msg);
-            out.print(gson.toJson(safeMap("success", false, "error", "STAFF_OFFLINE", "chatType", "AI", "systemMsg", msg, "msgId", msgId, "debugOnline", activeAdminIds)));
+            out.print(gson.toJson(safeMap("success", false, "error", "STAFF_OFFLINE", "chatType", "AI", "systemMsg",
+                    msg, "msgId", msgId, "debugOnline", activeAdminIds, "adminActivityCount", adminActivity.size())));
             return;
         }
 
@@ -468,7 +492,8 @@ public class ChatServlet extends HttpServlet {
         if (success) {
             String msg = "Cuộc trò chuyện đã được chuyển cho nhân viên hỗ trợ. Vui lòng đợi trong giây lát, nhân viên sẽ phản hồi sớm nhất có thể! 🧑‍💼";
             int msgId = chatMessageDAO.saveMessageReturnId(convoId, "AI", msg);
-            out.print(gson.toJson(safeMap("success", true, "chatType", "STAFF", "systemMsg", msg, "msgId", msgId, "debugOnline", activeAdminIds)));
+            out.print(gson.toJson(safeMap("success", true, "chatType", "STAFF", "systemMsg", msg, "msgId", msgId,
+                    "debugOnline", activeAdminIds)));
         } else {
             out.print(gson.toJson(safeMap("success", false, "error", "Handoff failed", "debugOnline", activeAdminIds)));
         }
@@ -522,7 +547,8 @@ public class ChatServlet extends HttpServlet {
     }
 
     private boolean isAdminOrStaff(User user) {
-        if (user == null || user.getRole() == null) return false;
+        if (user == null || user.getRole() == null)
+            return false;
         String role = user.getRole().trim();
         return "ADMIN".equalsIgnoreCase(role) || "STAFF".equalsIgnoreCase(role);
     }

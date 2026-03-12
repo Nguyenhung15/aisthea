@@ -74,25 +74,31 @@ public class ChatMessageDAO {
     }
 
     public boolean handoffToStaff(int conversationId, Integer userId) {
+        // Find staffId if userId is provided, but handle admins without staff records
         int staffId = (userId != null) ? getStaffIdByUserId(userId) : -1;
+        
+        // Ensure chattype becomes STAFF and status is OPEN so it shows up in dashboards
         String sql = "UPDATE conversations SET chattype = 'STAFF', staffid = ?, updatedat = GETDATE(), status = 'OPEN' "
                 + "WHERE conversationid = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+            
             if (staffId > 0) {
                 ps.setInt(1, staffId);
             } else {
                 ps.setNull(1, java.sql.Types.INTEGER);
             }
             ps.setInt(2, conversationId);
+            
             int rows = ps.executeUpdate();
-            if (rows == 0) {
-                System.err.println("[ChatMessageDAO] handoffToStaff: 0 rows affected for ID " + conversationId);
+            if (rows > 0) {
+                System.out.println("[ChatMessageDAO] Handoff successful for convo " + conversationId + " (StaffId: " + (staffId > 0 ? staffId : "NULL") + ")");
+            } else {
+                System.err.println("[ChatMessageDAO] Handoff failed: No conversation found with ID " + conversationId);
             }
             return rows > 0;
         } catch (SQLException e) {
-            System.err.println("[ChatMessageDAO] handoffToStaff error (staffId=" + staffId + "): " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[ChatMessageDAO] handoffToStaff error: " + e.getMessage());
             return false;
         }
     }

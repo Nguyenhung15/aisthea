@@ -189,6 +189,7 @@
                 var lastAdminMsgId = 0;
                 var pollTimer = null;
                 var knownStaffConvos = new Set();
+                var convoMsgCounts = {}; // Track message counts for each convoId
                 var notifSound = document.getElementById('notifSound');
                 var seenMessageIds = new Set(); // For deduplication
 
@@ -222,14 +223,49 @@
                         allConvos = data.conversations || [];
                         convoCount.textContent = allConvos.length;
                         
-                        // Check for NEW staff handoffs
-                        var hasNewStaff = false;
+                        // Check for NEW staff handoffs OR NEW messages in existing staff chats
+                        var hasReasonToNotif = false;
                         allConvos.forEach(function(c) {
-                            if (String(c.chatType||'').trim().toUpperCase() === 'STAFF' && String(c.status||'').trim().toUpperCase() === 'OPEN' && !knownStaffConvos.has(c.convoId)) {
-                                hasNewStaff = true;
+                            var isStaffType = String(c.chatType||'').trim().toUpperCase() === 'STAFF';
+                            var isOpen = String(c.status||'').trim().toUpperCase() === 'OPEN';
+                            
+                            // Reason 1: New handoff request
+                            if (isStaffType && isOpen && !knownStaffConvos.has(c.convoId)) {
+                                hasReasonToNotif = true;
                                 knownStaffConvos.add(c.convoId);
                             }
+                            
+                            // Reason 2: New message in a staff chat (sent by customer)
+                            var oldCount = convoMsgCounts[c.convoId] || 0;
+                            if (isStaffType && isOpen && c.msgCount > oldCount) {
+                                // Double check if last message was from customer to avoid notifying on staff replies
+                                // For simplicity, we just notify if msgCount increases while chattype is staff
+                                if (activeConvoId != c.convoId) { // Only if not currently looking at it
+                                    hasReasonToNotif = true;
+                                }
+                            }
+                            convoMsgCounts[c.convoId] = c.msgCount;
                         });
+
+                        if (hasReasonToNotif) {
+                            console.log("[ManageChats] New activity detected! Playing sound...");
+                            if (notifSound) {
+                                notifSound.currentTime = 0;
+                                notifSound.play().catch(function(err) {
+                                    console.warn("Audio play failed:", err);
+                                });
+                            }
+                            // Blink title
+                            var oldTitle = document.title;
+                            var blinkCount = 0;
+                            var blinker = setInterval(function() {
+                                document.title = (blinkCount % 2 === 0) ? "🔔 CÓ TIN NHẮN..." : oldTitle;
+                                if (++blinkCount > 10) {
+                                    clearInterval(blinker);
+                                    document.title = oldTitle;
+                                }
+                            }, 1000);
+                        }
                         
                         applyFilters();
 

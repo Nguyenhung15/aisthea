@@ -301,6 +301,11 @@
             .lux-header__dropdown-item--danger:hover i {
                 color: #dc2626;
             }
+            @keyframes pulseNotif {
+                0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+                70% { transform: scale(1.2); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+                100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            }
         </style>
 
         <script>
@@ -359,6 +364,7 @@
                     .then(r => r.json())
                     .then(data => {
                         const convos = data.conversations || [];
+                        console.log('[AdminNotif] Poll Success. Convos:', convos.length, 'OnlineAdmins:', data.onlineCount);
                         const types = convos.map(c => String(c.chatType || '').trim().toUpperCase() + '/' + String(c.status || '').trim().toUpperCase());
                         console.log('[Poll] Raw Data (Type/Stat):', types);
 
@@ -375,29 +381,35 @@
                             notifPulseCount.textContent = staffConvos.length;
                             notifPulseCount.style.display = 'inline-block';
                             
+                            // Make badge blink if it's extremely urgent
+                            notifBadge.style.animation = 'pulseNotif 1s infinite';
+
                             let html = '';
                             staffConvos.forEach((c, idx) => {
                                 const sid = String(c.convoId);
-                                if (isInitialized && !knownHandoffIds.has(sid)) {
+                                // Show toast ONLY if it's the first time we see this ID since page load
+                                if (!knownHandoffIds.has(sid)) {
                                     console.log('[Poll] NEW handoff request:', sid);
-                                    showToast('Yêu cầu hỗ trợ', (c.fullname || c.username || 'Khách hàng') + ' cần giúp đỡ', c.convoId);
-                                    try {
-                                        const bell = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-                                        bell.play().catch(e => console.warn('Audio play blocked:', e));
-                                    } catch(e) {}
+                                    if (isInitialized) {
+                                        showToast('Yêu cầu hỗ trợ', (c.fullname || c.username || 'Khách hàng') + ' cần giúp đỡ', c.convoId);
+                                        try {
+                                            const bell = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                                            bell.play().catch(e => console.warn('Audio play blocked:', e));
+                                        } catch(e) {}
+                                    }
+                                    knownHandoffIds.add(sid);
                                 }
-                                knownHandoffIds.add(sid);
 
                                 if (idx < 5) {
                                     const name = c.fullname || c.username || 'Khách hàng';
                                     const initials = name.charAt(0).toUpperCase();
                                     const msg = (c.lastMessage || 'Cần hỗ trợ gấp...').substring(0, 50);
                                     html += `
-                                        <a href="\${ctx}/chat?action=manage&convoId=\${c.convoId}" class="notif-item">
-                                            <div class="notif-ava">\${initials}</div>
+                                        <a href="${ctx}/chat?action=manage&convoId=${c.convoId}" class="notif-item">
+                                            <div class="notif-ava">${initials}</div>
                                             <div class="notif-content">
-                                                <span class="notif-name">\${name}</span>
-                                                <span class="notif-text">\${msg}</span>
+                                                <span class="notif-name">${name}</span>
+                                                <span class="notif-text">${msg}</span>
                                             </div>
                                             <span class="notif-time">Mới</span>
                                         </a>
@@ -407,6 +419,7 @@
                             notifList.innerHTML = html;
                         } else {
                             notifBadge.style.display = 'none';
+                            notifBadge.style.animation = 'none';
                             notifPulseCount.style.display = 'none';
                             notifList.innerHTML = '<div class="lux-header__dropdown-item" style="justify-content:center; color:var(--color-text-muted); font-style:italic;">Không có yêu cầu mới</div>';
                             knownHandoffIds.clear(); 

@@ -88,3 +88,19 @@ update-jsp-paths.ps1
 .project
 .classpath
 bin/
+
+# debug files
+sql_log.txt
+tmp_sql_output.txt
+
+# diagnostic jsp
+diag_*.jsp
+
+# debug files
+*.log
+sql_*.txt
+tmp_*.txt
+changes.txt
+
+# jar debug
+jar_*.txt
