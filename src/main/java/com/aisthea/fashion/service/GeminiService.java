@@ -20,8 +20,7 @@ import java.util.Map;
  */
 public class GeminiService {
 
-    private static final String API_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+    private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
     private static final MediaType JSON_MEDIA = MediaType.parse("application/json; charset=utf-8");
 
@@ -70,112 +69,78 @@ public class GeminiService {
     }
 
     /**
-     * Send a chat message with history to Gemini and get a reply.
-     *
-     * @param userMessage    The current user message
-     * @param history        List of previous messages
-     * @param productContext Optional text containing actual product data from DB
-     * @return AI reply text
+     * Send a chat message with history to Groq (Llama 3) and get a reply.
      */
-    public String chat(String userMessage, List<Map<String, String>> history, String productContext) throws IOException {
+    public String chat(String userMessage, List<Map<String, String>> history, String productContext)
+            throws IOException {
 
         JsonObject requestBody = new JsonObject();
+        requestBody.addProperty("model", "llama-3.3-70b-versatile"); // Model mạnh nhất hiện tại trên Groq
 
-        // System Instruction (v1beta support)
+        JsonArray messages = new JsonArray();
+
+        // 1. Add System Message
         String finalSystemPrompt = SYSTEM_PROMPT;
         if (productContext != null && !productContext.isBlank()) {
             finalSystemPrompt += "\n\n## Dữ liệu sản phẩm thực tế từ cửa hàng:\n" + productContext;
         }
+        JsonObject systemMsg = new JsonObject();
+        systemMsg.addProperty("role", "system");
+        systemMsg.addProperty("content", finalSystemPrompt);
+        messages.add(systemMsg);
 
-        JsonObject systemInstruction = new JsonObject();
-        JsonArray siParts = new JsonArray();
-        JsonObject siPart = new JsonObject();
-        siPart.addProperty("text", finalSystemPrompt);
-        System.out.println("[GeminiService] Final System Prompt Length: " + finalSystemPrompt.length());
-        siParts.add(siPart);
-        systemInstruction.add("parts", siParts);
-        requestBody.add("system_instruction", systemInstruction);
-
-        // Build contents array (conversation history + current message)
-        JsonArray contents = new JsonArray();
-
-        // Add history
+        // 2. Add History
         if (history != null) {
             for (Map<String, String> msg : history) {
-                JsonObject content = new JsonObject();
-                content.addProperty("role", msg.get("role")); // "user" or "model"
-                JsonArray parts = new JsonArray();
-                JsonObject part = new JsonObject();
-                part.addProperty("text", msg.get("text"));
-                parts.add(part);
-                content.add("parts", parts);
-                contents.add(content);
+                JsonObject m = new JsonObject();
+                // Chuyển role từ Gemini (model) sang chuẩn OpenAI (assistant)
+                String role = "model".equalsIgnoreCase(msg.get("role")) ? "assistant" : "user";
+                m.addProperty("role", role);
+                m.addProperty("content", msg.get("text"));
+                messages.add(m);
             }
         }
 
-        // Add current user message (Clean message, instructions are in system_instruction)
-        JsonObject userContent = new JsonObject();
-        userContent.addProperty("role", "user");
-        JsonArray userParts = new JsonArray();
-        JsonObject userPart = new JsonObject();
-        userPart.addProperty("text", userMessage);
-        userParts.add(userPart);
-        userContent.add("parts", userParts);
-        contents.add(userContent);
+        // 3. Add Current Message
+        JsonObject userMsg = new JsonObject();
+        userMsg.addProperty("role", "user");
+        userMsg.addProperty("content", userMessage);
+        messages.add(userMsg);
 
-        requestBody.add("contents", contents);
-
-        // Generation config
-        JsonObject generationConfig = new JsonObject();
-        generationConfig.addProperty("temperature", 0.4); 
-        generationConfig.addProperty("maxOutputTokens", 2048); // Increased from 1024
-        requestBody.add("generationConfig", generationConfig);
+        requestBody.add("messages", messages);
+        requestBody.addProperty("temperature", 0.4);
+        requestBody.addProperty("max_tokens", 2048);
 
         // Make API call
-        System.out.println("[GeminiService] Calling API: " + API_URL + " (v1beta latest fix)");
-        String url = API_URL + "?key=" + apiKey;
+        System.out.println("[GroqService] Calling API: " + API_URL + " with Llama 3");
         RequestBody body = RequestBody.create(gson.toJson(requestBody), JSON_MEDIA);
         Request request = new Request.Builder()
-                .url(url)
+                .url(API_URL)
+                .addHeader("Authorization", "Bearer " + apiKey)
                 .post(body)
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
             String responseBody = response.body() != null ? response.body().string() : "";
-            
+
             if (!response.isSuccessful()) {
-                System.err.println("[GeminiService] API Failed: " + responseBody);
-                throw new IOException("Gemini API error " + response.code() + ": " + responseBody);
+                String errorMsg = "Groq API error " + response.code() + ": " + responseBody;
+                System.err.println("[GroqService] " + errorMsg);
+                throw new IOException(errorMsg);
             }
 
             JsonObject jsonResponse = gson.fromJson(responseBody, JsonObject.class);
 
-            // Extract text from response (Handle multiple parts)
-            if (jsonResponse.has("candidates") && jsonResponse.getAsJsonArray("candidates").size() > 0) {
-                JsonObject candidate = jsonResponse.getAsJsonArray("candidates").get(0).getAsJsonObject();
-                
-                // Debug finish reason
-                if (candidate.has("finishReason")) {
-                    System.out.println("[GeminiService] Finish Reason: " + candidate.get("finishReason").getAsString());
+            if (jsonResponse.has("choices") && jsonResponse.getAsJsonArray("choices").size() > 0) {
+                JsonObject choice = jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject();
+                if (choice.has("message") && choice.getAsJsonObject("message").has("content")) {
+                    return choice.getAsJsonObject("message").get("content").getAsString();
                 }
+            }
 
-                if (candidate.has("content") && candidate.getAsJsonObject("content").has("parts")) {
-                    JsonArray parts = candidate.getAsJsonObject("content").getAsJsonArray("parts");
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < parts.size(); i++) {
-                        sb.append(parts.get(i).getAsJsonObject().get("text").getAsString());
-                    }
-                    return sb.toString();
-                }
-            }
-            
-            if (jsonResponse.has("promptFeedback")) {
-                return "Xin lỗi, câu hỏi của bạn vi phạm quy tắc an toàn của AI. Vui lòng hỏi câu khác! 🙏";
-            } else {
-                return "Xin lỗi, tôi gặp chút trục trặc khi xử lý câu trả lời. Bạn thử lại nhé!";
-            }
+            return "Xin lỗi, tôi gặp chút trục trặc khi xử lý câu trả lời. Bạn thử lại nhé!";
         } catch (Exception e) {
-            System.err.println("[GeminiService] Error: " + e.getMessage());
+            System.err.println("[GroqService] Error: " + e.getMessage());
             throw e;
         }
     }
