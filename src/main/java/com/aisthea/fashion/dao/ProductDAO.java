@@ -432,8 +432,8 @@ public class ProductDAO implements IProductDAO {
 
     @Override
     public String getInventorySummary() throws SQLException {
-        // Trở lại TOP 40 theo yêu cầu khách hàng để demo đầy đủ
-        String sql = "SELECT TOP 40 p.productid, p.name, p.price, p.is_bestseller, c.name as cat_name, "
+        // Giảm xuống TOP 12 để ưu tiên tính năng "đổi màu hiện ảnh" mà không lo hết token (6000 limit)
+        String sql = "SELECT TOP 12 p.productid, p.name, p.price, p.is_bestseller, c.name as cat_name, "
                 + "(SELECT COALESCE(SUM(oi.quantity), 0) FROM orderitems oi "
                 + " JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid "
                 + " WHERE pcs.productid = p.productid) as sold_qty "
@@ -447,35 +447,26 @@ public class ProductDAO implements IProductDAO {
             
             while (rs.next()) {
                 int pid = rs.getInt("productid");
-                int soldQty = rs.getInt("sold_qty");
-                sb.append("[P-ID:").append(pid).append("] ")
-                  .append(rs.getString("name")).append(" | ")
-                  .append(String.format("%,.0f", rs.getBigDecimal("price"))).append("đ | ")
-                  .append("Loại:").append(rs.getString("cat_name")).append(" | ")
-                  .append("Đã bán:").append(soldQty).append("\n");
+                StringBuilder colorMap = new StringBuilder("[");
                 
-                // Fetch colors and images for this product
                 String imgSql = "SELECT imageurl, color FROM product_image WHERE productid = ? ORDER BY isprimary DESC";
-                List<String> availableColors = new ArrayList<>();
-                StringBuilder imagesByColor = new StringBuilder();
-                
                 try (PreparedStatement ips = conn.prepareStatement(imgSql)) {
                     ips.setInt(1, pid);
                     try (ResultSet irs = ips.executeQuery()) {
-                        while(irs.next()) {
+                        while (irs.next()) {
                             String color = irs.getString("color");
                             String url = irs.getString("imageurl");
-                            String colorLabel = (color != null && !color.isEmpty()) ? color : "Mặc định";
-                            if (!availableColors.contains(colorLabel)) {
-                                availableColors.add(colorLabel);
-                            }
-                            imagesByColor.append("  + [").append(colorLabel).append("] -> ").append(url).append("\n");
+                            colorMap.append(color != null && !color.isEmpty() ? color : "Default").append(":").append(url).append(",");
                         }
                     }
                 }
-                sb.append("Màu sắc hiện có: ").append(String.join(", ", availableColors)).append("\n");
-                sb.append("Dữ liệu ảnh:\n").append(imagesByColor.toString());
-                sb.append("\n");
+                
+                sb.append("ID:").append(pid)
+                  .append("|").append(rs.getString("name"))
+                  .append("|").append(String.format("%.0f", rs.getBigDecimal("price")))
+                  .append("|S:").append(rs.getInt("sold_qty"))
+                  .append("|M-A:").append(colorMap.toString())
+                  .append("\n");
             }
         }
         return sb.toString();

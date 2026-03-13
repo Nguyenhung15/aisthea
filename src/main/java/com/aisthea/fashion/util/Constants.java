@@ -53,7 +53,7 @@ public class Constants {
     // File Upload
     public static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     public static final String[] ALLOWED_IMAGE_EXTENSIONS = { "jpg", "jpeg", "png", "gif" };
-    public static final String UPLOAD_DIR = "E:/aisthea_uploads/uploads";
+    public static final String UPLOAD_DIR = System.getProperty("user.home") + "/aisthea_uploads/uploads";
 
     // Pagination
     public static final int DEFAULT_PAGE_SIZE = 12;
