@@ -210,7 +210,26 @@ public class FeedbackServlet extends HttpServlet {
         if ("incrementHelpful".equals(action)) {
             try {
                 int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
+                
+                // Track liked status in Session
+                Map<Integer, Boolean> likedMap = (Map<Integer, Boolean>) session.getAttribute("likedMap");
+                if (likedMap == null) {
+                    likedMap = new java.util.HashMap<>();
+                }
+                
+                // Prevent duplicate likes
+                if (likedMap.containsKey(feedbackId)) {
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"success\": false, \"message\": \"Already liked\"}");
+                    return;
+                }
+
                 boolean success = feedbackService.incrementHelpfulCount(feedbackId);
+                if (success) {
+                    likedMap.put(feedbackId, true);
+                    session.setAttribute("likedMap", likedMap);
+                }
+                
                 response.setContentType("application/json");
                 response.getWriter().write("{\"success\": " + success + "}");
                 return;

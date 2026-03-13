@@ -56,19 +56,8 @@
 
                     <style>
                         /* ── Base font override ── */
-                        body,
-                        button,
-                        input,
-                        select,
-                        textarea {
+                        body, button, input, select, textarea {
                             font-family: 'Manrope', sans-serif;
-                        }
-
-                        h1,
-                        h2,
-                        h3,
-                        h4 {
-                            font-family: 'Playfair Display', serif;
                         }
 
                         .glass-panel {
@@ -203,7 +192,7 @@
                             </c:if>
                         </c:if>
 
-                        <main class="relative pt-20 pb-20 px-4 md:px-8 min-h-screen">
+                        <main class="relative pt-8 pb-20 px-4 md:px-8 min-h-screen">
 
                             <!-- ======= PRODUCT DETAIL SECTION ======= -->
                             <div
@@ -213,27 +202,50 @@
                                 <!-- Left: Images -->
                                 <div class="lg:col-span-7 flex flex-col gap-4">
                                     <div
-                                        class="relative w-full max-w-xl mx-auto aspect-[4/5] overflow-hidden rounded-sm bg-white shadow-sm">
+                                        class="relative w-full max-w-xl mx-auto aspect-[4/5] overflow-hidden rounded-sm bg-white shadow-sm group cursor-crosshair"
+                                        onmousemove="zoomImage(event, this)"
+                                        onmouseleave="resetZoom(this)">
                                         <img id="mainImage" src="${primaryImgUrl}" alt="${product.name}"
-                                            class="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+                                            class="w-full h-full object-cover origin-center transition-transform hover:duration-200 duration-500 ease-out group-hover:scale-[2]"
                                             onerror="this.src='${placeholderImg}'">
+                                            
+                                        <!-- Prev / Next Buttons -->
+                                        <button onclick="prevImage(event)" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/70 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all z-10 transition-colors">
+                                            <span class="material-icons-outlined">chevron_left</span>
+                                        </button>
+                                        <button onclick="nextImage(event)" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/70 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all z-10 transition-colors">
+                                            <span class="material-icons-outlined">chevron_right</span>
+                                        </button>
                                     </div>
 
-                                    <div class="grid grid-cols-4 gap-4" id="thumbnail-container">
-                                        <c:forEach var="img" items="${images}">
-                                            <c:set var="thumbUrl" value="${img.imageUrl}" />
-                                            <c:if
-                                                test="${not empty thumbUrl and not fn:startsWith(thumbUrl, 'http') and not fn:startsWith(thumbUrl, '/')}">
-                                                <c:set var="thumbUrl"
-                                                    value="${pageContext.request.contextPath}/uploads/${thumbUrl}" />
-                                            </c:if>
-                                            <div class="aspect-[3/4] overflow-hidden rounded-sm cursor-pointer border border-slate-200 hover:border-primary transition-colors thumbnail-item"
-                                                onclick="changeImage(this.querySelector('img'))">
-                                                <img src="${thumbUrl}" alt="Thumbnail"
-                                                    class="w-full h-full object-cover hover:opacity-90 transition-opacity"
-                                                    onerror="this.src='${placeholderImg}'">
-                                            </div>
-                                        </c:forEach>
+                                    <div class="relative w-full max-w-xl mx-auto group/thumbs">
+                                        <!-- Prev Button Thumbnails -->
+                                        <button onclick="scrollThumbs('left')" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white border border-slate-100 text-slate-800 rounded-full shadow-md opacity-0 group-hover/thumbs:opacity-100 transition-all z-10 hover:bg-slate-50 hover:scale-105 pointer-events-auto">
+                                            <span class="material-icons-outlined text-[18px]">chevron_left</span>
+                                        </button>
+
+                                        <div class="flex gap-3 overflow-x-auto pb-1 pt-1 w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth" id="thumbnail-container">
+                                            <c:forEach var="img" items="${images}">
+                                                <c:set var="thumbUrl" value="${img.imageUrl}" />
+                                                <c:if
+                                                    test="${not empty thumbUrl and not fn:startsWith(thumbUrl, 'http') and not fn:startsWith(thumbUrl, '/')}">
+                                                    <c:set var="thumbUrl"
+                                                        value="${pageContext.request.contextPath}/uploads/${thumbUrl}" />
+                                                </c:if>
+                                                <div class="flex-shrink-0 w-20 aspect-[3/4] overflow-hidden rounded-sm cursor-pointer border-2 border-transparent hover:border-slate-800 transition-colors thumbnail-item opacity-70 hover:opacity-100"
+                                                    data-color="${img.color}"
+                                                    onclick="changeImage('${thumbUrl}')">
+                                                    <img src="${thumbUrl}" alt="Thumbnail"
+                                                        class="w-full h-full object-cover"
+                                                        onerror="this.src='${placeholderImg}'">
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+
+                                        <!-- Next Button Thumbnails -->
+                                        <button onclick="scrollThumbs('right')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white border border-slate-100 text-slate-800 rounded-full shadow-md opacity-0 group-hover/thumbs:opacity-100 transition-all z-10 hover:bg-slate-50 hover:scale-105 pointer-events-auto">
+                                            <span class="material-icons-outlined text-[18px]">chevron_right</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -242,7 +254,7 @@
 
                                     <!-- Breadcrumb -->
                                     <nav aria-label="Breadcrumb"
-                                        class="flex items-center flex-wrap text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-8 font-bold gap-1">
+                                        class="flex items-center flex-wrap text-[10px] uppercase tracking-[0.2em] text-slate-400 mb-4 font-bold gap-1 mt-0">
                                         <%-- Level 1: Home --%>
                                             <a class="hover:text-primary transition-colors"
                                                 href="${pageContext.request.contextPath}/home">Home</a>
@@ -291,8 +303,8 @@
                                     </h1>
 
                                     <!-- Price & Rating -->
-                                    <div class="flex items-center justify-between mb-8 border-b border-slate-100 pb-8">
-                                        <span class="text-3xl text-primary font-serif italic font-medium">
+                                    <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-5">
+                                        <span class="text-3xl text-primary font-bold">
                                             <c:choose>
                                                 <c:when test="${not empty product.price}">
                                                     <fmt:formatNumber value="${product.price}" type="number"
@@ -447,7 +459,7 @@
                             </div>
 
                             <!-- ======= REVIEWS SECTION ======= -->
-                            <section class="max-w-[1400px] mx-auto mt-32 pt-24 border-t border-slate-100">
+                            <section class="max-w-[1400px] mx-auto mt-6 pt-6 border-t border-slate-100">
                                 <c:set var="totalRating" value="0" />
                                 <c:set var="reviewCount" value="${fn:length(feedbacks)}" />
                                 <c:forEach var="fb" items="${feedbacks}">
@@ -538,115 +550,94 @@
                                                 </div>
                                             </c:when>
                                             <c:otherwise>
-                                                <div class="space-y-12">
+                                                <div class="flex flex-col divide-y divide-slate-100">
                                                     <c:forEach var="fb" items="${feedbacks}">
-                                                        <div class="group relative">
-                                                            <div class="flex flex-col md:flex-row gap-6">
-                                                                <!-- Meta side -->
-                                                                <div class="md:w-48 flex-shrink-0">
-                                                                    <div class="mb-4">
-                                                                        <h4
-                                                                            class="font-serif text-lg text-slate-950 mb-1 leading-tight">
-                                                                            ${not empty fb.username ? fb.username :
-                                                                            'Anonymous'}
+                                                        <div class="py-6 group relative">
+                                                            <div class="flex items-start gap-4">
+                                                                <!-- Avatar -->
+                                                                <div class="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-serif text-sm font-bold uppercase shrink-0">
+                                                                    ${not empty fb.username ? fn:substring(fb.username, 0, 1) : 'A'}
+                                                                </div>
+                                                                
+                                                                <div class="flex-1 min-w-0">
+                                                                    <!-- Header inline -->
+                                                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-1">
+                                                                        <h4 class="font-bold text-[14px] text-slate-900 truncate max-w-full">
+                                                                            ${not empty fb.username ? fb.username : 'Anonymous'}
                                                                         </h4>
-                                                                        <div class="flex items-center gap-1.5">
-                                                                            <c:if test="${fb.verified}">
-                                                                                <span
-                                                                                    class="inline-flex items-center gap-1 text-[8px] font-extrabold uppercase tracking-widest text-[#024acf] bg-blue-50/50 px-2 py-0.5 rounded-full border border-blue-100/50">
-                                                                                    <span
-                                                                                        class="material-symbols-outlined text-[10px]"
-                                                                                        style="font-variation-settings: 'FILL' 1;">verified</span>
-                                                                                    Verified
-                                                                                </span>
-                                                                            </c:if>
+                                                                        <div class="flex gap-0.5 text-xs">
+                                                                            <c:forEach begin="1" end="5" var="s">
+                                                                                <span class="material-symbols-outlined text-[12px] ${s <= fb.rating ? 'text-yellow-400' : 'text-slate-200'}" style="${s <= fb.rating ? 'font-variation-settings: \'FILL\' 1;' : ''}">star</span>
+                                                                            </c:forEach>
+                                                                        </div>
+                                                                        <c:if test="${fb.verified}">
+                                                                            <span class="inline-flex items-center gap-1 text-[8px] font-extrabold uppercase tracking-widest text-[#024acf] bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100">
+                                                                                <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                                                                Verified
+                                                                            </span>
+                                                                        </c:if>
+                                                                        <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-auto shrink-0">
+                                                                            <fmt:formatDate value="${fb.createdat}" pattern="MMM dd, yyyy" />
                                                                         </div>
                                                                     </div>
-                                                                    <div
-                                                                        class="text-[10px] font-extrabold text-slate-300 uppercase tracking-[0.2em]">
-                                                                        <fmt:formatDate value="${fb.createdat}"
-                                                                            pattern="dd MMM yyyy" />
-                                                                    </div>
-                                                                </div>
-
-                                                                <!-- Content side -->
-                                                                <div class="flex-1">
-                                                                    <div class="flex gap-0.5 mb-4">
-                                                                        <c:forEach begin="1" end="5" var="s">
-                                                                            <span
-                                                                                class="material-symbols-outlined text-sm ${s <= fb.rating ? 'star-filled-primary' : 'text-slate-100'}">star</span>
-                                                                        </c:forEach>
-                                                                    </div>
-
-                                                                    <div class="relative">
-                                                                        <span
-                                                                            class="absolute -left-6 -top-2 text-4xl text-slate-50 font-serif opacity-50">“</span>
-                                                                        <p
-                                                                            class="text-sm text-slate-600 leading-[1.8] font-medium italic mb-6">
+                                                                    
+                                                                    <!-- Message & Actions Horizontal -->
+                                                                    <div class="flex flex-wrap items-end gap-x-4 gap-y-2 mt-1">
+                                                                        <p class="text-[14px] text-slate-800 leading-relaxed font-medium flex-1 min-w-[200px]">
                                                                             ${not empty fb.comment ? fb.comment : ''}
                                                                         </p>
+
+                                                                        <!-- Helpful/Edit Actions -->
+                                                                        <div class="shrink-0 flex items-center">
+                                                                            <c:choose>
+                                                                                <c:when test="${not empty sessionScope.user and sessionScope.user.userId == fb.userid}">
+                                                                                    <button onclick="window.location.href='${pageContext.request.contextPath}/profile?tab=reviews'" class="flex items-center gap-1 text-slate-400 hover:text-slate-900 transition-colors group/btn">
+                                                                                        <span class="material-symbols-outlined text-[15px]">edit_note</span>
+                                                                                        <span class="text-[10px] font-bold uppercase tracking-widest">Edit</span>
+                                                                                    </button>
+                                                                                </c:when>
+                                                                                <c:when test="${not empty sessionScope.likedMap and sessionScope.likedMap[fb.feedbackid]}">
+                                                                                    <button type="button" disabled class="flex items-center gap-1.5 text-rose-500 transition-all duration-300 group/btn cursor-not-allowed">
+                                                                                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                                                                                        <span class="text-[12px] font-bold tracking-widest ml-1"><span class="count">${fb.helpfulCount}</span></span>
+                                                                                    </button>
+                                                                                </c:when>
+                                                                                <c:otherwise>
+                                                                                    <button type="button" onclick="handleHelpful(${fb.feedbackid}, this)" data-fbid="${fb.feedbackid}" class="helpful-btn flex items-center gap-1.5 text-slate-400 hover:text-rose-500 transition-all duration-300 group/btn">
+                                                                                        <span class="material-symbols-outlined text-[24px] group-hover/btn:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0;">favorite</span>
+                                                                                        <span class="text-[12px] font-bold tracking-widest ml-1"><span class="count">${fb.helpfulCount}</span></span>
+                                                                                    </button>
+                                                                                </c:otherwise>
+                                                                            </c:choose>
+                                                                        </div>
                                                                     </div>
 
-                                                                    <c:if test="${not empty fb.imageUrl}">
-                                                                        <div
-                                                                            class="mt-6 mb-8 overflow-hidden rounded-sm group/img ring-1 ring-black/5">
-                                                                            <img src="${fb.imageUrl}" alt="User sensory"
-                                                                                class="max-w-[320px] w-full object-cover transition-transform duration-700 group-hover/img:scale-105"
-                                                                                onerror="this.parentElement.style.display='none'">
-                                                                        </div>
-                                                                    </c:if>
-
-                                                                    <c:if test="${not empty fb.adminReply}">
-                                                                        <div
-                                                                            class="mt-8 bg-slate-50/80 p-6 rounded-sm border-l-2 border-slate-900 relative">
-                                                                            <div class="flex items-center gap-2 mb-3">
-                                                                                <img src="${pageContext.request.contextPath}/assets/images/ata-logo.png"
-                                                                                    alt="AISTHÉA Logo"
-                                                                                    class="w-5 h-5 object-contain">
-                                                                                <span
-                                                                                    class="text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-900">AISTHÉA</span>
+                                                                    <div class="flex flex-col items-start">
+                                                                        <c:if test="${not empty fb.imageUrl}">
+                                                                            <c:set var="resolvedImageUrl" value="${fb.imageUrl}" />
+                                                                            <c:if test="${not fn:startsWith(resolvedImageUrl, 'http') and not fn:startsWith(resolvedImageUrl, '/')}">
+                                                                                <c:set var="resolvedImageUrl" value="${pageContext.request.contextPath}/uploads/${resolvedImageUrl}" />
+                                                                            </c:if>
+                                                                            <div class="mt-2 overflow-hidden rounded border border-slate-100 inline-block group/img">
+                                                                                <img src="${resolvedImageUrl}" alt="User upload" class="max-w-[90px] aspect-square object-cover transition-transform duration-700 group-hover/img:scale-105" onerror="this.parentElement.style.display='none'">
                                                                             </div>
-                                                                            <p
-                                                                                class="text-[13px] text-slate-600 font-serif leading-relaxed italic pr-4">
-                                                                                "${fb.adminReply}"
-                                                                            </p>
-                                                                            <div
-                                                                                class="text-[9px] text-slate-300 uppercase tracking-widest mt-4 flex justify-between items-center">
-                                                                                <span>Approved Experience</span>
-                                                                                <span>
-                                                                                    <fmt:formatDate
-                                                                                        value="${fb.repliedAt}"
-                                                                                        pattern="MMM dd, yyyy" />
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </c:if>
+                                                                        </c:if>
 
-                                                                    <div
-                                                                        class="mt-8 pt-6 border-t border-slate-50 flex items-center gap-6">
-                                                                        <button
-                                                                            onclick="handleHelpful(${fb.feedbackid}, this)"
-                                                                            class="flex items-center gap-2 text-slate-400 hover:text-[#024acf] transition-all duration-500 group/btn">
-                                                                            <span
-                                                                                class="material-symbols-outlined text-[18px] group-hover/btn:scale-110 transition-transform"
-                                                                                style="font-variation-settings: 'FILL' 0;">favorite</span>
-                                                                            <span
-                                                                                class="text-[10px] font-bold uppercase tracking-widest">Helpful
-                                                                                (<span
-                                                                                    class="count">${fb.helpfulCount}</span>)</span>
-                                                                        </button>
-                                                                        <button
-                                                                            class="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-all duration-500 opacity-0 group-hover:opacity-100">
-                                                                            <span
-                                                                                class="material-symbols-outlined text-[16px]">share</span>
-                                                                            <span
-                                                                                class="text-[10px] font-bold uppercase tracking-widest">Share</span>
-                                                                        </button>
+                                                                        <!-- Admin Reply -->
+                                                                        <c:if test="${not empty fb.adminReply}">
+                                                                            <div class="bg-slate-50/80 p-3 rounded-tr-xl rounded-b-xl rounded-bl-sm border-l-2 border-slate-900 mt-2 inline-block">
+                                                                                <div class="flex items-center gap-1.5 mb-1">
+                                                                                    <span class="text-[9px] font-extrabold uppercase tracking-[0.2em] text-slate-900">AISTHÉA Reply</span>
+                                                                                </div>
+                                                                                <p class="text-[12px] text-slate-700 font-serif leading-relaxed italic pr-2">
+                                                                                    "${fb.adminReply}"
+                                                                                </p>
+                                                                            </div>
+                                                                        </c:if>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="h-[1px] w-full bg-slate-50 my-12 last:hidden"></div>
                                                     </c:forEach>
                                                 </div>
                                             </c:otherwise>
@@ -850,6 +841,89 @@
                                         item.classList.toggle('active');
                                     }
 
+                                    // ── Image Gallery (Zoom & Prev/Next) ─────────────────
+                                    window.zoomImage = function (e, container) {
+                                        const img = container.querySelector('img');
+                                        const rect = container.getBoundingClientRect();
+                                        const x = ((e.clientX - rect.left) / rect.width) * 100;
+                                        const y = ((e.clientY - rect.top) / rect.height) * 100;
+                                        img.style.transformOrigin = x + '% ' + y + '%';
+                                    };
+
+                                    window.resetZoom = function (container) {
+                                        const img = container.querySelector('img');
+                                        img.style.transformOrigin = 'center center';
+                                    };
+
+                                    const productImages = [];
+                                    const thumbs = document.querySelectorAll('.thumbnail-item');
+                                    thumbs.forEach(thumb => {
+                                        const imgUrl = thumb.querySelector('img').src;
+                                        productImages.push(imgUrl);
+                                    });
+
+                                    let currentImgIdx = 0;
+                                    const mainImgElt = document.getElementById('mainImage');
+                                    
+                                    function updateThumbStyle(activeIndex) {
+                                        if (!thumbs || thumbs.length === 0) return;
+                                        thumbs.forEach((t, i) => {
+                                            if (i === activeIndex) {
+                                                t.classList.add('border-slate-800', 'opacity-100');
+                                                t.classList.remove('border-transparent', 'opacity-70');
+                                                t.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                                            } else {
+                                                t.classList.remove('border-slate-800', 'opacity-100');
+                                                t.classList.add('border-transparent', 'opacity-70');
+                                            }
+                                        });
+                                    }
+
+                                    if(productImages.length > 0) {
+                                        const foundIdx = productImages.findIndex(url => mainImgElt.src.includes(url));
+                                        if (foundIdx >= 0) currentImgIdx = foundIdx;
+                                        updateThumbStyle(currentImgIdx);
+                                    }
+
+                                    window.changeImage = function (url) {
+                                        // handle if called from older color switch logic that passes img element
+                                        if(typeof url === 'object' && url.src) {
+                                            url = url.src;
+                                        }
+                                        mainImgElt.src = url;
+                                        const idx = productImages.findIndex(u => u.includes(url) || url.includes(u));
+                                        if (idx >= 0) {
+                                            currentImgIdx = idx;
+                                            updateThumbStyle(currentImgIdx);
+                                        }
+                                    };
+
+                                    window.prevImage = function (e) {
+                                        e.stopPropagation();
+                                        if (productImages.length === 0) return;
+                                        currentImgIdx = (currentImgIdx - 1 + productImages.length) % productImages.length;
+                                        mainImgElt.src = productImages[currentImgIdx];
+                                        updateThumbStyle(currentImgIdx);
+                                    };
+
+                                    window.nextImage = function (e) {
+                                        e.stopPropagation();
+                                        if (productImages.length === 0) return;
+                                        currentImgIdx = (currentImgIdx + 1) % productImages.length;
+                                        mainImgElt.src = productImages[currentImgIdx];
+                                        updateThumbStyle(currentImgIdx);
+                                    };
+
+                                    window.scrollThumbs = function (direction) {
+                                        const container = document.getElementById('thumbnail-container');
+                                        const scrollAmount = container.clientWidth / 2;
+                                        if (direction === 'left') {
+                                            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                                        } else {
+                                            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                                        }
+                                    };
+
                                     // ── Color / Size Data from server ──────────────────────────
                                     const colorSizeData = [];
                                     <c:forEach var="cs" items="${colorSizes}">
@@ -949,7 +1023,7 @@
                                             colorOptions.innerHTML = colors.map(function (c) {
                                                 return '<label class="cursor-pointer group relative">'
                                                     + '<input type="radio" name="color" value="' + c + '" class="peer sr-only" onchange="selectColor(\'' + c + '\')">'
-                                                    + '<div class="w-10 h-10 rounded-full border border-slate-200 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-accent transition-all group-hover:scale-110" '
+                                                    + '<div class="w-10 h-10 rounded-full border border-slate-200 peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-slate-900 transition-all group-hover:scale-110 group-hover:ring-2 group-hover:ring-black group-hover:ring-offset-2" '
                                                     + 'style="background-color: ' + getColorHex(c) + '"></div>'
                                                     + '<span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-widest text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">' + c + '</span>'
                                                     + '</label>';
@@ -963,7 +1037,7 @@
                                             sizeOptions.innerHTML = sizes.map(function (s) {
                                                 return '<label class="cursor-pointer">'
                                                     + '<input type="radio" name="size" value="' + s + '" class="peer sr-only" onchange="selectSize(\'' + s + '\')">'
-                                                    + '<div class="h-12 border border-slate-200 flex items-center justify-center text-[11px] font-extrabold text-slate-800 hover:border-accent peer-checked:bg-slate-900 peer-checked:text-white peer-checked:border-slate-900 transition-all uppercase">' + s + '</div>'
+                                                    + '<div class="h-12 border border-slate-200 flex items-center justify-center text-[11px] font-extrabold text-slate-800 hover:bg-black hover:border-black hover:text-white peer-checked:bg-slate-900 peer-checked:text-white peer-checked:border-slate-900 transition-all uppercase">' + s + '</div>'
                                                     + '</label>';
                                             }).join('');
                                         }
@@ -971,11 +1045,35 @@
 
                                     window.selectColor = function (c) {
                                         selectedColor = c;
-                                        if (colorToImageUrlMap[c] && mainImage) {
-                                            mainImage.src = colorToImageUrlMap[c];
+
+                                        if (colorToImageUrlMap[c]) {
                                             const hiddenInput = document.getElementById('productImageUrlHidden');
                                             if (hiddenInput) hiddenInput.value = colorToImageUrlMap[c];
                                         }
+
+                                        let firstVisibleThumbSrc = null;
+
+                                        // Filter thumbnails
+                                        document.querySelectorAll('.thumbnail-item').forEach(t => {
+                                            if (!c || t.dataset.color === c || !t.dataset.color) {
+                                                t.style.display = 'block';
+                                                
+                                                if (!firstVisibleThumbSrc) {
+                                                    const imgElt = t.querySelector('img');
+                                                    if (imgElt && imgElt.src) firstVisibleThumbSrc = imgElt.src;
+                                                }
+                                            } else {
+                                                t.style.display = 'none';
+                                            }
+                                        });
+
+                                        // Always display the first thumbnail of the chosen color
+                                        if (firstVisibleThumbSrc) {
+                                            changeImage(firstVisibleThumbSrc);
+                                        } else if (colorToImageUrlMap[c] && mainImage) {
+                                            changeImage(colorToImageUrlMap[c]);
+                                        }
+
                                         updateUI();
                                     }
 
@@ -1109,8 +1207,8 @@
 
                                     // ── Helpful Button AJAX ───────────────────────────
                                     window.handleHelpful = function (feedbackId, btn) {
-                                        if (btn.disabled) return;
-                                        btn.disabled = true;
+                                        if (btn.hasAttribute('disabled')) return;
+                                        btn.setAttribute('disabled', 'true');
 
                                         const formData = new URLSearchParams();
                                         formData.append('action', 'incrementHelpful');
@@ -1129,20 +1227,60 @@
                                                         const currentCount = parseInt(countSpan.textContent);
                                                         countSpan.textContent = currentCount + 1;
                                                     }
-                                                    btn.style.color = '#024acf';
+                                                    
+                                                    // Make the button look permanently "liked" and unclickable
+                                                    btn.style.color = '#f43f5e'; // rose-500
+                                                    btn.style.cursor = 'not-allowed';
+                                                    btn.classList.remove('hover:text-rose-500');
+                                                    
                                                     const icon = btn.querySelector('.material-symbols-outlined');
                                                     if (icon) {
                                                         icon.style.fontVariationSettings = "'FILL' 1";
-                                                        icon.style.transform = 'scale(1.2)';
-                                                        setTimeout(() => icon.style.transform = 'scale(1)', 200);
+                                                        icon.classList.remove('group-hover/btn:scale-110');
+                                                        
+                                                        // Heart beat animation once
+                                                        icon.style.transform = 'scale(1.3)';
+                                                        setTimeout(() => icon.style.transform = 'scale(1)', 300);
                                                     }
+                                                    
+                                                    // Remove the onclick event so it can't be clicked again
+                                                    btn.removeAttribute('onclick');
+
+                                                    // Save to LocalStorage for persistence
+                                                    const liked = JSON.parse(localStorage.getItem('likedFeedbacks') || '[]');
+                                                    if (!liked.includes(feedbackId)) {
+                                                        liked.push(feedbackId);
+                                                        localStorage.setItem('likedFeedbacks', JSON.stringify(liked));
+                                                    }
+                                                } else {
+                                                    btn.removeAttribute('disabled');
                                                 }
                                             })
                                             .catch(err => {
                                                 console.error('Error:', err);
-                                                btn.disabled = false;
+                                                btn.removeAttribute('disabled');
                                             });
                                     };
+
+                                    // Hydrate helpful buttons on load
+                                    const likedFeedbacks = JSON.parse(localStorage.getItem('likedFeedbacks') || '[]');
+                                    if (likedFeedbacks.length > 0) {
+                                        document.querySelectorAll('.helpful-btn').forEach(btn => {
+                                            const fbId = parseInt(btn.dataset.fbid);
+                                            if (likedFeedbacks.includes(fbId)) {
+                                                btn.setAttribute('disabled', 'true');
+                                                btn.style.color = '#f43f5e';
+                                                btn.style.cursor = 'not-allowed';
+                                                btn.classList.remove('hover:text-rose-500');
+                                                btn.removeAttribute('onclick');
+                                                const icon = btn.querySelector('.material-symbols-outlined');
+                                                if (icon) {
+                                                    icon.style.fontVariationSettings = "'FILL' 1";
+                                                    icon.classList.remove('group-hover/btn:scale-110');
+                                                }
+                                            }
+                                        });
+                                    }
 
                                     renderColors();
                                     renderSizes();
