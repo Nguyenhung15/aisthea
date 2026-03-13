@@ -17,4 +17,8 @@ public interface IFeedbackService {
     boolean replyToFeedback(int feedbackId, String reply);
 
     boolean incrementHelpfulCount(int feedbackId);
+
+    /** Returns [avgRating, reviewCount] for the given product */
+    double[] getAvgRatingForProduct(int productId);
 }
+

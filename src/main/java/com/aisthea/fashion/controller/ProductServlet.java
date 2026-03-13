@@ -133,6 +133,7 @@ public class ProductServlet extends HttpServlet {
         String categoryIndexParam = request.getParameter("categoryIndex");
         String genderIdParam = request.getParameter("genderid");
         String maxPriceParam = request.getParameter("maxPrice");
+        String minPriceParam = request.getParameter("minPrice");
         String sortParam = request.getParameter("sort");
         String colorParam = request.getParameter("color");
         String sizeParam = request.getParameter("size");
@@ -174,7 +175,7 @@ public class ProductServlet extends HttpServlet {
                 Category foundCategory = categoryService.findCategoryByIndexNameAndGender(categoryIndexParam, genderId);
                 if (foundCategory != null) {
                     request.setAttribute("displayCategory", foundCategory);
-                    request.setAttribute("genderLabel", genderId == 1 ? "NAM" : "NỮ");
+                    request.setAttribute("genderLabel", genderId == 1 ? "Men" : "Women");
                     request.setAttribute("genderId", genderId);
                     request.setAttribute("pageTitle", foundCategory.getName());
                 } else {
@@ -189,7 +190,7 @@ public class ProductServlet extends HttpServlet {
 
                 if (selectedCategory != null) {
                     int catGenderId = selectedCategory.getGenderid();
-                    request.setAttribute("genderLabel", catGenderId == 1 ? "NAM" : "NỮ");
+                    request.setAttribute("genderLabel", catGenderId == 1 ? "Men" : "Women");
                     request.setAttribute("genderId", catGenderId);
                     request.setAttribute("pageTitle", selectedCategory.getName());
 
@@ -235,10 +236,10 @@ public class ProductServlet extends HttpServlet {
             // Only genderid given (clicking NAM / NỮ from navbar)
             else if (genderIdParam != null && !genderIdParam.isBlank()) {
                 int genderId = Integer.parseInt(genderIdParam);
-                String genderLbl = genderId == 1 ? "NAM" : "NỮ";
+                String genderLbl = genderId == 1 ? "Men" : "Women";
                 request.setAttribute("genderLabel", genderLbl);
                 request.setAttribute("genderId", genderId);
-                request.setAttribute("pageTitle", genderId == 1 ? "BST NAM" : "BST NỮ");
+                request.setAttribute("pageTitle", genderId == 1 ? "Men's Collection" : "Women's Collection");
                 // Filter all products by gender via their category
                 List<Category> genderCategories = categoryService.getParentCategoriesByGender(genderId);
                 genderCategories.addAll(categoryService.getChildCategoriesByGender(null, genderId) != null
@@ -259,23 +260,34 @@ public class ProductServlet extends HttpServlet {
             list = new ArrayList<>();
         }
 
-        // Apply price filter (only if maxPrice is explicitly provided AND is NOT the
-        // default max)
-        // The slider max is 500,000,000 — treat that as "no price filter"
-        if (maxPriceParam != null && !maxPriceParam.isBlank()) {
-            try {
-                BigDecimal maxPrice = new BigDecimal(maxPriceParam);
-                BigDecimal sliderMax = new BigDecimal("500000000");
-                // Only apply filter if user actually lowered the price from the maximum
-                if (maxPrice.compareTo(sliderMax) < 0) {
-                    list = list.stream()
-                            .filter(p -> p.getPrice() != null && p.getPrice().compareTo(maxPrice) <= 0)
-                            .collect(Collectors.toList());
-                }
-            } catch (NumberFormatException e) {
-                logger.warning("Invalid maxPrice value: " + maxPriceParam);
+        // Apply price range filter (minPrice and/or maxPrice)
+        // Defaults: minPrice = 0, maxPrice = 500_000_000 (slider max = no limit)
+        final BigDecimal SLIDER_MAX = new BigDecimal("500000000");
+        boolean hasPriceFilter = false;
+        BigDecimal filteredMin = BigDecimal.ZERO;
+        BigDecimal filteredMax = SLIDER_MAX;
+        try {
+            if (minPriceParam != null && !minPriceParam.isBlank()) {
+                BigDecimal parsed = new BigDecimal(minPriceParam.trim());
+                if (parsed.compareTo(BigDecimal.ZERO) > 0) { filteredMin = parsed; hasPriceFilter = true; }
             }
+        } catch (NumberFormatException e) { logger.warning("Invalid minPrice: " + minPriceParam); }
+        try {
+            if (maxPriceParam != null && !maxPriceParam.isBlank()) {
+                BigDecimal parsed = new BigDecimal(maxPriceParam.trim());
+                if (parsed.compareTo(SLIDER_MAX) < 0) { filteredMax = parsed; hasPriceFilter = true; }
+            }
+        } catch (NumberFormatException e) { logger.warning("Invalid maxPrice: " + maxPriceParam); }
+        if (hasPriceFilter) {
+            final BigDecimal fMin = filteredMin;
+            final BigDecimal fMax = filteredMax;
+            list = list.stream()
+                    .filter(p -> p.getPrice() != null
+                            && p.getPrice().compareTo(fMin) >= 0
+                            && p.getPrice().compareTo(fMax) <= 0)
+                    .collect(Collectors.toList());
         }
+
 
         // Apply color filter (check product images or colorSizes)
         if (colorParam != null && !colorParam.isBlank()) {
@@ -376,6 +388,15 @@ public class ProductServlet extends HttpServlet {
             listForPage = new ArrayList<>();
         }
 
+        // Populate rating data for the displayed products
+        if (listForPage != null) {
+            for (Product p : listForPage) {
+                double[] ratingData = feedbackService.getAvgRatingForProduct(p.getProductId());
+                p.setAvgRating(ratingData[0]);
+                p.setReviewCount((int) ratingData[1]);
+            }
+        }
+
         // Set attributes
         request.setAttribute("productList", listForPage);
         request.setAttribute("totalPages", totalPages);
@@ -448,7 +469,7 @@ public class ProductServlet extends HttpServlet {
         if (product != null && product.getCategory() != null) {
             Category category = product.getCategory();
             int genderId = category.getGenderid();
-            request.setAttribute("genderLabel", genderId == 1 ? "NAM" : "NỮ");
+            request.setAttribute("genderLabel", genderId == 1 ? "Men" : "Women");
             request.setAttribute("genderId", genderId);
 
             // If this product's category is a child, fetch its parent too
