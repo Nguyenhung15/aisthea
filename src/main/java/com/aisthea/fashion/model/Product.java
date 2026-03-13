@@ -19,6 +19,9 @@ public class Product {
     private Date createdAt;
     private Date updatedAt;
     private boolean bestseller; // true = show Best Seller badge
+    private double avgRating;   // average star rating (0.0 – 5.0)
+    private int reviewCount;    // number of visible reviews
+
 
     public Product() {
     }
@@ -166,4 +169,21 @@ public class Product {
     public void setBestseller(boolean bestseller) {
         this.bestseller = bestseller;
     }
+
+    public double getAvgRating() {
+        return avgRating;
+    }
+
+    public void setAvgRating(double avgRating) {
+        this.avgRating = avgRating;
+    }
+
+    public int getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(int reviewCount) {
+        this.reviewCount = reviewCount;
+    }
 }
+

@@ -87,4 +87,15 @@ public class FeedbackService implements IFeedbackService {
             return false;
         }
     }
+
+    @Override
+    public double[] getAvgRatingForProduct(int productId) {
+        try {
+            return ((FeedbackDAO) feedbackDAO).getAvgRatingForProduct(productId);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error getting avg rating for product " + productId, e);
+            return new double[]{0.0, 0};
+        }
+    }
 }
+

@@ -432,10 +432,13 @@ public class ProductDAO implements IProductDAO {
 
     @Override
     public String getInventorySummary() throws SQLException {
-        // Fetch products with their categories
-        String sql = "SELECT TOP 40 p.productid, p.name, p.price, c.name as cat_name "
+        // Trở lại TOP 40 theo yêu cầu khách hàng để demo đầy đủ
+        String sql = "SELECT TOP 40 p.productid, p.name, p.price, p.is_bestseller, c.name as cat_name, "
+                + "(SELECT COALESCE(SUM(oi.quantity), 0) FROM orderitems oi "
+                + " JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid "
+                + " WHERE pcs.productid = p.productid) as sold_qty "
                 + "FROM Products p JOIN Categories c ON p.categoryid = c.categoryid "
-                + "ORDER BY p.updatedat DESC";
+                + "ORDER BY sold_qty DESC, p.updatedat DESC";
         
         StringBuilder sb = new StringBuilder();
         try (Connection conn = DBConnection.getConnection();
@@ -444,10 +447,12 @@ public class ProductDAO implements IProductDAO {
             
             while (rs.next()) {
                 int pid = rs.getInt("productid");
-                sb.append("--- PRODUCT ID: ").append(pid).append(" ---\n")
-                  .append("Tên: ").append(rs.getString("name")).append("\n")
-                  .append("Giá: ").append(String.format("%,.0f VNĐ", rs.getBigDecimal("price"))).append("\n")
-                  .append("Loại: ").append(rs.getString("cat_name")).append("\n");
+                int soldQty = rs.getInt("sold_qty");
+                sb.append("[P-ID:").append(pid).append("] ")
+                  .append(rs.getString("name")).append(" | ")
+                  .append(String.format("%,.0f", rs.getBigDecimal("price"))).append("đ | ")
+                  .append("Loại:").append(rs.getString("cat_name")).append(" | ")
+                  .append("Đã bán:").append(soldQty).append("\n");
                 
                 // Fetch colors and images for this product
                 String imgSql = "SELECT imageurl, color FROM product_image WHERE productid = ? ORDER BY isprimary DESC";

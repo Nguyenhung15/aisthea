@@ -194,4 +194,25 @@ public class FeedbackDAO implements IFeedbackDAO {
             return ps.executeUpdate() > 0;
         }
     }
+
+    /**
+     * Returns [avgRating, reviewCount] for a given product (only Visible feedbacks).
+     */
+    public double[] getAvgRatingForProduct(int productId) throws SQLException {
+        String sql = "SELECT AVG(CAST(rating AS FLOAT)) AS avg_rating, COUNT(*) AS review_count "
+                + "FROM feedback WHERE productid = ? AND (status IS NULL OR status = 'Visible')";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    double avg = rs.getDouble("avg_rating");
+                    int count = rs.getInt("review_count");
+                    return new double[]{rs.wasNull() ? 0.0 : avg, count};
+                }
+            }
+        }
+        return new double[]{0.0, 0};
+    }
 }
+

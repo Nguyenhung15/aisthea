@@ -842,11 +842,14 @@
                                 .catch(function (err) {
                                     removeTyping();
                                     var friendlyMsg = '⚠️ ' + (err.message || 'Có lỗi xảy ra. Vui lòng thử lại sau!');
-                                    if (err.message.indexOf('429') !== -1) {
-                                        friendlyMsg = '⚠️ Hệ thống AI đang bận (hết hạn mức). Bạn vui lòng đợi vài giây rồi nhắn lại nhé, hoặc bấm "Gặp nhân viên" để được hỗ trợ ngay! 🙏';
+                                    
+                                    // Bắt lỗi 413 (Dữ liệu quá lớn) và 429 (Quá hạn mức)
+                                    if (err.message.indexOf('413') !== -1 || err.message.indexOf('429') !== -1) {
+                                        friendlyMsg = '⚠️ Hệ thống AI đang bận hoặc tin nhắn quá dài. Bạn vui lòng đợi vài giây hoặc thử lại với câu hỏi ngắn gọn hơn nhé! 🙏';
                                     } else if (err.message.indexOf('404') !== -1) {
-                                        friendlyMsg = '⚠️ Không tìm thấy máy chủ AI. Vui lòng báo cho quản trị viên!';
+                                        friendlyMsg = '⚠️ Không tìm thấy dịch vụ AI. Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ!';
                                     }
+                                    
                                     addMessage(friendlyMsg, 'AI', true);
                                     console.error('[Chat] FATAL ERROR:', err);
                                 })
