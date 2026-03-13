@@ -349,7 +349,7 @@
                                     class="flex-1 px-4 py-3 border border-slate-200 bg-white text-slate-600 font-semibold rounded-lg hover:bg-slate-50 transition-colors text-sm">
                                     Hủy Bỏ
                                 </button>
-                                <button type="submit"
+                                <button ~type="submit"
                                     class="flex-1 px-4 py-3 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition-colors text-sm">
                                     Xóa
                                 </button>

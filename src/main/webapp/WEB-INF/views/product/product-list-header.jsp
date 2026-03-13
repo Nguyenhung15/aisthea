@@ -84,10 +84,9 @@
                                              group-hover:scale-105 transition-transform duration-200">
                                                                         </c:when>
                                                                         <c:otherwise>
-                                                                            <div
-                                                                                class="text-slate-600 group-hover:text-primary transition-transform group-hover:-translate-y-0.5 duration-200">
-                                                                                <i class="fa-solid fa-user text-lg"></i>
-                                                                            </div>
+                                                                            <img src="${pageContext.request.contextPath}/images/ava_default.png"
+                                                                                alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
+                                             group-hover:scale-105 transition-transform duration-200">
                                                                         </c:otherwise>
                                                                     </c:choose>
                                                                     <span id="pl-user-name"
@@ -178,10 +177,11 @@
                                                         </c:when>
                                                         <c:otherwise>
                                                             <%-- Not logged in --%>
-                                                                <a class="text-slate-600 hover:text-primary transition-transform hover:-translate-y-0.5 duration-200 hidden sm:block"
+                                                                <a class="flex items-center gap-2 transition-transform hover:-translate-y-0.5 duration-200 hidden sm:block"
                                                                     href="${pageContext.request.contextPath}/login"
                                                                     title="Login">
-                                                                    <i class="fa-solid fa-user text-lg"></i>
+                                                                    <img src="${pageContext.request.contextPath}/images/ava_default.png"
+                                                                        alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md">
                                                                 </a>
                                                         </c:otherwise>
                                                     </c:choose>

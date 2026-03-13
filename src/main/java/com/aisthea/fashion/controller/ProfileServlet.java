@@ -92,7 +92,7 @@ public class ProfileServlet extends HttpServlet {
         String oldAvatar = user.getAvatar();
 
         if (filePart != null && filePart.getSize() > 0) {
-            String uploadPath = request.getServletContext().getRealPath("/uploads");
+            String uploadPath = com.aisthea.fashion.util.Constants.UPLOAD_DIR;
             File uploadDir = new File(uploadPath);
             if (!uploadDir.exists()) {
                 uploadDir.mkdirs();

@@ -38,13 +38,15 @@
                         <div id="account-btn" class="icon-btn" style="position:relative;">
                             <c:choose>
                                 <c:when
-                                    test="${not empty sessionScope.user.avatar and sessionScope.user.avatar ne 'images/ava_default.png'}">
+                                    test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
                                     <img src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
                                         alt="Avatar"
                                         style="width:36px;height:36px;border-radius:50%;object-fit:cover;vertical-align:middle;">
                                 </c:when>
                                 <c:otherwise>
-                                    <i class="fa-solid fa-user"></i>
+                                    <img src="${pageContext.request.contextPath}/images/ava_default.png"
+                                        alt="Avatar"
+                                        style="width:36px;height:36px;border-radius:50%;object-fit:cover;vertical-align:middle;">
                                 </c:otherwise>
                             </c:choose>
 
@@ -99,8 +101,10 @@
                     </c:when>
 
                     <c:otherwise>
-                        <a class="icon-btn" href="${pageContext.request.contextPath}/login" title="Login">
-                            <i class="fa-solid fa-user"></i>
+                        <a class="icon-btn" href="${pageContext.request.contextPath}/login" title="Login" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                            <img src="${pageContext.request.contextPath}/images/ava_default.png"
+                                 alt="Avatar"
+                                 style="width:36px;height:36px;border-radius:50%;object-fit:cover;vertical-align:middle;">
                         </a>
                     </c:otherwise>
                 </c:choose>

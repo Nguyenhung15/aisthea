@@ -23,6 +23,7 @@ public class OrderService implements IOrderService {
     private IOrderDAO orderDAO;
     private IOrderItemDAO orderItemDAO;
     private final VoucherDAO voucherDAO = new VoucherDAO();
+    private final INotificationService notificationService = new NotificationService();
     private static final Logger logger = Logger.getLogger(OrderService.class.getName());
 
     public OrderService() {
@@ -125,6 +126,12 @@ public class OrderService implements IOrderService {
 
             conn.commit();
 
+            // Send notification for new order
+            notificationService.sendNotification(user.getUserId(), 
+                "Đặt hàng thành công", 
+                "Đơn hàng #" + newOrderId + " của bạn đã được đặt thành công và đang chờ xác nhận.", 
+                "ORDER");
+
             // Points are added when order is Paid or Completed to avoid duplication.
 
             // ── 7. Xoá voucher khỏi session ──────────────────────────────
@@ -216,7 +223,22 @@ public class OrderService implements IOrderService {
                     }
                 }
             }
-            return orderDAO.updateOrderStatus(orderId, newStatus);
+            
+            boolean updated = orderDAO.updateOrderStatus(orderId, newStatus);
+            if (updated) {
+                try {
+                    Order order = orderDAO.getAdminOrderById(orderId);
+                    if (order != null) {
+                        notificationService.sendNotification(order.getUserid(), 
+                            "Cập nhật đơn hàng", 
+                            "Đơn hàng #" + orderId + " của bạn đã được cập nhật trạng thái sang: " + newStatus, 
+                            "ORDER");
+                    }
+                } catch (Exception e) {
+                    logger.warning("Could not send status update notification: " + e.getMessage());
+                }
+            }
+            return updated;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Lỗi khi cập nhật trạng thái đơn hàng", e);
             e.printStackTrace();
@@ -284,6 +306,11 @@ public class OrderService implements IOrderService {
             }
 
             conn.commit();
+            
+            notificationService.sendNotification(userId, 
+                "Hủy đơn hàng thành công", 
+                "Đơn hàng #" + orderId + " của bạn đã được hủy thành công.", 
+                "ORDER");
             return true;
 
         } catch (Exception e) {

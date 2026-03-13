@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
         <!DOCTYPE html>
         <html lang="vi">
 
@@ -130,126 +131,84 @@
                                             các chương trình khuyến mãi mới nhất</p>
                                     </div>
                                     <div class="hidden md:block">
-                                        <span
-                                            class="text-xs text-primary cursor-pointer hover:underline font-medium">Đánh
-                                            dấu đã đọc tất cả</span>
+                                        <a href="${pageContext.request.contextPath}/notifications?action=markAllRead"
+                                            class="text-xs text-primary hover:underline font-medium">Đánh
+                                            dấu đã đọc tất cả</a>
                                     </div>
                                 </header>
 
+                                <c:if test="${not empty error}">
+                                    <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 text-sm flex items-center">
+                                        <span class="material-symbols-outlined mr-2">error</span>
+                                        ${error}
+                                    </div>
+                                </c:if>
+
+                                <c:if test="${not empty debugInfo}">
+                                    <div class="bg-blue-50 border border-blue-200 text-blue-600 px-4 py-3 rounded-xl mb-6 text-xs font-mono">
+                                        DEBUG: ${debugInfo}
+                                    </div>
+                                </c:if>
+
                                 <div class="flex space-x-1 mb-8 bg-slate-100/50 p-1 rounded-xl w-fit">
-                                    <button
-                                        class="px-5 py-2 rounded-lg text-sm font-semibold text-primary bg-white shadow-sm transition-all duration-200">Tất
-                                        cả</button>
-                                    <button
-                                        class="px-5 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 transition-all duration-200">Cập
-                                        nhật đơn hàng</button>
-                                    <button
-                                        class="px-5 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 transition-all duration-200">Khuyến
-                                        mãi</button>
+                                    <a href="${pageContext.request.contextPath}/notifications?type=ALL"
+                                        class="px-5 py-2 rounded-lg text-sm font-semibold ${activeType == 'ALL' ? 'text-primary bg-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'} transition-all duration-200">Tất
+                                        cả</a>
+                                    <a href="${pageContext.request.contextPath}/notifications?type=ORDER"
+                                        class="px-5 py-2 rounded-lg text-sm font-semibold ${activeType == 'ORDER' ? 'text-primary bg-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'} transition-all duration-200">Cập
+                                        nhật đơn hàng</a>
+                                    <a href="${pageContext.request.contextPath}/notifications?type=PROMOTION"
+                                        class="px-5 py-2 rounded-lg text-sm font-semibold ${activeType == 'PROMOTION' ? 'text-primary bg-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'} transition-all duration-200">Khuyến
+                                        mãi</a>
                                 </div>
 
                                 <div class="space-y-1">
-                                    <!-- Notification Item 1 -->
-                                    <div
-                                        class="group relative bg-white/40 hover:bg-white/80 rounded-2xl p-5 border border-slate-100 transition-all duration-300 hover:shadow-glass-sm flex gap-4 items-start cursor-pointer">
-                                        <div
-                                            class="absolute top-6 left-4 w-2 h-2 bg-sky-400 rounded-full notification-dot">
+                                    <c:if test="${empty notifications}">
+                                        <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                                            <span class="material-symbols-outlined text-6xl mb-4 opacity-20">notifications_off</span>
+                                            <p class="text-sm font-medium">Bạn chưa có thông báo nào</p>
                                         </div>
-                                        <div
-                                            class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 text-primary border border-blue-100 ml-3">
-                                            <span class="material-symbols-outlined text-[24px]">local_shipping</span>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="flex justify-between items-start mb-1">
-                                                <h3 class="text-slate-900 font-bold text-sm">Giao hàng thành công</h3>
-                                                <span
-                                                    class="text-[11px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">2
-                                                    giờ trước</span>
-                                            </div>
-                                            <p class="text-slate-600 text-sm leading-relaxed mb-2">Đơn hàng <span
-                                                    class="font-medium text-slate-800">#DH82931</span> của bạn đã được
-                                                giao thành công. Vui lòng kiểm tra và xác nhận.</p>
-                                            <span
-                                                class="inline-block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cập
-                                                nhật đơn hàng</span>
-                                        </div>
-                                    </div>
+                                    </c:if>
+                                    
+                                    <c:forEach var="n" items="${notifications}">
+                                        <div onclick="window.location.href='${pageContext.request.contextPath}/notifications?action=markRead&id=${n.notificationId}'"
+                                            class="group relative ${n.read ? 'bg-white/20' : 'bg-white/40'} hover:bg-white/80 rounded-2xl p-5 border border-slate-100 transition-all duration-300 hover:shadow-glass-sm flex gap-4 items-start cursor-pointer ${n.read ? 'opacity-80' : ''}">
+                                            
+                                            <c:if test="${!n.read}">
+                                                <div class="absolute top-6 left-4 w-2 h-2 bg-sky-400 rounded-full notification-dot"></div>
+                                            </c:if>
 
-                                    <!-- Notification Item 2 -->
-                                    <div
-                                        class="group relative bg-white/40 hover:bg-white/80 rounded-2xl p-5 border border-slate-100 transition-all duration-300 hover:shadow-glass-sm flex gap-4 items-start cursor-pointer">
-                                        <div
-                                            class="absolute top-6 left-4 w-2 h-2 bg-sky-400 rounded-full notification-dot">
-                                        </div>
-                                        <div
-                                            class="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center flex-shrink-0 text-accent-gold border border-amber-100 ml-3">
-                                            <span class="material-symbols-outlined text-[24px]">percent</span>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="flex justify-between items-start mb-1">
-                                                <h3 class="text-slate-900 font-bold text-sm">Ưu đãi độc quyền Gold
-                                                    Member</h3>
-                                                <span
-                                                    class="text-[11px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">5
-                                                    giờ trước</span>
+                                            <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ml-3
+                                                ${n.type == 'ORDER' ? 'bg-blue-50 text-primary border-blue-100' : 
+                                                  n.type == 'PROMOTION' ? 'bg-amber-50 text-accent-gold border-amber-100' : 
+                                                  'bg-slate-50 text-slate-400 border-slate-100'} border">
+                                                <span class="material-symbols-outlined text-[24px]">
+                                                    ${n.type == 'ORDER' ? 'local_shipping' : 
+                                                      n.type == 'PROMOTION' ? 'percent' : 
+                                                      'info'}
+                                                </span>
                                             </div>
-                                            <p class="text-slate-600 text-sm leading-relaxed mb-2">Chúc mừng bạn đã
-                                                thăng hạng Gold! Tận hưởng ưu đãi giảm 20% cho đơn hàng tiếp theo với mã
-                                                <span class="font-mono text-accent-gold font-bold">GOLD20</span>.</p>
-                                            <span
-                                                class="inline-block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Khuyến
-                                                mãi</span>
-                                        </div>
-                                    </div>
 
-                                    <!-- Notification Item 3 -->
-                                    <div
-                                        class="group relative bg-white/40 hover:bg-white/80 rounded-2xl p-5 border border-slate-100 transition-all duration-300 hover:shadow-glass-sm flex gap-4 items-start cursor-pointer">
-                                        <div
-                                            class="absolute top-6 left-4 w-2 h-2 bg-sky-400 rounded-full notification-dot">
-                                        </div>
-                                        <div
-                                            class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 text-primary border border-blue-100 ml-3">
-                                            <span class="material-symbols-outlined text-[24px]">inventory_2</span>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="flex justify-between items-start mb-1">
-                                                <h3 class="text-slate-900 font-bold text-sm">Đơn hàng đang được vận
-                                                    chuyển</h3>
-                                                <span
-                                                    class="text-[11px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">1
-                                                    ngày trước</span>
+                                            <div class="flex-1">
+                                                <div class="flex justify-between items-start mb-1">
+                                                    <h3 class="text-slate-900 font-bold text-sm">
+                                                        <c:out value="${n.title}"/>
+                                                    </h3>
+                                                    <span class="text-[11px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
+                                                        <fmt:formatDate value="${n.createdAt}" pattern="dd/MM/yyyy HH:mm" />
+                                                    </span>
+                                                </div>
+                                                <p class="text-slate-600 text-sm leading-relaxed mb-2">
+                                                    <c:out value="${n.content}"/>
+                                                </p>
+                                                <span class="inline-block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                    ${n.type == 'ORDER' ? 'Cập nhật đơn hàng' : 
+                                                      n.type == 'PROMOTION' ? 'Khuyến mãi' : 
+                                                      'Hệ thống'}
+                                                </span>
                                             </div>
-                                            <p class="text-slate-600 text-sm leading-relaxed mb-2">Đơn hàng <span
-                                                    class="font-medium text-slate-800">#DH82931</span> đã được bàn giao
-                                                cho đơn vị vận chuyển.</p>
-                                            <span
-                                                class="inline-block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cập
-                                                nhật đơn hàng</span>
                                         </div>
-                                    </div>
-
-                                    <!-- Notification Item 4 (Read) -->
-                                    <div
-                                        class="group relative bg-white/20 hover:bg-white/60 rounded-2xl p-5 border border-transparent hover:border-slate-100 transition-all duration-300 flex gap-4 items-start cursor-pointer opacity-80 hover:opacity-100">
-                                        <div
-                                            class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center flex-shrink-0 text-slate-400 border border-slate-100 ml-3">
-                                            <span class="material-symbols-outlined text-[24px]">check_circle</span>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="flex justify-between items-start mb-1">
-                                                <h3 class="text-slate-700 font-bold text-sm">Xác nhận thanh toán thành
-                                                    công</h3>
-                                                <span class="text-[11px] text-slate-400 font-medium">3 ngày trước</span>
-                                            </div>
-                                            <p class="text-slate-500 text-sm leading-relaxed mb-2">Thanh toán cho đơn
-                                                hàng <span class="font-medium">#DH82931</span> đã được xác nhận. Cảm ơn
-                                                bạn đã mua sắm tại AISTHÉA.</p>
-                                            <span
-                                                class="inline-block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cập
-                                                nhật đơn hàng</span>
-                                        </div>
-                                    </div>
+                                    </c:forEach>
                                 </div>
 
                                 <div class="mt-8 flex justify-center">
