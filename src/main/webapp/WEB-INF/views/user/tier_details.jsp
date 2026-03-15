@@ -209,6 +209,25 @@
                                     border-color: var(--hover-accent) !important;
                                     box-shadow: var(--hover-shadow) !important;
                                 }
+
+                                .custom-scrollbar::-webkit-scrollbar {
+                                    width: 6px;
+                                }
+
+                                .custom-scrollbar::-webkit-scrollbar-track {
+                                    background: rgba(241, 245, 249, 0.5);
+                                    border-radius: 10px;
+                                }
+
+                                .custom-scrollbar::-webkit-scrollbar-thumb {
+                                    background: rgba(0, 86, 179, 0.15);
+                                    border-radius: 10px;
+                                    transition: all 0.3s ease;
+                                }
+
+                                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                                    background: rgba(0, 86, 179, 0.3);
+                                }
                             </style>
                         </head>
 
@@ -345,43 +364,45 @@
                                                             style="height: 1px; background: #f1f5f9; margin-left: 16px;"></span>
                                                     </h3>
                                                     
-                                                    <div class="bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl overflow-hidden shadow-sm">
-                                                        <table class="w-full text-left border-collapse">
-                                                            <thead>
-                                                                <tr class="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-wider">
-                                                                    <th class="px-6 py-4 font-semibold">Ngày giao dịch</th>
-                                                                    <th class="px-6 py-4 font-semibold">Lý do</th>
-                                                                    <th class="px-6 py-4 font-semibold text-right">Điểm cộng</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody class="divide-y divide-slate-100/50">
-                                                                <c:choose>
-                                                                    <c:when test="${not empty pointHistory}">
-                                                                        <c:forEach var="item" items="${pointHistory}">
-                                                                            <tr class="hover:bg-white/30 transition-colors">
-                                                                                <td class="px-6 py-4 text-sm text-slate-600">
-                                                                                    <c:set var="createdAt" value="${item.createdAt}" />
-                                                                                    <fmt:formatDate value="${createdAt}" pattern="dd/MM/yyyy HH:mm" />
-                                                                                </td>
-                                                                                <td class="px-6 py-4 text-sm font-medium text-slate-700">
-                                                                                    ${item.reason}
-                                                                                </td>
-                                                                                <td class="px-6 py-4 text-sm font-bold text-right" style="color: ${accentColor};">
-                                                                                    +${item.pointsEarned}
+                                                    <div class="bg-white/40 backdrop-blur-md border border-white/60 rounded-2xl shadow-sm overflow-hidden">
+                                                        <div class="max-h-[400px] overflow-y-auto custom-scrollbar">
+                                                            <table class="w-full text-left border-collapse">
+                                                                <thead class="sticky top-0 z-20 bg-slate-50/95 backdrop-blur-sm shadow-sm">
+                                                                    <tr class="text-slate-500 text-xs uppercase tracking-wider">
+                                                                        <th class="px-6 py-4 font-semibold">Ngày giao dịch</th>
+                                                                        <th class="px-6 py-4 font-semibold">Lý do</th>
+                                                                        <th class="px-6 py-4 font-semibold text-right">Điểm cộng</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody class="divide-y divide-slate-100/50">
+                                                                    <c:choose>
+                                                                        <c:when test="${not empty pointHistory}">
+                                                                            <c:forEach var="item" items="${pointHistory}">
+                                                                                <tr class="hover:bg-white/30 transition-colors">
+                                                                                    <td class="px-6 py-4 text-sm text-slate-600">
+                                                                                        <c:set var="createdAt" value="${item.createdAt}" />
+                                                                                        <fmt:formatDate value="${createdAt}" pattern="dd/MM/yyyy HH:mm" />
+                                                                                    </td>
+                                                                                    <td class="px-6 py-4 text-sm font-medium text-slate-700">
+                                                                                        ${item.reason}
+                                                                                    </td>
+                                                                                    <td class="px-6 py-4 text-sm font-bold text-right" style="color: ${accentColor};">
+                                                                                        +${item.pointsEarned}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </c:forEach>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <tr>
+                                                                                <td colspan="3" class="px-6 py-10 text-center text-slate-400 italic text-sm">
+                                                                                    Chưa có lịch sử tích điểm nào.
                                                                                 </td>
                                                                             </tr>
-                                                                        </c:forEach>
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        <tr>
-                                                                            <td colspan="3" class="px-6 py-10 text-center text-slate-400 italic text-sm">
-                                                                                Chưa có lịch sử tích điểm nào.
-                                                                            </td>
-                                                                        </tr>
-                                                                    </c:otherwise>
-                                                                </c:choose>
-                                                            </tbody>
-                                                        </table>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 </div>
 

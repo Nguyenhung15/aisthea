@@ -229,151 +229,139 @@
 
                                         <!-- Avatar Section -->
                                         <div class="flex flex-col items-center justify-center mb-10">
-                                            <div class="relative group">
-                                                <div
-                                                    class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative bg-slate-100">
-                                                    <c:choose>
-                                                        <c:when
-                                                            test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
-                                                            <img id="avatarPreview"
-                                                                src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
-                                                                class="w-full h-full object-cover" alt="Avatar">
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <img id="avatarPreview"
-                                                                src="${pageContext.request.contextPath}/images/ava_default.png"
-                                                                class="w-full h-full object-cover" alt="Avatar">
-                                                        </c:otherwise>
-                                                    </c:choose>
+                                            <div onclick="document.getElementById('avatarInput').click()"
+                                                class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative bg-slate-100 cursor-pointer group">
+                                                <c:choose>
+                                                    <c:when
+                                                        test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
+                                                        <img id="avatarPreview"
+                                                            src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
+                                                            class="w-full h-full object-cover" alt="Avatar">
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <img id="avatarPreview"
+                                                            src="${pageContext.request.contextPath}/images/ava_default.png"
+                                                            class="w-full h-full object-cover" alt="Avatar">
+                                                    </c:otherwise>
+                                                </c:choose>
 
-                                                    <!-- Edit Overlay -->
-                                                    <div onclick="document.getElementById('avatarInput').click()"
-                                                        class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                                        <span
-                                                            class="material-symbols-outlined text-white text-3xl">photo_camera</span>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Hidden Input -->
-                                                <input type="file" id="avatarInput" name="avatar" accept="image/*"
-                                                    class="hidden">
-
-                                                <div
-                                                    class="absolute -bottom-2 -right-2 bg-white rounded-full p-2 shadow-md border border-slate-100 text-primary">
-                                                    <span class="material-symbols-outlined text-xl">edit</span>
+                                                <!-- Camera Overlay on Hover -->
+                                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
                                                 </div>
                                             </div>
+
+                                            <!-- Hidden Input -->
+                                            <input type="file" id="avatarInput" name="avatar" accept="image/*"
+                                                class="hidden">
                                             <p
                                                 class="mt-4 text-xs font-semibold text-slate-400 uppercase tracking-widest">
                                                 Thay đổi ảnh đại diện</p>
                                         </div>
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
 
-                                            <div class="space-y-2 group">
-                                                <label
-                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
-                                                    for="fullName">Họ và tên</label>
-                                                <div class="relative">
-                                                    <input name="fullname"
-                                                        class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 placeholder-slate-400 outline-none font-medium"
-                                                        id="fullName" type="text" value="${sessionScope.user.fullname}"
-                                                        required />
-                                                    <div
-                                                        class="absolute right-4 top-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <span class="material-symbols-outlined text-[18px]">edit</span>
-                                                    </div>
-                                                </div>
+                                    <div class="space-y-2 group">
+                                        <label
+                                            class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                            for="fullName">Họ và tên</label>
+                                        <div class="relative">
+                                            <input name="fullname"
+                                                class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 placeholder-slate-400 outline-none font-medium"
+                                                id="fullName" type="text" value="${sessionScope.user.fullname}"
+                                                required />
+                                            <div
+                                                class="absolute right-4 top-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span class="material-symbols-outlined text-[18px]">edit</span>
                                             </div>
-
-                                            <div class="space-y-2">
-                                                <label
-                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
-                                                    for="email">Email</label>
-                                                <div class="relative opacity-75">
-                                                    <input
-                                                        class="w-full pl-5 pr-12 py-3.5 bg-slate-100/50 border border-slate-200/60 rounded-xl text-slate-500 cursor-not-allowed font-medium"
-                                                        disabled="" id="email" type="email"
-                                                        value="${sessionScope.user.email}" />
-                                                    <input type="hidden" name="email"
-                                                        value="${sessionScope.user.email}" />
-                                                    <span
-                                                        class="material-symbols-outlined absolute right-4 top-3.5 text-slate-400 text-[20px]">lock</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="space-y-2">
-                                                <labelb
-                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
-                                                    for="phone">Số điện thoại</label>
-                                                    <div class="relative group">
-                                                        <input name="phone"
-                                                            class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium"
-                                                            id="phone" type="tel" value="${sessionScope.user.phone}"
-                                                            maxlength="10" />
-                                                        <div
-                                                            class="absolute right-4 top-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                                            <span
-                                                                class="material-symbols-outlined text-[18px]">edit</span>
-                                                        </div>
-                                                    </div>
-                                                    <p id="phoneError" class="text-red-500 text-xs mt-1 hidden">SĐT phải
-                                                        có
-                                                        đúng 10 chữ số (0-9).</p>
-                                            </div>
-
-                                            <div class="space-y-2">
-                                                <label
-                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
-                                                    for="gender">Giới tính</label>
-                                                <div class="relative">
-                                                    <select name="gender"
-                                                        class="w-full pl-5 pr-12 py-3.5 glass-input rounded-xl text-slate-800 appearance-none cursor-pointer font-medium"
-                                                        id="gender">
-                                                        <option value="Male" ${sessionScope.user.gender=='Male'
-                                                            ? 'selected' : '' }>Nam</option>
-                                                        <option value="Female" ${sessionScope.user.gender=='Female'
-                                                            ? 'selected' : '' }>Nữ</option>
-                                                        <option value="Other" ${sessionScope.user.gender=='Other'
-                                                            ? 'selected' : '' }>Khác</option>
-                                                    </select>
-                                                    <span
-                                                        class="material-symbols-outlined absolute right-4 top-3.5 pointer-events-none text-slate-500 text-[20px]">expand_more</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="space-y-2 md:col-span-2 lg:col-span-1">
-                                                <label
-                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
-                                                    for="dob">Ngày sinh</label>
-                                                <div class="relative">
-                                                    <input name="dob"
-                                                        class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium cursor-pointer"
-                                                        id="dob" type="date" value="${sessionScope.user.dob}" max="" />
-                                                    <span
-                                                        class="material-symbols-outlined absolute right-4 top-3.5 pointer-events-none text-slate-500 text-[20px]">calendar_today</span>
-                                                </div>
-                                                <p id="dobError" class="text-red-500 text-xs mt-1 hidden"></p>
-                                            </div>
-
                                         </div>
+                                    </div>
 
-                                        <div
-                                            class="pt-6 flex items-center justify-start gap-5 border-transparent mt-10">
-                                            <button
-                                                class="px-8 py-3.5 bg-primary text-white rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:bg-primary-dark transition-all duration-300 transform hover:-translate-y-0.5"
-                                                type="submit">
-                                                <span
-                                                    class="font-medium tracking-wide flex items-center justify-center text-sm uppercase">
-                                                    <span class="material-symbols-outlined mr-2 text-[18px]">save</span>
-                                                    Lưu thay đổi
-                                                </span>
-                                            </button>
+                                    <div class="space-y-2">
+                                        <label
+                                            class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                            for="email">Email</label>
+                                        <div class="relative opacity-75">
+                                            <input
+                                                class="w-full pl-5 pr-12 py-3.5 bg-slate-100/50 border border-slate-200/60 rounded-xl text-slate-500 cursor-not-allowed font-medium"
+                                                disabled="" id="email" type="email"
+                                                value="${sessionScope.user.email}" />
+                                            <input type="hidden" name="email" value="${sessionScope.user.email}" />
+                                            <span
+                                                class="material-symbols-outlined absolute right-4 top-3.5 text-slate-400 text-[20px]">lock</span>
                                         </div>
-                                    </form>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <labelb
+                                            class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                            for="phone">Số điện thoại</label>
+                                            <div class="relative group">
+                                                <input name="phone"
+                                                    class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium"
+                                                    id="phone" type="tel" value="${sessionScope.user.phone}"
+                                                    maxlength="10" />
+                                                <div
+                                                    class="absolute right-4 top-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                                                </div>
+                                            </div>
+                                            <p id="phoneError" class="text-red-500 text-xs mt-1 hidden">SĐT phải
+                                                có
+                                                đúng 10 chữ số (0-9).</p>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <label
+                                            class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                            for="gender">Giới tính</label>
+                                        <div class="relative">
+                                            <select name="gender"
+                                                class="w-full pl-5 pr-12 py-3.5 glass-input rounded-xl text-slate-800 appearance-none cursor-pointer font-medium"
+                                                id="gender">
+                                                <option value="Male" ${sessionScope.user.gender=='Male' ? 'selected'
+                                                    : '' }>Nam</option>
+                                                <option value="Female" ${sessionScope.user.gender=='Female' ? 'selected'
+                                                    : '' }>Nữ</option>
+                                                <option value="Other" ${sessionScope.user.gender=='Other' ? 'selected'
+                                                    : '' }>Khác</option>
+                                            </select>
+                                            <span
+                                                class="material-symbols-outlined absolute right-4 top-3.5 pointer-events-none text-slate-500 text-[20px]">expand_more</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-2 md:col-span-2 lg:col-span-1">
+                                        <label
+                                            class="block text-xs font-bold text-slate-500 uppercase tracking-wider ml-1"
+                                            for="dob">Ngày sinh</label>
+                                        <div class="relative">
+                                            <input name="dob"
+                                                class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium cursor-pointer"
+                                                id="dob" type="date" value="${sessionScope.user.dob}" max="" />
+                                            <span
+                                                class="material-symbols-outlined absolute right-4 top-3.5 pointer-events-none text-slate-500 text-[20px]">calendar_today</span>
+                                        </div>
+                                        <p id="dobError" class="text-red-500 text-xs mt-1 hidden"></p>
+                                    </div>
+
                                 </div>
+
+                                <div class="pt-6 flex items-center justify-start gap-5 border-transparent mt-10">
+                                    <button
+                                        class="px-8 py-3.5 bg-primary text-white rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:bg-primary-dark transition-all duration-300 transform hover:-translate-y-0.5"
+                                        type="submit">
+                                        <span
+                                            class="font-medium tracking-wide flex items-center justify-center text-sm uppercase">
+                                            <span class="material-symbols-outlined mr-2 text-[18px]">save</span>
+                                            Lưu thay đổi
+                                        </span>
+                                    </button>
+                                </div>
+                                </form>
                             </div>
-                        </section>
+                    </div>
+                    </section>
                     </div>
                 </main>
 

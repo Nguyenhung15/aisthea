@@ -272,12 +272,10 @@
                                                     Cập nhật mật khẩu
                                                 </span>
                                             </button>
-                                            <button
-                                                class="w-full mt-4 text-xs text-slate-500 hover:text-primary underline decoration-slate-300 hover:decoration-primary underline-offset-4 transition-all"
-                                                type="button"
-                                                onclick="window.location.href='${pageContext.request.contextPath}/forgot_password'">
+                                            <a href="${pageContext.request.contextPath}/forgot-password"
+                                                class="block w-full mt-4 text-xs text-slate-500 hover:text-primary underline decoration-slate-300 hover:decoration-primary underline-offset-4 transition-all text-center">
                                                 Quên mật khẩu?
-                                            </button>
+                                            </a>
                                         </div>
                                     </form>
                                 </div>
