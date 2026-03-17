@@ -38,35 +38,75 @@ public class AnalyticsServlet extends HttpServlet {
             return;
         }
 
+        String filterType = request.getParameter("type"); // YEAR, MONTH, DAY
+        String filterValue = request.getParameter("value"); // e.g., "2024", "2024-03", "2024-03-17"
+
         try {
-            // 1. Metrics
-            BigDecimal totalRevenue = analyticsDAO.getTotalRevenue();
+            // 1. Metrics & Data - Filtered if applicable
+            BigDecimal totalRevenue;
+            int totalOrders;
+            int completedOrders;
+            List<Map<String, Object>> topProducts;
+            List<Map<String, Object>> topCustomers;
+            LinkedHashMap<String, Integer> orderStatusData;
+            int totalCustomersInPeriod;
+            
+            if (filterType != null && filterValue != null) {
+                totalRevenue = analyticsDAO.getFilteredRevenue(filterType, filterValue);
+                totalOrders = analyticsDAO.getFilteredOrderCount(filterType, filterValue);
+                completedOrders = analyticsDAO.getFilteredCompletedOrderCount(filterType, filterValue);
+                topProducts = analyticsDAO.getFilteredTopSellingProducts(5, filterType, filterValue);
+                topCustomers = analyticsDAO.getFilteredTopCustomersBySpending(5, filterType, filterValue);
+                orderStatusData = analyticsDAO.getFilteredOrderStatusCounts(filterType, filterValue);
+                totalCustomersInPeriod = analyticsDAO.getFilteredCustomerCount(filterType, filterValue);
+            } else {
+                totalRevenue = analyticsDAO.getTotalRevenue();
+                totalOrders = analyticsDAO.getTotalOrderCount();
+                completedOrders = analyticsDAO.getCompletedOrderCount();
+                topProducts = analyticsDAO.getTopSellingProducts(5);
+                topCustomers = analyticsDAO.getTopCustomersBySpending(5);
+                orderStatusData = analyticsDAO.getOrderStatusCounts();
+                totalCustomersInPeriod = analyticsDAO.getTotalCustomers();
+            }
+
             BigDecimal revenueThisMonth = analyticsDAO.getRevenueThisMonth();
             BigDecimal revenueToday = analyticsDAO.getRevenueToday();
-            BigDecimal revenuePrevMonth = analyticsDAO.getRevenuePreviousMonth();
+            
+            // 2. Additional data
+            List<Map<String, Object>> lowStockProducts = analyticsDAO.getLowStockProducts(5);
+            int newCustomers = analyticsDAO.getNewCustomersThisMonth();
+            int totalCustomers = analyticsDAO.getTotalCustomers();
 
+            // 3. Charts - Dynamic based on filter
+            LinkedHashMap<String, BigDecimal> revenueBreakdown;
+            LinkedHashMap<String, Integer> orderBreakdown;
+            String chartSubtitle = "Monthly revenue over the last 12 months";
+            
+            if ("YEAR".equalsIgnoreCase(filterType)) {
+                revenueBreakdown = analyticsDAO.getRevenueBreakdown("YEAR", filterValue);
+                orderBreakdown = analyticsDAO.getOrderBreakdown("YEAR", filterValue);
+                chartSubtitle = "Monthly breakdown for year " + filterValue;
+            } else if ("MONTH".equalsIgnoreCase(filterType)) {
+                revenueBreakdown = analyticsDAO.getRevenueBreakdown("MONTH", filterValue);
+                orderBreakdown = analyticsDAO.getOrderBreakdown("MONTH", filterValue);
+                chartSubtitle = "Daily breakdown for " + filterValue;
+            } else if ("DAY".equalsIgnoreCase(filterType)) {
+                revenueBreakdown = analyticsDAO.getRevenueBreakdown("DAY", filterValue);
+                orderBreakdown = analyticsDAO.getOrderBreakdown("DAY", filterValue);
+                chartSubtitle = "Hourly breakdown for " + filterValue;
+            } else {
+                revenueBreakdown = analyticsDAO.getRevenueByMonth(12);
+                orderBreakdown = analyticsDAO.getOrderCountsByDay(7);
+            }
+            
+            // 4. Calculate Growth
+            BigDecimal revenuePrevMonth = analyticsDAO.getRevenuePreviousMonth();
             double revenueGrowth = 0;
             if (revenuePrevMonth.compareTo(BigDecimal.ZERO) > 0) {
                 revenueGrowth = revenueThisMonth.subtract(revenuePrevMonth)
                         .divide(revenuePrevMonth, 4, RoundingMode.HALF_UP)
                         .multiply(new BigDecimal(100)).doubleValue();
             }
-
-            // 2. Collections
-            List<Map<String, Object>> topProducts = analyticsDAO.getTopSellingProducts(5);
-            List<Map<String, Object>> topCustomers = analyticsDAO.getTopCustomersBySpending(5);
-            List<Map<String, Object>> lowStockProducts = analyticsDAO.getLowStockProducts(5);
-
-            // 3. Statuses
-            int newCustomers = analyticsDAO.getNewCustomersThisMonth();
-            int totalCustomers = analyticsDAO.getTotalCustomers();
-            int totalOrders = analyticsDAO.getTotalOrderCount();
-            int completedOrders = analyticsDAO.getCompletedOrderCount();
-
-            // 4. Charts
-            LinkedHashMap<String, Integer> ordersPerDay = analyticsDAO.getOrderCountsByDay(7);
-            LinkedHashMap<String, BigDecimal> revenueByMonth = analyticsDAO.getRevenueByMonth(12);
-            LinkedHashMap<String, Integer> orderStatusData = analyticsDAO.getOrderStatusCounts();
 
             // Set Attributes
             request.setAttribute("totalRevenue", totalRevenue);
@@ -77,17 +117,23 @@ public class AnalyticsServlet extends HttpServlet {
             request.setAttribute("totalCustomers", totalCustomers);
             request.setAttribute("totalOrders", totalOrders);
             request.setAttribute("completedOrders", completedOrders);
+            request.setAttribute("totalCustomersInPeriod", totalCustomersInPeriod);
             request.setAttribute("topProducts", topProducts);
             request.setAttribute("topCustomers", topCustomers);
             request.setAttribute("lowStockProducts", lowStockProducts);
+            
+            request.setAttribute("filterType", filterType);
+            request.setAttribute("filterValue", filterValue);
+            request.setAttribute("chartSubtitle", chartSubtitle);
 
-            // JSON for Charts - Chronological Order (Oldest to Newest)
-            request.setAttribute("revenueByMonthLabels", toJsonArray(revenueByMonth.keySet()));
-            request.setAttribute("revenueByMonthData", toJsonNumberArray(revenueByMonth.values()));
+            // JSON for Charts
+            request.setAttribute("revenueLabels", toJsonArrayNoReverse(revenueBreakdown.keySet()));
+            request.setAttribute("revenueData", toJsonNumberArrayNoReverse(revenueBreakdown.values()));
+            request.setAttribute("orderLabels", toJsonArrayNoReverse(orderBreakdown.keySet()));
+            request.setAttribute("orderData", toJsonNumberArrayNoReverse(orderBreakdown.values()));
+            
             request.setAttribute("orderStatusLabels", toJsonStatusArray(orderStatusData.keySet()));
             request.setAttribute("orderStatusData", toJsonStatusNumberArray(orderStatusData.values()));
-            request.setAttribute("ordersPerDayLabels", toJsonArray(ordersPerDay.keySet()));
-            request.setAttribute("ordersPerDayData", toJsonNumberArray(ordersPerDay.values()));
 
             request.getRequestDispatcher("/WEB-INF/views/admin/analytics.jsp").forward(request, response);
 
@@ -98,27 +144,23 @@ public class AnalyticsServlet extends HttpServlet {
         }
     }
 
-    private String toJsonArray(Collection<String> col) {
+    private String toJsonArrayNoReverse(Collection<String> col) {
         StringBuilder sb = new StringBuilder("[");
-        List<String> list = new ArrayList<>(col);
-        Collections.reverse(list); // Reverse to chronological
         int i = 0;
-        for (String s : list) {
+        for (String s : col) {
             sb.append("\"").append(s.replace("\"", "\\\"")).append("\"");
-            if (++i < list.size()) sb.append(",");
+            if (++i < col.size()) sb.append(",");
         }
         sb.append("]");
         return sb.toString();
     }
 
-    private String toJsonNumberArray(Collection<? extends Number> col) {
+    private String toJsonNumberArrayNoReverse(Collection<? extends Number> col) {
         StringBuilder sb = new StringBuilder("[");
-        List<Number> list = new ArrayList<>(col);
-        Collections.reverse(list); // Reverse to chronological
         int i = 0;
-        for (Number n : list) {
+        for (Number n : col) {
             sb.append(n != null ? n.toString() : "0");
-            if (++i < list.size()) sb.append(",");
+            if (++i < col.size()) sb.append(",");
         }
         sb.append("]");
         return sb.toString();

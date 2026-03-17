@@ -386,6 +386,131 @@
                             grid-template-columns: 1fr;
                         }
                     }
+                    /* Filter Bar */
+                    .analytics-filter-bar {
+                        background: #fff;
+                        border-radius: 20px;
+                        padding: 20px 28px;
+                        margin-bottom: 32px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        background: #fff;
+                        padding: 16px 24px;
+                        border-radius: 16px;
+                        margin-bottom: 30px;
+                        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+                        border: 1px solid rgba(0, 0, 0, 0.05);
+                        flex-wrap: wrap;
+                        gap: 20px;
+                    }
+
+                    .filter-controls {
+                        display: flex;
+                        align-items: center;
+                        gap: 24px;
+                        flex-wrap: wrap;
+                    }
+
+                    .filter-group {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    }
+
+                    .filter-group label {
+                        font-family: 'Inter', sans-serif;
+                        font-weight: 600;
+                        font-size: 0.85rem;
+                        color: #64748b;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+
+                    .filter-btns-wrapper {
+                        display: flex;
+                        background: #f1f5f9;
+                        padding: 4px;
+                        border-radius: 12px;
+                        gap: 2px;
+                    }
+
+                    .filter-btn {
+                        border: none;
+                        background: transparent;
+                        padding: 8px 16px;
+                        border-radius: 10px;
+                        font-family: 'Inter', sans-serif;
+                        font-weight: 600;
+                        font-size: 0.8rem;
+                        color: #64748b;
+                        cursor: pointer;
+                        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+
+                    .filter-btn:hover {
+                        color: #0f172a;
+                    }
+
+                    .filter-btn.active {
+                        background: #fff;
+                        color: #0f172a;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                    }
+
+                    .picker-group input, .picker-group select {
+                        padding: 8px 14px;
+                        border-radius: 10px;
+                        border: 1px solid #e2e8f0;
+                        font-family: 'Inter', sans-serif;
+                        font-size: 0.85rem;
+                        color: #0f172a;
+                        background: #fff;
+                        transition: all 0.2s ease;
+                        cursor: pointer;
+                        outline: none;
+                    }
+
+                    .picker-group input:focus, .picker-group select:focus {
+                        border-color: #3b82f6;
+                        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                    }
+
+                    .clear-filter {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 8px 16px;
+                        border-radius: 10px;
+                        font-family: 'Inter', sans-serif;
+                        font-size: 0.8rem;
+                        font-weight: 600;
+                        color: #64748b;
+                        text-decoration: none;
+                        transition: all 0.2s ease;
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                    }
+
+                    .clear-filter i {
+                        font-size: 0.9rem;
+                        color: #94a3b8;
+                    }
+
+                    .clear-filter:hover {
+                        background: #fff;
+                        color: #ef4444;
+                        border-color: #fca5a5;
+                        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.08);
+                    }
+
+                    .clear-filter:hover i {
+                        color: #ef4444;
+                    }
+
+                    .hidden {
+                        display: none !important;
+                    }
                 </style>
             </head>
 
@@ -408,7 +533,58 @@
                                     </div>
                                 </section>
 
-                                <!-- Error Message -->
+                                 <!-- ========== FILTER BAR ========== -->
+                                 <section class="analytics-filter-bar">
+                                    <div class="filter-controls">
+                                        <div class="filter-group">
+                                            <label><i class="fa-solid fa-calendar-days" style="margin-right:8px;"></i> View By</label>
+                                            <div class="filter-btns-wrapper">
+                                                <button type="button" class="filter-btn ${filterType == 'YEAR' ? 'active' : ''}" onclick="setFilterType('YEAR')">Yearly</button>
+                                                <button type="button" class="filter-btn ${filterType == 'MONTH' ? 'active' : ''}" onclick="setFilterType('MONTH')">Monthly</button>
+                                                <button type="button" class="filter-btn ${filterType == 'DAY' ? 'active' : ''}" onclick="setFilterType('DAY')">Daily</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="filter-group">
+                                            <form action="${pageContext.request.contextPath}/admin/analytics" method="get" id="filterForm" style="display:flex; align-items:center; gap:16px;">
+                                                <input type="hidden" name="type" id="filterTypeInput" value="${filterType}">
+                                                
+                                                <div id="picker-YEAR" class="picker-group ${filterType == 'YEAR' ? '' : 'hidden'}">
+                                                    <select name="value" onchange="this.form.submit()">
+                                                        <option value="">Select Year</option>
+                                                        <c:forEach var="y" begin="2023" end="2026">
+                                                            <option value="${y}" ${filterValue == y ? 'selected' : ''}>${y}</option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div id="picker-MONTH" class="picker-group ${filterType == 'MONTH' ? '' : 'hidden'}">
+                                                    <input type="month" name="value" value="${filterValue}" onchange="this.form.submit()">
+                                                </div>
+                                                
+                                                <div id="picker-DAY" class="picker-group ${filterType == 'DAY' ? '' : 'hidden'}">
+                                                    <input type="date" name="value" value="${filterValue}" onchange="this.form.submit()">
+                                                </div>
+                                                
+                                                <c:if test="${not empty filterType}">
+                                                    <a href="${pageContext.request.contextPath}/admin/analytics" class="clear-filter">
+                                                        <i class="fa-solid fa-rotate-left"></i> Reset Filter
+                                                    </a>
+                                                </c:if>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <div class="filter-status">
+                                        <c:if test="${not empty filterType}">
+                                            <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">
+                                                Showing data for: <strong style="color: #334155;">${filterValue}</strong>
+                                            </span>
+                                        </c:if>
+                                    </div>
+                                 </section>
+
+                                 <!-- Error Message -->
                                 <c:if test="${not empty error}">
                                     <div class="analytics-error">
                                         <i class="fa-solid fa-triangle-exclamation"></i> ${error}
@@ -422,76 +598,87 @@
                                         <div class="analytics-kpi-card__icon analytics-kpi-card__icon--revenue">
                                             <i class="fa-solid fa-wallet"></i>
                                         </div>
-                                        <div class="analytics-kpi-card__label">Total Revenue</div>
+                                        <div class="analytics-kpi-card__label">
+                                            <c:choose>
+                                                <c:when test="${not empty filterType}">Revenue (${filterValue})</c:when>
+                                                <c:otherwise>Total Revenue (All Time)</c:otherwise>
+                                            </c:choose>
+                                        </div>
                                         <div class="analytics-kpi-card__value">
                                             $
                                             <fmt:formatNumber value="${totalRevenue}" type="number"
                                                 maxFractionDigits="0" groupingUsed="true" />
                                         </div>
-                                        <div class="analytics-kpi-card__change analytics-kpi-card__change--neutral">
-                                            <i class="fa-solid fa-chart-simple"></i> All time (completed)
+                                        <div class="analytics-kpi-card__change ${revenueGrowth >= 0 ? 'analytics-kpi-card__change--positive' : 'analytics-kpi-card__change--negative'}">
+                                            <c:choose>
+                                                <c:when test="${not empty filterType and filterType != 'YEAR'}">
+                                                    <i class="fa-solid ${revenueGrowth >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i> 
+                                                    ${Math.abs(revenueGrowth)}% vs last period
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <i class="fa-solid fa-chart-simple"></i> Completed Orders only
+                                                </c:otherwise>
+                                            </c:choose>
                                         </div>
                                     </div>
 
-                                    <!-- Revenue This Month -->
+                                    <!-- Total Orders -->
                                     <div class="analytics-kpi-card">
-                                        <div class="analytics-kpi-card__icon analytics-kpi-card__icon--month">
-                                            <i class="fa-solid fa-calendar"></i>
+                                        <div class="analytics-kpi-card__icon analytics-kpi-card__icon--orders">
+                                            <i class="fa-solid fa-cart-shopping"></i>
                                         </div>
-                                        <div class="analytics-kpi-card__label">Revenue This Month</div>
+                                        <div class="analytics-kpi-card__label">
+                                            <c:choose>
+                                                <c:when test="${not empty filterType}">Total Orders (${filterValue})</c:when>
+                                                <c:otherwise>Total Orders (All Time)</c:otherwise>
+                                            </c:choose>
+                                        </div>
                                         <div class="analytics-kpi-card__value">
-                                            $
-                                            <fmt:formatNumber value="${revenueThisMonth}" type="number"
-                                                maxFractionDigits="0" groupingUsed="true" />
-                                        </div>
-                                        <c:choose>
-                                            <c:when test="${revenueGrowth > 0}">
-                                                <div class="analytics-kpi-card__change analytics-kpi-card__change--up">
-                                                    <i class="fa-solid fa-arrow-trend-up"></i> +${revenueGrowth}% vs
-                                                    last month
-                                                </div>
-                                            </c:when>
-                                            <c:when test="${revenueGrowth < 0}">
-                                                <div
-                                                    class="analytics-kpi-card__change analytics-kpi-card__change--down">
-                                                    <i class="fa-solid fa-arrow-trend-down"></i> ${revenueGrowth}% vs
-                                                    last month
-                                                </div>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <div
-                                                    class="analytics-kpi-card__change analytics-kpi-card__change--neutral">
-                                                    <i class="fa-solid fa-equals"></i> No change vs last month
-                                                </div>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-
-                                    <!-- Revenue Today -->
-                                    <div class="analytics-kpi-card">
-                                        <div class="analytics-kpi-card__icon analytics-kpi-card__icon--today">
-                                            <i class="fa-solid fa-bolt"></i>
-                                        </div>
-                                        <div class="analytics-kpi-card__label">Revenue Today</div>
-                                        <div class="analytics-kpi-card__value">
-                                            $
-                                            <fmt:formatNumber value="${revenueToday}" type="number"
-                                                maxFractionDigits="0" groupingUsed="true" />
+                                            <fmt:formatNumber value="${totalOrders}" type="number" groupingUsed="true" />
                                         </div>
                                         <div class="analytics-kpi-card__change analytics-kpi-card__change--neutral">
-                                            <i class="fa-solid fa-clock"></i> Since midnight
+                                            <i class="fa-solid fa-box"></i> Across all categories
                                         </div>
                                     </div>
 
-                                    <!-- Orders Summary -->
+                                    <!-- Completed Orders -->
                                     <div class="analytics-kpi-card">
-                                        <div class="analytics-kpi-card__icon analytics-kpi-card__icon--growth">
-                                            <i class="fa-solid fa-bag-shopping"></i>
+                                        <div class="analytics-kpi-card__icon analytics-kpi-card__icon--shipping">
+                                            <i class="fa-solid fa-circle-check"></i>
                                         </div>
-                                        <div class="analytics-kpi-card__label">Total Orders</div>
-                                        <div class="analytics-kpi-card__value">${totalOrders}</div>
-                                        <div class="analytics-kpi-card__change analytics-kpi-card__change--up">
-                                            <i class="fa-solid fa-check"></i> ${completedOrders} completed
+                                        <div class="analytics-kpi-card__label">
+                                            <c:choose>
+                                                <c:when test="${not empty filterType}">Completed (${filterValue})</c:when>
+                                                <c:otherwise>Completed (All Time)</c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <div class="analytics-kpi-card__value">
+                                            <fmt:formatNumber value="${completedOrders}" type="number" groupingUsed="true" />
+                                        </div>
+                                        <div class="analytics-kpi-card__change analytics-kpi-card__change--positive">
+                                            <i class="fa-solid fa-star"></i> 
+                                            <c:if test="${totalOrders > 0}">
+                                                <fmt:formatNumber value="${(completedOrders / totalOrders) * 100}" maxFractionDigits="1" />% Success Rate
+                                            </c:if>
+                                        </div>
+                                    </div>
+
+                                    <!-- Customers -->
+                                    <div class="analytics-kpi-card">
+                                        <div class="analytics-kpi-card__icon analytics-kpi-card__icon--customers">
+                                            <i class="fa-solid fa-users"></i>
+                                        </div>
+                                        <div class="analytics-kpi-card__label">
+                                            <c:choose>
+                                                <c:when test="${not empty filterType}">Customers (${filterValue})</c:when>
+                                                <c:otherwise>Total Customers (All Time)</c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <div class="analytics-kpi-card__value">
+                                            <fmt:formatNumber value="${totalCustomersInPeriod}" type="number" groupingUsed="true" />
+                                        </div>
+                                        <div class="analytics-kpi-card__change analytics-kpi-card__change--neutral">
+                                            <i class="fa-solid fa-user-plus"></i> ${newCustomers} new this month / ${totalCustomers} lifetime
                                         </div>
                                     </div>
                                 </section>
@@ -502,9 +689,8 @@
                                     <div class="analytics-chart-card">
                                         <div class="analytics-chart-card__header">
                                             <div>
-                                                <div class="analytics-chart-card__title">Revenue Trend</div>
-                                                <div class="analytics-chart-card__subtitle">Monthly revenue over the
-                                                    last 12 months</div>
+                                                 <div class="analytics-chart-card__title">Revenue Trend</div>
+                                                 <div class="analytics-chart-card__subtitle">${chartSubtitle}</div>
                                             </div>
                                         </div>
                                         <div class="analytics-chart-wrap">
@@ -516,9 +702,8 @@
                                     <div class="analytics-chart-card">
                                         <div class="analytics-chart-card__header">
                                             <div>
-                                                <div class="analytics-chart-card__title">Daily Orders</div>
-                                                <div class="analytics-chart-card__subtitle">Orders placed in the last 7
-                                                    days</div>
+                                                 <div class="analytics-chart-card__title">Orders Volume</div>
+                                                 <div class="analytics-chart-card__subtitle">${chartSubtitle}</div>
                                             </div>
                                         </div>
                                         <div class="analytics-chart-wrap">
@@ -684,20 +869,38 @@
                         </main>
 
                         <!-- Chart data from server via data attributes -->
-                        <div id="chartData" style="display:none" data-revenue-labels='${revenueByMonthLabels}'
-                            data-revenue-data='${revenueByMonthData}' data-orders-labels='${ordersPerDayLabels}'
-                            data-orders-data='${ordersPerDayData}' data-status-labels='${orderStatusLabels}'
+                        <div id="chartData" style="display:none" 
+                            data-revenue-labels='${revenueLabels}'
+                            data-revenue-data='${revenueData}' 
+                            data-order-labels='${orderLabels}'
+                            data-order-data='${orderData}' 
+                            data-status-labels='${orderStatusLabels}'
                             data-status-data='${orderStatusData}'>
                         </div>
                         <script>
+                            function setFilterType(type) {
+                                document.getElementById('filterTypeInput').value = type;
+                                // Hide all pickers
+                                document.getElementById('picker-YEAR').classList.add('hidden');
+                                document.getElementById('picker-MONTH').classList.add('hidden');
+                                document.getElementById('picker-DAY').classList.add('hidden');
+                                // Show selected picker
+                                document.getElementById('picker-' + type).classList.remove('hidden');
+                                
+                                // Highlight active button
+                                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                                event.target.classList.add('active');
+                            }
+
                             document.addEventListener("DOMContentLoaded", function () {
+                                // Redefine chart titles and tooltips based on current filter context...
 
                                 // --- Read chart data from hidden element ---
                                 var cd = document.getElementById('chartData');
                                 var revenueLabels = JSON.parse(cd.getAttribute('data-revenue-labels') || '[]');
                                 var revenueData = JSON.parse(cd.getAttribute('data-revenue-data') || '[]');
-                                var ordersLabels = JSON.parse(cd.getAttribute('data-orders-labels') || '[]');
-                                var ordersData = JSON.parse(cd.getAttribute('data-orders-data') || '[]');
+                                var orderLabels = JSON.parse(cd.getAttribute('data-order-labels') || '[]');
+                                var orderData = JSON.parse(cd.getAttribute('data-order-data') || '[]');
                                 var statusLabels = JSON.parse(cd.getAttribute('data-status-labels') || '[]');
                                 var statusData = JSON.parse(cd.getAttribute('data-status-data') || '[]');
 
@@ -791,12 +994,12 @@
                                     new Chart(ordersCtx, {
                                         type: 'bar',
                                         data: {
-                                            labels: ordersLabels,
+                                            labels: orderLabels,
                                             datasets: [{
                                                 label: 'Orders',
-                                                data: ordersData,
+                                                data: orderData,
                                                 backgroundColor: function (context) {
-                                                    const maxVal = Math.max(...ordersData);
+                                                    const maxVal = Math.max(...orderData);
                                                     return context.raw === maxVal ? NAVY : 'rgba(15, 27, 45, 0.18)';
                                                 },
                                                 borderRadius: 8,
