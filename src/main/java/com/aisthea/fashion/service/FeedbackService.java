@@ -97,5 +97,35 @@ public class FeedbackService implements IFeedbackService {
             return new double[]{0.0, 0};
         }
     }
+
+    @Override
+    public List<Feedback> getFeedbacksByUserId(int userId) {
+        try {
+            return feedbackDAO.getFeedbacksByUserId(userId);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error getting feedbacks for userId=" + userId, e);
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    public boolean updateFeedback(int feedbackId, int userId, int rating, String comment) {
+        try {
+            return feedbackDAO.updateFeedback(feedbackId, userId, rating, comment);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error updating feedback id=" + feedbackId, e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean deleteFeedback(int feedbackId, int userId) {
+        try {
+            return feedbackDAO.deleteFeedback(feedbackId, userId);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error deleting feedback id=" + feedbackId, e);
+            return false;
+        }
+    }
 }
 

@@ -18,6 +18,15 @@ public interface IFeedbackService {
 
     boolean incrementHelpfulCount(int feedbackId);
 
+    /** Lấy tất cả feedbacks của 1 user (cho trang quản lý) */
+    List<Feedback> getFeedbacksByUserId(int userId);
+
+    /** Sửa feedback (chỉ owner mới được) */
+    boolean updateFeedback(int feedbackId, int userId, int rating, String comment);
+
+    /** Xóa feedback (chỉ owner mới được) */
+    boolean deleteFeedback(int feedbackId, int userId);
+
     /** Returns [avgRating, reviewCount] for the given product */
     double[] getAvgRatingForProduct(int productId);
 }

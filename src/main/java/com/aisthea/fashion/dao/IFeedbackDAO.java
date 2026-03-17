@@ -18,4 +18,13 @@ public interface IFeedbackDAO {
     boolean replyToFeedback(int feedbackId, String reply) throws SQLException;
 
     boolean incrementHelpfulCount(int feedbackId) throws SQLException;
+
+    /** Lấy tất cả feedbacks của 1 user */
+    List<Feedback> getFeedbacksByUserId(int userId) throws SQLException;
+
+    /** User sửa feedback của chính mình (verify by userId) */
+    boolean updateFeedback(int feedbackId, int userId, int rating, String comment) throws SQLException;
+
+    /** User xóa feedback của chính mình (verify by userId) */
+    boolean deleteFeedback(int feedbackId, int userId) throws SQLException;
 }

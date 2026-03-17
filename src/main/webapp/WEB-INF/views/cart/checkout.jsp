@@ -117,75 +117,104 @@
                                     <h2 class="font-serif mb-6 text-slate-800 tracking-wide font-semibold text-3xl">
                                         Shipping Details</h2>
                                     <div class="glass-card rounded-xl p-8 space-y-6">
-                                        <!-- Address Book Selection -->
-                                        <div class="space-y-4" id="addressSelectionContainer">
-                                            <c:choose>
-                                                <c:when test="${not empty userAddresses}">
-                                                    <c:forEach var="addr" items="${userAddresses}">
-                                                        <label
-                                                            class="address-option relative flex p-4 rounded-lg border-2 cursor-pointer transition-all ${addr.isDefault ? 'border-accent-blue bg-white/50' : 'border-slate-200 bg-white/20'}"
-                                                            onclick="selectAddress('${addr.fullName}', '${addr.phone}', '${addr.detailedAddress}', this)">
-                                                            <div class="flex items-center gap-4 w-full">
-                                                                <input type="radio" name="addressSelection"
-                                                                    value="${addr.addressId}"
-                                                                    class="text-accent-blue focus:ring-accent-blue"
-                                                                    ${addr.isDefault ? 'checked' : '' } />
-                                                                <div class="flex flex-col flex-1">
-                                                                    <div class="flex justify-between items-center mb-1">
-                                                                        <span
-                                                                            class="font-bold text-slate-800">${addr.fullName}
-                                                                            <span
-                                                                                class="font-normal text-slate-500 text-sm ml-2">|
-                                                                                ${addr.phone}</span></span>
-                                                                        <c:if test="${addr.isDefault}"><span
-                                                                                class="text-[10px] uppercase tracking-widest bg-accent-blue text-white px-2 py-0.5 rounded-full">Default</span>
-                                                                        </c:if>
+                                        <!-- Address Book (Collapsible Dropdown) -->
+                                        <style>
+                                            #addressDropdownList {
+                                                max-height: 0;
+                                                overflow: hidden;
+                                                transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+                                            }
+                                            #addressDropdownList.addr-open { max-height: 700px; }
+                                            #addressChevron { transition: transform 0.3s ease; }
+                                            #addressChevron.rotated { transform: rotate(180deg); }
+                                        </style>
+
+                                        <!-- Preview card (always visible, click to open list) -->
+                                        <div id="selectedAddressPreview"
+                                            class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-2 border-accent-blue bg-white/50 cursor-pointer hover:bg-white/70 transition-all select-none"
+                                            onclick="toggleAddressDropdown()">
+                                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                                <span class="material-icons-outlined text-accent-blue text-xl flex-shrink-0">location_on</span>
+                                                <div class="min-w-0">
+                                                    <p id="previewName" class="font-bold text-sm text-slate-800 truncate">
+                                                        ${sessionScope.user.fullname}
+                                                        <span class="font-normal text-slate-500 ml-1">| ${sessionScope.user.phone}</span>
+                                                    </p>
+                                                    <p id="previewAddress" class="text-xs text-slate-500 mt-0.5 truncate">
+                                                        ${sessionScope.user.address}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 flex-shrink-0 text-accent-blue">
+                                                <span class="text-[10px] font-bold uppercase tracking-wider hidden sm:block">Thay đổi</span>
+                                                <span id="addressChevron" class="material-icons-outlined text-xl">expand_more</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Collapsible address list -->
+                                        <div id="addressDropdownList">
+                                            <div class="space-y-2 pt-2" id="addressSelectionContainer">
+                                                <c:choose>
+                                                    <c:when test="${not empty userAddresses}">
+                                                        <c:forEach var="addr" items="${userAddresses}">
+                                                            <label
+                                                                class="address-option relative flex p-3.5 rounded-lg border-2 cursor-pointer transition-all ${addr.isDefault ? 'border-accent-blue bg-white/50' : 'border-slate-200 bg-white/20'}"
+                                                                onclick="selectAddress('${addr.fullName}', '${addr.phone}', '${addr.detailedAddress}', this)">
+                                                                <div class="flex items-center gap-3 w-full">
+                                                                    <input type="radio" name="addressSelection"
+                                                                        value="${addr.addressId}"
+                                                                        class="flex-shrink-0 text-accent-blue focus:ring-accent-blue"
+                                                                        ${addr.isDefault ? 'checked' : ''} />
+                                                                    <div class="flex flex-col flex-1 min-w-0">
+                                                                        <div class="flex items-center gap-2 flex-wrap">
+                                                                            <span class="font-bold text-sm text-slate-800">${addr.fullName}</span>
+                                                                            <span class="text-slate-400 text-xs">|</span>
+                                                                            <span class="text-xs text-slate-500">${addr.phone}</span>
+                                                                            <c:if test="${addr.isDefault}">
+                                                                                <span class="text-[9px] uppercase tracking-widest bg-accent-blue text-white px-1.5 py-0.5 rounded-full">Default</span>
+                                                                            </c:if>
+                                                                        </div>
+                                                                        <span class="text-xs text-slate-500 mt-0.5 truncate">${addr.detailedAddress}</span>
                                                                     </div>
-                                                                    <span
-                                                                        class="text-sm text-slate-600">${addr.detailedAddress}</span>
+                                                                </div>
+                                                            </label>
+                                                        </c:forEach>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <label
+                                                            class="address-option relative flex p-3.5 rounded-lg border-2 border-accent-blue bg-white/50 cursor-pointer"
+                                                            onclick="selectAddress('${sessionScope.user.fullname}', '${sessionScope.user.phone}', '${sessionScope.user.address}', this)">
+                                                            <div class="flex items-center gap-3 w-full">
+                                                                <input type="radio" name="addressSelection" value="profile"
+                                                                    class="flex-shrink-0 text-accent-blue focus:ring-accent-blue" checked />
+                                                                <div class="flex flex-col flex-1 min-w-0">
+                                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                                        <span class="font-bold text-sm text-slate-800">${sessionScope.user.fullname}</span>
+                                                                        <span class="text-slate-400 text-xs">|</span>
+                                                                        <span class="text-xs text-slate-500">${sessionScope.user.phone}</span>
+                                                                    </div>
+                                                                    <span class="text-xs text-slate-500 mt-0.5 truncate">${sessionScope.user.address}</span>
                                                                 </div>
                                                             </div>
                                                         </label>
-                                                    </c:forEach>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <!-- Default profile address if no saved address records yet -->
-                                                    <label
-                                                        class="address-option relative flex p-4 rounded-lg border-2 border-accent-blue bg-white/50 cursor-pointer"
-                                                        onclick="selectAddress('${sessionScope.user.fullname}', '${sessionScope.user.phone}', '${sessionScope.user.address}', this)">
-                                                        <div class="flex items-center gap-4 w-full">
-                                                            <input type="radio" name="addressSelection" value="profile"
-                                                                class="text-accent-blue focus:ring-accent-blue"
-                                                                checked />
-                                                            <div class="flex flex-col flex-1">
-                                                                <div class="flex justify-between items-center mb-1">
-                                                                    <span
-                                                                        class="font-bold text-slate-800">${sessionScope.user.fullname}
-                                                                        <span
-                                                                            class="font-normal text-slate-500 text-sm ml-2">|
-                                                                            ${sessionScope.user.phone}</span></span>
-                                                                </div>
-                                                                <span
-                                                                    class="text-sm text-slate-600">${sessionScope.user.address}</span>
-                                                            </div>
-                                                        </div>
-                                                    </label>
-                                                </c:otherwise>
-                                            </c:choose>
+                                                    </c:otherwise>
+                                                </c:choose>
 
-                                            <!-- Add New Address Option -->
-                                            <label
-                                                class="address-option relative flex p-4 rounded-lg border-2 border-slate-200 bg-white/20 cursor-pointer transition-all"
-                                                onclick="toggleNewAddressForm(this)">
-                                                <div class="flex items-center gap-4 w-full">
-                                                    <input type="radio" name="addressSelection" value="new"
-                                                        class="text-accent-blue focus:ring-accent-blue"
-                                                        id="newAddressRadio" />
-                                                    <span class="font-bold text-slate-800 flex items-center gap-2">
-                                                        Add new address
-                                                    </span>
-                                                </div>
-                                            </label>
+                                                <!-- Add New Address -->
+                                                <label
+                                                    class="address-option relative flex p-3.5 rounded-lg border-2 border-dashed border-slate-300 bg-white/10 cursor-pointer hover:border-accent-blue hover:bg-white/20 transition-all"
+                                                    onclick="toggleNewAddressForm(this)">
+                                                    <div class="flex items-center gap-3 w-full">
+                                                        <input type="radio" name="addressSelection" value="new"
+                                                            class="flex-shrink-0 text-accent-blue focus:ring-accent-blue"
+                                                            id="newAddressRadio" />
+                                                        <span class="font-semibold text-sm text-slate-600 flex items-center gap-1.5">
+                                                            <span class="material-icons-outlined text-base">add_circle_outline</span>
+                                                            Thêm địa chỉ mới
+                                                        </span>
+                                                    </div>
+                                                </label>
+                                            </div>
                                         </div>
 
                                         <!-- Hidden New Address Form -->
@@ -252,7 +281,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- Hidden identity fields for backend -->
+                                        <!-- Hidden identity fields (default = profile) -->
                                         <input type="hidden" name="fullname" id="hiddenFullname"
                                             value="${sessionScope.user.fullname}">
                                         <input type="hidden" name="phone" id="hiddenPhone"
@@ -261,6 +290,11 @@
                                             value="${sessionScope.user.address}">
 
                                         <script>
+                                            function toggleAddressDropdown() {
+                                                document.getElementById('addressDropdownList').classList.toggle('addr-open');
+                                                document.getElementById('addressChevron').classList.toggle('rotated');
+                                            }
+
                                             function selectAddress(name, phone, address, element) {
                                                 document.getElementById('hiddenFullname').value = name;
                                                 document.getElementById('hiddenPhone').value = phone;
@@ -268,43 +302,47 @@
 
                                                 const formContainer = document.getElementById('newAddressForm');
                                                 formContainer.classList.add('hidden');
-
-                                                const inputs = formContainer.querySelectorAll('input, select, textarea');
-                                                inputs.forEach(inp => {
+                                                formContainer.querySelectorAll('input, select, textarea').forEach(inp => {
                                                     inp.required = false;
-                                                    // Also remove browser validation errors
                                                     inp.setCustomValidity("");
                                                 });
 
-                                                // Reset styles
                                                 document.querySelectorAll('.address-option').forEach(el => {
                                                     el.classList.remove('border-accent-blue', 'bg-white/50');
                                                     el.classList.add('border-slate-200', 'bg-white/20');
                                                 });
                                                 element.classList.add('border-accent-blue', 'bg-white/50');
                                                 element.classList.remove('border-slate-200', 'bg-white/20');
+
+                                                // Update preview
+                                                document.getElementById('previewName').innerHTML =
+                                                    '<strong>' + name + '</strong> <span class="font-normal text-slate-500 ml-1">| ' + phone + '</span>';
+                                                document.getElementById('previewAddress').textContent = address;
+
+                                                // Close dropdown
+                                                document.getElementById('addressDropdownList').classList.remove('addr-open');
+                                                document.getElementById('addressChevron').classList.remove('rotated');
                                             }
 
                                             function toggleNewAddressForm(element) {
                                                 const formContainer = document.getElementById('newAddressForm');
                                                 formContainer.classList.remove('hidden');
-
-                                                const inputs = formContainer.querySelectorAll('input, select, textarea');
-                                                inputs.forEach(inp => {
-                                                    if (inp.id !== 'saveNewAddress') {
-                                                        inp.required = true;
-                                                    }
+                                                formContainer.querySelectorAll('input, select, textarea').forEach(inp => {
+                                                    if (inp.id !== 'saveNewAddress') inp.required = true;
                                                 });
-
                                                 updateHiddenFieldsFromNew();
 
-                                                // Reset styles
                                                 document.querySelectorAll('.address-option').forEach(el => {
                                                     el.classList.remove('border-accent-blue', 'bg-white/50');
                                                     el.classList.add('border-slate-200', 'bg-white/20');
                                                 });
                                                 element.classList.add('border-accent-blue', 'bg-white/50');
                                                 element.classList.remove('border-slate-200', 'bg-white/20');
+
+                                                document.getElementById('previewName').innerHTML = '<strong>Địa chỉ mới</strong>';
+                                                document.getElementById('previewAddress').textContent = 'Điền thông tin bên dưới...';
+                                                document.getElementById('addressDropdownList').classList.remove('addr-open');
+                                                document.getElementById('addressChevron').classList.remove('rotated');
                                             }
 
                                             let allProvincesData = [];
@@ -336,19 +374,15 @@
                                                 const wardSelect = document.getElementById('newWard');
                                                 wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
                                                 wardSelect.disabled = true;
-
                                                 if (!this.value) return;
-
                                                 const code = parseInt(this.options[this.selectedIndex].getAttribute('data-code'));
                                                 const province = allProvincesData.find(p => p.code === code);
                                                 if (!province || !province.districts) return;
-
                                                 const allWards = [];
                                                 province.districts.forEach(d => {
                                                     if (d.wards) d.wards.forEach(w => allWards.push(w));
                                                 });
                                                 allWards.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-
                                                 allWards.forEach(w => {
                                                     const opt = document.createElement('option');
                                                     opt.value = w.name;
@@ -363,29 +397,17 @@
                                                 if (document.getElementById('newAddressRadio').checked) {
                                                     document.getElementById('hiddenFullname').value = document.getElementById('newFullName').value;
                                                     document.getElementById('hiddenPhone').value = document.getElementById('newPhone').value;
-
                                                     let street = document.getElementById('newDetailedAddress').value;
                                                     let ward = document.getElementById('newWard').value;
                                                     let province = document.getElementById('newProvince').value;
-
                                                     let customAddress = street;
                                                     if (ward && ward.trim() !== '') customAddress += ", " + ward;
                                                     if (province && province.trim() !== '') customAddress += ", " + province;
-
                                                     document.getElementById('hiddenAddress').value = customAddress;
                                                 }
                                             }
 
-                                            window.addEventListener('DOMContentLoaded', () => {
-                                                fetchAllData();
-                                                const checkedInput = document.querySelector('input[name="addressSelection"]:checked');
-                                                if (checkedInput && checkedInput.value !== 'new') {
-                                                    const parent = checkedInput.closest('.address-option');
-                                                    if (parent) {
-                                                        parent.click(); // apply the default
-                                                    }
-                                                }
-                                            });
+                                            window.addEventListener('DOMContentLoaded', () => { fetchAllData(); });
                                         </script>
                                     </div>
                                 </section>
@@ -696,7 +718,8 @@
                                             </c:when>
                                             <c:otherwise>
                                                 <c:forEach var="vc" items="${activeVouchers}">
-                                                    <c:set var="canUse" value="${empty vc.minOrderValue or sessionScope.cart.totalPrice >= vc.minOrderValue}" />
+                                                    <c:set var="canUse"
+                                                        value="${empty vc.minOrderValue or sessionScope.cart.totalPrice >= vc.minOrderValue}" />
                                                     <div class="voucher-pick-card relative overflow-hidden rounded-xl border-2 transition-all duration-200 ${canUse ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-60'}"
                                                         style="border-color:${canUse ? '#e2e8f0' : '#f1f5f9'}; background:${canUse ? 'linear-gradient(135deg,#fff 0%,#f8f9ff 100%)' : '#fafafa'};"
                                                         onclick="${canUse ? 'pickVoucher(this)' : 'void(0)'}"
@@ -708,7 +731,7 @@
                                                             <div
                                                                 style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;">
                                                             </div>
- 
+
                                                             <div
                                                                 style="padding:14px 24px;display:flex;align-items:center;gap:14px;">
                                                                 <%-- icon --%>
@@ -763,7 +786,7 @@
                                                                                     test="${not empty vc.minOrderValue}">
                                                                                     <span
                                                                                         style="font-size:0.66rem;color:#94a3b8;">Đơn
-                                                                                         từ
+                                                                                        từ
                                                                                         <fmt:formatNumber
                                                                                             value="${vc.minOrderValue}"
                                                                                             type="currency"
@@ -820,26 +843,25 @@
                                                                                     </c:choose>
                                                                                 </span>
                                                                             </div>
-                                                                    </div>
-                                                    </div>
-                                                  </div>
                                                             </div>
                                                     </div>
-                                                </c:forEach>
-                                            </c:otherwise>
-                                        </c:choose>
                                     </div>
                             </div>
-                            <!-- Footer -->
-                            <div class="p-6 border-t border-slate-100">
-                                <button type="button"
-                                    onclick="document.getElementById('discount-drawer').classList.add('hidden')"
-                                    class="w-full py-4 border border-slate-900 text-slate-900 text-[10px] uppercase tracking-[0.3em] font-bold rounded-lg hover:bg-slate-900 hover:text-white transition-all duration-300">
-                                    Trở lại Checkout
-                                </button>
-                            </div>
                         </div>
+                        </c:forEach>
+                        </c:otherwise>
+                        </c:choose>
                     </div>
+                </div>
+                <!-- Footer -->
+                <div class="p-6 border-t border-slate-100">
+                    <button type="button" onclick="document.getElementById('discount-drawer').classList.add('hidden')"
+                        class="w-full py-4 border border-slate-900 text-slate-900 text-[10px] uppercase tracking-[0.3em] font-bold rounded-lg hover:bg-slate-900 hover:text-white transition-all duration-300">
+                        Trở lại Checkout
+                    </button>
+                </div>
+                </div>
+                </div>
                 </div>
 
                 <script>

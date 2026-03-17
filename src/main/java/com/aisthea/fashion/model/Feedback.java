@@ -18,6 +18,7 @@ public class Feedback {
     private Date updatedat;
     private Date repliedAt;
     private boolean isVerified;
+    private String productName; // transient — populated from JOIN
 
     // Constructors
     public Feedback() {
@@ -145,6 +146,14 @@ public class Feedback {
 
     public void setVerified(boolean isVerified) {
         this.isVerified = isVerified;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
     }
 
     @Override

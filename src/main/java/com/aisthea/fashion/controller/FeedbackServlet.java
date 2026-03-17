@@ -1,24 +1,38 @@
 package com.aisthea.fashion.controller;
 
 import com.aisthea.fashion.model.Feedback;
+import com.aisthea.fashion.util.Constants;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.FeedbackService;
 import com.aisthea.fashion.service.IFeedbackService;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024,      // 1 MB
+    maxFileSize       = 5 * 1024 * 1024,  // 5 MB mỗi file
+    maxRequestSize    = 10 * 1024 * 1024  // 10 MB tổng request
+)
 @WebServlet(name = "FeedbackServlet", urlPatterns = { "/feedback" })
 public class FeedbackServlet extends HttpServlet {
 
@@ -152,6 +166,18 @@ public class FeedbackServlet extends HttpServlet {
             return;
         }
 
+        String action = request.getParameter("action");
+
+        // ── Trang quản lý feedback của user ──
+        if ("myFeedbacks".equals(action)) {
+            User currentUser = (User) session.getAttribute("user");
+            List<com.aisthea.fashion.model.Feedback> myList =
+                    feedbackService.getFeedbacksByUserId(currentUser.getUserId());
+            request.setAttribute("myFeedbacks", myList);
+            request.getRequestDispatcher("/WEB-INF/views/user/my-feedbacks.jsp").forward(request, response);
+            return;
+        }
+
         String orderIdStr = request.getParameter("orderId");
         if (orderIdStr == null || orderIdStr.trim().isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/order?action=history");
@@ -239,6 +265,42 @@ public class FeedbackServlet extends HttpServlet {
             }
         }
 
+        // ── Xóa feedback ──
+        if ("delete".equals(action)) {
+            try {
+                int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
+                feedbackService.deleteFeedback(feedbackId, user.getUserId());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            String redirectUrl = request.getParameter("redirectUrl");
+            if (redirectUrl != null && !redirectUrl.trim().isEmpty()) {
+                response.sendRedirect(redirectUrl);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/feedback?action=myFeedbacks");
+            }
+            return;
+        }
+
+        // ── Sửa feedback ──
+        if ("update".equals(action)) {
+            try {
+                int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
+                int rating = Integer.parseInt(request.getParameter("rating"));
+                String comment = request.getParameter("comment");
+                feedbackService.updateFeedback(feedbackId, user.getUserId(), rating, comment != null ? comment : "");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            String redirectUrl = request.getParameter("redirectUrl");
+            if (redirectUrl != null && !redirectUrl.trim().isEmpty()) {
+                response.sendRedirect(redirectUrl);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/feedback?action=myFeedbacks&updated=1");
+            }
+            return;
+        }
+
         try {
             String productIdStr = request.getParameter("productId");
             String ratingStr = request.getParameter("rating");
@@ -258,7 +320,37 @@ public class FeedbackServlet extends HttpServlet {
 
             int productId = Integer.parseInt(productIdStr.trim());
             int rating = (ratingStr != null && !ratingStr.isEmpty()) ? Integer.parseInt(ratingStr) : 1;
-            String imageUrl = request.getParameter("imageUrl");
+
+            // ── Xử lý upload ảnh ──
+            String imageUrl = null;
+            try {
+                Part filePart = request.getPart("feedbackImage");
+                if (filePart != null && filePart.getSize() > 0) {
+                    String originalName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                    String ext = "";
+                    int dotIdx = originalName.lastIndexOf('.');
+                    if (dotIdx >= 0) ext = originalName.substring(dotIdx).toLowerCase();
+
+                    String savedName = UUID.randomUUID().toString() + ext;
+
+                    // Lưu vào Constants.UPLOAD_DIR/feedback/ — cùng nơi ImageServlet tìm file
+                    File feedbackDir = new File(Constants.UPLOAD_DIR, "feedback");
+                    if (!feedbackDir.exists()) feedbackDir.mkdirs();
+
+                    File savedFile = new File(feedbackDir, savedName);
+                    try (InputStream is = filePart.getInputStream()) {
+                        Files.copy(is, savedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    }
+
+                    // imageUrl lưu vào DB dạng "feedback/uuid.jpg"
+                    // ImageServlet sẽ serve từ: GET /uploads/feedback/uuid.jpg
+                    imageUrl = "feedback/" + savedName;
+                    java.util.logging.Logger.getLogger("FeedbackServlet")
+                        .info("[Feedback] Image saved to: " + savedFile.getAbsolutePath() + " | DB url=" + imageUrl);
+                }
+            } catch (Exception uploadEx) {
+                java.util.logging.Logger.getLogger("FeedbackServlet").warning("[Feedback] Image upload failed: " + uploadEx.getMessage());
+            }
 
             Feedback feedback = new Feedback();
             feedback.setUserid(user.getUserId());

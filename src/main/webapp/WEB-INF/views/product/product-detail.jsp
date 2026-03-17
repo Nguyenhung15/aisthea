@@ -591,10 +591,21 @@
                                                                         <div class="shrink-0 flex items-center">
                                                                             <c:choose>
                                                                                 <c:when test="${not empty sessionScope.user and sessionScope.user.userId == fb.userid}">
-                                                                                    <button onclick="window.location.href='${pageContext.request.contextPath}/profile?tab=reviews'" class="flex items-center gap-1 text-slate-400 hover:text-slate-900 transition-colors group/btn">
-                                                                                        <span class="material-symbols-outlined text-[15px]">edit_note</span>
-                                                                                        <span class="text-[10px] font-bold uppercase tracking-widest">Edit</span>
-                                                                                    </button>
+                                                                                    <div class="flex items-center gap-2">
+                                                                                        <button type="button"
+                                                                                            onclick="openEditModal(${fb.feedbackid}, ${fb.rating}, '${fn:replace(fb.comment, "'", "&#39;")}', '${pageContext.request.contextPath}')"
+                                                                                            class="flex items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors group/btn">
+                                                                                            <span class="material-symbols-outlined text-[15px]">edit_note</span>
+                                                                                            <span class="text-[10px] font-bold uppercase tracking-widest">Sửa</span>
+                                                                                        </button>
+                                                                                        <span class="text-slate-200">|</span>
+                                                                                        <button type="button"
+                                                                                            onclick="openDeleteModal(${fb.feedbackid}, '${pageContext.request.contextPath}')"
+                                                                                            class="flex items-center gap-1 text-slate-400 hover:text-red-500 transition-colors group/btn">
+                                                                                            <span class="material-symbols-outlined text-[15px]">delete</span>
+                                                                                            <span class="text-[10px] font-bold uppercase tracking-widest">Xóa</span>
+                                                                                        </button>
+                                                                                    </div>
                                                                                 </c:when>
                                                                                 <c:when test="${not empty sessionScope.likedMap and sessionScope.likedMap[fb.feedbackid]}">
                                                                                     <button type="button" disabled class="flex items-center gap-1.5 text-rose-500 transition-all duration-300 group/btn cursor-not-allowed">
@@ -1286,6 +1297,121 @@
                                     renderSizes();
                                 })();
                             </script>
+
+                    <!-- ===== Modal SỬA feedback ===== -->
+                    <div id="editFbModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden" onclick="if(event.target===this)closeEditModal()">
+                        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="font-serif text-xl text-slate-900">Chỉnh sửa đánh giá</h3>
+                                <button onclick="closeEditModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+                                    <span class="material-symbols-outlined text-[18px] text-slate-600">close</span>
+                                </button>
+                            </div>
+                            <form id="editFbForm" method="POST">
+                                <input type="hidden" name="action" value="update">
+                                <input type="hidden" name="feedbackId" id="editFbId">
+                                <input type="hidden" name="redirectUrl" id="editRedirectUrl">
+                                <!-- Stars -->
+                                <div class="mb-5">
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Đánh giá</label>
+                                    <div id="editStars" class="flex gap-1">
+                                        <c:forEach begin="1" end="5" var="es">
+                                            <span class="material-symbols-outlined text-3xl text-slate-300 cursor-pointer edit-star" data-val="${es}"
+                                                style="font-variation-settings:'FILL' 0;"
+                                                onmouseover="hoverEditStar(${es})" onmouseout="unhoverEditStar()" onclick="selectEditStar(${es})">star</span>
+                                        </c:forEach>
+                                    </div>
+                                    <input type="hidden" name="rating" id="editRatingVal" value="5">
+                                </div>
+                                <!-- Comment -->
+                                <div class="mb-6">
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nhận xét</label>
+                                    <textarea name="comment" id="editComment" rows="4"
+                                        class="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-800 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-slate-900"
+                                        placeholder="Chia sẻ cảm nhận của bạn..."></textarea>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button type="button" onclick="closeEditModal()" class="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Huỷ</button>
+                                    <button type="submit" class="flex-1 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition-colors">Lưu thay đổi</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ===== Modal XÓA feedback ===== -->
+                    <div id="deleteFbModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden" onclick="if(event.target===this)closeDeleteModal()">
+                        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 text-center">
+                            <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                                <span class="material-symbols-outlined text-red-500 text-3xl">delete_forever</span>
+                            </div>
+                            <h3 class="font-serif text-xl text-slate-900 mb-2">Xoá đánh giá?</h3>
+                            <p class="text-sm text-slate-500 mb-6">Hành động này không thể hoàn tác. Đánh giá của bạn sẽ bị xoá vĩnh viễn.</p>
+                            <form id="deleteFbForm" method="POST">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="feedbackId" id="deleteFbId">
+                                <input type="hidden" name="redirectUrl" id="deleteRedirectUrl">
+                                <div class="flex gap-3">
+                                    <button type="button" onclick="closeDeleteModal()" class="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Huỷ</button>
+                                    <button type="submit" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold transition-colors">Xoá</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <script>
+                        var _ctxPath = '${pageContext.request.contextPath}';
+                        var _currentUrl = window.location.href;
+
+                        // ─── Edit modal ───
+                        var _editSelectedStar = 5;
+
+                        function openEditModal(fbId, rating, comment, ctx) {
+                            document.getElementById('editFbId').value = fbId;
+                            document.getElementById('editComment').value = comment;
+                            document.getElementById('editRedirectUrl').value = _currentUrl;
+                            document.getElementById('editFbForm').action = _ctxPath + '/feedback';
+                            _editSelectedStar = rating;
+                            renderEditStars(rating);
+                            document.getElementById('editRatingVal').value = rating;
+                            document.getElementById('editFbModal').classList.remove('hidden');
+                            document.body.style.overflow = 'hidden';
+                        }
+
+                        function closeEditModal() {
+                            document.getElementById('editFbModal').classList.add('hidden');
+                            document.body.style.overflow = '';
+                        }
+
+                        function renderEditStars(val) {
+                            document.querySelectorAll('.edit-star').forEach(function(s) {
+                                var v = parseInt(s.getAttribute('data-val'));
+                                s.style.color = v <= val ? '#facc15' : '#cbd5e1';
+                                s.style.fontVariationSettings = v <= val ? "'FILL' 1" : "'FILL' 0";
+                            });
+                        }
+
+                        function hoverEditStar(val) { renderEditStars(val); }
+                        function unhoverEditStar()  { renderEditStars(_editSelectedStar); }
+                        function selectEditStar(val) {
+                            _editSelectedStar = val;
+                            document.getElementById('editRatingVal').value = val;
+                            renderEditStars(val);
+                        }
+
+                        // ─── Delete modal ───
+                        function openDeleteModal(fbId, ctx) {
+                            document.getElementById('deleteFbId').value = fbId;
+                            document.getElementById('deleteRedirectUrl').value = _currentUrl;
+                            document.getElementById('deleteFbForm').action = _ctxPath + '/feedback';
+                            document.getElementById('deleteFbModal').classList.remove('hidden');
+                            document.body.style.overflow = 'hidden';
+                        }
+
+                        function closeDeleteModal() {
+                            document.getElementById('deleteFbModal').classList.add('hidden');
+                            document.body.style.overflow = '';
+                        }
+                    </script>
 
                 </body>
 

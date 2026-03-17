@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
   <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
       <% if (session.getAttribute("user")==null) { response.sendRedirect(request.getContextPath() + "/login" ); return;
@@ -230,6 +230,7 @@
 
                     <!-- Feedback Form -->
                     <form action="${pageContext.request.contextPath}/feedback" method="POST" id="feedbackForm"
+                      enctype="multipart/form-data"
                       class="space-y-8">
                       <input type="hidden" name="orderId" value="${orderId}" />
                       <input type="hidden" name="rating" id="ratingValue" value="0" />
@@ -317,22 +318,41 @@
                               </div>
                             </div>
 
-                            <%-- Image URL --%>
+                            <%-- Image Upload --%>
                               <div class="space-y-2">
                                 <div class="flex justify-between items-baseline ml-1 mr-1">
-                                  <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Hình ảnh đính
-                                    kèm</label>
-                                  <span class="text-[10px] text-slate-400 italic">URL hình ảnh, không bắt buộc</span>
+                                  <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Hình ảnh đính kèm</label>
+                                  <span class="text-[10px] text-slate-400 italic">Tối đa 5 MB &mdash; không bắt buộc</span>
                                 </div>
-                                <div class="relative">
-                                  <span
-                                    class="material-symbols-outlined absolute left-4 top-3.5 text-slate-400 text-[20px]">add_a_photo</span>
-                                  <input type="text" name="imageUrl"
-                                    class="w-full pl-12 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium"
-                                    placeholder="Dán link hình ảnh sản phẩm thực tế...">
+
+                                <div id="dropZone"
+                                  class="relative flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-dashed border-slate-200 bg-white/40 cursor-pointer transition-all duration-300 hover:border-blue-300 hover:bg-blue-50/30"
+                                  onclick="document.getElementById('feedbackImage').click()">
+                                  <input type="file" id="feedbackImage" name="feedbackImage" accept="image/*" class="hidden" onchange="handleImgSelect(this)">
+
+                                  <%-- Default state --%>
+                                  <div id="dropDefault" class="flex flex-col items-center gap-2 pointer-events-none">
+                                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+                                      <span class="material-symbols-outlined text-primary text-[26px]" style="font-variation-settings: 'FILL' 0;">add_a_photo</span>
+                                    </div>
+                                    <p class="text-sm font-medium text-slate-600">Click để chọn ảnh</p>
+                                    <p class="text-[11px] text-slate-400">Hoặc kéo &amp; thả vào đây &mdash; JPG, PNG, WEBP</p>
+                                  </div>
+
+                                  <%-- Preview state (hidden by default) --%>
+                                  <div id="dropPreview" class="hidden w-full flex flex-col items-center gap-3 pointer-events-none">
+                                    <div class="relative inline-block">
+                                      <img id="previewImg" src="" alt="Preview" class="max-h-44 max-w-full rounded-xl shadow-md object-contain border border-white">
+                                      <button type="button" onclick="event.stopPropagation(); clearImg()"
+                                        class="pointer-events-auto absolute -top-2 -right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md transition-colors">
+                                        <span class="material-symbols-outlined text-[16px]">close</span>
+                                      </button>
+                                    </div>
+                                    <p id="previewName" class="text-xs text-slate-500 font-medium"></p>
+                                  </div>
                                 </div>
-                                <p class="text-[10px] text-slate-400 ml-1 tracking-wide">Hình ảnh thực tế giúp cộng đồng
-                                  tham khảo tốt hơn</p>
+
+                                <p class="text-[10px] text-slate-400 ml-1 tracking-wide">Ảnh thực tế giúp cộng đồng tham khảo tốt hơn</p>
                               </div>
 
                               <%-- Submit --%>
@@ -445,6 +465,57 @@
               // Update hidden input
               document.getElementById('selectedProductId').value = card.getAttribute('data-product-id');
             }
+
+            // ── Image upload helpers ──
+            function handleImgSelect(input) {
+              if (!input.files || !input.files[0]) return;
+              var file = input.files[0];
+              if (file.size > 5 * 1024 * 1024) {
+                alert('Ảnh quá lớn! Vui lòng chọn ảnh nhỏ hơn 5 MB.');
+                input.value = '';
+                return;
+              }
+              var reader = new FileReader();
+              reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('previewName').textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+                document.getElementById('dropDefault').classList.add('hidden');
+                document.getElementById('dropPreview').classList.remove('hidden');
+              };
+              reader.readAsDataURL(file);
+            }
+
+            function clearImg() {
+              document.getElementById('feedbackImage').value = '';
+              document.getElementById('previewImg').src = '';
+              document.getElementById('previewName').textContent = '';
+              document.getElementById('dropDefault').classList.remove('hidden');
+              document.getElementById('dropPreview').classList.add('hidden');
+            }
+
+            // Drag-and-drop
+            (function() {
+              var zone = document.getElementById('dropZone');
+              if (!zone) return;
+              zone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                zone.classList.add('border-blue-400', 'bg-blue-50/60');
+              });
+              zone.addEventListener('dragleave', function() {
+                zone.classList.remove('border-blue-400', 'bg-blue-50/60');
+              });
+              zone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                zone.classList.remove('border-blue-400', 'bg-blue-50/60');
+                var inp = document.getElementById('feedbackImage');
+                if (e.dataTransfer.files.length > 0) {
+                  var dt = new DataTransfer();
+                  dt.items.add(e.dataTransfer.files[0]);
+                  inp.files = dt.files;
+                  handleImgSelect(inp);
+                }
+              });
+            })();
 
           </script>
 

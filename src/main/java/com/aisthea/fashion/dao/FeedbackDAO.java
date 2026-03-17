@@ -119,10 +119,8 @@ public class FeedbackDAO implements IFeedbackDAO {
 
     @Override
     public boolean addFeedback(Feedback feedback) throws SQLException {
-        // Use only guaranteed columns: userid, productid, rating, comment, status,
-        // createdat
-        String sql = "INSERT INTO feedback (userid, productid, rating, comment, status, createdat) " +
-                "VALUES (?, ?, ?, ?, 'Visible', GETDATE())";
+        String sql = "INSERT INTO feedback (userid, productid, rating, comment, status, image_url, createdat) " +
+                "VALUES (?, ?, ?, ?, 'Visible', ?, GETDATE())";
 
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -130,12 +128,13 @@ public class FeedbackDAO implements IFeedbackDAO {
             ps.setInt(2, feedback.getProductid());
             ps.setInt(3, feedback.getRating());
             ps.setString(4, feedback.getComment());
+            ps.setString(5, feedback.getImageUrl()); // null nếu không kèm ảnh
 
             boolean success = ps.executeUpdate() > 0;
-            logger.info("[FeedbackDAO] Simple insert success: " + success + " for product " + feedback.getProductid());
+            logger.info("[FeedbackDAO] Insert success: " + success + " for product " + feedback.getProductid());
             return success;
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "[FeedbackDAO] Simple insert FAILED: " + e.getMessage(), e);
+            logger.log(Level.SEVERE, "[FeedbackDAO] Insert FAILED: " + e.getMessage(), e);
             throw e;
         }
     }
@@ -196,7 +195,8 @@ public class FeedbackDAO implements IFeedbackDAO {
     }
 
     /**
-     * Returns [avgRating, reviewCount] for a given product (only Visible feedbacks).
+     * Returns [avgRating, reviewCount] for a given product (only Visible
+     * feedbacks).
      */
     public double[] getAvgRatingForProduct(int productId) throws SQLException {
         String sql = "SELECT AVG(CAST(rating AS FLOAT)) AS avg_rating, COUNT(*) AS review_count "
@@ -208,11 +208,65 @@ public class FeedbackDAO implements IFeedbackDAO {
                 if (rs.next()) {
                     double avg = rs.getDouble("avg_rating");
                     int count = rs.getInt("review_count");
-                    return new double[]{rs.wasNull() ? 0.0 : avg, count};
+                    return new double[] { rs.wasNull() ? 0.0 : avg, count };
                 }
             }
         }
-        return new double[]{0.0, 0};
+        return new double[] { 0.0, 0 };
+    }
+
+    @Override
+    public List<Feedback> getFeedbacksByUserId(int userId) throws SQLException {
+        String sql = "SELECT f.*, u.fullname, u.username AS uname, p.name AS product_name "
+                + "FROM feedback f "
+                + "LEFT JOIN users u ON f.userid = u.userid "
+                + "LEFT JOIN products p ON f.productid = p.productid "
+                + "WHERE f.userid = ? "
+                + "ORDER BY f.createdat DESC";
+        List<Feedback> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Feedback f = mapResultSetToFeedback(rs);
+                    ResultSetMetaData meta = rs.getMetaData();
+                    for (int i = 1; i <= meta.getColumnCount(); i++) {
+                        if ("product_name".equalsIgnoreCase(meta.getColumnLabel(i))) {
+                            f.setProductName(rs.getString("product_name"));
+                            break;
+                        }
+                    }
+                    list.add(f);
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public boolean updateFeedback(int feedbackId, int userId, int rating, String comment) throws SQLException {
+        String sql = "UPDATE feedback SET rating = ?, comment = ? WHERE feedbackid = ? AND userid = ?";
+        logger.info("[FeedbackDAO.updateFeedback] feedbackId=" + feedbackId + " userId=" + userId);
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, rating);
+            ps.setString(2, comment);
+            ps.setInt(3, feedbackId);
+            ps.setInt(4, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    @Override
+    public boolean deleteFeedback(int feedbackId, int userId) throws SQLException {
+        String sql = "DELETE FROM feedback WHERE feedbackid = ? AND userid = ?";
+        logger.info("[FeedbackDAO.deleteFeedback] feedbackId=" + feedbackId + " userId=" + userId);
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, feedbackId);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        }
     }
 }
-
