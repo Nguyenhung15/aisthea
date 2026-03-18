@@ -21,10 +21,10 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public String registerUser(User user) {
+    public void registerUser(User user) throws Exception {
         if (isEmailExist(user.getEmail())) {
             LOGGER.log(Level.WARNING, "Registration failed: Email already exists - {0}", user.getEmail());
-            return "EMAIL_EXISTS";
+            throw new com.aisthea.fashion.exception.BusinessException("Email này đã được sử dụng.");
         }
 
         user.setUsername(user.getEmail());
@@ -32,7 +32,7 @@ public class UserService implements IUserService {
         if (isUsernameExist(user.getUsername())) {
             LOGGER.log(Level.WARNING, "Registration failed: Username (derived from email) already exists - {0}",
                     user.getUsername());
-            return "USERNAME_EXISTS";
+            throw new com.aisthea.fashion.exception.BusinessException("Tên đăng nhập (email) này đã tồn tại.");
         }
 
         String hashedPassword = BCryptUtil.hashPassword(user.getPassword());
@@ -41,14 +41,13 @@ public class UserService implements IUserService {
 
         try {
             userDAO.insertUser(user);
-            return "SUCCESS";
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error inserting user into DB: SQLState=" + e.getSQLState() + ", ErrorCode="
                     + e.getErrorCode() + ", Msg=" + e.getMessage(), e);
-            return "DB_ERROR: " + e.getMessage();
+            throw new com.aisthea.fashion.exception.DatabaseException("Đăng ký thất bại! Đã xảy ra lỗi hệ thống cơ sở dữ liệu.", e);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, "Hashing or other error", ex);
-            return "SYSTEM_ERROR: " + ex.getMessage();
+            throw new Exception("Đăng ký thất bại! Đã xảy ra lỗi xử lý ngoại lệ.", ex);
         }
     }
 

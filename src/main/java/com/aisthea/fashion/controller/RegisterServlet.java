@@ -52,49 +52,40 @@ public class RegisterServlet extends HttpServlet {
             newUser.setAddress(null);
             // Avatar will be null by default - user can upload later
 
-            String result = userService.registerUser(newUser);
+            try {
+                userService.registerUser(newUser);
 
-            switch (result) {
-                case "SUCCESS":
-                    String subject = "Kích hoạt tài khoản AISTHEA";
-                    // Tự động xây dựng URL từ request - không cần hardcode IP nữa
-                    String baseUrl = request.getScheme() + "://" +
-                            request.getServerName() + ":" +
-                            request.getServerPort() +
-                            request.getContextPath();
-                    String activateLink = baseUrl + "/activate?email=" + email;
-                    String html = "<html><body>"
-                            + "<h2>Chào " + fullname + "!</h2>"
-                            + "<p>Bạn đã đăng ký tài khoản tại <b>AISTHEA FASHION</b>.</p>"
-                            + "<p>Vui lòng nhấn vào nút bên dưới để kích hoạt tài khoản:</p>"
-                            + "<a href='" + activateLink
-                            + "' style='background:#4CAF50;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;'>Kích hoạt ngay</a>"
-                            + "<p>Nếu bạn không đăng ký, vui lòng bỏ qua email này.</p>"
-                            + "</body></html>";
+                String subject = "Kích hoạt tài khoản AISTHEA";
+                // Tự động xây dựng URL từ request - không cần hardcode IP nữa
+                String baseUrl = request.getScheme() + "://" +
+                        request.getServerName() + ":" +
+                        request.getServerPort() +
+                        request.getContextPath();
+                String activateLink = baseUrl + "/activate?email=" + email;
+                String html = "<html><body>"
+                        + "<h2>Chào " + fullname + "!</h2>"
+                        + "<p>Bạn đã đăng ký tài khoản tại <b>AISTHEA FASHION</b>.</p>"
+                        + "<p>Vui lòng nhấn vào nút bên dưới để kích hoạt tài khoản:</p>"
+                        + "<a href='" + activateLink
+                        + "' style='background:#4CAF50;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;'>Kích hoạt ngay</a>"
+                        + "<p>Nếu bạn không đăng ký, vui lòng bỏ qua email này.</p>"
+                        + "</body></html>";
 
-                    MailUtil.sendMail(email, subject, html);
-                    request.setAttribute("message",
-                            "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
-                    request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
-                    break;
+                MailUtil.sendMail(email, subject, html);
+                request.setAttribute("message",
+                        "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
+                request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
 
-                case "EMAIL_EXISTS":
-                    request.setAttribute("registerError", "Đăng ký thất bại! Email này đã được sử dụng.");
-                    request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
-                    break;
-
-                case "USERNAME_EXISTS":
-                    request.setAttribute("registerError", "Đăng ký thất bại! Tên đăng nhập (email) này đã tồn tại.");
-                    request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
-                    break;
-
-                case "DB_ERROR":
-                case "SYSTEM_ERROR":
-                default:
-                    request.setAttribute("registerError",
-                            "Đăng ký thất bại! Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.");
-                    request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
-                    break;
+            } catch (com.aisthea.fashion.exception.BusinessException e) {
+                request.setAttribute("registerError", e.getMessage());
+                request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
+            } catch (com.aisthea.fashion.exception.DatabaseException e) {
+                request.setAttribute("registerError", e.getMessage());
+                request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.setAttribute("registerError", e.getMessage());
+                request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);
             }
 
         } catch (Exception e) {
