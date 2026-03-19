@@ -186,7 +186,7 @@
                                                 for="current-password">Mật khẩu hiện tại</label>
                                             <div class="relative group">
                                                 <input name="oldPassword" required
-                                                    class="w-full pl-5 pr-12 py-3.5 glass-input rounded-xl text-slate-800 placeholder-slate-400 outline-none font-medium focus:ring-0"
+                                                    class="w-full pl-5 pr-12 py-3.5 glass-input rounded-xl text-slate-800 placeholder-slate-400 outline-none font-medium focus:border-primary focus:shadow-[0_0_0_4px_rgba(0,86,179,0.1)]"
                                                     id="current-password" placeholder="Nhập mật khẩu hiện tại"
                                                     type="password" />
                                                 <button
@@ -203,7 +203,7 @@
                                                 for="new-password">Mật khẩu mới</label>
                                             <div class="relative group">
                                                 <input name="newPassword" required
-                                                    class="w-full pl-5 pr-12 py-3.5 glass-input rounded-xl text-slate-800 placeholder-slate-400 outline-none font-medium border-emerald-500/50 focus:border-emerald-500 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.1)]"
+                                                    class="w-full pl-5 pr-12 py-3.5 glass-input rounded-xl text-slate-800 placeholder-slate-400 outline-none font-medium focus:border-primary focus:shadow-[0_0_0_4px_rgba(0,86,179,0.1)]"
                                                     id="new-password" placeholder="Nhập mật khẩu mới" type="password"
                                                     oninput="checkPasswordStrength()" />
                                                 <button
@@ -299,20 +299,41 @@
                         }
                     }
 
+                    function applyStatus(input, status) {
+                        const successClasses = ['border-emerald-500', 'bg-emerald-50/20', 'focus:border-emerald-600', 'focus:shadow-[0_0_0_4px_rgba(16,185,129,0.15)]'];
+                        const errorClasses = ['border-red-500', 'bg-red-50/20', 'focus:border-red-600', 'focus:shadow-[0_0_0_4px_rgba(239,68,68,0.2)]'];
+                        const defaultClasses = ['focus:border-primary', 'focus:shadow-[0_0_0_4px_rgba(0,86,179,0.1)]'];
+
+                        input.classList.remove(...successClasses, ...errorClasses, ...defaultClasses);
+
+                        if (status === 'success') {
+                            input.classList.add(...successClasses);
+                        } else if (status === 'error') {
+                            input.classList.add(...errorClasses);
+                        } else {
+                            input.classList.add(...defaultClasses);
+                        }
+                    }
+
                     function checkPasswordMatch() {
                         const newPwd = document.getElementById('new-password').value;
                         const confirmPwd = document.getElementById('confirm-password').value;
                         const msg = document.getElementById('pwd-match');
                         const input = document.getElementById('confirm-password');
 
-                        if (confirmPwd.length > 0 && newPwd !== confirmPwd) {
-                            msg.classList.remove('hidden');
-                            input.classList.remove('focus:border-primary', 'focus:shadow-[0_0_0_4px_rgba(0,86,179,0.1)]');
-                            input.classList.add('border-red-500/30', 'focus:border-red-500', 'focus:shadow-[0_0_0_4px_rgba(239,68,68,0.1)]');
-                        } else {
+                        if (confirmPwd.length === 0) {
                             msg.classList.add('hidden');
-                            input.classList.add('focus:border-primary', 'focus:shadow-[0_0_0_4px_rgba(0,86,179,0.1)]');
-                            input.classList.remove('border-red-500/30', 'focus:border-red-500', 'focus:shadow-[0_0_0_4px_rgba(239,68,68,0.1)]');
+                            applyStatus(input, 'default');
+                        } else if (newPwd !== confirmPwd) {
+                            msg.classList.remove('hidden', 'text-emerald-600');
+                            msg.classList.add('text-red-600');
+                            msg.innerHTML = '<span class="material-symbols-outlined text-[14px] mr-1">error</span> Mật khẩu không khớp';
+                            applyStatus(input, 'error');
+                        } else {
+                            msg.classList.remove('hidden', 'text-red-600');
+                            msg.classList.add('text-emerald-600');
+                            msg.innerHTML = '<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span> Mật khẩu đã khớp';
+                            applyStatus(input, 'success');
                         }
                     }
 
@@ -321,20 +342,19 @@
                         const input = document.getElementById('new-password');
                         const msg = document.getElementById('pwd-strength');
 
-                        if (pwd.length > 0 && pwd.length < 8) {
+                        if (pwd.length === 0) {
+                            msg.classList.add('hidden');
+                            applyStatus(input, 'default');
+                        } else if (pwd.length < 8) {
                             msg.classList.remove('hidden', 'text-emerald-600');
-                            msg.classList.add('text-slate-400');
-                            msg.innerHTML = '<span class="material-symbols-outlined text-[14px] mr-1">info</span> Cần ít nhất 8 ký tự';
-
-                            input.classList.remove('border-emerald-500/50', 'focus:border-emerald-500', 'focus:shadow-[0_0_0_4px_rgba(16,185,129,0.1)]');
-                        } else if (pwd.length >= 8) {
-                            msg.classList.remove('hidden', 'text-slate-400');
+                            msg.classList.add('text-red-600');
+                            msg.innerHTML = '<span class="material-symbols-outlined text-[14px] mr-1">error</span> Cần ít nhất 8 ký tự';
+                            applyStatus(input, 'error');
+                        } else {
+                            msg.classList.remove('hidden', 'text-red-600');
                             msg.classList.add('text-emerald-600');
                             msg.innerHTML = '<span class="material-symbols-outlined text-[14px] mr-1">check_circle</span> Mật khẩu hợp lệ';
-
-                            input.classList.add('border-emerald-500/50', 'focus:border-emerald-500', 'focus:shadow-[0_0_0_4px_rgba(16,185,129,0.1)]');
-                        } else {
-                            msg.classList.add('hidden');
+                            applyStatus(input, 'success');
                         }
                         checkPasswordMatch();
                     }
