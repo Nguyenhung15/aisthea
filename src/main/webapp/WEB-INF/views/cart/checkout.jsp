@@ -159,7 +159,8 @@
                                                         <c:forEach var="addr" items="${userAddresses}">
                                                             <label
                                                                 class="address-option relative flex p-3.5 rounded-lg border-2 cursor-pointer transition-all ${addr.isDefault ? 'border-accent-blue bg-white/50' : 'border-slate-200 bg-white/20'}"
-                                                                onclick="selectAddress('${addr.fullName}', '${addr.phone}', '${addr.detailedAddress}', this)">
+                                                                data-addr-name="${addr.fullName}" data-addr-phone="${addr.phone}" data-addr-address="${addr.detailedAddress}"
+                                                                onclick="selectAddressFromLabel(this)">
                                                                 <div class="flex items-center gap-3 w-full">
                                                                     <input type="radio" name="addressSelection"
                                                                         value="${addr.addressId}"
@@ -183,7 +184,8 @@
                                                     <c:otherwise>
                                                         <label
                                                             class="address-option relative flex p-3.5 rounded-lg border-2 border-accent-blue bg-white/50 cursor-pointer"
-                                                            onclick="selectAddress('${sessionScope.user.fullname}', '${sessionScope.user.phone}', '${sessionScope.user.address}', this)">
+                                                            data-addr-name="${sessionScope.user.fullname}" data-addr-phone="${sessionScope.user.phone}" data-addr-address="${sessionScope.user.address}"
+                                                            onclick="selectAddressFromLabel(this)">
                                                             <div class="flex items-center gap-3 w-full">
                                                                 <input type="radio" name="addressSelection" value="profile"
                                                                     class="flex-shrink-0 text-accent-blue focus:ring-accent-blue" checked />
@@ -229,7 +231,7 @@
                                                     <input id="newFullName"
                                                         class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
                                                         type="text" placeholder="John Doe"
-                                                        oninput="updateHiddenFieldsFromNew()" required />
+                                                        oninput="updateHiddenFieldsFromNew()" />
                                                 </div>
                                                 <div class="space-y-1">
                                                     <label
@@ -238,7 +240,7 @@
                                                     <input id="newPhone"
                                                         class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
                                                         type="tel" placeholder="0912345678"
-                                                        oninput="updateHiddenFieldsFromNew()" required />
+                                                        oninput="updateHiddenFieldsFromNew()" />
                                                 </div>
                                             </div>
                                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -246,7 +248,7 @@
                                                     <label
                                                         class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Tỉnh/Thành
                                                         Phố</label>
-                                                    <select id="newProvince" required
+                                                    <select id="newProvince"
                                                         onchange="updateHiddenFieldsFromNew()"
                                                         class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm">
                                                         <option value="">Chọn Tỉnh/Thành Phố</option>
@@ -255,7 +257,7 @@
                                                 <div class="space-y-1">
                                                     <label
                                                         class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Phường/Xã</label>
-                                                    <select id="newWard" required disabled
+                                                    <select id="newWard" disabled
                                                         onchange="updateHiddenFieldsFromNew()"
                                                         class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm">
                                                         <option value="">Chọn Phường/Xã</option>
@@ -266,7 +268,7 @@
                                                 <label
                                                     class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Số
                                                     Nhà, Tên Đường</label>
-                                                <input id="newDetailedAddress" required
+                                                <input id="newDetailedAddress"
                                                     oninput="updateHiddenFieldsFromNew()"
                                                     class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
                                                     type="text" placeholder="VD: Số 12 Đường Lê Lợi, Lô B Tòa nhà..." />
@@ -322,6 +324,14 @@
                                                 // Close dropdown
                                                 document.getElementById('addressDropdownList').classList.remove('addr-open');
                                                 document.getElementById('addressChevron').classList.remove('rotated');
+                                            }
+
+                                            // Wrapper: đọc data attributes từ label rồi gọi selectAddress
+                                            function selectAddressFromLabel(labelEl) {
+                                                const name    = labelEl.getAttribute('data-addr-name')    || '';
+                                                const phone   = labelEl.getAttribute('data-addr-phone')   || '';
+                                                const address = labelEl.getAttribute('data-addr-address') || '';
+                                                selectAddress(name, phone, address, labelEl);
                                             }
 
                                             function toggleNewAddressForm(element) {
@@ -407,7 +417,20 @@
                                                 }
                                             }
 
-                                            window.addEventListener('DOMContentLoaded', () => { fetchAllData(); });
+                                            window.addEventListener('DOMContentLoaded', () => {
+                                                fetchAllData();
+
+                                                // ── Tự động populate hidden fields từ địa chỉ mặc định khi trang load ──
+                                                const checkedAddr = document.querySelector('input[name="addressSelection"]:checked');
+                                                if (checkedAddr && checkedAddr.value !== 'new') {
+                                                    const label = checkedAddr.closest('.address-option');
+                                                    if (label && label.hasAttribute('data-addr-name')) {
+                                                        document.getElementById('hiddenFullname').value = label.getAttribute('data-addr-name');
+                                                        document.getElementById('hiddenPhone').value    = label.getAttribute('data-addr-phone');
+                                                        document.getElementById('hiddenAddress').value  = label.getAttribute('data-addr-address');
+                                                    }
+                                                }
+                                            });
                                         </script>
                                     </div>
                                 </section>
@@ -1041,13 +1064,38 @@
                     const form = document.getElementById('checkoutForm');
                     if (form) {
                         form.addEventListener('submit', function (e) {
+                            // ── 1. Validate địa chỉ giao hàng ──────────────────────────────
+                            const hiddenAddr = document.getElementById('hiddenAddress');
+                            const hiddenName = document.getElementById('hiddenFullname');
+                            const hiddenPhone = document.getElementById('hiddenPhone');
+                            if (!hiddenAddr || !hiddenAddr.value.trim() ||
+                                !hiddenName || !hiddenName.value.trim() ||
+                                !hiddenPhone || !hiddenPhone.value.trim()) {
+                                e.preventDefault();
+                                alert('Vui lòng chọn hoặc nhập địa chỉ giao hàng hợp lệ trước khi đặt hàng.');
+                                return;
+                            }
+
+                            // ── 2. Validate nếu chọn "Thêm địa chỉ mới" mà chưa điền đủ ──
+                            const newAddrRadio = document.getElementById('newAddressRadio');
+                            if (newAddrRadio && newAddrRadio.checked) {
+                                const newName = document.getElementById('newFullName').value.trim();
+                                const newPhone = document.getElementById('newPhone').value.trim();
+                                const newDetail = document.getElementById('newDetailedAddress').value.trim();
+                                if (!newName || !newPhone || !newDetail) {
+                                    e.preventDefault();
+                                    alert('Vui lòng điền đầy đủ thông tin địa chỉ mới (Họ tên, Số điện thoại, Số nhà/Đường).');
+                                    return;
+                                }
+                            }
+
+                            // ── 3. Validate thông tin thẻ nếu chọn Card ─────────────────────
                             const checkedRadio = document.querySelector('input[name="paymentMethod"]:checked');
                             if (!checkedRadio) return;
                             const selected = checkedRadio.value;
 
-                            if (selected === 'QR') {
-                                // Unified PayOS flow - just submit the form
-                                return;
+                            if (selected === 'QR' || selected === 'COD') {
+                                return; // Không cần validate thêm
                             }
 
                             if (selected === 'Card') {
@@ -1060,19 +1108,30 @@
                                     const expiryDate = expiryDateInput.value.trim();
                                     const cvv = cvvInput.value.trim();
 
+                                    // Nếu chưa nhập gì cả, yêu cầu nhập
+                                    if (!cardNumber && !expiryDate && !cvv) {
+                                        e.preventDefault();
+                                        alert('Vui lòng nhập thông tin thẻ tín dụng (Số thẻ, Ngày hết hạn, CVV).');
+                                        cardNumberInput.focus();
+                                        return;
+                                    }
+
                                     if (!/^\d{4}(\s\d{4}){3}$|^\d{16}$/.test(cardNumber.replace(/\s/g, ''))) {
                                         e.preventDefault();
-                                        alert("Invalid card number (16 digits)");
+                                        alert('Số thẻ không hợp lệ (cần 16 chữ số).');
+                                        cardNumberInput.focus();
                                         return;
                                     }
                                     if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiryDate)) {
                                         e.preventDefault();
-                                        alert("Invalid expiry date (MM/YY)");
+                                        alert('Ngày hết hạn không hợp lệ (định dạng MM/YY).');
+                                        expiryDateInput.focus();
                                         return;
                                     }
                                     if (!/^\d{3}$/.test(cvv)) {
                                         e.preventDefault();
-                                        alert("Invalid CVV (3 digits)");
+                                        alert('CVV không hợp lệ (cần 3 chữ số).');
+                                        cvvInput.focus();
                                         return;
                                     }
                                 }
