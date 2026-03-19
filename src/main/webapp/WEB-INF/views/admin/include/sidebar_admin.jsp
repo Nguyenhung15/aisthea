@@ -63,6 +63,11 @@
                     <i class="fa-solid fa-comments"></i>
                     <span>AI Chats</span>
                 </a>
+                <a href="${pageContext.request.contextPath}/admin/emails" class="lux-sidebar__link"
+                    data-path="/admin/emails">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                    <span>Email Hub</span>
+                </a>
             </nav>
 
         </aside>
