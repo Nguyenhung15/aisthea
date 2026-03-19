@@ -125,7 +125,7 @@ public class OrderServlet extends HttpServlet {
             throws ServletException, IOException {
         // Refresh user in session to ensure rank/points are up to date in sidebar
         refreshSessionUser(request);
-        
+
         List<Order> orderList = orderService.getOrderHistory(user.getUserId());
         request.setAttribute("orderList", orderList);
         request.getRequestDispatcher("/WEB-INF/views/order/history.jsp").forward(request, response);
@@ -171,7 +171,8 @@ public class OrderServlet extends HttpServlet {
                 }
             }
 
-            // Always refresh user session when viewing details to ensure tier/points are current
+            // Always refresh user session when viewing details to ensure tier/points are
+            // current
             refreshSessionUser(request);
             user = (User) request.getSession().getAttribute("user");
 
@@ -180,11 +181,19 @@ public class OrderServlet extends HttpServlet {
                 order = orderService.getOrderDetails(orderId, user.getUserId());
             }
 
-            // If payment was success, clear the cart now (it wasn't cleared during
-            // placeOrder for QR)
+            // If payment was success, restore originalCart (Buy Now flow) or clear cart
+            // (normal checkout)
             if ("success".equalsIgnoreCase(paymentStatus)) {
-                request.getSession().setAttribute("cart", new com.aisthea.fashion.model.Cart());
-                request.getSession().removeAttribute("originalCart");
+                HttpSession sess = request.getSession();
+                Cart originalCart = (Cart) sess.getAttribute("originalCart");
+                if (originalCart != null) {
+                    // Buy Now flow: restore the user's regular cart
+                    sess.setAttribute("cart", originalCart);
+                    sess.removeAttribute("originalCart");
+                } else {
+                    // Normal checkout flow: clear the cart
+                    sess.setAttribute("cart", new com.aisthea.fashion.model.Cart());
+                }
             }
 
             if (order != null) {
@@ -267,8 +276,14 @@ public class OrderServlet extends HttpServlet {
 
             sendOrderEmail(newOrder);
 
-            session.setAttribute("cart", new Cart());
-            session.removeAttribute("originalCart");
+            // Restore originalCart if this was a "Buy Now" flow, otherwise clear cart
+            Cart originalCart = (Cart) session.getAttribute("originalCart");
+            if (originalCart != null) {
+                session.setAttribute("cart", originalCart);
+                session.removeAttribute("originalCart");
+            } else {
+                session.setAttribute("cart", new Cart());
+            }
 
             // Refresh session user after placing order
             User freshUser = new com.aisthea.fashion.dao.UserDAO().selectUser(user.getUserId());

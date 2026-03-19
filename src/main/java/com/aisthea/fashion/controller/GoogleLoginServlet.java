@@ -1,11 +1,13 @@
 package com.aisthea.fashion.controller;
 
 import com.aisthea.fashion.dao.UserDAO;
+import com.aisthea.fashion.model.Cart;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.IUserService;
 import com.aisthea.fashion.service.UserService;
 import com.aisthea.fashion.config.GoogleConfig;
 import com.aisthea.fashion.util.BCryptUtil;
+import com.aisthea.fashion.util.CartStore;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -105,7 +107,21 @@ public class GoogleLoginServlet extends HttpServlet {
             // Create session
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
-            response.sendRedirect(request.getContextPath() + "/home");
+
+            // Restore cart saved at logout time and merge with current session cart
+            Cart merged = CartStore.popAndMerge(
+                    user.getUserId(),
+                    (Cart) session.getAttribute("cart"));
+            session.setAttribute("cart", merged);
+
+            // Redirect to returnUrl if set (e.g. redirected from checkout)
+            String returnUrl = (String) session.getAttribute("returnUrl");
+            if (returnUrl != null && !returnUrl.isEmpty()) {
+                session.removeAttribute("returnUrl");
+                response.sendRedirect(returnUrl);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/home");
+            }
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Unexpected error during Google login", e);

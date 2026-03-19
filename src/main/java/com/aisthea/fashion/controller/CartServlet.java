@@ -85,24 +85,29 @@ public class CartServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
+
+            // Guest user: redirect to login, then come back to checkout
+            com.aisthea.fashion.model.User user = (com.aisthea.fashion.model.User) session.getAttribute("user");
+            if (user == null) {
+                String checkoutUrl = request.getContextPath() + "/checkout";
+                session.setAttribute("returnUrl", checkoutUrl);
+                response.sendRedirect(request.getContextPath() + "/login?returnUrl="
+                        + java.net.URLEncoder.encode(checkoutUrl, "UTF-8"));
+                return;
+            }
+
             // Load active vouchers for the "pick voucher" panel
             com.aisthea.fashion.dao.VoucherDAO vDao = new com.aisthea.fashion.dao.VoucherDAO();
             request.setAttribute("activeVouchers", vDao.findActiveVouchers());
 
             // Load user addresses
-            com.aisthea.fashion.model.User user = (com.aisthea.fashion.model.User) session.getAttribute("user");
-            if (user != null) {
-                com.aisthea.fashion.dao.UserAddressDAO addressDao = new com.aisthea.fashion.dao.UserAddressDAO();
-                java.util.List<com.aisthea.fashion.model.UserAddress> addrs = addressDao.getByUserId(user.getUserId());
-                System.out.println(">>> CHECKOUT: Loading addresses for UserID = " + user.getUserId() + " | Found: "
-                        + addrs.size());
-                request.setAttribute("userAddresses", addrs);
-            } else {
-                System.out.println(">>> CHECKOUT: User is NULL in session!");
-            }
+            com.aisthea.fashion.dao.UserAddressDAO addressDao = new com.aisthea.fashion.dao.UserAddressDAO();
+            java.util.List<com.aisthea.fashion.model.UserAddress> addrs = addressDao.getByUserId(user.getUserId());
+            System.out.println(">>> CHECKOUT: Loading addresses for UserID = " + user.getUserId() + " | Found: "
+                    + addrs.size());
+            request.setAttribute("userAddresses", addrs);
 
             request.getRequestDispatcher("/WEB-INF/views/cart/checkout.jsp")
-
                     .forward(request, response);
             return;
         }
