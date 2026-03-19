@@ -71,7 +71,8 @@ public class RegisterServlet extends HttpServlet {
                         + "<p>Nếu bạn không đăng ký, vui lòng bỏ qua email này.</p>"
                         + "</body></html>";
 
-                EmailConfig.sendMail(email, subject, html);
+                EmailConfig.sendMail(email, subject, html,
+                        EmailConfig.TYPE_REGISTER, 0);
                 request.setAttribute("message",
                         "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
                 request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);

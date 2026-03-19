@@ -473,7 +473,8 @@ public class OrderServlet extends HttpServlet {
             html.append("</div>");
             html.append("</body></html>");
 
-            EmailConfig.sendMail(customerEmail, subject, html.toString());
+            EmailConfig.sendMail(customerEmail, subject, html.toString(),
+                    EmailConfig.TYPE_ORDER_CONFIRM, order.getUserid());
             logger.info("Email xác nhận đơn hàng #" + order.getOrderid() + " đã được gửi tới " + customerEmail);
 
         } catch (Exception e) {

@@ -48,7 +48,8 @@ public class PasswordResetService implements IPasswordResetService {
                 + "<p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>"
                 + "</div>";
 
-        boolean mailSent = EmailConfig.sendMail(email, "AISTHÉA - Đặt lại mật khẩu", html);
+        boolean mailSent = EmailConfig.sendMail(email, "AISTHÉA - Đặt lại mật khẩu", html,
+                EmailConfig.TYPE_PASSWORD_RESET, user.getUserId());
         if (!mailSent) {
             return RequestStatus.MAIL_ERROR;
         }
