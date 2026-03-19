@@ -114,11 +114,32 @@
             <version>2.0.1</version>
         </dependency>
 
-        <!-- ✅ OkHttp for PayOS -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
             <version>4.11.0</version>
+        </dependency>
+
+        <!-- ✅ JUnit 5 (Unit Testing) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- ✅ Selenium (Automation Testing) -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.13.0</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
@@ -126,6 +147,16 @@
     <build>
         <finalName>AistheaFashion</finalName>
         <plugins>
+
+            <!-- ✅ Skip Tests by Default during Build (mvn install/package) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
 
             <!-- Compiler -->
             <plugin>

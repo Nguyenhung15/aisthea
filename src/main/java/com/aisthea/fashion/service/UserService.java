@@ -4,7 +4,7 @@ import com.aisthea.fashion.dao.IUserDAO;
 import com.aisthea.fashion.dao.UserDAO;
 import com.aisthea.fashion.model.LoginResult;
 import com.aisthea.fashion.model.User;
-import com.aisthea.fashion.utils.BCryptUtil;
+import com.aisthea.fashion.util.BCryptUtil;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;

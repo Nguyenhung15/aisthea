@@ -58,20 +58,14 @@ public class ChatServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         try {
-            this.gson = new Gson();
-            String apiKey = getServletContext().getInitParameter("GEMINI_API_KEY");
-            if (apiKey == null || apiKey.isBlank() || apiKey.equals("YOUR_GEMINI_API_KEY_HERE")) {
-                System.err.println("[ChatServlet] ERROR: GEMINI_API_KEY is not configured in web.xml!");
-            } else {
-                System.out.println("[ChatServlet] Gemini API Key loaded. Starts with: "
-                        + apiKey.substring(0, Math.min(apiKey.length(), 6)) + "...");
-            }
-            this.geminiService = new GeminiService(apiKey != null ? apiKey : "");
-            this.chatMessageDAO = new ChatMessageDAO();
-            this.productDAO = new com.aisthea.fashion.dao.ProductDAO();
-            this.userDAO = new com.aisthea.fashion.dao.UserDAO();
+            this.gson           = new Gson();
+            this.geminiService    = new GeminiService(); // Now auto-configures from application.properties
+            this.chatMessageDAO   = new ChatMessageDAO();
+            this.productDAO       = new com.aisthea.fashion.dao.ProductDAO();
+            this.userDAO          = new com.aisthea.fashion.dao.UserDAO();
+            
             ISO_FORMAT.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-            System.out.println("[ChatServlet] Initialization SUCCESSFUL.");
+            System.out.println("[ChatServlet] Initialization SUCCESSFUL (AI auto-config).");
         } catch (Throwable t) {
             System.err.println("[ChatServlet] CRITICAL ERROR in init(): " + t.getMessage());
             t.printStackTrace();

@@ -1,5 +1,6 @@
 package com.aisthea.fashion.service;
 
+import com.aisthea.fashion.config.AIConfig;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -15,134 +16,92 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Service for calling Google Gemini API.
- * Uses OkHttp (already in pom.xml) for HTTP requests and Gson for JSON.
+ * Service for calling the AI API (Groq/Llama).
+ * Configuration is dynamically served by {@link AIConfig}.
  */
 public class GeminiService {
 
-    private static final String API_URL = "https://api.groq.com/openai/v1/chat/completions";
-
     private static final MediaType JSON_MEDIA = MediaType.parse("application/json; charset=utf-8");
-
-    private static final String SYSTEM_PROMPT = """
-            Bạn là **AISTHÉA Assistant** — trợ lý AI chính thức của thương hiệu thời trang cao cấp AISTHÉA.
-
-            ## Về AISTHÉA
-            - Thương hiệu thời trang luxury, phong cách hiện đại, sang trọng
-            - Sản phẩm: áo, quần, váy, đầm, áo khoác, phụ kiện cho cả Nam và Nữ
-            - Website: AISTHÉA Fashion Store
-
-            ## Chính sách cửa hàng
-            - **Đổi trả**: Trong vòng 7 ngày kể từ khi nhận hàng, sản phẩm còn nguyên tag
-            - **Vận chuyển**: Giao hàng toàn quốc, miễn phí cho đơn từ 500.000đ
-            - **Thanh toán**: Hỗ trợ thanh toán trực tuyến qua PayOS và thanh toán khi nhận hàng (COD)
-            - **Voucher/Khuyến mãi**: Có chương trình khách hàng thân thiết theo tier (Bronze, Silver, Gold, Platinum)
-
-            ## Hướng dẫn Size (tham khảo)
-            - **S**: 40-50kg, cao 150-160cm
-            - **M**: 50-60kg, cao 155-165cm
-            Dưới đây là danh sách 12 sản phẩm bán chạy nhất hiện nay:
-            %s
-            
-            QUY TẮC (BẮT BUỘC):
-            1. Trả lời tiếng Việt, giọng điệu luxury.
-            2. **TRẢ LỜI CHÍNH XÁC**: 
-               - "Bán chạy nhất" = Sản phẩm có số sau chữ `S:` cao nhất.
-               - "Rẻ nhất" = Sản phẩm có giá thấp nhất.
-            3. Hiện ảnh bằng định dạng: `[product_card:ID|TÊN|GIÁ|URL_ẢNH]`.
-            4. **CHỌN ẢNH**: Tìm URL đúng màu khách hỏi trong `M-A`. Không hỏi màu thì dùng `Default` hoặc link đầu tiên.
-            5. Chỉ hiện ảnh khi khách muốn ngắm mẫu/xem màu. Hỏi tin chung thì chỉ dùng văn bản.
-            6. Xưng là "AISTHÉA Assistant". ✨
-            """;
 
     private final String apiKey;
     private final OkHttpClient httpClient;
     private final Gson gson;
 
-    public GeminiService(String apiKey) {
-        this.apiKey = apiKey;
+    public GeminiService() {
+        // Automatically uses key from AIConfig (which checks env vars/properties)
+        this.apiKey = AIConfig.getApiKey();
         this.httpClient = new OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(AIConfig.CONNECT_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(AIConfig.READ_TIMEOUT,       TimeUnit.SECONDS)
+                .writeTimeout(AIConfig.WRITE_TIMEOUT,     TimeUnit.SECONDS)
                 .build();
         this.gson = new Gson();
     }
 
     /**
-     * Send a chat message with history to Groq (Llama 3) and get a reply.
+     * Send a chat message with history to the AI.
      */
     public String chat(String userMessage, List<Map<String, String>> history, String productContext)
             throws IOException {
 
-        JsonObject requestBody = new JsonObject();
-        requestBody.addProperty("model", "llama-3.1-8b-instant"); // Dùng 8b để có hạn mức (Rate Limit) cực cao, chat không bị ngắt quãng
+        // Build system prompt
+        String systemPromptContent = String.format(
+                AIConfig.SYSTEM_PROMPT,
+                productContext != null && !productContext.isBlank() ? productContext : "(Chưa có dữ liệu sản phẩm)"
+        );
 
         JsonArray messages = new JsonArray();
 
-        // 1. Add System Message
-        String finalSystemPrompt = SYSTEM_PROMPT;
-        if (productContext != null && !productContext.isBlank()) {
-            finalSystemPrompt += "\n\n## Dữ liệu sản phẩm thực tế từ cửa hàng:\n" + productContext;
-        }
+        // 1. System message
         JsonObject systemMsg = new JsonObject();
         systemMsg.addProperty("role", "system");
-        systemMsg.addProperty("content", finalSystemPrompt);
+        systemMsg.addProperty("content", systemPromptContent);
         messages.add(systemMsg);
 
-        // 2. Add History
+        // 2. History
         if (history != null) {
             for (Map<String, String> msg : history) {
-                JsonObject m = new JsonObject();
-                // Chuyển role từ Gemini (model) sang chuẩn OpenAI (assistant)
                 String role = "model".equalsIgnoreCase(msg.get("role")) ? "assistant" : "user";
+                JsonObject m = new JsonObject();
                 m.addProperty("role", role);
                 m.addProperty("content", msg.get("text"));
                 messages.add(m);
             }
         }
 
-        // 3. Add Current Message
+        // 3. User message
         JsonObject userMsg = new JsonObject();
         userMsg.addProperty("role", "user");
         userMsg.addProperty("content", userMessage);
         messages.add(userMsg);
 
+        // API Request Body
+        JsonObject requestBody = new JsonObject();
+        requestBody.addProperty("model",       AIConfig.getModel());
+        requestBody.addProperty("temperature", AIConfig.getTemperature());
+        requestBody.addProperty("max_tokens",  AIConfig.getMaxTokens());
         requestBody.add("messages", messages);
-        requestBody.addProperty("temperature", 0.2);
-        requestBody.addProperty("max_tokens", 2048);
 
-        // Make API call
-        System.out.println("[GroqService] Calling API: " + API_URL + " with Llama 3");
         RequestBody body = RequestBody.create(gson.toJson(requestBody), JSON_MEDIA);
         Request request = new Request.Builder()
-                .url(API_URL)
+                .url(AIConfig.getApiUrl())
                 .addHeader("Authorization", "Bearer " + apiKey)
                 .post(body)
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
-            String responseBody = response.body() != null ? response.body().string() : "";
+            String responseBodyStr = response.body() != null ? response.body().string() : "";
 
             if (!response.isSuccessful()) {
-                String errorMsg = "Groq API error " + response.code() + ": " + responseBody;
-                System.err.println("[GroqService] " + errorMsg);
-                throw new IOException(errorMsg);
+                throw new IOException("AI API error " + response.code() + ": " + responseBodyStr);
             }
 
-            JsonObject jsonResponse = gson.fromJson(responseBody, JsonObject.class);
-
+            JsonObject jsonResponse = gson.fromJson(responseBodyStr, JsonObject.class);
             if (jsonResponse.has("choices") && jsonResponse.getAsJsonArray("choices").size() > 0) {
-                JsonObject choice = jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject();
-                if (choice.has("message") && choice.getAsJsonObject("message").has("content")) {
-                    return choice.getAsJsonObject("message").get("content").getAsString();
-                }
+                return jsonResponse.getAsJsonArray("choices").get(0).getAsJsonObject()
+                        .getAsJsonObject("message").get("content").getAsString();
             }
-
-            return "Xin lỗi, tôi gặp chút trục trặc khi xử lý câu trả lời. Bạn thử lại nhé!";
-        } catch (Exception e) {
-            System.err.println("[GroqService] Error: " + e.getMessage());
-            throw e;
+            return "Xin lỗi, tôi gặp chút trục trặc khi xử lý câu trả lời.";
         }
     }
 }

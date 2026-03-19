@@ -1,5 +1,6 @@
 package com.aisthea.fashion.util;
 
+import com.aisthea.fashion.config.SecurityConfig;
 import org.mindrot.jbcrypt.BCrypt;
 
 /**
@@ -17,7 +18,7 @@ public class BCryptUtil {
         if (plainText == null || plainText.isEmpty()) {
             return null;
         }
-        return BCrypt.hashpw(plainText, BCrypt.gensalt(12)); // cost factor 12
+        return BCrypt.hashpw(plainText, BCrypt.gensalt(SecurityConfig.getBcryptRounds()));
     }
 
     /**

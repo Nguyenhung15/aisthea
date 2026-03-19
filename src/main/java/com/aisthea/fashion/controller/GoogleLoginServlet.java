@@ -4,7 +4,8 @@ import com.aisthea.fashion.dao.UserDAO;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.IUserService;
 import com.aisthea.fashion.service.UserService;
-import com.aisthea.fashion.utils.BCryptUtil;
+import com.aisthea.fashion.config.GoogleConfig;
+import com.aisthea.fashion.util.BCryptUtil;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -24,7 +25,6 @@ import java.util.logging.Logger;
 public class GoogleLoginServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(GoogleLoginServlet.class.getName());
-    private static final String CLIENT_ID = "149895780747-i2o54c2tbv6vhg5kb71k8kfnd3n12jrj.apps.googleusercontent.com";
     private IUserService userService;
     private UserDAO userDAO;
 
@@ -46,10 +46,11 @@ public class GoogleLoginServlet extends HttpServlet {
         }
 
         try {
+            String clientId = GoogleConfig.getClientId();
             // Verify the Google ID token
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(),
                     new GsonFactory())
-                    .setAudience(Collections.singletonList(CLIENT_ID))
+                    .setAudience(Collections.singletonList(clientId))
                     .build();
 
             GoogleIdToken idToken = verifier.verify(credential);

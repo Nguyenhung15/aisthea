@@ -6,8 +6,9 @@ import com.aisthea.fashion.dao.IUserDAO;
 import com.aisthea.fashion.dao.UserDAO;
 import com.aisthea.fashion.model.EmailVerification;
 import com.aisthea.fashion.model.User;
-import com.aisthea.fashion.utils.BCryptUtil;
-import com.aisthea.fashion.utils.MailUtil;
+import com.aisthea.fashion.util.BCryptUtil;
+import com.aisthea.fashion.config.EmailConfig;
+import com.aisthea.fashion.config.SecurityConfig;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -30,7 +31,8 @@ public class PasswordResetService implements IPasswordResetService {
         }
 
         String token = UUID.randomUUID().toString();
-        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(30);
+        int expiryMinutes = SecurityConfig.getTokenExpiryMinutes();
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expiryMinutes);
 
         boolean tokenSaved = evDAO.saveToken(user.getUserId(), token, expiresAt);
         if (!tokenSaved) {
@@ -41,12 +43,12 @@ public class PasswordResetService implements IPasswordResetService {
         String html = "<div style='font-family:Poppins, sans-serif'>"
                 + "<h3>Xin chào " + (user.getFullname() != null ? user.getFullname() : user.getEmail()) + ",</h3>"
                 + "<p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản AISTHÉA.</p>"
-                + "<p>Nhấn vào liên kết dưới đây để đặt lại mật khẩu (hạn trong 30 phút):</p>"
+                + "<p>Nhấn vào liên kết dưới đây để đặt lại mật khẩu (hạn trong " + SecurityConfig.getTokenExpiryMinutes() + " phút):</p>"
                 + "<p><a href='" + resetLink + "' style='background:#004c99;color:#fff;padding:8px 12px;border-radius:6px;text-decoration:none;'>Đặt lại mật khẩu</a></p>"
                 + "<p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>"
                 + "</div>";
 
-        boolean mailSent = MailUtil.sendMail(email, "AISTHÉA - Đặt lại mật khẩu", html);
+        boolean mailSent = EmailConfig.sendMail(email, "AISTHÉA - Đặt lại mật khẩu", html);
         if (!mailSent) {
             return RequestStatus.MAIL_ERROR;
         }

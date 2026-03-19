@@ -8,11 +8,6 @@
         <param-name>jakarta.faces.PROJECT_STAGE</param-name>
         <param-value>Development</param-value>
     </context-param>
-    <!-- Gemini AI API Key (replace with your actual key from aistudio.google.com) -->
-    <context-param>
-        <param-name>GEMINI_API_KEY</param-name>
-        <param-value>YOUR_API_KEY_HERE</param-value>
-    </context-param>
     <listener>
         <listener-class>com.aisthea.fashion.listener.SessionListener</listener-class>
     </listener>

@@ -3,7 +3,7 @@ package com.aisthea.fashion.controller;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.IUserService;
 import com.aisthea.fashion.service.UserService;
-import com.aisthea.fashion.utils.MailUtil;
+import com.aisthea.fashion.config.EmailConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -71,7 +71,7 @@ public class RegisterServlet extends HttpServlet {
                         + "<p>Nếu bạn không đăng ký, vui lòng bỏ qua email này.</p>"
                         + "</body></html>";
 
-                MailUtil.sendMail(email, subject, html);
+                EmailConfig.sendMail(email, subject, html);
                 request.setAttribute("message",
                         "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.");
                 request.getRequestDispatcher("/WEB-INF/views/user/login.jsp").forward(request, response);

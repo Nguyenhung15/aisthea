@@ -1,6 +1,6 @@
 //package com.aisthea.fashion.controller;
 //
-//import com.aisthea.fashion.utils.MailUtil;
+//import com.aisthea.fashion.config.EmailConfig;
 //import jakarta.servlet.ServletException;
 //import jakarta.servlet.annotation.WebServlet;
 //import jakarta.servlet.http.*;

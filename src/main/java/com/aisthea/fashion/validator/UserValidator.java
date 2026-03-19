@@ -52,12 +52,12 @@ public class UserValidator {
             return errors;
         }
 
-        if (password.length() < SecurityConfig.MIN_PASSWORD_LENGTH) {
-            errors.add("Mật khẩu phải có ít nhất " + SecurityConfig.MIN_PASSWORD_LENGTH + " ký tự");
+        if (password.length() < SecurityConfig.getMinPasswordLength()) {
+            errors.add("Mật khẩu phải có ít nhất " + SecurityConfig.getMinPasswordLength() + " ký tự");
         }
 
-        if (password.length() > SecurityConfig.MAX_PASSWORD_LENGTH) {
-            errors.add("Mật khẩu không được vượt quá " + SecurityConfig.MAX_PASSWORD_LENGTH + " ký tự");
+        if (password.length() > SecurityConfig.getMaxPasswordLength()) {
+            errors.add("Mật khẩu không được vượt quá " + SecurityConfig.getMaxPasswordLength() + " ký tự");
         }
 
         // Check for at least one letter

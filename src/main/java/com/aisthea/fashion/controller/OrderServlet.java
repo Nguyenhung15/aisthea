@@ -6,8 +6,8 @@ import com.aisthea.fashion.model.OrderItem;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.IOrderService;
 import com.aisthea.fashion.service.OrderService;
-import com.aisthea.fashion.utils.MailUtil;
-import com.aisthea.fashion.utils.PayOSConfig;
+import com.aisthea.fashion.config.EmailConfig;
+import com.aisthea.fashion.config.PayOSConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -473,7 +473,7 @@ public class OrderServlet extends HttpServlet {
             html.append("</div>");
             html.append("</body></html>");
 
-            MailUtil.sendMail(customerEmail, subject, html.toString());
+            EmailConfig.sendMail(customerEmail, subject, html.toString());
             logger.info("Email xác nhận đơn hàng #" + order.getOrderid() + " đã được gửi tới " + customerEmail);
 
         } catch (Exception e) {
