@@ -568,6 +568,27 @@
                         transform: translateY(-2px);
                         box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
                     }
+
+                    /* Inline Images in Chat */
+                    .aisthea-chat-inline-img {
+                        max-width: 100%;
+                        border-radius: 12px;
+                        margin-top: 8px;
+                        margin-bottom: 4px;
+                        cursor: zoom-in;
+                        transition: transform 0.2s;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                        display: block;
+                    }
+
+                    .aisthea-chat-inline-img:hover {
+                        transform: scale(1.02);
+                    }
+
+                    .aisthea-chat-img-container {
+                        width: 100%;
+                        overflow: hidden;
+                    }
                 </style>
 
                 <!-- Chat Bubble -->
@@ -767,18 +788,37 @@
                                                '</div>';
                                     });
 
-                                    // 3. Fallback for legacy tags if AI still uses them
-                                    text = text.replace(/\[img:(.*?)\]/g, ''); // Hide raw [img] tags as we use cards
-                                    text = text.replace(/\[img:(.*?)\]/g, ''); // Duplicate catch to be safe
-                                    
-                                    // Handle any remaining Markdown links
+                                    // 3. Support for various image formats
+                                    // 3a. Markdown Images ![alt](url)
+                                    text = text.replace(/!\[(.*?)\]\((.*?)\)/g, function(match, alt, url) {
+                                        var finalUrl = url.trim();
+                                        if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
+                                        return '<div class="aisthea-chat-img-container"><img src="' + finalUrl + '" alt="' + alt + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + finalUrl + '\', \'_blank\')"></div>';
+                                    });
+
+                                    // 3b. Legacy [img:URL] tags (RESTORED logic)
+                                    text = text.replace(/\[img:(.*?)\]/g, function(match, url) {
+                                        var finalUrl = url.trim();
+                                        if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
+                                        return '<div class="aisthea-chat-img-container"><img src="' + finalUrl + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + finalUrl + '\', \'_blank\')"></div>';
+                                    });
+
+                                    // 3c. Raw Image URLs (png, jpg, jpeg, gif, webp, and Pinterest)
+                                    // Match URLs but ignore them if they are already part of an attribute or specific tag
+                                    var imgRegex = /(src=['"]|href=['"]|!\[.*?\]\(|\[img:|\[product_card:[^\]]*?\|)?(https?:\/\/[^\s<]+\.(?:png|jpg|jpeg|gif|webp)(?:\?[^\s<]*)?|https?:\/\/i\.pinimg\.com\/[^\s<]+)/gi;
+                                    text = text.replace(imgRegex, function(match, prefix, url) {
+                                        if (prefix) return match; 
+                                        return '<div class="aisthea-chat-img-container"><img src="' + url + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + url + '\', \'_blank\')"></div>';
+                                    });
+
+                                    // 4. Remaining Markdown links [label](url)
                                     text = text.replace(/\[(.*?)\]\((.*?)\)/g, function(match, label, url) {
                                         var finalUrl = url.trim();
                                         if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
                                         return '<a href="' + finalUrl + '" class="aisthea-chat-link">' + label + ' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8em"></i></a>';
                                     });
 
-                                    // 4. New lines
+                                    // 5. New lines
                                     text = text.replace(/\n/g, '<br>');
                                 } catch (e) {
                                     console.error('[ChatWidget] Regex error:', e, text);

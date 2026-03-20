@@ -416,8 +416,8 @@
                                                                 <i class="fa-solid ${u.banned ? 'fa-circle-check' : 'fa-ban'}"
                                                                     style="${u.banned ? 'color:var(--color-success);' : 'color:#dc2626;'}"></i>
                                                             </button>
-                                                            <a href="${pageContext.request.contextPath}/user?action=delete&id=${u.userId}"
-                                                                onclick="return confirm('Warning: Deleting a user cannot be undone. Are you sure?');"
+                                                            <a href="javascript:void(0)"
+                                                                onclick="confirmUserDelete(${u.userId}, '${u.fullname}')"
                                                                 style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-text-secondary);transition:all 0.2s ease;"
                                                                 title="Delete User">
                                                                 <i class="fa-solid fa-trash-can"></i>
@@ -461,25 +461,56 @@
                                 var title = document.getElementById('modalTitle');
                                 var text = document.getElementById('modalText');
                                 var confirmBtn = document.getElementById('modalConfirmBtn');
+                                var cancelBtn = document.querySelector('.lux-modal__btn--cancel');
+
+                                cancelBtn.innerText = 'Hủy';
+                                confirmBtn.innerText = 'Xác nhận';
 
                                 if (isBanned) {
                                     icon.innerHTML = '<i class="fa-solid fa-user-check"></i>';
                                     icon.className = 'lux-modal__icon lux-modal__icon--success';
-                                    title.innerText = 'Unban this customer?';
-                                    text.innerText = 'You are about to unban ' + fullname + '. They will be able to log into the system again.';
+                                    title.innerText = 'Mở khóa tài khoản?';
+                                    text.innerText = 'Bạn đang chuẩn bị mở khóa cho ' + fullname + '. Họ sẽ có thể đăng nhập lại vào hệ thống.';
                                 } else {
                                     icon.innerHTML = '<i class="fa-solid fa-user-slash"></i>';
                                     icon.className = 'lux-modal__icon lux-modal__icon--warn';
-                                    title.innerText = 'Ban this customer?';
-                                    text.innerText = 'You are about to ban account of ' + fullname + '. This user will not be able to log in until unbanned.';
+                                    title.innerText = 'Khóa tài khoản khách?';
+                                    text.innerText = 'Bạn đang chuẩn bị khóa tài khoản của ' + fullname + '. Người này sẽ không thể đăng nhập cho đến khi được mở khóa.';
                                 }
 
                                 confirmBtn.href = '${pageContext.request.contextPath}/user?action=toggleStatus&id=' + userId;
                                 overlay.classList.add('active');
                             }
 
+                            function confirmUserDelete(userId, fullname) {
+                                var overlay = document.getElementById('luxModalOverlay');
+                                var icon = document.getElementById('modalIcon');
+                                var title = document.getElementById('modalTitle');
+                                var text = document.getElementById('modalText');
+                                var confirmBtn = document.getElementById('modalConfirmBtn');
+                                var cancelBtn = document.querySelector('.lux-modal__btn--cancel');
+
+                                cancelBtn.innerText = 'Hủy';
+                                confirmBtn.innerText = 'Xác nhận xóa';
+                                confirmBtn.style.background = '#dc2626';
+
+                                icon.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+                                icon.className = 'lux-modal__icon lux-modal__icon--warn';
+                                title.innerText = 'Xóa vĩnh viễn tài khoản?';
+                                text.innerText = 'Cảnh báo: Hành động này sẽ xóa dữ liệu của ' + fullname + ' và không thể hoàn tác. Bạn có thực sự muốn tiếp tục?';
+
+                                confirmBtn.href = '${pageContext.request.contextPath}/user?action=delete&id=' + userId;
+                                overlay.classList.add('active');
+                            }
+
                             function closeModal() {
-                                document.getElementById('luxModalOverlay').classList.remove('active');
+                                var overlay = document.getElementById('luxModalOverlay');
+                                var confirmBtn = document.getElementById('modalConfirmBtn');
+                                overlay.classList.remove('active');
+                                // Reset confirm button color to default after some time
+                                setTimeout(function() {
+                                    confirmBtn.style.background = 'var(--color-primary)';
+                                }, 300);
                             }
 
                             // ── Customer Filter JS ──

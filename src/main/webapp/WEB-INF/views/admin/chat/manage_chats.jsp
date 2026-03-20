@@ -101,6 +101,26 @@
                     animation: pulseStaff 2s infinite;
                     border-color: #f59e0b;
                 }
+
+                /* Inline Images in Admin Chat */
+                .aisthea-chat-inline-img {
+                    max-width: 250px; /* Smaller for admin view */
+                    border-radius: var(--radius-lg);
+                    margin-top: 8px;
+                    margin-bottom: 4px;
+                    cursor: zoom-in;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    display: block;
+                }
+                .aisthea-chat-product-card {
+                    margin: 12px 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+                    overflow: hidden; width: 220px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+                }
+                .aisthea-product-card-img { width: 100%; height: 220px; object-fit: cover; }
+                .aisthea-product-card-info { padding: 8px; font-size: 0.75rem; }
+                .aisthea-product-card-name { font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+                .aisthea-product-card-price { font-weight: 600; color: #B2967D; }
+                .aisthea-chat-img-container { width: 100%; }
             </style>
             <!-- Audio for notifications -->
             <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
@@ -367,6 +387,69 @@
                     });
                 }
 
+                function formatChatText(text, senderType) {
+                    if (!text) return '';
+                    if (senderType === 'CUSTOMER') return escapeHtml(text).replace(/\n/g, '<br>');
+
+                    try {
+                        // 1. Bold text
+                        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        
+                        // 2. Product Card [product_card:ID|NAME|PRICE|IMAGE]
+                        text = text.replace(/\[product_card:(.*?)\]/g, function(match, content) {
+                            var parts = content.split('|');
+                            if (parts.length < 4) return '';
+                            var id = parts[0].trim(), name = parts[1].trim(), price = parts[2].trim(), img = parts[3].trim();
+                            var finalImgUrl = img;
+                            if (!img.startsWith('http') && !img.startsWith('/')) finalImgUrl = ctxPath + '/' + img;
+                            else if (img.startsWith('/') && !img.startsWith(ctxPath)) finalImgUrl = ctxPath + img;
+                            
+                            return '<div class="aisthea-chat-product-card">' +
+                                   '  <img src="' + finalImgUrl + '" class="aisthea-product-card-img" onerror="this.src=\'' + ctxPath + '/assets/images/defaults/no-image.svg\'" />' +
+                                   '  <div class="aisthea-product-card-info">' +
+                                   '    <div class="aisthea-product-card-name">' + name + '</div>' +
+                                   '    <div class="aisthea-product-card-price">' + price + '</div>' +
+                                   '  </div>' +
+                                   '</div>';
+                        });
+
+                        // 3. Various Image formats
+                        // 3a. Markdown Images ![alt](url)
+                        text = text.replace(/!\[(.*?)\]\((.*?)\)/g, function(match, alt, url) {
+                            var finalUrl = url.trim();
+                            if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
+                            return '<div class="aisthea-chat-img-container"><img src="' + finalUrl + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + finalUrl + '\', \'_blank\')"></div>';
+                        });
+
+                        // 3b. [img:url]
+                        text = text.replace(/\[img:(.*?)\]/g, function(match, url) {
+                            var finalUrl = url.trim();
+                            if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
+                            return '<div class="aisthea-chat-img-container"><img src="' + finalUrl + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + finalUrl + '\', \'_blank\')"></div>';
+                        });
+
+                        // 3c. Raw Image URLs (png, jpg, jpeg, gif, webp, and Pinterest)
+                        var imgRegex = /(src=['"]|href=['"]|!\[.*?\]\(|\[img:|\[product_card:[^\]]*?\|)?(https?:\/\/[^\s<]+\.(?:png|jpg|jpeg|gif|webp)(?:\?[^\s<]*)?|https?:\/\/i\.pinimg\.com\/[^\s<]+)/gi;
+                        text = text.replace(imgRegex, function(match, prefix, url) {
+                            if (prefix) return match; 
+                            return '<div class="aisthea-chat-img-container"><img src="' + url + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + url + '\', \'_blank\')"></div>';
+                        });
+
+                        // 4. Remaining links [label](url)
+                        text = text.replace(/\[(.*?)\]\((.*?)\)/g, function(match, label, url) {
+                            var finalUrl = url.trim();
+                            if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
+                            return '<a href="' + finalUrl + '" target="_blank" style="color:var(--color-primary)">' + label + '</a>';
+                        });
+
+                        // 5. New lines
+                        text = text.replace(/\n/g, '<br>');
+                    } catch (e) {
+                        console.error('[AdminChat] Formatting error:', e, text);
+                    }
+                    return text;
+                }
+
                 function renderMessages(msgs) {
                     var html = '';
                     msgs.forEach(function(m) {
@@ -375,10 +458,7 @@
                         if (senderType === 'CUSTOMER') { cls = 'admin-msg--customer'; label = '👤 Customer'; }
                         else if (senderType === 'STAFF') { cls = 'admin-msg--staff'; label = '🧑‍💼 Staff'; }
 
-                        var text = m.text || '';
-                        if (senderType !== 'CUSTOMER') {
-                            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-                        }
+                        var text = formatChatText(m.text, senderType);
                         var timeStr = m.time ? formatTime(m.time) : '';
                         html += '<div class="admin-msg ' + cls + '">'
                             + '<div class="admin-msg__label">' + label + '</div>'
@@ -450,10 +530,8 @@
                                     var senderType = (m.sender||'').toUpperCase();
                                     var cls = 'admin-msg--ai', label = '🤖 AI';
                                     if (senderType === 'CUSTOMER') { cls = 'admin-msg--customer'; label = '👤 Customer'; }
-                                    var text = m.text || '';
-                                    if (senderType !== 'CUSTOMER') {
-                                        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-                                    }
+                                    
+                                    var text = formatChatText(m.text, senderType);
                                     var div = document.createElement('div');
                                     div.className = 'admin-msg ' + cls;
                                     div.innerHTML = '<div class="admin-msg__label">' + label + '</div>' + text
