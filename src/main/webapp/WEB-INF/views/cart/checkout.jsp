@@ -122,32 +122,74 @@
                                             #addressDropdownList {
                                                 max-height: 0;
                                                 overflow: hidden;
-                                                transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+                                                transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
                                             }
-                                            #addressDropdownList.addr-open { max-height: 700px; }
-                                            #addressChevron { transition: transform 0.3s ease; }
-                                            #addressChevron.rotated { transform: rotate(180deg); }
+
+                                            #addressDropdownList.addr-open {
+                                                max-height: 700px;
+                                            }
+
+                                            #addressChevron {
+                                                transition: transform 0.3s ease;
+                                            }
+
+                                            #addressChevron.rotated {
+                                                transform: rotate(180deg);
+                                            }
                                         </style>
+
+                                        <!-- Xác định địa chỉ mặc định để hiển thị ban đầu -->
+                                        <%-- Tìm địa chỉ isDefault=true, nếu không có thì lấy địa chỉ đầu tiên --%>
+                                        <c:set var="defaultAddr" value="" />
+                                        <c:forEach var="a" items="${userAddresses}">
+                                            <c:if test="${a.isDefault && empty defaultAddr}">
+                                                <c:set var="defaultAddr" value="${a}" />
+                                            </c:if>
+                                        </c:forEach>
+                                        <c:if test="${empty defaultAddr && not empty userAddresses}">
+                                            <c:set var="defaultAddr" value="${userAddresses[0]}" />
+                                        </c:if>
 
                                         <!-- Preview card (always visible, click to open list) -->
                                         <div id="selectedAddressPreview"
                                             class="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-2 border-accent-blue bg-white/50 cursor-pointer hover:bg-white/70 transition-all select-none"
                                             onclick="toggleAddressDropdown()">
                                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                                                <span class="material-icons-outlined text-accent-blue text-xl flex-shrink-0">location_on</span>
+                                                <span
+                                                    class="material-icons-outlined text-accent-blue text-xl flex-shrink-0">location_on</span>
                                                 <div class="min-w-0">
-                                                    <p id="previewName" class="font-bold text-sm text-slate-800 truncate">
-                                                        ${sessionScope.user.fullname}
-                                                        <span class="font-normal text-slate-500 ml-1">| ${sessionScope.user.phone}</span>
+                                                    <p id="previewName"
+                                                        class="font-bold text-sm text-slate-800 truncate">
+                                                        <c:choose>
+                                                            <c:when test="${not empty defaultAddr}">
+                                                                ${defaultAddr.fullName}
+                                                                <span class="font-normal text-slate-500 ml-1">| ${defaultAddr.phone}</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                ${sessionScope.user.fullname}
+                                                                <span class="font-normal text-slate-500 ml-1">| ${sessionScope.user.phone}</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </p>
-                                                    <p id="previewAddress" class="text-xs text-slate-500 mt-0.5 truncate">
-                                                        ${sessionScope.user.address}
+                                                    <p id="previewAddress"
+                                                        class="text-xs text-slate-500 mt-0.5 truncate">
+                                                        <c:choose>
+                                                            <c:when test="${not empty defaultAddr}">
+                                                                ${defaultAddr.detailedAddress}
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                ${sessionScope.user.address}
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </p>
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-1.5 flex-shrink-0 text-accent-blue">
-                                                <span class="text-[10px] font-bold uppercase tracking-wider hidden sm:block">Thay đổi</span>
-                                                <span id="addressChevron" class="material-icons-outlined text-xl">expand_more</span>
+                                                <span
+                                                    class="text-[10px] font-bold uppercase tracking-wider hidden sm:block">Thay
+                                                    đổi</span>
+                                                <span id="addressChevron"
+                                                    class="material-icons-outlined text-xl">expand_more</span>
                                             </div>
                                         </div>
 
@@ -159,23 +201,30 @@
                                                         <c:forEach var="addr" items="${userAddresses}">
                                                             <label
                                                                 class="address-option relative flex p-3.5 rounded-lg border-2 cursor-pointer transition-all ${addr.isDefault ? 'border-accent-blue bg-white/50' : 'border-slate-200 bg-white/20'}"
-                                                                data-addr-name="${addr.fullName}" data-addr-phone="${addr.phone}" data-addr-address="${addr.detailedAddress}"
+                                                                data-addr-name="${addr.fullName}"
+                                                                data-addr-phone="${addr.phone}"
+                                                                data-addr-address="${addr.detailedAddress}"
                                                                 onclick="selectAddressFromLabel(this)">
                                                                 <div class="flex items-center gap-3 w-full">
                                                                     <input type="radio" name="addressSelection"
                                                                         value="${addr.addressId}"
                                                                         class="flex-shrink-0 text-accent-blue focus:ring-accent-blue"
-                                                                        ${addr.isDefault ? 'checked' : ''} />
+                                                                        ${addr.isDefault ? 'checked' : '' } />
                                                                     <div class="flex flex-col flex-1 min-w-0">
                                                                         <div class="flex items-center gap-2 flex-wrap">
-                                                                            <span class="font-bold text-sm text-slate-800">${addr.fullName}</span>
-                                                                            <span class="text-slate-400 text-xs">|</span>
-                                                                            <span class="text-xs text-slate-500">${addr.phone}</span>
+                                                                            <span
+                                                                                class="font-bold text-sm text-slate-800">${addr.fullName}</span>
+                                                                            <span
+                                                                                class="text-slate-400 text-xs">|</span>
+                                                                            <span
+                                                                                class="text-xs text-slate-500">${addr.phone}</span>
                                                                             <c:if test="${addr.isDefault}">
-                                                                                <span class="text-[9px] uppercase tracking-widest bg-accent-blue text-white px-1.5 py-0.5 rounded-full">Default</span>
+                                                                                <span
+                                                                                    class="text-[9px] uppercase tracking-widest bg-accent-blue text-white px-1.5 py-0.5 rounded-full">Default</span>
                                                                             </c:if>
                                                                         </div>
-                                                                        <span class="text-xs text-slate-500 mt-0.5 truncate">${addr.detailedAddress}</span>
+                                                                        <span
+                                                                            class="text-xs text-slate-500 mt-0.5 truncate">${addr.detailedAddress}</span>
                                                                     </div>
                                                                 </div>
                                                             </label>
@@ -184,18 +233,25 @@
                                                     <c:otherwise>
                                                         <label
                                                             class="address-option relative flex p-3.5 rounded-lg border-2 border-accent-blue bg-white/50 cursor-pointer"
-                                                            data-addr-name="${sessionScope.user.fullname}" data-addr-phone="${sessionScope.user.phone}" data-addr-address="${sessionScope.user.address}"
+                                                            data-addr-name="${sessionScope.user.fullname}"
+                                                            data-addr-phone="${sessionScope.user.phone}"
+                                                            data-addr-address="${sessionScope.user.address}"
                                                             onclick="selectAddressFromLabel(this)">
                                                             <div class="flex items-center gap-3 w-full">
-                                                                <input type="radio" name="addressSelection" value="profile"
-                                                                    class="flex-shrink-0 text-accent-blue focus:ring-accent-blue" checked />
+                                                                <input type="radio" name="addressSelection"
+                                                                    value="profile"
+                                                                    class="flex-shrink-0 text-accent-blue focus:ring-accent-blue"
+                                                                    checked />
                                                                 <div class="flex flex-col flex-1 min-w-0">
                                                                     <div class="flex items-center gap-2 flex-wrap">
-                                                                        <span class="font-bold text-sm text-slate-800">${sessionScope.user.fullname}</span>
+                                                                        <span
+                                                                            class="font-bold text-sm text-slate-800">${sessionScope.user.fullname}</span>
                                                                         <span class="text-slate-400 text-xs">|</span>
-                                                                        <span class="text-xs text-slate-500">${sessionScope.user.phone}</span>
+                                                                        <span
+                                                                            class="text-xs text-slate-500">${sessionScope.user.phone}</span>
                                                                     </div>
-                                                                    <span class="text-xs text-slate-500 mt-0.5 truncate">${sessionScope.user.address}</span>
+                                                                    <span
+                                                                        class="text-xs text-slate-500 mt-0.5 truncate">${sessionScope.user.address}</span>
                                                                 </div>
                                                             </div>
                                                         </label>
@@ -210,8 +266,10 @@
                                                         <input type="radio" name="addressSelection" value="new"
                                                             class="flex-shrink-0 text-accent-blue focus:ring-accent-blue"
                                                             id="newAddressRadio" />
-                                                        <span class="font-semibold text-sm text-slate-600 flex items-center gap-1.5">
-                                                            <span class="material-icons-outlined text-base">add_circle_outline</span>
+                                                        <span
+                                                            class="font-semibold text-sm text-slate-600 flex items-center gap-1.5">
+                                                            <span
+                                                                class="material-icons-outlined text-base">add_circle_outline</span>
                                                             Thêm địa chỉ mới
                                                         </span>
                                                     </div>
@@ -248,8 +306,7 @@
                                                     <label
                                                         class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Tỉnh/Thành
                                                         Phố</label>
-                                                    <select id="newProvince"
-                                                        onchange="updateHiddenFieldsFromNew()"
+                                                    <select id="newProvince" onchange="updateHiddenFieldsFromNew()"
                                                         class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm">
                                                         <option value="">Chọn Tỉnh/Thành Phố</option>
                                                     </select>
@@ -257,8 +314,7 @@
                                                 <div class="space-y-1">
                                                     <label
                                                         class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Phường/Xã</label>
-                                                    <select id="newWard" disabled
-                                                        onchange="updateHiddenFieldsFromNew()"
+                                                    <select id="newWard" disabled onchange="updateHiddenFieldsFromNew()"
                                                         class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm">
                                                         <option value="">Chọn Phường/Xã</option>
                                                     </select>
@@ -268,8 +324,7 @@
                                                 <label
                                                     class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Số
                                                     Nhà, Tên Đường</label>
-                                                <input id="newDetailedAddress"
-                                                    oninput="updateHiddenFieldsFromNew()"
+                                                <input id="newDetailedAddress" oninput="updateHiddenFieldsFromNew()"
                                                     class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
                                                     type="text" placeholder="VD: Số 12 Đường Lê Lợi, Lô B Tòa nhà..." />
                                             </div>
@@ -283,13 +338,13 @@
                                             </div>
                                         </div>
 
-                                        <!-- Hidden identity fields (default = profile) -->
+                                        <!-- Hidden identity fields (default = địa chỉ mặc định từ DB, fallback về profile) -->
                                         <input type="hidden" name="fullname" id="hiddenFullname"
-                                            value="${sessionScope.user.fullname}">
+                                            value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.fullName}</c:when><c:otherwise>${sessionScope.user.fullname}</c:otherwise></c:choose>">
                                         <input type="hidden" name="phone" id="hiddenPhone"
-                                            value="${sessionScope.user.phone}">
+                                            value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.phone}</c:when><c:otherwise>${sessionScope.user.phone}</c:otherwise></c:choose>">
                                         <input type="hidden" name="address" id="hiddenAddress"
-                                            value="${sessionScope.user.address}">
+                                            value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.detailedAddress}</c:when><c:otherwise>${sessionScope.user.address}</c:otherwise></c:choose>">
 
                                         <script>
                                             function toggleAddressDropdown() {
@@ -328,8 +383,8 @@
 
                                             // Wrapper: đọc data attributes từ label rồi gọi selectAddress
                                             function selectAddressFromLabel(labelEl) {
-                                                const name    = labelEl.getAttribute('data-addr-name')    || '';
-                                                const phone   = labelEl.getAttribute('data-addr-phone')   || '';
+                                                const name = labelEl.getAttribute('data-addr-name') || '';
+                                                const phone = labelEl.getAttribute('data-addr-phone') || '';
                                                 const address = labelEl.getAttribute('data-addr-address') || '';
                                                 selectAddress(name, phone, address, labelEl);
                                             }
@@ -420,14 +475,26 @@
                                             window.addEventListener('DOMContentLoaded', () => {
                                                 fetchAllData();
 
-                                                // ── Tự động populate hidden fields từ địa chỉ mặc định khi trang load ──
+                                                // ── Populate hidden fields từ địa chỉ được check (mặc định từ DB) khi trang load ──
                                                 const checkedAddr = document.querySelector('input[name="addressSelection"]:checked');
                                                 if (checkedAddr && checkedAddr.value !== 'new') {
                                                     const label = checkedAddr.closest('.address-option');
                                                     if (label && label.hasAttribute('data-addr-name')) {
-                                                        document.getElementById('hiddenFullname').value = label.getAttribute('data-addr-name');
-                                                        document.getElementById('hiddenPhone').value    = label.getAttribute('data-addr-phone');
-                                                        document.getElementById('hiddenAddress').value  = label.getAttribute('data-addr-address');
+                                                        const addrName    = label.getAttribute('data-addr-name')    || '';
+                                                        const addrPhone   = label.getAttribute('data-addr-phone')   || '';
+                                                        const addrAddress = label.getAttribute('data-addr-address') || '';
+
+                                                        if (addrName || addrAddress) {
+                                                            document.getElementById('hiddenFullname').value = addrName;
+                                                            document.getElementById('hiddenPhone').value   = addrPhone;
+                                                            document.getElementById('hiddenAddress').value = addrAddress;
+
+                                                            // Cập nhật lại preview card cho chắc
+                                                            document.getElementById('previewName').innerHTML =
+                                                                '<strong>' + addrName + '</strong>' +
+                                                                (addrPhone ? ' <span class="font-normal text-slate-500 ml-1">| ' + addrPhone + '</span>' : '');
+                                                            document.getElementById('previewAddress').textContent = addrAddress;
+                                                        }
                                                     }
                                                 }
                                             });
