@@ -116,7 +116,11 @@ public class ProductDAO implements IProductDAO {
                         psInsertStock.setInt(4, pcs.getStock());
                         psInsertStock.addBatch();
                     }
-                    psInsertStock.executeBatch();
+                    int[] batchResults = psInsertStock.executeBatch();
+                    logger.info("Batch stock insert result: " + batchResults.length + " rows.");
+                } catch (BatchUpdateException bue) {
+                    logger.log(Level.SEVERE, "Lỗi khi chèn loạt biến thể (Stock Batch): " + bue.getMessage(), bue);
+                    throw new SQLException("Lỗi biến thể sản phẩm: " + bue.getMessage(), bue);
                 }
             }
 
@@ -130,13 +134,17 @@ public class ProductDAO implements IProductDAO {
                         psInsertImage.setBoolean(4, img.isPrimary());
                         psInsertImage.addBatch();
                     }
-                    psInsertImage.executeBatch();
+                    int[] batchResults = psInsertImage.executeBatch();
+                    logger.info("Batch images insert result: " + batchResults.length + " rows.");
+                } catch (BatchUpdateException bue) {
+                    logger.log(Level.SEVERE, "Lỗi khi chèn loạt hình ảnh (Image Batch): " + bue.getMessage(), bue);
+                    throw new SQLException("Lỗi hình ảnh sản phẩm: " + bue.getMessage(), bue);
                 }
             }
 
             conn.commit();
             inserted = true;
-            logger.info("✅ Product inserted successfully (with batch images/stock): " + product.getName());
+            logger.info("✅ Product inserted successfully: " + product.getName() + " (ID: " + newProductId + ")");
 
         } catch (SQLException e) {
             if (conn != null) {
@@ -355,7 +363,11 @@ public class ProductDAO implements IProductDAO {
                         psInsertStock.setInt(4, pcs.getStock());
                         psInsertStock.addBatch();
                     }
-                    psInsertStock.executeBatch();
+                    int[] results = psInsertStock.executeBatch();
+                    logger.info("Batch stock update result: " + results.length + " rows.");
+                } catch (BatchUpdateException bue) {
+                    logger.log(Level.SEVERE, "Lỗi cập nhật loạt biến thể (Stock Update Batch): " + bue.getMessage(), bue);
+                    throw new SQLException("Lỗi biến thể sản phẩm: " + bue.getMessage(), bue);
                 }
             }
 
@@ -369,13 +381,17 @@ public class ProductDAO implements IProductDAO {
                         psInsertImage.setBoolean(4, img.isPrimary());
                         psInsertImage.addBatch();
                     }
-                    psInsertImage.executeBatch();
+                    int[] results = psInsertImage.executeBatch();
+                    logger.info("Batch images update result: " + results.length + " rows.");
+                } catch (BatchUpdateException bue) {
+                    logger.log(Level.SEVERE, "Lỗi cập nhật loạt hình ảnh (Image Update Batch): " + bue.getMessage(), bue);
+                    throw new SQLException("Lỗi hình ảnh sản phẩm: " + bue.getMessage(), bue);
                 }
             }
 
             conn.commit();
             updated = true;
-            logger.info("✅ Product updated successfully (with images/stock): ID=" + product.getProductId());
+            logger.info("✅ Product updated successfully: ID=" + product.getProductId());
 
         } catch (SQLException e) {
             if (conn != null) {

@@ -185,5 +185,17 @@ public class Product {
     public void setReviewCount(int reviewCount) {
         this.reviewCount = reviewCount;
     }
+
+    public BigDecimal getActualPrice() {
+        if (price == null) {
+            return BigDecimal.ZERO;
+        }
+        if (discount != null && discount.compareTo(BigDecimal.ZERO) > 0) {
+            // discount is percentage (0-100)
+            BigDecimal factor = BigDecimal.ONE.subtract(discount.divide(new BigDecimal("100")));
+            return price.multiply(factor).setScale(0, java.math.RoundingMode.HALF_UP);
+        }
+        return price;
+    }
 }
 

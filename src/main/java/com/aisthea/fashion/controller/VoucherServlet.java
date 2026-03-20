@@ -87,16 +87,35 @@ public class VoucherServlet extends HttpServlet {
             throws IOException {
         String idStr = req.getParameter("voucherId");
         Voucher v = buildVoucherFromRequest(req);
+        HttpSession session = req.getSession();
 
         boolean ok;
-        if (idStr != null && !idStr.isBlank()) {
-            v.setVoucherId(Integer.parseInt(idStr));
-            ok = voucherDAO.update(v);
-        } else {
-            ok = voucherDAO.insert(v);
+        String errorMessage = null;
+
+        try {
+            if (idStr != null && !idStr.isBlank()) {
+                v.setVoucherId(Integer.parseInt(idStr));
+                ok = voucherDAO.update(v);
+            } else {
+                // Check if code exists
+                if (voucherDAO.findByCode(v.getCode()) != null) {
+                    ok = false;
+                    errorMessage = "Mã voucher '" + v.getCode() + "' đã tồn tại!";
+                } else {
+                    ok = voucherDAO.insert(v);
+                }
+            }
+        } catch (Exception e) {
+            ok = false;
+            errorMessage = "Lỗi hệ thống: " + e.getMessage();
         }
-        String flash = ok ? "success" : "error";
-        res.sendRedirect(req.getContextPath() + "/voucher?action=list&" + flash + "=true");
+
+        if (ok) {
+            res.sendRedirect(req.getContextPath() + "/voucher?action=list&success=true");
+        } else {
+            session.setAttribute("voucherError", errorMessage != null ? errorMessage : "Không thể lưu voucher. Vui lòng kiểm tra lại thông tin.");
+            res.sendRedirect(req.getContextPath() + "/voucher?action=list&error=true");
+        }
     }
 
     // ── Admin: delete ────────────────────────────────────────────────────
@@ -200,9 +219,17 @@ public class VoucherServlet extends HttpServlet {
         v.setCode(req.getParameter("code"));
         v.setDescription(req.getParameter("description"));
         v.setDiscountType(req.getParameter("discountType"));
-        v.setDiscountValue(parseBD(req.getParameter("discountValue")));
-        v.setMinOrderValue(parseBD(req.getParameter("minOrderValue")));
-        v.setMaxDiscountAmount(parseBD(req.getParameter("maxDiscountAmount")));
+
+        // Handle possible locale issues with decimal separator
+        String dvStr = req.getParameter("discountValue");
+        v.setDiscountValue(parseBD(dvStr != null ? dvStr.replace(",", ".") : null));
+
+        String mvStr = req.getParameter("minOrderValue");
+        v.setMinOrderValue(parseBD(mvStr != null ? mvStr.replace(",", ".") : null));
+
+        String mdStr = req.getParameter("maxDiscountAmount");
+        v.setMaxDiscountAmount(parseBD(mdStr != null ? mdStr.replace(",", ".") : null));
+
         v.setUsageLimit(intParam(req, "usageLimit", -1));
         v.setStartDate(parseTimestamp(req.getParameter("startDate")));
         v.setEndDate(parseTimestamp(req.getParameter("endDate")));

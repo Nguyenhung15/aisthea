@@ -210,7 +210,9 @@
                                             <div
                                                 style="background:#fef2f2;color:#dc2626;padding:14px 20px;border-radius:var(--radius-md);margin-bottom:var(--space-lg);font-weight:600;font-size:0.88rem;">
                                                 <i class="fa-solid fa-circle-exclamation"
-                                                    style="margin-right:8px;"></i>Có lỗi xảy ra. Vui lòng thử lại.
+                                                    style="margin-right:8px;"></i>
+                                                <c:out value="${sessionScope.voucherError != null ? sessionScope.voucherError : 'Có lỗi xảy ra. Vui lòng thử lại.'}" />
+                                                <c:remove var="voucherError" scope="session" />
                                             </div>
                                         </c:if>
 
