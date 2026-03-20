@@ -17,7 +17,16 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.Part;
+import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
+import java.util.Scanner;
 import java.util.stream.Collectors;
+import com.aisthea.fashion.util.Constants;
 
 @WebServlet(name = "ProductServlet", urlPatterns = { "/product" })
 public class ProductServlet extends HttpServlet {
@@ -89,7 +98,22 @@ public class ProductServlet extends HttpServlet {
                     break;
 
                 case "update":
-                    int id = Integer.parseInt(request.getParameter("id"));
+                    String idParam = request.getParameter("id");
+                    if (idParam == null || idParam.isBlank()) {
+                        // Attempt to read from part if it's there but getParameter failed (can happen in some multipart configs)
+                        Part idPart = request.getPart("id");
+                        if (idPart != null) {
+                            try (Scanner scanner = new Scanner(idPart.getInputStream())) {
+                                if (scanner.hasNext()) idParam = scanner.next();
+                            }
+                        }
+                    }
+
+                    if (idParam == null || idParam.isBlank()) {
+                        throw new Exception("ID của sản phẩm không được cung cấp (null). Vui lòng thử lại.");
+                    }
+
+                    int id = Integer.parseInt(idParam.trim());
                     productForRollback = extractProductFromRequest(request);
                     productForRollback.setProductId(id);
 
@@ -105,19 +129,27 @@ public class ProductServlet extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Lỗi doPost ProductServlet (action=" + action + ")", e);
+            String errorMsg = e.getMessage();
+            if (e.getCause() != null) {
+                errorMsg += " -> " + e.getCause().getMessage();
+            }
+            logger.log(Level.SEVERE, "Lỗi doPost ProductServlet (action=" + action + "): " + errorMsg, e);
 
-            request.setAttribute("error", "Lỗi: " + e.getMessage());
+            request.setAttribute("error", "Lỗi xử lý " + action + ": " + errorMsg);
             request.setAttribute("product", productForRollback);
             request.setAttribute("allCategories", categoryService.getAllCategories());
 
             if (productForRollback != null && productForRollback.getCategory() != null) {
-                String parentIndexName = productForRollback.getCategory().getParentid();
-                if (parentIndexName != null && !parentIndexName.isEmpty()) {
-                    Category parentCategory = categoryService.findCategoryByIndexNameAndGender(
-                            parentIndexName,
-                            productForRollback.getCategory().getGenderid());
-                    request.setAttribute("parentCategory", parentCategory);
+                try {
+                    String parentIndexName = productForRollback.getCategory().getParentid();
+                    if (parentIndexName != null && !parentIndexName.isEmpty()) {
+                        Category parentCategory = categoryService.findCategoryByIndexNameAndGender(
+                                parentIndexName,
+                                productForRollback.getCategory().getGenderid());
+                        request.setAttribute("parentCategory", parentCategory);
+                    }
+                } catch (Exception ex) {
+                    logger.warning("Không thể lấy thông tin danh mục cha để hiển thị lại: " + ex.getMessage());
                 }
             }
 
@@ -521,7 +553,11 @@ public class ProductServlet extends HttpServlet {
                     if (i > 0)
                         json.append(",");
                     json.append("{");
-                    json.append("\"imageUrl\":").append(jsonStr(img.getImageUrl())).append(",");
+                    String resolvedUrl = img.getImageUrl();
+                    if (resolvedUrl != null && !resolvedUrl.startsWith("http") && !resolvedUrl.startsWith("/") && !resolvedUrl.startsWith("data:")) {
+                        resolvedUrl = request.getContextPath() + "/uploads/" + resolvedUrl;
+                    }
+                    json.append("\"imageUrl\":").append(jsonStr(resolvedUrl)).append(",");
                     json.append("\"color\":").append(jsonStr(img.getColor())).append(",");
                     json.append("\"isPrimary\":").append(img.isPrimary());
                     json.append("}");
@@ -579,15 +615,29 @@ public class ProductServlet extends HttpServlet {
         product.setDiscount(parseBigDecimal(request.getParameter("discount")));
 
         String categoryIdParam = request.getParameter("categoryid");
+        // Fallback 1: Javascript-synced hidden input
         if (categoryIdParam == null || categoryIdParam.isBlank()) {
-            throw new ServletException("Danh mục con (categoryid) không được rỗng. Vui lòng chọn lại danh mục.");
+            categoryIdParam = request.getParameter("categoryid_backup");
+        }
+        // Fallback 2: if child category is empty, use parent category value
+        if (categoryIdParam == null || categoryIdParam.isBlank()) {
+            categoryIdParam = request.getParameter("parentCategory");
+        }
+        
+        String genderIdParam = request.getParameter("genderid");
+        String parentCategoryParam = request.getParameter("parentCategory");
+
+        logger.info("DEBUG Categories: categoryid=" + categoryIdParam + ", backup=" + request.getParameter("categoryid_backup") + ", gender=" + genderIdParam + ", parent=" + parentCategoryParam);
+
+        if (categoryIdParam == null || categoryIdParam.isBlank()) {
+            throw new ServletException("Danh mục con không được rỗng. Chi tiết nhận được: {child=" + categoryIdParam + ", backup=" + request.getParameter("categoryid_backup") + ", parent=" + parentCategoryParam + "}. Vui lòng chọn lại danh mục và nhấn Publish.");
         }
 
         int categoryId;
         try {
-            categoryId = Integer.parseInt(categoryIdParam);
+            categoryId = Integer.parseInt(categoryIdParam.trim());
         } catch (NumberFormatException e) {
-            throw new ServletException("Lỗi: categoryid không phải là số. Giá trị nhận được: " + categoryIdParam);
+            throw new ServletException("Lỗi: categoryid không phải là số. Giá trị: " + categoryIdParam + " (parent=" + parentCategoryParam + ")");
         }
 
         product.setCategory(categoryService.getCategoryById(categoryId));
@@ -626,18 +676,51 @@ public class ProductServlet extends HttpServlet {
         List<ProductImage> imageList = new ArrayList<>();
         String[] urls = request.getParameterValues("image_url");
         String[] imgColors = request.getParameterValues("image_color");
+        String[] imgIndexes = request.getParameterValues("image_index");
         String primaryImageIndex = request.getParameter("image_isprimary");
 
-        if (urls != null && imgColors != null) {
-            int imageRowCount = Math.min(urls.length, imgColors.length);
+        if (urls != null && imgColors != null && imgIndexes != null) {
+            int imageRowCount = Math.min(urls.length, Math.min(imgColors.length, imgIndexes.length));
 
             for (int i = 0; i < imageRowCount; i++) {
                 String url = urls[i];
+                String idx = imgIndexes[i];
+                
+                // Tiên quyết: Xử lý file upload nếu người dùng dùng tab "Upload from Device"
+                try {
+                    Part filePart = request.getPart("image_file_" + idx);
+                    if (filePart != null && filePart.getSize() > 0) {
+                        String originalName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                        String ext = "";
+                        int dotIdx = originalName.lastIndexOf('.');
+                        if (dotIdx >= 0) ext = originalName.substring(dotIdx).toLowerCase();
+
+                        String savedName = UUID.randomUUID().toString() + ext;
+
+                        File productDir = new File(Constants.UPLOAD_DIR, "product");
+                        if (!productDir.exists()) {
+                            boolean created = productDir.mkdirs();
+                            logger.info("Created upload directory: " + productDir.getAbsolutePath() + " result=" + created);
+                        }
+
+                        File savedFile = new File(productDir, savedName);
+                        try (InputStream is = filePart.getInputStream()) {
+                            Files.copy(is, savedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        }
+
+                        // Set URL mới về đường dẫn file đã lưu
+                        url = "product/" + savedName;
+                    }
+                } catch (Exception uploadEx) {
+                    logger.warning("Upload image failed for index " + i + ": " + uploadEx.getMessage());
+                }
+
                 if (url != null && !url.isBlank()) {
                     ProductImage img = new ProductImage();
                     img.setImageUrl(url);
                     img.setColor(imgColors[i]);
-                    img.setPrimary(String.valueOf(i).equals(primaryImageIndex));
+                    // Mark as primary based on the index string equality (radio value is idx)
+                    img.setPrimary(idx != null && idx.equals(primaryImageIndex));
                     img.setProduct(product);
                     imageList.add(img);
                 }

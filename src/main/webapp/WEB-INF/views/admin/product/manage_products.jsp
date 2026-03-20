@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
         <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+        <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
             <!DOCTYPE html>
             <html lang="en">
 
@@ -288,17 +289,35 @@
                                                                 <c:set var="foundPrimary" value="false" />
                                                                 <c:forEach var="img" items="${p.images}">
                                                                     <c:if test="${img.primary and not foundPrimary}">
-                                                                        <c:set var="primaryImgUrl"
-                                                                            value="${img.imageUrl}" />
+                                                                        <c:set var="rawImgUrl" value="${img.imageUrl}" />
+                                                                        <c:choose>
+                                                                            <c:when test="${not empty rawImgUrl and (fn:startsWith(rawImgUrl, 'http') or fn:startsWith(rawImgUrl, '/'))}">
+                                                                                <c:set var="primaryImgUrl" value="${rawImgUrl}" />
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                <c:set var="primaryImgUrl" value="${pageContext.request.contextPath}/uploads/${rawImgUrl}" />
+                                                                            </c:otherwise>
+                                                                        </c:choose>
                                                                         <c:set var="foundPrimary" value="true" />
                                                                     </c:if>
                                                                 </c:forEach>
-                                                                <c:if
-                                                                    test="${not foundPrimary and not empty p.images[0]}">
-                                                                    <c:set var="primaryImgUrl"
-                                                                        value="${p.images[0].imageUrl}" />
+                                                                <c:if test="${not foundPrimary and not empty p.images[0]}">
+                                                                    <c:set var="rawImgUrl" value="${p.images[0].imageUrl}" />
+                                                                    <c:choose>
+                                                                        <c:when test="${not empty rawImgUrl and (fn:startsWith(rawImgUrl, 'http') or fn:startsWith(rawImgUrl, '/'))}">
+                                                                            <c:set var="primaryImgUrl" value="${rawImgUrl}" />
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <c:set var="primaryImgUrl" value="${pageContext.request.contextPath}/uploads/${rawImgUrl}" />
+                                                                            </c:otherwise>
+                                                                    </c:choose>
                                                                 </c:if>
                                                             </c:if>
+                                                            
+                                                            <c:if test="${not empty primaryImgUrl and not fn:startsWith(primaryImgUrl, 'http') and not fn:startsWith(primaryImgUrl, '/')}">
+                                                                <c:set var="primaryImgUrl" value="${pageContext.request.contextPath}/uploads/${primaryImgUrl}" />
+                                                            </c:if>
+                                                            
                                                             <img src="${primaryImgUrl}" alt="${p.name}"
                                                                 style="width:52px;height:52px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--color-border-light);flex-shrink:0;"
                                                                 onerror="this.src='https://placehold.co/60x60/f0f2f5/9ca3af?text=N/A'">

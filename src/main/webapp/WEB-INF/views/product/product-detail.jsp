@@ -304,15 +304,26 @@
 
                                     <!-- Price & Rating -->
                                     <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-5">
-                                        <span class="text-3xl text-primary font-bold">
-                                            <c:choose>
-                                                <c:when test="${not empty product.price}">
-                                                    <fmt:formatNumber value="${product.price}" type="number"
-                                                        groupingUsed="true" />₫
-                                                </c:when>
-                                                <c:otherwise>0₫</c:otherwise>
-                                            </c:choose>
-                                        </span>
+                                        <div class="flex flex-col">
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-3xl text-primary font-bold">
+                                                    <c:choose>
+                                                        <c:when test="${not empty product.actualPrice}">
+                                                            <fmt:formatNumber value="${product.actualPrice}" type="number" groupingUsed="true" />₫
+                                                        </c:when>
+                                                        <c:otherwise>0₫</c:otherwise>
+                                                    </c:choose>
+                                                </span>
+                                                <c:if test="${product.discount != null && product.discount > 0}">
+                                                    <span class="text-lg text-slate-400 line-through">
+                                                        <fmt:formatNumber value="${product.price}" type="number" groupingUsed="true" />₫
+                                                    </span>
+                                                    <span class="bg-red-50 text-red-500 text-xs font-bold px-2 py-1 rounded">
+                                                        -${product.discount.intValue()}%
+                                                    </span>
+                                                </c:if>
+                                            </div>
+                                        </div>
                                         <c:set var="totalStars" value="0" />
                                         <c:set var="totalCount" value="${fn:length(feedbacks)}" />
                                         <c:forEach var="f" items="${feedbacks}">
@@ -1057,16 +1068,28 @@
                                     window.selectColor = function (c) {
                                         selectedColor = c;
 
-                                        if (colorToImageUrlMap[c]) {
+                                        const targetColorSafe = c ? c.trim().toUpperCase() : null;
+                                        
+                                        // Case-insensitive lookup for URL map
+                                        let mappedUrl = null;
+                                        for (const [col, url] of Object.entries(colorToImageUrlMap)) {
+                                            if (col.trim().toUpperCase() === targetColorSafe) {
+                                                mappedUrl = url;
+                                                break;
+                                            }
+                                        }
+
+                                        if (mappedUrl) {
                                             const hiddenInput = document.getElementById('productImageUrlHidden');
-                                            if (hiddenInput) hiddenInput.value = colorToImageUrlMap[c];
+                                            if (hiddenInput) hiddenInput.value = mappedUrl;
                                         }
 
                                         let firstVisibleThumbSrc = null;
 
-                                        // Filter thumbnails
+                                        // Filter thumbnails ignoring case
                                         document.querySelectorAll('.thumbnail-item').forEach(t => {
-                                            if (!c || t.dataset.color === c || !t.dataset.color) {
+                                            const thumbColorSafe = t.dataset.color ? t.dataset.color.trim().toUpperCase() : null;
+                                            if (!targetColorSafe || thumbColorSafe === targetColorSafe || !t.dataset.color) {
                                                 t.style.display = 'block';
                                                 
                                                 if (!firstVisibleThumbSrc) {
@@ -1081,8 +1104,8 @@
                                         // Always display the first thumbnail of the chosen color
                                         if (firstVisibleThumbSrc) {
                                             changeImage(firstVisibleThumbSrc);
-                                        } else if (colorToImageUrlMap[c] && mainImage) {
-                                            changeImage(colorToImageUrlMap[c]);
+                                        } else if (mappedUrl && mainImage) {
+                                            changeImage(mappedUrl);
                                         }
 
                                         updateUI();

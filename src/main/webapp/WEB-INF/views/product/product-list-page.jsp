@@ -899,8 +899,20 @@
                                                                                         <c:choose>
                                                                                         <c:when
                                                                                         test="${not empty p.images and fn:length(p.images) > 0}">
+                                                                                        <%-- Find primary or fallback to first --%>
+                                                                                        <c:set var="primaryImg" value="${p.images[0].imageUrl}" />
+                                                                                        <c:forEach var="img" items="${p.images}">
+                                                                                            <c:if test="${img.primary}">
+                                                                                                <c:set var="primaryImg" value="${img.imageUrl}" />
+                                                                                            </c:if>
+                                                                                        </c:forEach>
+                                                                                        
+                                                                                        <c:if test="${not empty primaryImg and not fn:startsWith(primaryImg, 'http') and not fn:startsWith(primaryImg, '/')}">
+                                                                                            <c:set var="primaryImg" value="${pageContext.request.contextPath}/uploads/${primaryImg}" />
+                                                                                        </c:if>
+
                                                                                         <img class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0"
-                                                                                        src="${p.images[0].imageUrl}"
+                                                                                        src="${primaryImg}"
                                                                                         alt="${p.name}"
                                                                                         onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/images/defaults/no-image.svg'" />
                                                                                         </c:when>
@@ -916,8 +928,12 @@
                                                                                         <!-- Hover Image -->
                                                                                         <c:if
                                                                                         test="${not empty p.images and fn:length(p.images) > 1}">
+                                                                                        <c:set var="hoverImg" value="${p.images[1].imageUrl}" />
+                                                                                        <c:if test="${not empty hoverImg and not fn:startsWith(hoverImg, 'http') and not fn:startsWith(hoverImg, '/')}">
+                                                                                            <c:set var="hoverImg" value="${pageContext.request.contextPath}/uploads/${hoverImg}" />
+                                                                                        </c:if>
                                                                                         <img class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                                                                                        src="${p.images[1].imageUrl}"
+                                                                                        src="${hoverImg}" 
                                                                                         alt="${p.name} Hover"
                                                                                         onerror="this.onerror=null; this.style.display='none'" />
                                                                                         </c:if>
@@ -1032,7 +1048,7 @@
                                                                                         <c:set var="seenColors" value="," />
                                                                                         <c:forEach items="${p.colorSizes}" var="cs">
                                                                                         <c:if
-                                                                                        test="${not empty cs.color and not fn:contains(seenColors, concat(',', concat(cs.color, ',')))}">
+                                                                                        test="${not empty cs.color and not fn:contains(seenColors, ','.concat(cs.color).concat(','))}">
                                                                                         <c:set var="seenColors"
                                                                                         value="${seenColors}${cs.color}," />
                                                                                         <c:set var="matchedImgUrl" value="" />
@@ -1046,7 +1062,7 @@
                                                                                         <c:set var="imgUrlForSwatch"
                                                                                         value="${not empty matchedImgUrl ? matchedImgUrl : (not empty p.images ? p.images[0].imageUrl : '')}" />
                                                                                         <button type="button"
-                                                                                        onclick="changeProductImageWithHex(${p.productId}, '${imgUrlForSwatch}', this)"
+                                                                                        <c:set var="swatchPath" value="${imgUrlForSwatch}" /><c:if test="${not empty swatchPath and not fn:startsWith(swatchPath, 'http') and not fn:startsWith(swatchPath, '/')}"><c:set var="swatchPath" value="${pageContext.request.contextPath}/uploads/${swatchPath}" /></c:if>onclick="changeProductImageWithHex(${p.productId}, '${swatchPath}', this)"
                                                                                         class="color-swatch"
                                                                                         data-color-name="${cs.color}"
                                                                                         title="${cs.color}">
@@ -1056,9 +1072,9 @@
                                                                                         <!-- Fallback from images if no colorSizes -->
                                                                                         <c:if test="${empty p.colorSizes}">
                                                                                         <c:forEach items="${p.images}" var="img">
-                                                                                        <c:if test="${not empty img.color}">
+                                                                                        <c:set var="colorCheckImg" value=",${img.color}," /><c:if test="${not empty img.color and not fn:contains(seenColors, colorCheckImg)}"><c:set var="seenColors" value="${seenColors}${img.color}," />
                                                                                         <button type="button"
-                                                                                        onclick="changeProductImageWithHex(${p.productId}, '${img.imageUrl}', this)"
+                                                                                        <c:set var="swatchImg" value="${img.imageUrl}" /><c:if test="${not empty swatchImg and not fn:startsWith(swatchImg, 'http') and not fn:startsWith(swatchImg, '/')}"><c:set var="swatchImg" value="${pageContext.request.contextPath}/uploads/${swatchImg}" /></c:if>onclick="changeProductImageWithHex(${p.productId}, '${swatchImg}', this)"
                                                                                         class="color-swatch"
                                                                                         data-color-name="${img.color}"
                                                                                         title="${img.color}">

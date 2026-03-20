@@ -236,7 +236,7 @@ public class CartServlet extends HttpServlet {
         item.setProductId(productId);
         item.setProductColorSizeId(pcsId);
         item.setProductName(product.getName());
-        item.setPrice(product.getPrice());
+        item.setPrice(product.getActualPrice());
         item.setColor(variant.getColor());
         item.setSize(variant.getSize());
         item.setQuantity(quantity);

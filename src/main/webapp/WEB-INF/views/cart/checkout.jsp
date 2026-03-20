@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+        <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
         <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
             <!DOCTYPE html>
 
@@ -584,8 +585,12 @@
                                             <div class="flex gap-4">
                                                 <div
                                                     class="w-20 h-24 flex-shrink-0 rounded-lg bg-slate-100 overflow-hidden">
+                                                    <c:set var="checkoutImg" value="${item.productImageUrl}" />
+                                                    <c:if test="${not empty checkoutImg and not fn:startsWith(checkoutImg, 'http') and not fn:startsWith(checkoutImg, '/')}">
+                                                        <c:set var="checkoutImg" value="${pageContext.request.contextPath}/uploads/${checkoutImg}" />
+                                                    </c:if>
                                                     <img class="w-full h-full object-cover"
-                                                        src="${item.productImageUrl}" alt="${item.productName}" />
+                                                        src="${checkoutImg}" alt="${item.productName}" />
                                                 </div>
                                                 <div class="flex-grow">
                                                     <div class="flex justify-between items-start">

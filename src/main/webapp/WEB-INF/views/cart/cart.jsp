@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-        <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
             <!DOCTYPE html>
             <html lang="en">
@@ -111,8 +112,12 @@
                                                     <div class="p-8 flex flex-col md:flex-row gap-8 items-center">
                                                         <div
                                                             class="w-32 h-40 flex-shrink-0 rounded-xl bg-slate-100 overflow-hidden shadow-sm">
+                                                            <c:set var="cartImg" value="${item.productImageUrl}" />
+                                                            <c:if test="${not empty cartImg and not fn:startsWith(cartImg, 'http') and not fn:startsWith(cartImg, '/')}">
+                                                                <c:set var="cartImg" value="${pageContext.request.contextPath}/uploads/${cartImg}" />
+                                                            </c:if>
                                                             <img class="w-full h-full object-cover"
-                                                                src="${item.productImageUrl}"
+                                                                src="${cartImg}"
                                                                 alt="${item.productName}" />
                                                         </div>
 
