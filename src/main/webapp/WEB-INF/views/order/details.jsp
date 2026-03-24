@@ -182,24 +182,85 @@
                                             <h2 class="font-serif text-2xl font-semibold text-slate-800 mb-6">Order
                                                 Summary</h2>
 
-                                            <div class="space-y-4 text-sm mb-8">
-                                                <div class="flex justify-between">
-                                                    <span class="text-slate-500">Placed Date</span>
-                                                    <span class="font-medium text-slate-900">
-                                                        <fmt:formatDate value="${order.createdat}"
-                                                            pattern="MMM dd, yyyy" />
-                                                    </span>
+                                            <div class="space-y-4 text-sm mb-8 relative">
+                                                <div class="flex flex-col space-y-3 pb-4 border-b border-slate-100">
+                                                    <div class="flex justify-between items-center relative pl-4 border-l-[2px] border-emerald-500">
+                                                        <span class="text-slate-500">Ngày đặt hàng</span>
+                                                        <span class="font-medium text-slate-900 text-right text-xs">
+                                                            <fmt:formatDate value="${order.createdat}" pattern="HH:mm — dd/MM/yyyy" />
+                                                        </span>
+                                                        <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-white"></div>
+                                                    </div>
+                                                    
+                                                    <c:if test="${order.confirmedAt != null}">
+                                                        <div class="flex justify-between items-center relative pl-4 border-l-[2px] border-emerald-500">
+                                                            <span class="text-slate-500">Đã xác nhận</span>
+                                                            <span class="font-medium text-slate-900 text-right text-xs">
+                                                                <fmt:formatDate value="${order.confirmedAt}" pattern="HH:mm — dd/MM/yyyy" />
+                                                            </span>
+                                                            <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-white"></div>
+                                                        </div>
+                                                    </c:if>
+                                                    
+                                                    <c:if test="${order.shippedAt != null}">
+                                                        <div class="flex justify-between items-center relative pl-4 border-l-[2px] border-blue-500">
+                                                            <span class="text-slate-500">Đang giao hàng</span>
+                                                            <span class="font-medium text-slate-900 text-right text-xs">
+                                                                <fmt:formatDate value="${order.shippedAt}" pattern="HH:mm — dd/MM/yyyy" />
+                                                            </span>
+                                                            <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-white"></div>
+                                                        </div>
+                                                    </c:if>
+                                                    
+                                                    <c:if test="${order.completedAt != null}">
+                                                        <div class="flex justify-between items-center relative pl-4 border-l-[2px] border-indigo-500">
+                                                            <span class="text-slate-500 text-indigo-600 font-bold">Hoàn thành</span>
+                                                            <span class="font-medium text-slate-900 text-right text-xs">
+                                                                <fmt:formatDate value="${order.completedAt}" pattern="HH:mm — dd/MM/yyyy" />
+                                                            </span>
+                                                            <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-indigo-500 ring-4 ring-white"></div>
+                                                        </div>
+                                                    </c:if>
+
+                                                    <c:if test="${order.status eq 'Cancelled'}">
+                                                        <div class="flex justify-between items-center relative pl-4 border-l-[2px] border-red-500">
+                                                            <span class="text-slate-500 text-red-500 font-bold">Đã hủy</span>
+                                                            <span class="font-medium text-slate-900 text-right text-xs">
+                                                                <fmt:formatDate value="${order.updatedat}" pattern="HH:mm — dd/MM/yyyy" />
+                                                            </span>
+                                                            <div class="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-red-500 ring-4 ring-white"></div>
+                                                        </div>
+                                                        
+                                                        <div class="mt-2 bg-red-50 p-3 rounded-lg border border-red-100">
+                                                            <p class="text-xs text-red-600 font-semibold mb-1">Lý do hủy:</p>
+                                                            <p class="text-xs text-red-800">${empty order.cancelReason ? "Không có dữ liệu" : order.cancelReason}</p>
+                                                            <c:if test="${not empty order.refundStatus}">
+                                                                <div class="mt-2 pt-2 border-t border-red-200 flex justify-between">
+                                                                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Hoàn tiền (QR)</span>
+                                                                    <c:choose>
+                                                                        <c:when test="${order.refundStatus eq 'Pending'}">
+                                                                            <span class="text-[10px] text-amber-600 font-bold uppercase tracking-wider">Đang chờ xử lý</span>
+                                                                        </c:when>
+                                                                        <c:when test="${order.refundStatus eq 'Completed'}">
+                                                                            <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Đã hoàn thành</span>
+                                                                        </c:when>
+                                                                    </c:choose>
+                                                                </div>
+                                                            </c:if>
+                                                        </div>
+                                                    </c:if>
                                                 </div>
+
                                                 <%-- Payment Method --%>
                                                 <div class="flex justify-between">
                                                     <span class="text-slate-500">Payment</span>
                                                     <span class="font-semibold">
                                                         <c:choose>
                                                             <c:when test="${order.paymentMethod eq 'QR'}">
-                                                                <span class="text-blue-600">&#128373; QR / Online</span>
+                                                                <span class="text-blue-600"> QR / Online</span>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <span class="text-slate-700">&#128181; COD / Tiền mặt</span>
+                                                                <span class="text-slate-700"> COD / Tiền mặt</span>
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </span>
@@ -209,13 +270,13 @@
                                                     <span class="text-slate-500">Paid Status</span>
                                                     <c:choose>
                                                         <c:when test="${order.status eq 'Paid' or order.status eq 'Completed'}">  
-                                                            <span class="text-emerald-600 font-bold">&#10003; Đã thanh toán</span>
+                                                            <span class="text-emerald-600 font-bold">Đã thanh toán</span>
                                                         </c:when>
                                                         <c:when test="${order.status eq 'Cancelled'}">
-                                                            <span class="text-red-500 font-bold">&#10007; Đã hủy</span>
+                                                            <span class="text-red-500 font-bold">Đã hủy</span>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <span class="text-amber-600 font-bold">&#9201; Chưa thanh toán</span>
+                                                            <span class="text-amber-600 font-bold">Chưa thanh toán</span>
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </div>
@@ -258,35 +319,40 @@
                                             </div>
 
                                             <div class="mt-10 space-y-3">
-                                                <c:if test="${order.status == 'Pending'}">
+                                                <c:if test="${order.status == 'Pending' or order.status == 'Paid'}">
                                                     <button onclick="openCancelModal()"
                                                         class="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2">
                                                         <span class="material-symbols-outlined text-sm">cancel</span>
-                                                        Cancel Order
+                                                        Hủy Đơn Hàng
                                                     </button>
                                                 </c:if>
 
-                                                <%-- Smart review buttons per product for Completed orders --%>
+                                                <%-- Single review button — new multi-product feedback page handles all products at once --%>
                                                 <c:if test="${order.status == 'Completed'}">
+                                                    <c:set var="anyUnreviewed" value="false"/>
                                                     <c:forEach var="item" items="${order.items}">
-                                                        <c:choose>
-                                                            <c:when test="${!reviewedProductIds.contains(item.productId)}">
-                                                                <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}&productId=${item.productId}"
-                                                                    class="w-full bg-accent-blue text-white py-3 rounded-lg text-[10px] uppercase tracking-[0.15em] font-bold hover:bg-primary transition-all flex items-center justify-center gap-2">
-                                                                    <span class="material-symbols-outlined text-sm">star</span>
-                                                                    Đánh giá: ${item.productName}
-                                                                </a>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}&productId=${item.productId}"
-                                                                    class="w-full bg-amber-500 text-white py-3 rounded-lg text-[10px] uppercase tracking-[0.15em] font-bold hover:bg-amber-600 transition-all flex items-center justify-center gap-2">
-                                                                    <span class="material-symbols-outlined text-sm">edit</span>
-                                                                    Sửa đánh giá: ${item.productName}
-                                                                </a>
-                                                            </c:otherwise>
-                                                        </c:choose>
+                                                        <c:if test="${!reviewedProductIds.contains(item.productId)}">
+                                                            <c:set var="anyUnreviewed" value="true"/>
+                                                        </c:if>
                                                     </c:forEach>
+                                                    <c:choose>
+                                                        <c:when test="${anyUnreviewed}">
+                                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
+                                                                class="w-full bg-accent-blue text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-primary transition-all flex items-center justify-center gap-2">
+                                                                <span class="material-symbols-outlined text-sm">star</span>
+                                                                Đánh giá sản phẩm
+                                                            </a>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
+                                                                class="w-full bg-amber-500 text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-amber-600 transition-all flex items-center justify-center gap-2">
+                                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                                                Sửa đánh giá
+                                                            </a>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </c:if>
+
 
                                                 <a href="${pageContext.request.contextPath}/order?action=history"
                                                     class="w-full bg-slate-900 text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 text-center">
@@ -300,40 +366,42 @@
 
                 <div id="cancelModal" class="modal">
                     <div class="glass-card bg-white/95 rounded-2xl w-full max-w-md p-8 shadow-2xl animate-scale-in">
-                        <h3 class="font-serif text-2xl font-semibold text-slate-800 mb-2">Cancel Order</h3>
-                        <p class="text-sm text-slate-500 mb-8">Please tell us why you'd like to cancel this order.</p>
+                        <h3 class="font-serif text-2xl font-semibold text-slate-800 mb-2">Hủy Đơn Hàng</h3>
+                        <p class="text-sm text-slate-500 mb-6">Xin vui lòng cho chúng tôi biết lý do bạn muốn hủy đơn hàng này.</p>
+                        
+                        <c:if test="${order.status == 'Paid'}">
+                            <div class="bg-amber-50 text-amber-800 text-xs p-3 rounded-lg border border-amber-200 mb-6">
+                                <strong>Lưu ý:</strong> Đây là đơn hàng đã thanh toán qua mã QR. Sau khi hủy hành công, yêu cầu hoàn tiền của bạn sẽ được chuyển đến bộ phận chăm sóc khách hàng. Thời gian hoàn tiền thường từ 3-5 ngày làm việc.
+                            </div>
+                        </c:if>
 
-                        <form id="cancelForm" action="${pageContext.request.contextPath}/order" method="post"
-                            class="space-y-4">
+                        <form id="cancelForm" action="${pageContext.request.contextPath}/order" method="post" class="space-y-4">
                             <input type="hidden" name="action" value="cancel">
                             <input type="hidden" name="orderid" value="${order.orderid}">
 
                             <div class="space-y-3">
-                                <c:forEach var="reason"
-                                    items="${['Wrong product selected', 'Shipping address change', 'Delivery time too long', 'Found better price elsewhere', 'Other']}">
-                                    <label
-                                        class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-accent-blue/30 hover:bg-sky-50/50 cursor-pointer transition-all">
-                                        <input type="radio" name="reason" value="${reason}" required
-                                            onchange="toggleOtherReason()"
-                                            class="text-accent-blue focus:ring-accent-blue">
-                                        <span class="text-sm text-slate-600">${reason}</span>
+                                <c:forEach var="reason" items="${['Thay đổi địa chỉ giao hàng', 'Phí vận chuyển cao', 'Thời gian giao hàng quá lâu', 'Tìm thấy giá rẻ hơn ở nơi khác', 'Hủy để đặt lại đơn hàng khác', 'Other']}">
+                                    <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-accent-blue/30 hover:bg-sky-50/50 cursor-pointer transition-all">
+                                        <input type="radio" name="reason" value="${reason}" required onchange="toggleOtherReason()" class="text-accent-blue focus:ring-accent-blue">
+                                        <span class="text-sm text-slate-600">
+                                            <c:choose>
+                                                <c:when test="${reason eq 'Other'}">Lý do khác...</c:when>
+                                                <c:otherwise>${reason}</c:otherwise>
+                                            </c:choose>
+                                        </span>
                                     </label>
                                 </c:forEach>
                             </div>
 
                             <div id="otherReasonBox" class="hidden mt-4">
-                                <textarea name="otherReasonText" rows="3"
-                                    class="w-full bg-white/50 border-slate-200 rounded-xl focus:ring-accent-blue focus:border-accent-blue text-sm p-4"
-                                    placeholder="Please specify your reason..."></textarea>
+                                <textarea name="otherReasonText" rows="3" class="w-full bg-white/50 border border-slate-200 rounded-xl focus:ring-accent-blue focus:border-accent-blue text-sm p-4 outline-none" placeholder="Vui lòng cung cấp thêm chi tiết..."></textarea>
                             </div>
 
                             <div class="flex gap-3 mt-8">
                                 <button type="button" onclick="closeCancelModal()"
-                                    class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-400 hover:text-slate-600 transition-colors">Go
-                                    Back</button>
+                                    class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 rounded-lg">Quay lại</button>
                                 <button type="submit"
-                                    class="flex-1 bg-red-500 text-white py-3 rounded-lg text-[10px] uppercase font-bold tracking-widest hover:bg-red-600 shadow-lg shadow-red-200 transition-all">Confirm
-                                    Cancellation</button>
+                                    class="flex-1 bg-red-500 text-white py-3 rounded-lg text-[10px] uppercase font-bold tracking-widest hover:bg-red-600 shadow-lg shadow-red-200 transition-all">Xác Nhận Hủy</button>
                             </div>
                         </form>
                     </div>

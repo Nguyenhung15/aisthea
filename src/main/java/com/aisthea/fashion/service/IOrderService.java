@@ -29,7 +29,7 @@ public interface IOrderService {
 
     List<Order> getRecentOrders(int limit);
     
-    boolean cancelOrder(int orderId, int userId) throws Exception;
+    boolean cancelOrder(int orderId, int userId, String reason) throws Exception;
 
     List<Order> getFilteredOrders(String orderId, String status, String customerName, String date);
 }

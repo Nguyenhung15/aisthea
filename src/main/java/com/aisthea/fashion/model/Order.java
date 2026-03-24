@@ -22,6 +22,12 @@ public class Order {
     private java.math.BigDecimal discountAmount;
     private String giftMessage;
 
+    private String cancelReason;
+    private String refundStatus;
+    private Date confirmedAt;
+    private Date shippedAt;
+    private Date completedAt;
+
     private List<OrderItem> items;
 
     public Order() {
@@ -145,5 +151,45 @@ public class Order {
 
     public void setGiftMessage(String giftMessage) {
         this.giftMessage = giftMessage;
+    }
+
+    public String getCancelReason() {
+        return cancelReason;
+    }
+
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
+    }
+
+    public String getRefundStatus() {
+        return refundStatus;
+    }
+
+    public void setRefundStatus(String refundStatus) {
+        this.refundStatus = refundStatus;
+    }
+
+    public Date getConfirmedAt() {
+        return confirmedAt;
+    }
+
+    public void setConfirmedAt(Date confirmedAt) {
+        this.confirmedAt = confirmedAt;
+    }
+
+    public Date getShippedAt() {
+        return shippedAt;
+    }
+
+    public void setShippedAt(Date shippedAt) {
+        this.shippedAt = shippedAt;
+    }
+
+    public Date getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(Date completedAt) {
+        this.completedAt = completedAt;
     }
 }

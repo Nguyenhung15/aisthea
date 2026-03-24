@@ -219,6 +219,9 @@
                                             <button data-status="Pending"
                                                 class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Chờ
                                                 xác nhận</button>
+                                            <button data-status="Paid"
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Chờ
+                                                lấy hàng</button>
                                             <button data-status="Shipped"
                                                 class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Đang
                                                 giao</button>
@@ -275,6 +278,14 @@
                                                                             Chờ xác nhận
                                                                         </span>
                                                                     </c:when>
+                                                                    <c:when test="${order.status eq 'Paid'}">
+                                                                        <span
+                                                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-100 flex items-center">
+                                                                            <span
+                                                                                class="w-1.5 h-1.5 rounded-full bg-purple-500 mr-2 animate-pulse"></span>
+                                                                            Chờ lấy hàng
+                                                                        </span>
+                                                                    </c:when>
                                                                     <c:when test="${order.status eq 'Shipped'}">
                                                                         <span
                                                                             class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100 flex items-center">
@@ -290,10 +301,18 @@
                                                                         </span>
                                                                     </c:when>
                                                                     <c:when test="${order.status eq 'Cancelled'}">
-                                                                        <span
-                                                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
-                                                                            Đã hủy
-                                                                        </span>
+                                                                        <div class="flex flex-col items-end gap-1">
+                                                                            <span
+                                                                                class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                                                                                Đã hủy
+                                                                            </span>
+                                                                            <c:if test="${order.refundStatus eq 'Pending'}">
+                                                                                <span class="text-[10px] text-amber-500 font-bold uppercase tracking-wider bg-amber-50 px-2 py-0.5 rounded-sm">Hoàn tiền chờ xử lý</span>
+                                                                            </c:if>
+                                                                            <c:if test="${order.refundStatus eq 'Completed'}">
+                                                                                <span class="text-[10px] text-emerald-500 font-bold uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded-sm">Đã hoàn tiền</span>
+                                                                            </c:if>
+                                                                        </div>
                                                                     </c:when>
                                                                     <c:otherwise>
                                                                         <span
@@ -351,14 +370,13 @@
                                                                 <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full
                                                                     ${pm eq 'QR' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}">
                                                                     <c:choose>
-                                                                        <c:when test="${pm eq 'QR'}">&#128373; QR / Online</c:when>
-                                                                        <c:otherwise>&#128181; COD / Tiền mặt</c:otherwise>
+                                                                        <c:when test="${pm eq 'QR'}">QR / Online</c:when>
+                                                                        <c:otherwise>COD / Tiền mặt</c:otherwise>
                                                                     </c:choose>
                                                                 </span>
                                                             </div>
                                                             <div class="flex items-center gap-3">
                                                                 <c:if test="${order.status eq 'Completed'}">
-                                                                    <%-- Check if EVERY item has been reviewed FOR THIS ORDER --%>
                                                                     <c:set var="orderReviewedSet" value="${perOrderReviewedMap[order.orderid]}"/>
                                                                     <c:set var="anyUnreviewed" value="false"/>
                                                                     <c:forEach var="item" items="${order.items}">
@@ -366,23 +384,16 @@
                                                                             <c:set var="anyUnreviewed" value="true"/>
                                                                         </c:if>
                                                                     </c:forEach>
-                                                                    <c:choose>
-                                                                        <c:when test="${anyUnreviewed}">
-                                                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
-                                                                                class="px-5 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-600 transition-all duration-300 flex items-center gap-1.5">
-                                                                                <i class="fa-regular fa-star text-xs"></i>
-                                                                                Đánh giá
-                                                                            </a>
-                                                                        </c:when>
-                                                                        <c:otherwise>
-                                                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
-                                                                                class="px-5 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-amber-600 transition-all duration-300 flex items-center gap-1.5">
-                                                                                <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                                                                Sửa đánh giá
-                                                                            </a>
-                                                                        </c:otherwise>
-                                                                    </c:choose>
+                                                                    <c:if test="${anyUnreviewed}">
+                                                                        <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
+                                                                            class="px-5 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-600 transition-all duration-300 flex items-center gap-1.5">
+                                                                            <i class="fa-regular fa-star text-xs"></i>
+                                                                            Đánh giá
+                                                                        </a>
+                                                                    </c:if>
                                                                 </c:if>
+
+
                                                                 <a href="${pageContext.request.contextPath}/order?action=view&id=${order.orderid}"
                                                                     class="px-5 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 hover:text-primary hover:border-primary/30 transition-all duration-300">
                                                                     Xem chi tiết

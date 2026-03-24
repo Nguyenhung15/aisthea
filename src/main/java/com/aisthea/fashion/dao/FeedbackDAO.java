@@ -151,7 +151,8 @@ public class FeedbackDAO implements IFeedbackDAO {
         }
     }
 
-    /** Returns the feedback of userId for productId, or null if not reviewed yet. */
+    /** Returns the feedback of userId for productId, or null if not reviewed yet.
+     *  @deprecated Use getFeedbackByUserAndProductForOrder for per-order scoped checks. */
     public Feedback getFeedbackByUserAndProduct(int userId, int productId) throws SQLException {
         String sql = "SELECT f.*, u.fullname, u.username AS uname FROM feedback f " +
                 "LEFT JOIN users u ON f.userid = u.userid " +
@@ -160,6 +161,31 @@ public class FeedbackDAO implements IFeedbackDAO {
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ps.setInt(2, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapResultSetToFeedback(rs);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the feedback written by userId for productId that was created
+     * ON OR AFTER the specified order's creation date.
+     * This ensures Order #2 (re-purchase) doesn't show the review from Order #1.
+     * Returns null if no such review exists (= eligible to write a new review).
+     */
+    public Feedback getFeedbackByUserAndProductForOrder(int userId, int productId, int orderId) throws SQLException {
+        String sql =
+            "SELECT f.*, u.fullname, u.username AS uname FROM feedback f " +
+            "LEFT JOIN users u ON f.userid = u.userid " +
+            "JOIN orders o ON o.orderid = ? " +
+            "WHERE f.userid = ? AND f.productid = ? AND f.createdat >= o.createdat " +
+            "ORDER BY f.createdat DESC";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.setInt(2, userId);
+            ps.setInt(3, productId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapResultSetToFeedback(rs);
             }

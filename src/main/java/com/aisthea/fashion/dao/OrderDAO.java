@@ -1,11 +1,9 @@
 package com.aisthea.fashion.dao;
 
 import com.aisthea.fashion.model.Order;
-import com.aisthea.fashion.dao.DBConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class OrderDAO implements IOrderDAO {
@@ -16,7 +14,12 @@ public class OrderDAO implements IOrderDAO {
             + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_ORDERS_BY_USERID = "SELECT * FROM orders WHERE userid = ? ORDER BY createdat DESC";
     private static final String SELECT_ORDER_BY_ID = "SELECT * FROM orders WHERE orderid = ? AND userid = ?";
-    private static final String UPDATE_ORDER_STATUS = "UPDATE orders SET status = ?, updatedat = GETDATE() WHERE orderid = ?";
+    private static final String UPDATE_ORDER_STATUS = "UPDATE orders SET status = ?, updatedat = GETDATE(), "
+            + "confirmed_at = CASE WHEN ? = 'Confirmed' THEN COALESCE(confirmed_at, GETDATE()) ELSE confirmed_at END, "
+            + "shipped_at = CASE WHEN ? = 'Shipping' THEN COALESCE(shipped_at, GETDATE()) ELSE shipped_at END, "
+            + "completed_at = CASE WHEN ? = 'Completed' THEN COALESCE(completed_at, GETDATE()) ELSE completed_at END "
+            + "WHERE orderid = ?";
+    private static final String UPDATE_CANCEL_INFO = "UPDATE orders SET cancel_reason = ?, refund_status = ? WHERE orderid = ?";
     private static final String SELECT_ALL_ORDERS = "SELECT * FROM orders ORDER BY createdat DESC";
     private static final String SELECT_ADMIN_ORDER_BY_ID = "SELECT * FROM orders WHERE orderid = ?";
     private static final String DELETE_ORDER = "DELETE FROM orders WHERE orderid = ?";
@@ -94,7 +97,10 @@ public class OrderDAO implements IOrderDAO {
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(UPDATE_ORDER_STATUS)) {
             ps.setString(1, status);
-            ps.setInt(2, orderId);
+            ps.setString(2, status);
+            ps.setString(3, status);
+            ps.setString(4, status);
+            ps.setInt(5, orderId);
             return ps.executeUpdate() > 0;
         }
     }
@@ -103,7 +109,20 @@ public class OrderDAO implements IOrderDAO {
     public boolean updateOrderStatus(int orderId, String status, Connection conn) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(UPDATE_ORDER_STATUS)) {
             ps.setString(1, status);
-            ps.setInt(2, orderId);
+            ps.setString(2, status);
+            ps.setString(3, status);
+            ps.setString(4, status);
+            ps.setInt(5, orderId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    @Override
+    public boolean updateCancelInfo(int orderId, String cancelReason, String refundStatus, Connection conn) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(UPDATE_CANCEL_INFO)) {
+            ps.setString(1, cancelReason);
+            ps.setString(2, refundStatus);
+            ps.setInt(3, orderId);
             return ps.executeUpdate() > 0;
         }
     }
@@ -127,6 +146,13 @@ public class OrderDAO implements IOrderDAO {
             order.setVoucherId(rs.wasNull() ? null : voucherId);
             order.setDiscountAmount(rs.getBigDecimal("discountamount"));
             order.setGiftMessage(rs.getString("gift_message"));
+            
+            // New columns
+            order.setCancelReason(rs.getString("cancel_reason"));
+            order.setRefundStatus(rs.getString("refund_status"));
+            order.setConfirmedAt(rs.getTimestamp("confirmed_at"));
+            order.setShippedAt(rs.getTimestamp("shipped_at"));
+            order.setCompletedAt(rs.getTimestamp("completed_at"));
         } catch (SQLException e) {
             logger.warning("Không thể đọc đầy đủ thông tin giao hàng (có thể từ listOrders): " + e.getMessage());
         }

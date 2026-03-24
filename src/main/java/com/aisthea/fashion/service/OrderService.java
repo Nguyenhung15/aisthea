@@ -273,7 +273,7 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    public boolean cancelOrder(int orderId, int userId) throws Exception {
+    public boolean cancelOrder(int orderId, int userId, String reason) throws Exception {
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
@@ -283,8 +283,18 @@ public class OrderService implements IOrderService {
             if (order == null) {
                 throw new Exception("Không tìm thấy đơn hàng hoặc bạn không có quyền.");
             }
-            if (!"Pending".equalsIgnoreCase(order.getStatus())) {
-                throw new Exception("Chỉ có thể hủy đơn hàng ở trạng thái 'Pending'.");
+            
+            String currentStatus = order.getStatus();
+            String refundStatus = null;
+            
+            if ("Pending".equalsIgnoreCase(currentStatus)) {
+                // COD / Chờ xác nhận -> Hủy bình thường, không cần hoàn tiền
+                refundStatus = null;
+            } else if ("Paid".equalsIgnoreCase(currentStatus)) {
+                // Đã thanh toán QR -> Được phép hủy, nhưng cần hoàn tiền -> Refund Pending
+                refundStatus = "Pending";
+            } else {
+                throw new Exception("Chỉ có thể hủy đơn hàng ở trạng thái 'Pending' hoặc 'Paid'. Đơn hàng này đang ở trạng thái: " + currentStatus);
             }
 
             List<OrderItem> items = orderItemDAO.getOrderItemsByOrderId(orderId);
@@ -303,6 +313,11 @@ public class OrderService implements IOrderService {
             boolean statusUpdated = orderDAO.updateOrderStatus(orderId, "Cancelled", conn);
             if (!statusUpdated) {
                 throw new SQLException("Lỗi: Không thể cập nhật trạng thái đơn hàng.");
+            }
+            
+            boolean cancelInfoUpdated = orderDAO.updateCancelInfo(orderId, reason, refundStatus, conn);
+            if (!cancelInfoUpdated) {
+                logger.warning("Không thể lưu lý do hủy và trạng thái hoàn tiền cho đơn #" + orderId);
             }
 
             conn.commit();

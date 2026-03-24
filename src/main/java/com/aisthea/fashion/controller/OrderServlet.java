@@ -182,7 +182,7 @@ public class OrderServlet extends HttpServlet {
                 Order orderBeforeUpdate = orderService.getOrderDetails(orderId, user.getUserId());
                 if (orderBeforeUpdate != null && "Pending".equalsIgnoreCase(orderBeforeUpdate.getStatus())) {
                     logger.info("Payment cancelled detected for order " + orderId + ". Cancelling order.");
-                    orderService.cancelOrder(orderId, user.getUserId());
+                    orderService.cancelOrder(orderId, user.getUserId(), "Người dùng tự hủy thanh toán QR.");
                     request.setAttribute("error",
                             "Thanh toán QR đã bị hủy. Đơn hàng của bạn không thành công. Bạn có thể kiểm tra lại giỏ hàng.");
                 }
@@ -338,7 +338,16 @@ public class OrderServlet extends HttpServlet {
         int orderId = -1;
         try {
             orderId = Integer.parseInt(request.getParameter("orderid"));
-            orderService.cancelOrder(orderId, user.getUserId());
+            String reason = request.getParameter("reason");
+            if ("Other".equalsIgnoreCase(reason)) {
+                String otherText = request.getParameter("otherReasonText");
+                if (otherText != null && !otherText.trim().isEmpty()) {
+                    reason = "Khác: " + otherText.trim();
+                }
+            } else if (reason == null || reason.trim().isEmpty()) {
+                reason = "Không có lý do";
+            }
+            orderService.cancelOrder(orderId, user.getUserId(), reason);
             response.sendRedirect(request.getContextPath() + "/order?action=view&id=" + orderId + "&cancel=success");
         } catch (Exception e) {
             e.printStackTrace();

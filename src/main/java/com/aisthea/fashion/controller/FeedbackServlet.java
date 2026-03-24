@@ -186,32 +186,50 @@ public class FeedbackServlet extends HttpServlet {
 
         request.setAttribute("orderId", orderIdStr);
 
-        // Load danh sách sản phẩm trong đơn hàng để hiển thị dropdown chọn SP
+        // Load products in the order + their existing feedbacks all at once
         try {
             int orderId = Integer.parseInt(orderIdStr);
             List<Map<String, Object>> orderItems = new ArrayList<>();
+            StringBuilder productIdsCsv = new StringBuilder();
 
             try (Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
                     PreparedStatement ps = conn.prepareStatement(
                             "SELECT DISTINCT pcs.productid, p.name AS product_name, oi.image_url " +
-                                    "FROM orderitems oi " +
-                                    "JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid " +
-                                    "JOIN products p ON pcs.productid = p.productid " +
-                                    "WHERE oi.orderid = ?")) {
-
+                            "FROM orderitems oi " +
+                            "JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid " +
+                            "JOIN products p ON pcs.productid = p.productid " +
+                            "WHERE oi.orderid = ?")) {
                 ps.setInt(1, orderId);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         Map<String, Object> item = new LinkedHashMap<>();
-                        item.put("productId", rs.getInt("productid"));
+                        int pid = rs.getInt("productid");
+                        item.put("productId", pid);
                         item.put("productName", rs.getString("product_name"));
                         item.put("imageUrl", rs.getString("image_url"));
                         orderItems.add(item);
+                        if (productIdsCsv.length() > 0) productIdsCsv.append(",");
+                        productIdsCsv.append(pid);
                     }
                 }
             }
 
+            // Load existing feedbacks FOR THIS ORDER ONLY (per-order scoped)
+            // A review from a previous purchase of the same product will NOT pre-fill here.
+            User currentUser = (User) session.getAttribute("user");
+            com.aisthea.fashion.dao.FeedbackDAO fbDao = new com.aisthea.fashion.dao.FeedbackDAO();
+            java.util.Map<Integer, com.aisthea.fashion.model.Feedback> existingFeedbackMap = new java.util.HashMap<>();
+            for (Map<String, Object> item : orderItems) {
+                int pid = (Integer) item.get("productId");
+                com.aisthea.fashion.model.Feedback existing =
+                    fbDao.getFeedbackByUserAndProductForOrder(currentUser.getUserId(), pid, orderId);
+                if (existing != null) existingFeedbackMap.put(pid, existing);
+            }
+
+
             request.setAttribute("orderItems", orderItems);
+            request.setAttribute("productIdsCsv", productIdsCsv.toString());
+            request.setAttribute("existingFeedbackMap", existingFeedbackMap);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -288,7 +306,46 @@ public class FeedbackServlet extends HttpServlet {
                 int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
                 int rating = Integer.parseInt(request.getParameter("rating"));
                 String comment = request.getParameter("comment");
-                feedbackService.updateFeedback(feedbackId, user.getUserId(), rating, comment != null ? comment : "");
+
+                // Handle image: new upload beats fallback existingImageUrl
+                String imageUrl = null;
+                try {
+                    Part filePart = request.getPart("feedbackImage");
+                    if (filePart != null && filePart.getSize() > 0) {
+                        String originalName = java.nio.file.Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                        String ext = "";
+                        int dotIdx = originalName.lastIndexOf('.');
+                        if (dotIdx >= 0) ext = originalName.substring(dotIdx).toLowerCase();
+                        String savedName = java.util.UUID.randomUUID().toString() + ext;
+                        java.io.File feedbackDir = new java.io.File(com.aisthea.fashion.util.Constants.UPLOAD_DIR, "feedback");
+                        if (!feedbackDir.exists()) feedbackDir.mkdirs();
+                        java.io.File savedFile = new java.io.File(feedbackDir, savedName);
+                        try (java.io.InputStream is = filePart.getInputStream()) {
+                            java.nio.file.Files.copy(is, savedFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        }
+                        imageUrl = "feedback/" + savedName;
+                    } else {
+                        // No new file — keep existing or null (user cleared)
+                        String existing = request.getParameter("existingImageUrl");
+                        imageUrl = (existing != null && !existing.isBlank()) ? existing : null;
+                    }
+                } catch (Exception imgEx) {
+                    // Image handling failed, preserve existing
+                    String existing = request.getParameter("existingImageUrl");
+                    imageUrl = (existing != null && !existing.isBlank()) ? existing : null;
+                }
+
+                // Update via DAO directly with image support
+                String sql = "UPDATE feedback SET rating = ?, comment = ?, image_url = ?, updatedat = GETDATE() WHERE feedbackid = ? AND userid = ?";
+                try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
+                     java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, rating);
+                    ps.setString(2, comment != null ? comment : "");
+                    ps.setString(3, imageUrl);
+                    ps.setInt(4, feedbackId);
+                    ps.setInt(5, user.getUserId());
+                    ps.executeUpdate();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -297,6 +354,77 @@ public class FeedbackServlet extends HttpServlet {
                 response.sendRedirect(redirectUrl);
             } else {
                 response.sendRedirect(request.getContextPath() + "/feedback?action=myFeedbacks&updated=1");
+            }
+            return;
+        }
+
+
+        // ── Gửi/sửa TẤT CẢ feedback của đơn hàng cùng lúc ──
+        if ("submitAll".equals(action)) {
+            String productIdsStr = request.getParameter("productIds");
+            String orderId = request.getParameter("orderId");
+            if (productIdsStr != null && !productIdsStr.isBlank()) {
+                String[] pids = productIdsStr.split(",");
+                for (String pidStr : pids) {
+                    try {
+                        int pid = Integer.parseInt(pidStr.trim());
+                        String ratingStr = request.getParameter("rating_" + pid);
+                        if (ratingStr == null || ratingStr.isEmpty() || "0".equals(ratingStr)) continue;
+                        int rating = Integer.parseInt(ratingStr);
+                        String comment = request.getParameter("comment_" + pid);
+                        String feedbackIdStr = request.getParameter("feedbackId_" + pid);
+                        String existingImgUrl = request.getParameter("existingImageUrl_" + pid);
+
+                        // Handle image upload per-product
+                        String imageUrl = (existingImgUrl != null && !existingImgUrl.isBlank()) ? existingImgUrl : null;
+                        try {
+                            Part filePart = request.getPart("feedbackImage_" + pid);
+                            if (filePart != null && filePart.getSize() > 0) {
+                                String originalName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                                String ext = "";
+                                int dotIdx = originalName.lastIndexOf('.');
+                                if (dotIdx >= 0) ext = originalName.substring(dotIdx).toLowerCase();
+                                String savedName = UUID.randomUUID().toString() + ext;
+                                File feedbackDir = new File(Constants.UPLOAD_DIR, "feedback");
+                                if (!feedbackDir.exists()) feedbackDir.mkdirs();
+                                try (InputStream is = filePart.getInputStream()) {
+                                    Files.copy(is, new File(feedbackDir, savedName).toPath(), StandardCopyOption.REPLACE_EXISTING);
+                                }
+                                imageUrl = "feedback/" + savedName;
+                            }
+                        } catch (Exception imgEx) { /* keep existing */ }
+
+                        if (feedbackIdStr != null && !feedbackIdStr.isBlank()) {
+                            // UPDATE
+                            int feedbackId = Integer.parseInt(feedbackIdStr);
+                            String sql = "UPDATE feedback SET rating=?, comment=?, image_url=?, updatedat=GETDATE() WHERE feedbackid=? AND userid=?";
+                            try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
+                                 java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+                                ps.setInt(1, rating);
+                                ps.setString(2, comment != null ? comment : "");
+                                ps.setString(3, imageUrl);
+                                ps.setInt(4, feedbackId);
+                                ps.setInt(5, user.getUserId());
+                                ps.executeUpdate();
+                            }
+                        } else {
+                            // INSERT
+                            Feedback fb = new Feedback();
+                            fb.setUserid(user.getUserId());
+                            fb.setProductid(pid);
+                            fb.setRating(rating);
+                            fb.setComment(comment != null ? comment : "");
+                            fb.setImageUrl(imageUrl);
+                            fb.setStatus("Visible");
+                            feedbackService.addFeedback(fb);
+                        }
+                    } catch (Exception e) { e.printStackTrace(); }
+                }
+            }
+            if (orderId != null && !orderId.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/order?action=view&id=" + orderId + "&feedback=success");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/order?action=history&feedback=success");
             }
             return;
         }
