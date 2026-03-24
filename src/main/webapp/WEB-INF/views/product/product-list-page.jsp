@@ -1407,7 +1407,7 @@
                                                                                         btn.type = 'button';
                                                                                         btn.title = colorMap[c][0].color || c;
                                                                                         btn.dataset.color = c;
-                                                                                        btn.className = 'w-7 h-7 rounded-full border-2 border-white shadow transition-all hover:scale-105 hover:ring-2 hover:ring-primary hover:ring-offset-1';
+                                                                                        btn.className = 'w-7 h-7 rounded-full border-2 border-white shadow transition-all hover:scale-105 hover:ring-2 hover:ring-slate-900 hover:ring-offset-1';
                                                                                         btn.style.backgroundColor = hex;
                                                                                         btn.onclick = () => selectColor(c, colorMap, colorImageMap, d.images);
                                                                                         colorsDiv.appendChild(btn);
@@ -1438,7 +1438,7 @@
                                                                                         // ring
                                                                                         document.getElementById('qv-colors').querySelectorAll('button').forEach(b => {
                                                                                         if (b.dataset.color === color) {
-                                                                                        b.style.boxShadow = '0 0 0 2px white, 0 0 0 4px #024acf';
+                                                                                        b.style.boxShadow = '0 0 0 2px white, 0 0 0 4px #0f172a';
                                                                                         b.style.transform = 'scale(1.15)';
                                                                                         } else {
                                                                                         b.style.boxShadow = '';

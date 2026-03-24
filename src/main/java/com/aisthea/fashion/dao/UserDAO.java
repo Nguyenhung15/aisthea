@@ -10,13 +10,13 @@ import java.util.List;
 
 public class UserDAO implements IUserDAO {
 
-    private static final String INSERT_USER_SQL = "INSERT INTO Users (username, password, fullname, email, gender, phone, avatar, address, role, active, createdat, updatedat, dob) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, GETDATE(), GETDATE(), ?)";
+    private static final String INSERT_USER_SQL = "INSERT INTO Users (username, password, fullname, email, gender, phone, avatar, role, active, createdat, updatedat, dob) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, GETDATE(), GETDATE(), ?)";
     private static final String SELECT_BY_ID_SQL = "SELECT * FROM Users WHERE userid = ?";
     private static final String FIND_BY_EMAIL_SQL = "SELECT * FROM Users WHERE email = ?";
     private static final String FIND_BY_USERNAME_SQL = "SELECT * FROM Users WHERE username = ?";
     private static final String SELECT_ALL_SQL = "SELECT * FROM Users ORDER BY createdat DESC";
-    private static final String UPDATE_USER_SQL = "UPDATE Users SET username=?, fullname=?, email=?, gender=?, phone=?, avatar=?, address=?, role=?, active=?, dob=?, updatedat = GETDATE() WHERE userid=?";
+    private static final String UPDATE_USER_SQL = "UPDATE Users SET username=?, fullname=?, email=?, gender=?, phone=?, avatar=?, role=?, active=?, dob=?, updatedat = GETDATE() WHERE userid=?";
     private static final String UPDATE_PASSWORD_SQL = "UPDATE Users SET password = ?, updatedat = GETDATE() WHERE userid = ?";
     private static final String DELETE_USER_SQL = "DELETE FROM Users WHERE userid = ?";
     private static final String ACTIVATE_USER_SQL = "UPDATE Users SET active = 1, updatedat = GETDATE() WHERE email = ? AND active = 0";
@@ -34,7 +34,6 @@ public class UserDAO implements IUserDAO {
         u.setGender(rs.getString("gender"));
         u.setPhone(rs.getString("phone"));
         u.setAvatar(rs.getString("avatar"));
-        u.setAddress(rs.getString("address"));
         u.setRole(rs.getString("role"));
         u.setActive(rs.getBoolean("active"));
         u.setDob(rs.getDate("dob"));
@@ -61,13 +60,12 @@ public class UserDAO implements IUserDAO {
             ps.setString(5, user.getGender());
             ps.setString(6, user.getPhone());
             ps.setString(7, user.getAvatar());
-            ps.setString(8, user.getAddress());
-            ps.setString(9, user.getRole());
+            ps.setString(8, user.getRole());
 
             if (user.getDob() != null) {
-                ps.setDate(10, user.getDob());
+                ps.setDate(9, user.getDob());
             } else {
-                ps.setNull(10, java.sql.Types.DATE);
+                ps.setNull(9, java.sql.Types.DATE);
             }
 
             ps.executeUpdate();
@@ -157,17 +155,16 @@ public class UserDAO implements IUserDAO {
             ps.setString(4, user.getGender());
             ps.setString(5, user.getPhone());
             ps.setString(6, user.getAvatar());
-            ps.setString(7, user.getAddress());
-            ps.setString(8, user.getRole());
-            ps.setBoolean(9, user.isActive());
+            ps.setString(7, user.getRole());
+            ps.setBoolean(8, user.isActive());
 
             if (user.getDob() != null) {
-                ps.setDate(10, user.getDob());
+                ps.setDate(9, user.getDob());
             } else {
-                ps.setNull(10, java.sql.Types.DATE);
+                ps.setNull(9, java.sql.Types.DATE);
             }
 
-            ps.setInt(11, user.getUserId());
+            ps.setInt(10, user.getUserId());
 
             rowUpdated = ps.executeUpdate() > 0;
         } catch (SQLException e) {

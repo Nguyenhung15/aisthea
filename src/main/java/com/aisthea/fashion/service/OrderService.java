@@ -73,8 +73,8 @@ public class OrderService implements IOrderService {
         // ── 3. Build Order object ────────────────────────────────────────
         Order newOrder = new Order();
         newOrder.setUserid(user.getUserId());
-        newOrder.setTotalprice(finalTotal);
-        newOrder.setDiscountAmount(discountAmount);
+        newOrder.setTotalprice(finalTotal.setScale(0, java.math.RoundingMode.HALF_UP));
+        newOrder.setDiscountAmount(discountAmount.setScale(0, java.math.RoundingMode.HALF_UP));
         if (voucherId != null)
             newOrder.setVoucherId(voucherId);
         newOrder.setStatus("Pending");
@@ -104,7 +104,7 @@ public class OrderService implements IOrderService {
                 orderItem.setColor(cartItem.getColor());
                 orderItem.setSize(cartItem.getSize());
                 orderItem.setQuantity(cartItem.getQuantity());
-                orderItem.setPrice(cartItem.getPrice());
+                orderItem.setPrice(cartItem.getPrice() != null ? cartItem.getPrice().setScale(0, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO);
                 orderItem.setImageUrl(cartItem.getProductImageUrl());
                 orderItem.setProductName(cartItem.getProductName());
 

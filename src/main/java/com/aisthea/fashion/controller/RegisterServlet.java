@@ -49,7 +49,6 @@ public class RegisterServlet extends HttpServlet {
             newUser.setPassword(password);
             newUser.setGender(gender);
             newUser.setPhone(phone);
-            newUser.setAddress(null);
             // Avatar will be null by default - user can upload later
 
             try {

@@ -60,13 +60,10 @@
                                                 <a class="text-slate-600 hover:text-primary transition-transform hover:-translate-y-0.5 duration-200 relative"
                                                     href="${pageContext.request.contextPath}/cart" title="Cart">
                                                     <i class="fa-solid fa-bag-shopping text-lg"></i>
-                                                    <c:if
-                                                        test="${not empty sessionScope.cart and sessionScope.cart.totalQuantity > 0}">
-                                                        <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center
-                                 rounded-full bg-primary text-[10px] text-white font-bold">
-                                                            ${sessionScope.cart.totalQuantity}
-                                                        </span>
-                                                    </c:if>
+                                                    <span id="cart-badge" class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center
+                                 rounded-full bg-primary text-[10px] text-white font-bold ${empty sessionScope.cart or sessionScope.cart.totalQuantity eq 0 ? 'hidden' : ''}">
+                                                        ${not empty sessionScope.cart ? sessionScope.cart.totalQuantity : 0}
+                                                    </span>
                                                 </a>
 
                                                 <%-- User / Account --%>

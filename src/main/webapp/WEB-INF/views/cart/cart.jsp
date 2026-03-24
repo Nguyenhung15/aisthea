@@ -107,11 +107,18 @@
                                         </h1>
 
                                         <div class="glass-card rounded-xl overflow-hidden border border-sky-100">
-                                            <div class="divide-y divide-sky-100">
-                                                <c:forEach var="item" items="${sessionScope.cart.items}">
-                                                    <div class="p-8 flex flex-col md:flex-row gap-8 items-center">
-                                                        <div
-                                                            class="w-32 h-40 flex-shrink-0 rounded-xl bg-slate-100 overflow-hidden shadow-sm">
+                                            <form id="checkoutForm" action="${pageContext.request.contextPath}/cart" method="POST">
+                                                <input type="hidden" name="action" value="prepareCheckout">
+                                                <div class="divide-y divide-sky-100">
+                                                    <c:forEach var="item" items="${sessionScope.cart.items}">
+                                                        <div class="p-8 flex flex-col md:flex-row gap-8 items-center transition-all duration-500" id="item-row-${item.productColorSizeId}">
+                                                            <div class="flex items-center justify-center">
+                                                                <input type="checkbox" name="selectedItems" value="${item.productColorSizeId}" 
+                                                                    class="item-checkbox w-5 h-5 text-accent-blue border-slate-300 rounded focus:ring-accent-blue cursor-pointer" 
+                                                                    data-subtotal="${item.subtotal}" checked onchange="updateSelectedTotal()">
+                                                            </div>
+                                                            <div
+                                                                class="w-32 h-40 flex-shrink-0 rounded-xl bg-slate-100 overflow-hidden shadow-sm">
                                                             <c:set var="cartImg" value="${item.productImageUrl}" />
                                                             <c:if test="${not empty cartImg and not fn:startsWith(cartImg, 'http') and not fn:startsWith(cartImg, '/')}">
                                                                 <c:set var="cartImg" value="${pageContext.request.contextPath}/uploads/${cartImg}" />
@@ -134,43 +141,31 @@
                                                                 ${item.size}
                                                             </p>
                                                             <div class="pt-4">
-                                                                <a href="${pageContext.request.contextPath}/cart?action=remove&id=${item.productColorSizeId}"
+                                                                <button type="button" onclick="removeItem(${item.productColorSizeId})"
                                                                     class="text-[10px] uppercase tracking-widest text-slate-400 hover:text-red-500 flex items-center justify-center md:justify-start gap-1 transition-colors">
                                                                     <span
                                                                         class="material-icons-outlined text-sm">delete_outline</span>
                                                                     Remove Item
-                                                                </a>
+                                                                </button>
                                                             </div>
                                                         </div>
-
                                                         <div
-                                                            class="flex flex-col items-center md:items-end gap-4 min-w-[150px]">
-                                                            <form action="${pageContext.request.contextPath}/cart"
-                                                                method="POST">
-                                                                <input type="hidden" name="action" value="update">
-                                                                <input type="hidden" name="id"
-                                                                    value="${item.productColorSizeId}">
-
-                                                                <div
-                                                                    class="flex items-center border border-slate-200 rounded-lg bg-white/50 p-1">
-                                                                    <button type="button" onclick="decreaseQty(this)"
-                                                                        class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-accent-blue transition-colors">
-                                                                        <span
-                                                                            class="material-icons-outlined text-sm">remove</span>
-                                                                    </button>
-                                                                    <input type="number" name="quantity"
-                                                                        value="${item.quantity}" min="1"
-                                                                        class="w-10 border-0 bg-transparent text-center text-sm font-semibold focus:ring-0"
-                                                                        onchange="this.form.submit()">
-                                                                    <button type="button" onclick="increaseQty(this)"
-                                                                        class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-accent-blue transition-colors">
-                                                                        <span
-                                                                            class="material-icons-outlined text-sm">add</span>
-                                                                    </button>
-                                                                </div>
-                                                            </form>
+                                                            class="flex flex-col items-center md:items-end gap-4 min-w-[150px]" id="item-container-${item.productColorSizeId}">
+                                                            <div class="flex items-center border border-slate-200 rounded-lg bg-white/50 p-1">
+                                                                <button type="button" onclick="updateQty(${item.productColorSizeId}, -1)"
+                                                                    class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-accent-blue transition-colors">
+                                                                    <span class="material-icons-outlined text-sm">remove</span>
+                                                                </button>
+                                                                <input type="number" id="qty-${item.productColorSizeId}"
+                                                                    value="${item.quantity}" min="1" onchange="updateQtyManual(${item.productColorSizeId}, this.value)"
+                                                                    class="w-10 border-0 bg-transparent text-center text-sm font-semibold focus:ring-0">
+                                                                <button type="button" onclick="updateQty(${item.productColorSizeId}, 1)"
+                                                                    class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-accent-blue transition-colors">
+                                                                    <span class="material-icons-outlined text-sm">add</span>
+                                                                </button>
+                                                            </div>
                                                             <div class="text-right">
-                                                                <span class="text-lg font-bold text-slate-900">
+                                                                <span class="text-lg font-bold text-slate-900" id="subtotal-${item.productColorSizeId}">
                                                                     <fmt:formatNumber value="${item.subtotal}"
                                                                         type="currency" currencyCode="VND"
                                                                         maxFractionDigits="0" />
@@ -178,8 +173,9 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </c:forEach>
-                                            </div>
+                                                    </c:forEach>
+                                                </div>
+                                            </form>
                                         </div>
 
                                         <a href="${pageContext.request.contextPath}/"
@@ -199,7 +195,7 @@
                                             <div class="space-y-4 mb-8">
                                                 <div class="flex justify-between text-sm">
                                                     <span class="text-slate-500 font-medium">Subtotal</span>
-                                                    <span class="text-slate-900 font-semibold">
+                                                    <span class="text-slate-900 font-semibold" id="summary-subtotal">
                                                         <fmt:formatNumber value="${sessionScope.cart.totalPrice}"
                                                             type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                     </span>
@@ -212,7 +208,7 @@
                                                     class="pt-6 border-t border-sky-100 flex justify-between items-baseline">
                                                     <span class="text-xl font-bold text-slate-900">Total</span>
                                                     <div class="text-right">
-                                                        <p class="text-2xl font-bold text-accent-blue">
+                                                        <p class="text-2xl font-bold text-accent-blue" id="summary-total">
                                                             <fmt:formatNumber value="${sessionScope.cart.totalPrice}"
                                                                 type="currency" currencyCode="VND"
                                                                 maxFractionDigits="0" />
@@ -224,11 +220,11 @@
                                                 </div>
                                             </div>
 
-                                            <a href="${pageContext.request.contextPath}/cart?action=checkout"
+                                            <button type="button" onclick="submitCheckout()"
                                                 class="w-full bg-slate-900 text-white py-5 rounded-lg text-xs uppercase tracking-[0.3em] font-bold transition-all flex items-center justify-center gap-3 hover:bg-accent-blue">
-                                                Checkout Now
+                                                Checkout Selected
                                                 <span class="material-icons-outlined text-sm">east</span>
-                                            </a>
+                                            </button>
 
                                             <div class="mt-8 flex justify-center gap-4 opacity-30 grayscale scale-90">
                                                 <i class="fa-brands fa-cc-visa text-2xl"></i>
@@ -244,24 +240,169 @@
 
                 <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
+                <!-- Tiny Toast -->
+                <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 transform transition-all duration-500 opacity-0 translate-y-10 pointer-events-none">
+                    <div class="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+                         <span id="toast-icon" class="material-icons-outlined text-emerald-400 text-sm">check_circle</span>
+                         <span id="toast-msg" class="text-xs font-bold uppercase tracking-widest">Cart Updated</span>
+                    </div>
+                </div>
+
                 <script>
-                    function decreaseQty(btn) {
-                        const input = btn.nextElementSibling;
-                        let value = parseInt(input.value);
-                        if (value > 1) {
-                            input.value = value - 1;
-                            input.form.submit();
+                    const contextPath = '${pageContext.request.contextPath}';
+
+                    function submitCheckout() {
+                        const form = document.getElementById('checkoutForm');
+                        const checkboxes = form.querySelectorAll('.item-checkbox:checked');
+                        if (checkboxes.length === 0) {
+                            showToast('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.', 'warning');
+                            return;
+                        }
+                        form.submit();
+                    }
+
+                    function updateSelectedTotal() {
+                        const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+                        let total = 0;
+                        checkboxes.forEach(cb => {
+                            total += parseFloat(cb.getAttribute('data-subtotal'));
+                        });
+                        document.getElementById('summary-subtotal').textContent = formatVND(total);
+                        document.getElementById('summary-total').textContent = formatVND(total);
+                    }
+
+                    async function updateQty(pcsId, delta) {
+                        const input = document.getElementById('qty-' + pcsId);
+                        let currentQty = parseInt(input.value);
+                        if (isNaN(currentQty)) currentQty = 1;
+                        let newQty = currentQty + delta;
+                        if (newQty < 1) return;
+                        execUpdateQty(pcsId, newQty);
+                    }
+
+                    function updateQtyManual(pcsId, value) {
+                        let newQty = parseInt(value);
+                        if (isNaN(newQty) || newQty < 1) newQty = 1;
+                        execUpdateQty(pcsId, newQty);
+                    }
+
+                    async function execUpdateQty(pcsId, newQty) {
+                        const input = document.getElementById('qty-' + pcsId);
+                        
+                        // UI visual feedback
+                        input.style.opacity = '0.5';
+
+                        try {
+                            const params = new URLSearchParams();
+                            params.append('action', 'update');
+                            params.append('id', pcsId);
+                            params.append('quantity', newQty);
+                            params.append('ajax', 'true');
+
+                            const res = await fetch(contextPath + '/cart', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                                body: params
+                            });
+
+                            const data = await res.json();
+                            if (data.success) {
+                                input.value = data.newQuantity || newQty;
+                                const subtotalSpan = document.getElementById('subtotal-' + pcsId);
+                                subtotalSpan.textContent = formatVND(data.itemSubtotal);
+                                
+                                // Update checkbox data attribute
+                                const checkbox = document.querySelector(`.item-checkbox[value="${pcsId}"]`);
+                                if (checkbox) {
+                                    checkbox.setAttribute('data-subtotal', data.itemSubtotal);
+                                }
+                                updateSelectedTotal();
+                                
+                                if (data.error && data.error.trim() !== "") {
+                                    showToast(data.error, 'warning');
+                                } else {
+                                    // Subtle feedback
+                                }
+                            } else {
+                                showToast(data.message || 'Lỗi cập nhật số lượng', 'error');
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            showToast('Lỗi kết nối server', 'error');
+                        } finally {
+                            input.style.opacity = '1';
                         }
                     }
-                    function increaseQty(btn) {
-                        const input = btn.previousElementSibling;
-                        let value = parseInt(input.value);
-                        if (!isNaN(value)) {
-                            input.value = value + 1;
-                            input.form.submit();
+
+                    async function removeItem(pcsId) {
+                        if (!confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
+                        
+                        const itemRow = document.getElementById('item-row-' + pcsId);
+                        if (itemRow) itemRow.style.opacity = '0.3';
+
+                        try {
+                            const params = new URLSearchParams();
+                            params.append('action', 'remove');
+                            params.append('id', pcsId);
+                            params.append('ajax', 'true');
+
+                            const res = await fetch(contextPath + '/cart', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                                body: params
+                            });
+
+                            const data = await res.json();
+                            if (data.success) {
+                                if (data.cartCount === 0) {
+                                    location.reload(); // Refresh to show empty cart state
+                                } else {
+                                    if (itemRow) itemRow.remove();
+                                    updateSelectedTotal();
+                                    showToast('Đã xóa sản phẩm', 'success');
+                                }
+                            }
+                        } catch (e) {
+                            showToast('Lỗi khi xóa sản phẩm', 'error');
+                            if (itemRow) itemRow.style.opacity = '1';
                         }
                     }
-                </script>
+
+                    function formatVND(number) {
+                        return new Intl.NumberFormat('vi-VN', {
+                            style: 'currency',
+                            currency: 'VND',
+                            maximumFractionDigits: 0
+                        }).format(number).replace(/₫/, '₫');
+                    }
+
+                    function showToast(msg, type = 'success') {
+                        const toast = document.getElementById('toast');
+                        const toastMsg = document.getElementById('toast-msg');
+                        const toastIcon = document.getElementById('toast-icon');
+
+                        toastMsg.textContent = msg;
+                        
+                        if (type === 'success') {
+                            toastIcon.textContent = 'check_circle';
+                            toastIcon.className = 'material-icons-outlined text-emerald-400 text-sm';
+                        } else if (type === 'error') {
+                            toastIcon.textContent = 'error';
+                            toastIcon.className = 'material-symbols-outlined text-red-500 text-sm';
+                        } else {
+                            toastIcon.textContent = 'warning';
+                            toastIcon.className = 'material-symbols-outlined text-amber-500 text-sm';
+                        }
+
+                        toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                        toast.classList.add('opacity-100', 'translate-y-0');
+
+                        setTimeout(() => {
+                            toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+                            toast.classList.remove('opacity-100', 'translate-y-0');
+                        }, 3000);
+                    }
+                </script>>
             </body>
 
             </html>

@@ -7,43 +7,42 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * REQUIRES:
- * 1. Chrome browser installed.
- * 2. Tomcat server must be running at http://localhost:8080/AistheaFashion/
- */
 public class LoginAutomationTest {
 
     @Test
-    public void testLoginFlow() {
-        // Selenium 4 automatically handles driver binary management
+    public void testLogin_PasswordKhongHopLe_UiHienThiLoi() throws InterruptedException {
         WebDriver driver = new ChromeDriver();
         
         try {
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
             driver.manage().window().maximize();
             
-            // Navigate to login page
+            System.out.println(">>> Mở trang Đăng Nhập Hệ thống Aisthea Fashion...");
             driver.get("http://localhost:8080/AistheaFashion/login"); 
-
-            // Input credentials
-            driver.findElement(By.name("email")).sendKeys("admin@aisthea.com");
-            driver.findElement(By.name("password")).sendKeys("123456");
             
-            // Click Submit button
-            // If the login page has a button with id="btnLogin" or just a button[type='submit']
-            driver.findElement(By.cssSelector("button[type='submit']")).click();
+            Thread.sleep(1500);
 
-            // Verify successful login by checking the URL or presence of a "Welcome" element
-            String currentUrl = driver.getCurrentUrl();
-            assertTrue(currentUrl.contains("home") || currentUrl.contains("index"), 
-                "Should navigate to homepage after login. Found: " + currentUrl);
-                
-        } catch (Exception e) {
-            System.err.println("Automation Test Error: " + e.getMessage());
-            // Uncomment line below if you want test to fail when Tomcat is not running
-            // throw e; 
+            System.out.println(">>> Tự động điền Form Đăng Nhập...");
+            // Bản FIX: Chỉ định rỏ lấy ô input của class sign-in-container (Vì DOM có 2 thẻ name="email")
+            driver.findElement(By.cssSelector(".sign-in-container input[name='email']"))
+                  .sendKeys("testtuyennq@google.com");
+            Thread.sleep(1000); 
+            
+            driver.findElement(By.cssSelector(".sign-in-container input[name='password']"))
+                  .sendKeys("SaiMatKhauTungTe123");
+            Thread.sleep(1000); 
+            
+            System.out.println(">>> Tự động Click Đăng nhập!");
+            driver.findElement(By.xpath("//div[contains(@class, 'sign-in-container')]//button[@type='submit' and contains(text(), 'Đăng nhập')]")).click();
+
+            Thread.sleep(2000); 
+
+            String pageSource = driver.getPageSource();
+            assertTrue(pageSource.contains("class=\"error\""), "Lỗi đỏ không hiện trên giao diện!");
+            
+            System.out.println(">>> Test Kịch bản Đăng Nhập Thất bại: PASS!");
         } finally {
+            Thread.sleep(1000); 
             driver.quit(); 
         }
     }

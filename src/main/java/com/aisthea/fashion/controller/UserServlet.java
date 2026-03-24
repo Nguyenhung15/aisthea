@@ -95,7 +95,6 @@ public class UserServlet extends HttpServlet {
         String email = request.getParameter("email");
         String gender = request.getParameter("gender");
         String phone = request.getParameter("phone");
-        String address = request.getParameter("address");
         String role = request.getParameter("role");
         boolean active = "1".equals(request.getParameter("active"));
 
@@ -109,7 +108,6 @@ public class UserServlet extends HttpServlet {
         user.setEmail(email);
         user.setGender(gender);
         user.setPhone(phone);
-        user.setAddress(address);
         user.setRole(role);
         user.setActive(active);
 

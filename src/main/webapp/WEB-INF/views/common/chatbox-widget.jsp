@@ -758,22 +758,13 @@
                                     // 2. Specialized Product Card [product_card:ID|NAME|PRICE|IMAGE]
                                     text = text.replace(/\[product_card:(.*?)\]/g, function(match, content) {
                                         var parts = content.split('|');
-                                        if (parts.length < 4) return '';
+                                        if (parts.length < 4) return match;
                                         
-                                        var id = parts[0].trim();
-                                        var name = parts[1].trim();
-                                        var price = parts[2].trim();
-                                        var img = parts[3].trim();
-                                        
+                                        var id = parts[0].trim(), name = parts[1].trim(), price = parts[2].trim(), img = parts[3].trim();
                                         var detailUrl = ctxPath + '/product?action=view&id=' + id;
-                                        
-                                        // Final Image URL construction
                                         var finalImgUrl = img;
-                                        if (!img.startsWith('http') && !img.startsWith('/')) {
-                                            finalImgUrl = ctxPath + '/' + img;
-                                        } else if (img.startsWith('/') && !img.startsWith(ctxPath)) {
-                                            finalImgUrl = ctxPath + img;
-                                        }
+                                        if (!img.startsWith('http') && !img.startsWith('/')) finalImgUrl = ctxPath + '/' + img;
+                                        else if (img.startsWith('/') && !img.startsWith(ctxPath)) finalImgUrl = ctxPath + img;
 
                                         return '<div class="aisthea-chat-product-card">' +
                                                '  <a href="' + detailUrl + '" class="aisthea-product-img-link">' +
@@ -788,37 +779,47 @@
                                                '</div>';
                                     });
 
-                                    // 3. Support for various image formats
-                                    // 3a. Markdown Images ![alt](url)
+                                    // 3. Placeholder system to protect already-rendered HTML
+                                    var placeholders = [];
+                                    text = text.replace(/<[^>]+>/g, function(match) {
+                                        placeholders.push(match);
+                                        return '___PH' + (placeholders.length - 1) + '___';
+                                    });
+
+                                    // 4. Handle other raw formats in the remaining non-HTML text
+                                    // 4a. Markdown Images ![alt](url)
                                     text = text.replace(/!\[(.*?)\]\((.*?)\)/g, function(match, alt, url) {
                                         var finalUrl = url.trim();
                                         if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
                                         return '<div class="aisthea-chat-img-container"><img src="' + finalUrl + '" alt="' + alt + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + finalUrl + '\', \'_blank\')"></div>';
                                     });
 
-                                    // 3b. Legacy [img:URL] tags (RESTORED logic)
+                                    // 4b. Legacy [img:URL]
                                     text = text.replace(/\[img:(.*?)\]/g, function(match, url) {
                                         var finalUrl = url.trim();
                                         if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
                                         return '<div class="aisthea-chat-img-container"><img src="' + finalUrl + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + finalUrl + '\', \'_blank\')"></div>';
                                     });
 
-                                    // 3c. Raw Image URLs (png, jpg, jpeg, gif, webp, and Pinterest)
-                                    // Match URLs but ignore them if they are already part of an attribute or specific tag
-                                    var imgRegex = /(src=['"]|href=['"]|!\[.*?\]\(|\[img:|\[product_card:[^\]]*?\|)?(https?:\/\/[^\s<]+\.(?:png|jpg|jpeg|gif|webp)(?:\?[^\s<]*)?|https?:\/\/i\.pinimg\.com\/[^\s<]+)/gi;
-                                    text = text.replace(imgRegex, function(match, prefix, url) {
-                                        if (prefix) return match; 
+                                    // 4c. Naked Image URLs
+                                    var imgRegex = /(https?:\/\/[^\s<]+\.(?:png|jpg|jpeg|gif|webp)(?:\?[^\s<]*)?|https?:\/\/i\.pinimg\.com\/[^\s<]+)/gi;
+                                    text = text.replace(imgRegex, function(url) {
                                         return '<div class="aisthea-chat-img-container"><img src="' + url + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + url + '\', \'_blank\')"></div>';
                                     });
 
-                                    // 4. Remaining Markdown links [label](url)
+                                    // 4d. Remaining Markdown links [label](url)
                                     text = text.replace(/\[(.*?)\]\((.*?)\)/g, function(match, label, url) {
                                         var finalUrl = url.trim();
                                         if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
                                         return '<a href="' + finalUrl + '" class="aisthea-chat-link">' + label + ' <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.8em"></i></a>';
                                     });
 
-                                    // 5. New lines
+                                    // 5. Restore HTML tags
+                                    text = text.replace(/___PH(\d+)___/g, function(match, id) {
+                                        return placeholders[parseInt(id)];
+                                    });
+
+                                    // 6. New lines
                                     text = text.replace(/\n/g, '<br>');
                                 } catch (e) {
                                     console.error('[ChatWidget] Regex error:', e, text);

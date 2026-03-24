@@ -139,16 +139,18 @@
                                             }
                                         </style>
 
-                                        <!-- Xác định địa chỉ mặc định để hiển thị ban đầu -->
-                                        <%-- Tìm địa chỉ isDefault=true, nếu không có thì lấy địa chỉ đầu tiên --%>
-                                        <c:set var="defaultAddr" value="" />
-                                        <c:forEach var="a" items="${userAddresses}">
-                                            <c:if test="${a.isDefault && empty defaultAddr}">
-                                                <c:set var="defaultAddr" value="${a}" />
+                                        <!-- Identify the default address to display initially -->
+                                        <c:set var="defaultAddr" value="${null}" />
+                                        <c:if test="${not empty userAddresses}">
+                                            <c:forEach var="a" items="${userAddresses}">
+                                                <c:if test="${a.isDefault && empty defaultAddr}">
+                                                    <c:set var="defaultAddr" value="${a}" />
+                                                </c:if>
+                                            </c:forEach>
+                                            <%-- Fallback: If no default marked, pick the first one from address book --%>
+                                            <c:if test="${empty defaultAddr}">
+                                                <c:set var="defaultAddr" value="${userAddresses[0]}" />
                                             </c:if>
-                                        </c:forEach>
-                                        <c:if test="${empty defaultAddr && not empty userAddresses}">
-                                            <c:set var="defaultAddr" value="${userAddresses[0]}" />
                                         </c:if>
 
                                         <!-- Preview card (always visible, click to open list) -->
@@ -179,7 +181,7 @@
                                                                 ${defaultAddr.detailedAddress}
                                                             </c:when>
                                                             <c:otherwise>
-                                                                ${sessionScope.user.address}
+                                                                <span class="text-amber-500 font-medium italic">Chưa có địa chỉ. Vui lòng thêm mới.</span>
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </p>
@@ -201,7 +203,7 @@
                                                     <c:when test="${not empty userAddresses}">
                                                         <c:forEach var="addr" items="${userAddresses}">
                                                             <label
-                                                                class="address-option relative flex p-3.5 rounded-lg border-2 cursor-pointer transition-all ${addr.isDefault ? 'border-accent-blue bg-white/50' : 'border-slate-200 bg-white/20'}"
+                                                                class="address-option relative flex p-3.5 rounded-lg border-2 cursor-pointer transition-all ${addr.addressId == defaultAddr.addressId ? 'border-accent-blue bg-white/50' : 'border-slate-200 bg-white/20'}"
                                                                 data-addr-name="${addr.fullName}"
                                                                 data-addr-phone="${addr.phone}"
                                                                 data-addr-address="${addr.detailedAddress}"
@@ -210,7 +212,7 @@
                                                                     <input type="radio" name="addressSelection"
                                                                         value="${addr.addressId}"
                                                                         class="flex-shrink-0 text-accent-blue focus:ring-accent-blue"
-                                                                        ${addr.isDefault ? 'checked' : '' } />
+                                                                        ${addr.addressId == defaultAddr.addressId ? 'checked' : '' } />
                                                                     <div class="flex flex-col flex-1 min-w-0">
                                                                         <div class="flex items-center gap-2 flex-wrap">
                                                                             <span
@@ -232,30 +234,9 @@
                                                         </c:forEach>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <label
-                                                            class="address-option relative flex p-3.5 rounded-lg border-2 border-accent-blue bg-white/50 cursor-pointer"
-                                                            data-addr-name="${sessionScope.user.fullname}"
-                                                            data-addr-phone="${sessionScope.user.phone}"
-                                                            data-addr-address="${sessionScope.user.address}"
-                                                            onclick="selectAddressFromLabel(this)">
-                                                            <div class="flex items-center gap-3 w-full">
-                                                                <input type="radio" name="addressSelection"
-                                                                    value="profile"
-                                                                    class="flex-shrink-0 text-accent-blue focus:ring-accent-blue"
-                                                                    checked />
-                                                                <div class="flex flex-col flex-1 min-w-0">
-                                                                    <div class="flex items-center gap-2 flex-wrap">
-                                                                        <span
-                                                                            class="font-bold text-sm text-slate-800">${sessionScope.user.fullname}</span>
-                                                                        <span class="text-slate-400 text-xs">|</span>
-                                                                        <span
-                                                                            class="text-xs text-slate-500">${sessionScope.user.phone}</span>
-                                                                    </div>
-                                                                    <span
-                                                                        class="text-xs text-slate-500 mt-0.5 truncate">${sessionScope.user.address}</span>
-                                                                </div>
-                                                            </div>
-                                                        </label>
+                                                        <div class="p-4 text-center text-sm text-slate-500 italic bg-white/50 rounded-lg border border-dashed border-slate-300">
+                                                            Bạn chưa có địa chỉ nhận hàng nào được lưu. Vui lòng chọn "Thêm địa chỉ giao hàng khác".
+                                                        </div>
                                                     </c:otherwise>
                                                 </c:choose>
 
@@ -345,7 +326,7 @@
                                         <input type="hidden" name="phone" id="hiddenPhone"
                                             value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.phone}</c:when><c:otherwise>${sessionScope.user.phone}</c:otherwise></c:choose>">
                                         <input type="hidden" name="address" id="hiddenAddress"
-                                            value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.detailedAddress}</c:when><c:otherwise>${sessionScope.user.address}</c:otherwise></c:choose>">
+                                            value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.detailedAddress}</c:when><c:otherwise></c:otherwise></c:choose>">
 
                                         <script>
                                             function toggleAddressDropdown() {
@@ -648,7 +629,7 @@
                                         Order</h2>
                                     <!-- Item List -->
                                     <div class="space-y-6 mb-8 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                        <c:forEach var="item" items="${sessionScope.cart.items}">
+                                        <c:forEach var="item" items="${sessionScope.checkoutCart.items}">
                                             <div class="flex gap-4">
                                                 <div
                                                     class="w-20 h-24 flex-shrink-0 rounded-lg bg-slate-100 overflow-hidden">
@@ -694,7 +675,7 @@
                                         <div class="flex justify-between text-sm">
                                             <span class="text-slate-500">Subtotal</span>
                                             <span class="text-slate-900" id="subtotalDisplay">
-                                                <fmt:formatNumber value="${sessionScope.cart.totalPrice}"
+                                                <fmt:formatNumber value="${sessionScope.checkoutCart.totalPrice}"
                                                     type="currency" currencyCode="VND" maxFractionDigits="0" />
                                             </span>
                                         </div>
@@ -725,7 +706,7 @@
                                                 <span class="text-xl font-bold text-slate-900">Total</span>
                                                 <span class="text-xl font-bold text-slate-900" id="totalDisplay">
                                                     <fmt:formatNumber
-                                                        value="${not empty sessionScope.appliedDiscount ? sessionScope.cart.totalPrice - sessionScope.appliedDiscount : sessionScope.cart.totalPrice}"
+                                                        value="${not empty sessionScope.appliedDiscount ? sessionScope.checkoutCart.totalPrice - sessionScope.appliedDiscount : sessionScope.checkoutCart.totalPrice}"
                                                         type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                 </span>
                                             </div>
@@ -814,9 +795,8 @@
                                             <c:otherwise>
                                                 <c:forEach var="vc" items="${activeVouchers}">
                                                     <c:set var="canUse"
-                                                        value="${empty vc.minOrderValue or sessionScope.cart.totalPrice >= vc.minOrderValue}" />
-                                                    <div class="voucher-pick-card relative overflow-hidden rounded-xl border-2 transition-all duration-200 ${canUse ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-60'}"
-                                                        style="border-color:${canUse ? '#e2e8f0' : '#f1f5f9'}; background:${canUse ? 'linear-gradient(135deg,#fff 0%,#f8f9ff 100%)' : '#fafafa'};"
+                                                        value="${empty vc.minOrderValue or sessionScope.checkoutCart.totalPrice >= vc.minOrderValue}" />
+                                                    <div class="voucher-pick-card relative overflow-hidden rounded-xl border-2 transition-all duration-200 ${canUse ? 'cursor-pointer opacity-100 border-slate-200 bg-gradient-to-br from-white to-blue-50/30' : 'cursor-not-allowed opacity-60 border-slate-100 bg-slate-50'}"
                                                         onclick="${canUse ? 'pickVoucher(this)' : 'void(0)'}"
                                                         data-code="${vc.code}">
                                                         <%-- decorative notches --%>
@@ -831,9 +811,8 @@
                                                                 style="padding:14px 24px;display:flex;align-items:center;gap:14px;">
                                                                 <%-- icon --%>
                                                                     <div
-                                                                        style="flex-shrink:0;width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:${vc.discountType eq 'PERCENT' ? '#dbeafe' : '#d1fae5'};color:${vc.discountType eq 'PERCENT' ? '#1d4ed8' : '#065f46'};">
-                                                                        <span class="material-symbols-outlined"
-                                                                            style="font-size:1.2rem;">${vc.discountType
+                                                                        class="flex-shrink-0 w-[42px] h-[42px] rounded-xl flex items-center justify-center ${vc.discountType eq 'PERCENT' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}">
+                                                                        <span class="material-symbols-outlined text-lg">${vc.discountType
                                                                             eq 'PERCENT' ? 'percent' :
                                                                             'payments'}</span>
                                                                     </div>
@@ -910,7 +889,7 @@
                                                                                     style="font-size:0.66rem;color:#ef4444;margin-top:4px;">
                                                                                     ⚠ Cần mua thêm
                                                                                     <fmt:formatNumber
-                                                                                        value="${vc.minOrderValue - sessionScope.cart.totalPrice}"
+                                                                                        value="${vc.minOrderValue - sessionScope.checkoutCart.totalPrice}"
                                                                                         type="currency"
                                                                                         currencyCode="VND"
                                                                                         maxFractionDigits="0" /> để dùng
@@ -921,8 +900,7 @@
                                                                         <%-- discount badge --%>
                                                                             <div style="flex-shrink:0;">
                                                                                 <span
-                                                                                    class="inline-block px-2.5 py-1.5 rounded-lg text-sm font-extrabold"
-                                                                                    style="background:${vc.discountType eq 'PERCENT' ? '#eff6ff' : '#f0fdf4'};color:${vc.discountType eq 'PERCENT' ? '#1d4ed8' : '#065f46'};">
+                                                                                    class="inline-block px-2.5 py-1.5 rounded-lg text-sm font-extrabold ${vc.discountType eq 'PERCENT' ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'}">
                                                                                     <c:choose>
                                                                                         <c:when
                                                                                             test="${vc.discountType eq 'PERCENT'}">
@@ -1015,7 +993,7 @@
                     updateSelection('Card');
 
                     // ── Voucher AJAX ──────────────────────────────────────
-                    const cartTotal = ${ sessionScope.cart.totalPrice };
+                    const cartTotal = ${ sessionScope.checkoutCart.totalPrice };
 
                     async function applyVoucherCode() {
                         const code = document.getElementById('voucherCodeInput').value.trim();

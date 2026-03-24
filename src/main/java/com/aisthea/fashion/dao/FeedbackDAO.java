@@ -151,6 +151,66 @@ public class FeedbackDAO implements IFeedbackDAO {
         }
     }
 
+    /** Returns the feedback of userId for productId, or null if not reviewed yet. */
+    public Feedback getFeedbackByUserAndProduct(int userId, int productId) throws SQLException {
+        String sql = "SELECT f.*, u.fullname, u.username AS uname FROM feedback f " +
+                "LEFT JOIN users u ON f.userid = u.userid " +
+                "WHERE f.userid = ? AND f.productid = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapResultSetToFeedback(rs);
+            }
+        }
+        return null;
+    }
+
+    /** Returns a Set of productIds that the given user has already reviewed
+     *  FOR THE SPECIFIC ORDER (only feedbacks created on or after the order's creation date
+     *  are counted, so a new purchase of the same product can still be reviewed). */
+    public java.util.Set<Integer> getReviewedProductIdsForOrder(int userId, int orderId) throws SQLException {
+        // Get the order's creation date, then find feedbacks for this user+products of this order
+        // that were written on or after the order was placed.
+        String sql =
+            "SELECT DISTINCT f.productid FROM feedback f " +
+            "JOIN orders o ON o.orderid = ? " +
+            "WHERE f.userid = ? " +
+            "  AND f.productid IN (" +
+            "      SELECT pcs.productid FROM orderitems oi " +
+            "      JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid " +
+            "      WHERE oi.orderid = ?" +
+            "  ) " +
+            "  AND f.createdat >= o.createdat";
+        java.util.Set<Integer> set = new java.util.HashSet<>();
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.setInt(2, userId);
+            ps.setInt(3, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) set.add(rs.getInt("productid"));
+            }
+        }
+        return set;
+    }
+
+    /** @deprecated Use getReviewedProductIdsForOrder for per-order review checks. 
+     *  This global check is kept for other use cases. */
+    public java.util.Set<Integer> getReviewedProductIds(int userId) throws SQLException {
+        String sql = "SELECT productid FROM feedback WHERE userid = ?";
+        java.util.Set<Integer> set = new java.util.HashSet<>();
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) set.add(rs.getInt("productid"));
+            }
+        }
+        return set;
+    }
+
     public List<Feedback> getAllFeedbacks() throws SQLException {
         List<Feedback> list = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();

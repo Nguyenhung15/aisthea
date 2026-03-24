@@ -8,6 +8,7 @@ public class OrderItem {
     private int orderitemid;
     private int orderid;
     private int productcolorsizeid;
+    private int productId;
     private String productName; 
     private String color;
     private String size;
@@ -27,6 +28,9 @@ public class OrderItem {
     public void setProductName(String productName) {
         this.productName = productName;
     }
+
+    public int getProductId() { return productId; }
+    public void setProductId(int productId) { this.productId = productId; }
 
     public int getOrderitemid() {
         return orderitemid;

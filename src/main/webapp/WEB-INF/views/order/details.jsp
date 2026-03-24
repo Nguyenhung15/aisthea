@@ -146,7 +146,8 @@
                                             </div>
                                             <div class="divide-y divide-sky-50">
                                                 <c:forEach var="item" items="${order.items}">
-                                                    <div class="p-6 flex items-center gap-6">
+                                                    <a href="${pageContext.request.contextPath}/product?action=view&id=${item.productId}"
+                                                       class="p-6 flex items-center gap-6 hover:bg-sky-50/40 transition-colors block">
                                                         <div
                                                             class="w-20 h-24 flex-shrink-0 rounded-lg bg-slate-100 overflow-hidden shadow-sm">
                                                             <img class="w-full h-full object-cover"
@@ -154,15 +155,11 @@
                                                                 onerror="this.src='https://placehold.co/100x120?text=No+Image'" />
                                                         </div>
                                                         <div class="flex-grow">
-                                                            <h3 class="text-sm font-semibold text-slate-900">
+                                                            <h3 class="text-sm font-semibold text-slate-900 hover:text-accent-blue transition-colors">
                                                                 ${item.productName}
                                                             </h3>
-                                                            <p class="text-xs text-slate-500 italic mt-1">${item.color}
-                                                                / Size
-                                                                ${item.size}</p>
-                                                            <p
-                                                                class="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">
-                                                                Qty: ${item.quantity}</p>
+                                                            <p class="text-xs text-slate-500 italic mt-1">${item.color} / Size ${item.size}</p>
+                                                            <p class="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-wider">Qty: ${item.quantity}</p>
                                                         </div>
                                                         <div class="text-right">
                                                             <p class="text-sm font-bold text-slate-900">
@@ -171,11 +168,10 @@
                                                                     maxFractionDigits="0" />
                                                             </p>
                                                             <p class="text-[10px] text-slate-400 mt-1">
-                                                                <fmt:formatNumber value="${item.price}" type="number" />
-                                                                /unit
+                                                                <fmt:formatNumber value="${item.price}" type="number" />/unit
                                                             </p>
                                                         </div>
-                                                    </div>
+                                                    </a>
                                                 </c:forEach>
                                             </div>
                                         </div>
@@ -194,10 +190,45 @@
                                                             pattern="MMM dd, yyyy" />
                                                     </span>
                                                 </div>
+                                                <%-- Payment Method --%>
+                                                <div class="flex justify-between">
+                                                    <span class="text-slate-500">Payment</span>
+                                                    <span class="font-semibold">
+                                                        <c:choose>
+                                                            <c:when test="${order.paymentMethod eq 'QR'}">
+                                                                <span class="text-blue-600">&#128373; QR / Online</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="text-slate-700">&#128181; COD / Tiền mặt</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </span>
+                                                </div>
+                                                <%-- Paid / Unpaid badge --%>
+                                                <div class="flex justify-between">
+                                                    <span class="text-slate-500">Paid Status</span>
+                                                    <c:choose>
+                                                        <c:when test="${order.status eq 'Paid' or order.status eq 'Completed'}">  
+                                                            <span class="text-emerald-600 font-bold">&#10003; Đã thanh toán</span>
+                                                        </c:when>
+                                                        <c:when test="${order.status eq 'Cancelled'}">
+                                                            <span class="text-red-500 font-bold">&#10007; Đã hủy</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="text-amber-600 font-bold">&#9201; Chưa thanh toán</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </div>
                                                 <div class="flex justify-between">
                                                     <span class="text-slate-500">Shipping</span>
                                                     <span class="text-emerald-600 font-bold italic">Complimentary</span>
                                                 </div>
+                                                <c:if test="${order.discountAmount != null && order.discountAmount > 0}">
+                                                <div class="flex justify-between">
+                                                    <span class="text-slate-500">Giảm giá</span>
+                                                    <span class="text-red-500 font-semibold">-<fmt:formatNumber value="${order.discountAmount}" type="currency" currencyCode="VND" maxFractionDigits="0" /></span>
+                                                </div>
+                                                </c:if>
                                                 <div
                                                     class="pt-4 border-t border-sky-100 flex justify-between items-baseline">
                                                     <span class="text-lg font-bold text-slate-900">Total</span>
@@ -231,25 +262,35 @@
                                                     <button onclick="openCancelModal()"
                                                         class="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2">
                                                         <span class="material-symbols-outlined text-sm">cancel</span>
-                                                        Cancel
-                                                        Order
+                                                        Cancel Order
                                                     </button>
                                                 </c:if>
 
+                                                <%-- Smart review buttons per product for Completed orders --%>
                                                 <c:if test="${order.status == 'Completed'}">
-                                                    <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
-                                                        class="w-full bg-accent-blue text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-primary transition-all flex items-center justify-center gap-2">
-                                                        <span class="material-symbols-outlined text-sm">star</span>
-                                                        Write a
-                                                        Review
-                                                    </a>
+                                                    <c:forEach var="item" items="${order.items}">
+                                                        <c:choose>
+                                                            <c:when test="${!reviewedProductIds.contains(item.productId)}">
+                                                                <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}&productId=${item.productId}"
+                                                                    class="w-full bg-accent-blue text-white py-3 rounded-lg text-[10px] uppercase tracking-[0.15em] font-bold hover:bg-primary transition-all flex items-center justify-center gap-2">
+                                                                    <span class="material-symbols-outlined text-sm">star</span>
+                                                                    Đánh giá: ${item.productName}
+                                                                </a>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}&productId=${item.productId}"
+                                                                    class="w-full bg-amber-500 text-white py-3 rounded-lg text-[10px] uppercase tracking-[0.15em] font-bold hover:bg-amber-600 transition-all flex items-center justify-center gap-2">
+                                                                    <span class="material-symbols-outlined text-sm">edit</span>
+                                                                    Sửa đánh giá: ${item.productName}
+                                                                </a>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </c:forEach>
                                                 </c:if>
 
                                                 <a href="${pageContext.request.contextPath}/order?action=history"
                                                     class="w-full bg-slate-900 text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 text-center">
-                                                    <span class="material-icons-outlined text-sm">arrow_back</span> Back
-                                                    to
-                                                    History
+                                                    <span class="material-icons-outlined text-sm">arrow_back</span> Back to History
                                                 </a>
                                             </div>
                                         </div>

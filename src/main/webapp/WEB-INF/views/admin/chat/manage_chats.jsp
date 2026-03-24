@@ -398,7 +398,7 @@
                         // 2. Product Card [product_card:ID|NAME|PRICE|IMAGE]
                         text = text.replace(/\[product_card:(.*?)\]/g, function(match, content) {
                             var parts = content.split('|');
-                            if (parts.length < 4) return '';
+                            if (parts.length < 4) return match;
                             var id = parts[0].trim(), name = parts[1].trim(), price = parts[2].trim(), img = parts[3].trim();
                             var finalImgUrl = img;
                             if (!img.startsWith('http') && !img.startsWith('/')) finalImgUrl = ctxPath + '/' + img;
@@ -413,36 +413,47 @@
                                    '</div>';
                         });
 
-                        // 3. Various Image formats
-                        // 3a. Markdown Images ![alt](url)
+                        // 3. Placeholder system to protect HTML
+                        var placeholders = [];
+                        text = text.replace(/<[^>]+>/g, function(match) {
+                            placeholders.push(match);
+                            return '___PH' + (placeholders.length - 1) + '___';
+                        });
+
+                        // 4. Various Image formats
+                        // 4a. Markdown Images ![alt](url)
                         text = text.replace(/!\[(.*?)\]\((.*?)\)/g, function(match, alt, url) {
                             var finalUrl = url.trim();
                             if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
                             return '<div class="aisthea-chat-img-container"><img src="' + finalUrl + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + finalUrl + '\', \'_blank\')"></div>';
                         });
 
-                        // 3b. [img:url]
+                        // 4b. [img:url]
                         text = text.replace(/\[img:(.*?)\]/g, function(match, url) {
                             var finalUrl = url.trim();
                             if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
                             return '<div class="aisthea-chat-img-container"><img src="' + finalUrl + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + finalUrl + '\', \'_blank\')"></div>';
                         });
 
-                        // 3c. Raw Image URLs (png, jpg, jpeg, gif, webp, and Pinterest)
-                        var imgRegex = /(src=['"]|href=['"]|!\[.*?\]\(|\[img:|\[product_card:[^\]]*?\|)?(https?:\/\/[^\s<]+\.(?:png|jpg|jpeg|gif|webp)(?:\?[^\s<]*)?|https?:\/\/i\.pinimg\.com\/[^\s<]+)/gi;
-                        text = text.replace(imgRegex, function(match, prefix, url) {
-                            if (prefix) return match; 
+                        // 4c. Raw image URLs
+                        var imgRegex = /(https?:\/\/[^\s<]+\.(?:png|jpg|jpeg|gif|webp)(?:\?[^\s<]*)?|https?:\/\/i\.pinimg\.com\/[^\s<]+)/gi;
+                        text = text.replace(imgRegex, function(url) {
                             return '<div class="aisthea-chat-img-container"><img src="' + url + '" class="aisthea-chat-inline-img" onclick="window.open(\'' + url + '\', \'_blank\')"></div>';
                         });
 
-                        // 4. Remaining links [label](url)
+                        // 4d. Remaining links [label](url)
                         text = text.replace(/\[(.*?)\]\((.*?)\)/g, function(match, label, url) {
                             var finalUrl = url.trim();
                             if (finalUrl.startsWith('/')) finalUrl = ctxPath + finalUrl;
                             return '<a href="' + finalUrl + '" target="_blank" style="color:var(--color-primary)">' + label + '</a>';
                         });
 
-                        // 5. New lines
+                        // 5. Restore HTML
+                        text = text.replace(/___PH(\d+)___/g, function(match, id) {
+                            return placeholders[parseInt(id)];
+                        });
+
+                        // 6. New lines
                         text = text.replace(/\n/g, '<br>');
                     } catch (e) {
                         console.error('[AdminChat] Formatting error:', e, text);

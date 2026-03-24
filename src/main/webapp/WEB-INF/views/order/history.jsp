@@ -346,14 +346,42 @@
                                                                         type="currency" currencyCode="VND"
                                                                         maxFractionDigits="0" />
                                                                 </p>
+                                                                <%-- Payment method badge --%>
+                                                                <c:set var="pm" value="${order.paymentMethod}" />
+                                                                <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full
+                                                                    ${pm eq 'QR' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}">
+                                                                    <c:choose>
+                                                                        <c:when test="${pm eq 'QR'}">&#128373; QR / Online</c:when>
+                                                                        <c:otherwise>&#128181; COD / Tiền mặt</c:otherwise>
+                                                                    </c:choose>
+                                                                </span>
                                                             </div>
                                                             <div class="flex items-center gap-3">
                                                                 <c:if test="${order.status eq 'Completed'}">
-                                                                    <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
-                                                                        class="px-5 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-600 transition-all duration-300 flex items-center gap-1.5">
-                                                                        <i class="fa-regular fa-star text-xs"></i>
-                                                                        Đánh giá
-                                                                    </a>
+                                                                    <%-- Check if EVERY item has been reviewed FOR THIS ORDER --%>
+                                                                    <c:set var="orderReviewedSet" value="${perOrderReviewedMap[order.orderid]}"/>
+                                                                    <c:set var="anyUnreviewed" value="false"/>
+                                                                    <c:forEach var="item" items="${order.items}">
+                                                                        <c:if test="${orderReviewedSet == null || !orderReviewedSet.contains(item.productId)}">
+                                                                            <c:set var="anyUnreviewed" value="true"/>
+                                                                        </c:if>
+                                                                    </c:forEach>
+                                                                    <c:choose>
+                                                                        <c:when test="${anyUnreviewed}">
+                                                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
+                                                                                class="px-5 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-600 transition-all duration-300 flex items-center gap-1.5">
+                                                                                <i class="fa-regular fa-star text-xs"></i>
+                                                                                Đánh giá
+                                                                            </a>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <a href="${pageContext.request.contextPath}/feedback?orderId=${order.orderid}"
+                                                                                class="px-5 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-amber-600 transition-all duration-300 flex items-center gap-1.5">
+                                                                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                                                                Sửa đánh giá
+                                                                            </a>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
                                                                 </c:if>
                                                                 <a href="${pageContext.request.contextPath}/order?action=view&id=${order.orderid}"
                                                                     class="px-5 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 hover:text-primary hover:border-primary/30 transition-all duration-300">
@@ -361,6 +389,7 @@
                                                                 </a>
                                                             </div>
                                                         </div>
+
                                                     </div>
                                                 </c:forEach>
                                             </c:otherwise>

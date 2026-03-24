@@ -128,6 +128,23 @@ public class OrderServlet extends HttpServlet {
 
         List<Order> orderList = orderService.getOrderHistory(user.getUserId());
         request.setAttribute("orderList", orderList);
+
+        // Build a per-order map: orderId -> Set<productId reviewed for that order>
+        // This lets each order independently show "Đánh giá" / "Sửa đánh giá".
+        try {
+            com.aisthea.fashion.dao.FeedbackDAO fbDao = new com.aisthea.fashion.dao.FeedbackDAO();
+            java.util.Map<Integer, java.util.Set<Integer>> perOrderReviewed = new java.util.HashMap<>();
+            for (Order o : orderList) {
+                if ("Completed".equalsIgnoreCase(o.getStatus())) {
+                    perOrderReviewed.put(o.getOrderid(),
+                        fbDao.getReviewedProductIdsForOrder(user.getUserId(), o.getOrderid()));
+                }
+            }
+            request.setAttribute("perOrderReviewedMap", perOrderReviewed);
+        } catch (Exception e) {
+            request.setAttribute("perOrderReviewedMap", new java.util.HashMap<>());
+        }
+
         request.getRequestDispatcher("/WEB-INF/views/order/history.jsp").forward(request, response);
     }
 
@@ -181,23 +198,30 @@ public class OrderServlet extends HttpServlet {
                 order = orderService.getOrderDetails(orderId, user.getUserId());
             }
 
-            // If payment was success, restore originalCart (Buy Now flow) or clear cart
-            // (normal checkout)
+            // If payment was success, remove processed items from main cart
             if ("success".equalsIgnoreCase(paymentStatus)) {
                 HttpSession sess = request.getSession();
-                Cart originalCart = (Cart) sess.getAttribute("originalCart");
-                if (originalCart != null) {
-                    // Buy Now flow: restore the user's regular cart
-                    sess.setAttribute("cart", originalCart);
-                    sess.removeAttribute("originalCart");
-                } else {
-                    // Normal checkout flow: clear the cart
-                    sess.setAttribute("cart", new com.aisthea.fashion.model.Cart());
+                Cart checkoutCart = (Cart) sess.getAttribute("checkoutCart");
+                Cart mainCart = (Cart) sess.getAttribute("cart");
+                if (checkoutCart != null && mainCart != null) {
+                    for (com.aisthea.fashion.model.CartItem item : checkoutCart.getItems()) {
+                        mainCart.removeItem(item.getProductColorSizeId());
+                    }
                 }
+                sess.removeAttribute("checkoutCart");
             }
 
             if (order != null) {
                 request.setAttribute("order", order);
+                // Per-ORDER review check: user can review the same product again if bought in a new order
+                try {
+                    com.aisthea.fashion.dao.FeedbackDAO fbDao = new com.aisthea.fashion.dao.FeedbackDAO();
+                    java.util.Set<Integer> reviewedIds =
+                        fbDao.getReviewedProductIdsForOrder(user.getUserId(), order.getOrderid());
+                    request.setAttribute("reviewedProductIds", reviewedIds);
+                } catch (Exception ignored) {
+                    request.setAttribute("reviewedProductIds", new java.util.HashSet<>());
+                }
                 request.getRequestDispatcher("/WEB-INF/views/order/details.jsp").forward(request, response);
             } else {
                 response.sendRedirect(request.getContextPath() + "/order?action=history&error=notfound");
@@ -212,7 +236,7 @@ public class OrderServlet extends HttpServlet {
             throws Exception {
 
         HttpSession session = request.getSession();
-        Cart cart = (Cart) session.getAttribute("cart");
+        Cart cart = (Cart) session.getAttribute("checkoutCart");
 
         if (cart == null || cart.isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/cart?error=empty");
@@ -276,14 +300,14 @@ public class OrderServlet extends HttpServlet {
 
             sendOrderEmail(newOrder);
 
-            // Restore originalCart if this was a "Buy Now" flow, otherwise clear cart
-            Cart originalCart = (Cart) session.getAttribute("originalCart");
-            if (originalCart != null) {
-                session.setAttribute("cart", originalCart);
-                session.removeAttribute("originalCart");
-            } else {
-                session.setAttribute("cart", new Cart());
+            // Remove purchased items from the main cart
+            Cart mainCart = (Cart) session.getAttribute("cart");
+            if (mainCart != null && cart != null) {
+                for (com.aisthea.fashion.model.CartItem item : cart.getItems()) {
+                    mainCart.removeItem(item.getProductColorSizeId());
+                }
             }
+            session.removeAttribute("checkoutCart");
 
             // Refresh session user after placing order
             User freshUser = new com.aisthea.fashion.dao.UserDAO().selectUser(user.getUserId());

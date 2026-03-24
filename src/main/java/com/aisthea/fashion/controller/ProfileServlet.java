@@ -63,7 +63,6 @@ public class ProfileServlet extends HttpServlet {
         String email = request.getParameter("email");
         String gender = request.getParameter("gender");
         String phone = request.getParameter("phone");
-        String address = request.getParameter("address");
         String dobStr = request.getParameter("dob");
 
         // Server-side phone validation: must be empty OR exactly 10 digits
@@ -76,7 +75,6 @@ public class ProfileServlet extends HttpServlet {
         user.setEmail(email);
         user.setGender(gender);
         user.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
-        user.setAddress(address);
 
         if (dobStr != null && !dobStr.isEmpty()) {
             try {

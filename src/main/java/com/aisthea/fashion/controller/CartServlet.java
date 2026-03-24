@@ -28,10 +28,49 @@ public class CartServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         Cart cart = (Cart) session.getAttribute("cart");
         if (cart == null) {
-            cart = new Cart();
+            com.aisthea.fashion.model.User user = (com.aisthea.fashion.model.User) session.getAttribute("user");
+            Integer userId = (user != null) ? user.getUserId() : null;
+            String sessionId = session.getId();
+            
+            Cart dbCart = new com.aisthea.fashion.dao.CartDAO().getCart(userId, sessionId);
+            if(dbCart != null) {
+                cart = dbCart;
+            } else {
+                cart = new Cart();
+            }
             session.setAttribute("cart", cart);
         }
         return cart;
+    }
+
+    private void syncDbOnItemChange(HttpServletRequest request, CartItem item) {
+        if(item == null) return;
+        HttpSession session = request.getSession(true);
+        com.aisthea.fashion.model.User user = (com.aisthea.fashion.model.User) session.getAttribute("user");
+        Integer userId = (user != null) ? user.getUserId() : null;
+        String sessionId = session.getId();
+        
+        com.aisthea.fashion.dao.CartDAO cd = new com.aisthea.fashion.dao.CartDAO();
+        Integer cartId = cd.getCartId(userId, sessionId);
+        if (cartId == null) {
+            cartId = cd.createCart(userId, sessionId);
+        }
+        if (cartId != null) {
+            cd.addOrUpdateItem(cartId, item);
+        }
+    }
+
+    private void syncDbOnRemove(HttpServletRequest request, int pcsId) {
+        HttpSession session = request.getSession(true);
+        com.aisthea.fashion.model.User user = (com.aisthea.fashion.model.User) session.getAttribute("user");
+        Integer userId = (user != null) ? user.getUserId() : null;
+        String sessionId = session.getId();
+        
+        com.aisthea.fashion.dao.CartDAO cd = new com.aisthea.fashion.dao.CartDAO();
+        Integer cartId = cd.getCartId(userId, sessionId);
+        if (cartId != null) {
+            cd.removeItem(cartId, pcsId);
+        }
     }
 
     @Override
@@ -51,15 +90,8 @@ public class CartServlet extends HttpServlet {
             action = "view";
         }
 
-        // Restore original cart ONLY if NOT in checkout flow
-        if (!"checkout".equals(action)) {
-            Cart savedOriginal = (Cart) session.getAttribute("originalCart");
-            if (savedOriginal != null) {
-                // If user is returning to /cart from a "Buy Now" flow, restore their items
-                session.setAttribute("cart", savedOriginal);
-                session.removeAttribute("originalCart");
-                logger.info("Restored original cart for user.");
-            }
+        if (action == null) {
+            action = "view";
         }
 
         Cart cart = (Cart) session.getAttribute("cart");
@@ -69,6 +101,7 @@ public class CartServlet extends HttpServlet {
             if ("remove".equals(action)) {
                 int pcsId = Integer.parseInt(request.getParameter("id"));
                 cart.removeItem(pcsId);
+                syncDbOnRemove(request, pcsId);
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
             }
@@ -80,7 +113,7 @@ public class CartServlet extends HttpServlet {
 
         // Handle /checkout route
         if ("checkout".equals(action)) {
-            Cart checkoutCart = (Cart) session.getAttribute("cart");
+            Cart checkoutCart = (Cart) session.getAttribute("checkoutCart");
             if (checkoutCart == null || checkoutCart.isEmpty()) {
                 response.sendRedirect(request.getContextPath() + "/cart");
                 return;
@@ -94,6 +127,18 @@ public class CartServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/login?returnUrl="
                         + java.net.URLEncoder.encode(checkoutUrl, "UTF-8"));
                 return;
+            }
+
+            // Refresh user session data to ensure profile address is latest
+            try {
+                com.aisthea.fashion.model.User freshUser = new com.aisthea.fashion.dao.UserDAO().selectUser(user.getUserId());
+                if (freshUser != null) {
+                    freshUser.setPassword(null);
+                    session.setAttribute("user", freshUser);
+                    user = freshUser;
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to refresh user in CartServlet: " + e.getMessage());
             }
 
             // Load active vouchers for the "pick voucher" panel
@@ -129,72 +174,128 @@ public class CartServlet extends HttpServlet {
         try {
             if ("add".equals(action)) {
                 Cart cart = getCartFromSession(request);
-
-                if (session.getAttribute("originalCart") != null) {
-                    session.removeAttribute("originalCart");
-                    logger.info("Cleared temp originalCart on 'add' action.");
+                boolean addSuccess = handleAddAction(request, cart);
+                if (addSuccess) {
+                    int pcsId = Integer.parseInt(request.getParameter("productColorSizeId"));
+                    syncDbOnItemChange(request, cart.getItem(pcsId));
                 }
 
-                boolean addSuccess = handleAddAction(request, cart);
+                boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                        || "true".equals(request.getParameter("ajax"));
 
-                if (addSuccess) {
-                    // AJAX request?
-                    boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
-                            || "true".equals(request.getParameter("ajax"));
-                    if (isAjax) {
-                        Cart cart2 = getCartFromSession(request);
-                        int cartCount = cart2.getTotalQuantity();
-                        response.setContentType("application/json;charset=UTF-8");
-                        PrintWriter out = response.getWriter();
-                        out.print("{\"success\":true,\"cartCount\":" + cartCount + "}");
-                        out.flush();
-                        return;
+                if (isAjax) {
+                    response.setContentType("application/json;charset=UTF-8");
+                    PrintWriter out = response.getWriter();
+                    if (addSuccess) {
+                        out.print("{\"success\":true,\"cartCount\":" + cart.getTotalQuantity() + "}");
+                    } else {
+                        out.print("{\"success\":false,\"message\":\"Số lượng vượt quá tồn kho hoặc sản phẩm không hợp lệ.\"}");
                     }
+                    out.flush();
+                    return;
+                }
+                
+                if (addSuccess) {
                     redirectUrl = request.getContextPath() + "/product?action=view&id=" + productId + "&added=true";
                 } else {
-                    boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
-                            || "true".equals(request.getParameter("ajax"));
-                    if (isAjax) {
-                        response.setContentType("application/json;charset=UTF-8");
-                        PrintWriter out = response.getWriter();
-                        out.print("{\"success\":false,\"message\":\"Out of stock or invalid variant\"}");
-                        out.flush();
-                        return;
-                    }
                     redirectUrl = request.getContextPath() + "/product?action=view&id=" + productId + "&error=stock";
                 }
 
             } else if ("buy".equals(action)) {
-
-                Cart originalCart = getCartFromSession(request);
-                session.setAttribute("originalCart", new Cart(originalCart));
-
                 Cart buyNowCart = new Cart();
                 boolean addSuccess = handleAddAction(request, buyNowCart);
 
                 if (buyNowCart.isEmpty() || !addSuccess) {
-                    logger.warning("Buy Now failed, item not added (likely out of stock).");
                     redirectUrl = request.getContextPath() + "/product?action=view&id=" + productId + "&error=stock";
-                    session.removeAttribute("originalCart");
                 } else {
-                    session.setAttribute("cart", buyNowCart);
+                    session.setAttribute("checkoutCart", buyNowCart);
+                    redirectUrl = request.getContextPath() + "/checkout";
+                }
+
+            } else if ("prepareCheckout".equals(action)) {
+                Cart mainCart = getCartFromSession(request);
+                Cart checkoutCart = new Cart();
+                
+                String[] selectedIds = request.getParameterValues("selectedItems");
+                if (selectedIds != null) {
+                    for (String idStr : selectedIds) {
+                        try {
+                            int pcsId = Integer.parseInt(idStr);
+                            CartItem item = mainCart.getItem(pcsId);
+                            if (item != null) {
+                                checkoutCart.addItem(new CartItem(item));
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+                
+                if (checkoutCart.isEmpty()) {
+                    session.setAttribute("error", "Vui lòng chọn ít nhất một sản phẩm để thanh toán.");
+                    redirectUrl = request.getContextPath() + "/cart";
+                } else {
+                    session.setAttribute("checkoutCart", checkoutCart);
                     redirectUrl = request.getContextPath() + "/checkout";
                 }
 
             } else if ("update".equals(action)) {
-                if (session.getAttribute("originalCart") != null) {
-                    session.removeAttribute("originalCart");
-                }
                 Cart cart = getCartFromSession(request);
                 handleUpdateAction(request, cart);
+                
+                int pcsId = Integer.parseInt(request.getParameter("id"));
+                CartItem item = cart.getItem(pcsId);
+                if (item != null && item.getQuantity() > 0) {
+                    syncDbOnItemChange(request, item);
+                } else {
+                    syncDbOnRemove(request, pcsId);
+                }
+
+                boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                        || "true".equals(request.getParameter("ajax"));
+                if (isAjax) {
+                    response.setContentType("application/json;charset=UTF-8");
+                    PrintWriter out = response.getWriter();
+                    out.print("{");
+                    out.print("\"success\":true");
+                    out.print(",\"itemSubtotal\":" + (item != null ? item.getSubtotal() : 0));
+                    out.print(",\"cartTotal\":" + cart.getTotalPrice());
+                    out.print(",\"cartCount\":" + cart.getTotalQuantity());
+                    out.print(",\"newQuantity\":" + (item != null ? item.getQuantity() : 0));
+                    String errorRaw = session.getAttribute("error") != null ? session.getAttribute("error").toString() : "";
+                    String errorEscaped = errorRaw.replace("\"", "\\\"");
+                    out.print(",\"error\":\"" + errorEscaped + "\"");
+                    out.print("}");
+                    session.removeAttribute("error");
+                    out.flush();
+                    return;
+                }
+            } else if ("remove".equals(action)) {
+                 Cart cart = getCartFromSession(request);
+                 int pcsId = Integer.parseInt(request.getParameter("id"));
+                 cart.removeItem(pcsId);
+                 syncDbOnRemove(request, pcsId);
+                 
+                 boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                        || "true".equals(request.getParameter("ajax"));
+                 if (isAjax) {
+                     response.setContentType("application/json;charset=UTF-8");
+                     PrintWriter out = response.getWriter();
+                     out.print("{\"success\":true,\"cartTotal\":" + cart.getTotalPrice() + ",\"cartCount\":" + cart.getTotalQuantity() + "}");
+                     out.flush();
+                     return;
+                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.severe("Error in Cart doPost (action=" + action + "): " + e.getMessage());
-            e.printStackTrace();
+            boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                    || "true".equals(request.getParameter("ajax"));
+            if (isAjax) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().print("{\"success\":false,\"message\":\"Exception: " + e.getClass().getSimpleName() + " - " + (e.getMessage() != null ? e.getMessage().replace("\"", "'") : "null") + "\"}");
+                return;
+            }
             if (productId != null && !productId.isEmpty()) {
                 redirectUrl = request.getContextPath() + "/product?action=view&id=" + productId + "&error=true";
             }
-            session.removeAttribute("originalCart");
         }
 
         response.sendRedirect(redirectUrl);

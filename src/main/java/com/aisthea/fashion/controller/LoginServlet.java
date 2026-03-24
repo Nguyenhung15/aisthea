@@ -6,7 +6,7 @@ import com.aisthea.fashion.model.LoginResult;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.IUserService;
 import com.aisthea.fashion.service.UserService;
-import com.aisthea.fashion.util.CartStore;
+import com.aisthea.fashion.dao.CartDAO;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.*;
@@ -68,13 +68,10 @@ public class LoginServlet extends HttpServlet {
                 HttpSession session = request.getSession();
                 session.setAttribute("user", user);
 
-                // Restore cart saved at logout time and merge with current session cart.
-                // popAndMerge returns null when there is no saved snapshot —
-                // in that case we must NOT touch the session cart (it may contain
-                // a buyNowCart or guest items that should be preserved).
-                Cart merged = CartStore.popAndMerge(
-                        user.getUserId(),
-                        (Cart) session.getAttribute("cart"));
+                // Merge session/guest cart into user cart via DB
+                CartDAO cartDao = new CartDAO();
+                cartDao.mergeCarts(session.getId(), user.getUserId());
+                Cart merged = cartDao.getCart(user.getUserId(), null);
                 if (merged != null) {
                     session.setAttribute("cart", merged);
                 }

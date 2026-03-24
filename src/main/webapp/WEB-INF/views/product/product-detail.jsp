@@ -1381,10 +1381,96 @@
                         </div>
                     </div>
 
+                    <!-- Tiny Toast for Product Detail -->
+                    <div id="pd-toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[10000] transform transition-all duration-500 opacity-0 translate-y-10 pointer-events-none">
+                        <div class="bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-4 min-w-[300px] border border-white/10">
+                             <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                <span id="pd-toast-icon" class="material-icons-outlined text-emerald-400 text-lg">check_circle</span>
+                             </div>
+                             <div class="flex flex-col">
+                                <span id="pd-toast-msg" class="text-xs font-bold uppercase tracking-[0.2em]">Sản phẩm đã được thêm</span>
+                                <a href="${pageContext.request.contextPath}/cart" class="text-[10px] text-accent-blue font-bold uppercase tracking-widest hover:underline mt-0.5">Xem giỏ hàng →</a>
+                             </div>
+                        </div>
+                    </div>
+
                     <script>
                         var _ctxPath = '${pageContext.request.contextPath}';
                         var _currentUrl = window.location.href;
 
+                        // ─── AJAX Add to Cart ───
+                        const cartForm = document.getElementById('cartForm');
+                        if (cartForm) {
+                            cartForm.addEventListener('submit', function(e) {
+                                const action = cartForm.querySelector('input[name="action"]').value;
+                                if (action === 'add') {
+                                    e.preventDefault();
+                                    const btn = document.getElementById('add-to-cart-btn');
+                                    const originalContent = btn.innerHTML;
+                                    
+                                    // Visual feedback
+                                    btn.disabled = true;
+                                    btn.innerHTML = '<span class="animate-spin material-symbols-outlined text-base">progress_activity</span>';
+
+                                    fetch(cartForm.getAttribute('action'), {
+                                        method: 'POST',
+                                        body: new URLSearchParams(new FormData(cartForm)),
+                                        headers: {
+                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                            'X-Requested-With': 'XMLHttpRequest'
+                                        }
+                                    })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            showPdToast('Đã thêm vào giỏ hàng!', 'success');
+                                            // Update badge
+                                            const badge = document.getElementById('cart-badge');
+                                            if (badge) {
+                                                badge.textContent = data.cartCount;
+                                                badge.classList.remove('hidden');
+                                                // Bounce effect
+                                                badge.style.transform = 'scale(1.4)';
+                                                setTimeout(() => badge.style.transform = 'scale(1)', 300);
+                                            }
+                                        } else {
+                                            showPdToast(data.message || 'Lỗi khi thêm vào giỏ', 'error');
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error(err);
+                                        showPdToast('Lỗi kết nối', 'error');
+                                    })
+                                    .finally(() => {
+                                        btn.disabled = false;
+                                        btn.innerHTML = originalContent;
+                                    });
+                                }
+                            });
+                        }
+
+                        function showPdToast(msg, type = 'success') {
+                            const toast = document.getElementById('pd-toast');
+                            const msgEl = document.getElementById('pd-toast-msg');
+                            const iconEl = document.getElementById('pd-toast-icon');
+                            
+                            msgEl.textContent = msg;
+                            if (type === 'success') {
+                                iconEl.textContent = 'check_circle';
+                                iconEl.className = 'material-icons-outlined text-emerald-400 text-lg';
+                            } else {
+                                iconEl.textContent = 'error';
+                                iconEl.className = 'material-icons-outlined text-red-400 text-lg';
+                            }
+
+                            toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                            toast.classList.add('opacity-100', 'translate-y-0');
+
+                            setTimeout(() => {
+                                toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+                                toast.classList.remove('opacity-100', 'translate-y-0');
+                            }, 4000);
+                        }
                         // ─── Edit modal ───
                         var _editSelectedStar = 5;
 
@@ -1392,7 +1478,7 @@
                             document.getElementById('editFbId').value = fbId;
                             document.getElementById('editComment').value = comment;
                             document.getElementById('editRedirectUrl').value = _currentUrl;
-                            document.getElementById('editFbForm').action = _ctxPath + '/feedback';
+                            document.getElementById('editFbForm').setAttribute('action', _ctxPath + '/feedback');
                             _editSelectedStar = rating;
                             renderEditStars(rating);
                             document.getElementById('editRatingVal').value = rating;
@@ -1425,7 +1511,7 @@
                         function openDeleteModal(fbId, ctx) {
                             document.getElementById('deleteFbId').value = fbId;
                             document.getElementById('deleteRedirectUrl').value = _currentUrl;
-                            document.getElementById('deleteFbForm').action = _ctxPath + '/feedback';
+                            document.getElementById('deleteFbForm').setAttribute('action', _ctxPath + '/feedback');
                             document.getElementById('deleteFbModal').classList.remove('hidden');
                             document.body.style.overflow = 'hidden';
                         }

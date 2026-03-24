@@ -186,11 +186,7 @@
                                                 <input type="text" name="phone" value="${user.phone}"
                                                     class="lux-form-input">
                                             </div>
-                                            <div class="lux-form-group full-width">
-                                                <label class="lux-form-label">Address</label>
-                                                <input type="text" name="address" value="${user.address}"
-                                                    class="lux-form-input">
-                                            </div>
+
                                             <div class="lux-form-group">
                                                 <label class="lux-form-label">Role</label>
                                                 <select name="role" class="lux-form-select">

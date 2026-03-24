@@ -13,7 +13,10 @@ public class OrderItemDAO implements IOrderItemDAO {
 
     private static final String INSERT_ORDER_ITEM = "INSERT INTO orderitems (orderid, productcolorsizeid, color, size, quantity, price, image_url, product_name) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    private static final String SELECT_ITEMS_BY_ORDERID = "SELECT * FROM orderitems WHERE orderid = ?";
+    private static final String SELECT_ITEMS_BY_ORDERID = 
+            "SELECT oi.*, pcs.productid FROM orderitems oi " +
+            "LEFT JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid " +
+            "WHERE oi.orderid = ?";
     private static final String UPDATE_STOCK = "UPDATE product_color_size SET stock = stock - ? "
             + "WHERE productcolorsizeid = ? AND stock >= ?";
     private static final String RESTORE_STOCK = "UPDATE product_color_size SET stock = stock + ? WHERE productcolorsizeid = ?";
@@ -74,6 +77,7 @@ public class OrderItemDAO implements IOrderItemDAO {
                 item.setPrice(rs.getBigDecimal("price"));
                 item.setImageUrl(rs.getString("image_url"));
                 item.setProductName(rs.getString("product_name"));
+                try { item.setProductId(rs.getInt("productid")); } catch (Exception ignored) {}
 
                 items.add(item);
             }

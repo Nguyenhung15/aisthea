@@ -1,34 +1,34 @@
 package com.aisthea.fashion.service;
 
 import com.aisthea.fashion.model.LoginResult;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserServiceTest {
 
-    @Test
-    public void testLoginSuccess() {
-        UserService userService = new UserService();
-        // NOTE: This test requires a user with these credentials to exist in your database
-        LoginResult result = userService.login("admin@aisthea.com", "1234512345");
-        
-        if (result.isSuccess()) {
-            assertTrue(result.isSuccess(), "Login should be successful");
-            assertNotNull(result.getUser(), "User object should not be null");
-            System.out.println("Login Test Success: " + result.getMessage());
-        } else {
-            System.out.println("Login Test Failed (Expected Success): " + result.getMessage());
-            // We don't fail the test immediately here to avoid red bars during first run 
-            // if the database is not ready, but in a real CI environment, it should fail.
-        }
+    private UserService userService;
+
+    @BeforeEach
+    public void setup() {
+        userService = new UserService();
     }
 
     @Test
-    public void testLoginWrongPassword() {
-        UserService userService = new UserService();
-        LoginResult result = userService.login("admin@aisthea.com", "wrong_password_123");
+    public void testLogin_SaiMatKhau_KiemTraThongBaoLoi() {
+        System.out.println(">>> [Bắt đầu Test] Đang gọi UserService.login() với Password sai...");
         
-        assertFalse(result.isSuccess(), "Login should fail with wrong password");
-        assertEquals("Sai mật khẩu. Vui lòng thử lại.", result.getMessage());
+        // Dữ liệu đầu vào: Email đúng nhưng Password sai
+        String email = "admin@aisthea.com"; 
+        String wrongPassword = "SaiPassword123!";
+
+        // Thực thi hàm login 
+        LoginResult result = userService.login(email, wrongPassword);
+
+        // Kì vọng: Login thất bại, Trả về đúng câu cảnh báo trong UserService.java
+        assertFalse(result.isSuccess(), "Trạng thái Success phải là false");
+        assertEquals("Sai mật khẩu. Vui lòng thử lại.", result.getMessage(), "Hệ thống báo câu lỗi không khớp");
+        
+        System.out.println(">>> [Hoàn thành Test] Logic bắt lỗi mật khẩu hoạt động hoàn hảo: " + result.getMessage());
     }
 }
