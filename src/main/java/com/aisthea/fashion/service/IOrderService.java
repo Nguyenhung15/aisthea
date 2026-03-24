@@ -30,6 +30,10 @@ public interface IOrderService {
     List<Order> getRecentOrders(int limit);
     
     boolean cancelOrder(int orderId, int userId, String reason) throws Exception;
+    
+    boolean adminCancelOrder(int orderId, String reason) throws Exception;
+    
+    boolean markRefunded(int orderId) throws Exception;
 
     List<Order> getFilteredOrders(String orderId, String status, String customerName, String date);
 }

@@ -304,6 +304,25 @@
                                                 <span class="info-row__label">Payment</span>
                                                 <span class="info-row__value">${order.paymentMethod}</span>
                                             </div>
+                                            
+                                            <div class="info-row">
+                                                <span class="info-row__label">Subtotal</span>
+                                                <span class="info-row__value">
+                                                    <fmt:formatNumber value="${order.totalprice + (order.discountAmount != null ? order.discountAmount : 0)}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                </span>
+                                            </div>
+                                            
+                                            <c:if test="${not empty order.voucher}">
+                                                <div class="info-row">
+                                                    <span class="info-row__label">Voucher 
+                                                        <span style="font-size:0.7rem; background:#e0f2fe; color:#0284c7; padding:2px 6px; border-radius:4px; margin-left:4px;">${order.voucher.code} <c:if test="${order.voucher.discountType eq 'PERCENT'}">(${order.voucher.discountValue}%)</c:if></span>
+                                                    </span>
+                                                    <span class="info-row__value" style="color:#10b981;">
+                                                        - <fmt:formatNumber value="${order.discountAmount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                    </span>
+                                                </div>
+                                            </c:if>
+
                                             <div class="info-row" style="border-bottom:none;">
                                                 <span class="info-row__label"
                                                     style="font-size:0.92rem;color:var(--color-text-primary);">Total</span>
@@ -314,17 +333,40 @@
                                                 </span>
                                             </div>
 
+                                            <c:if test="${order.status eq 'Cancelled' and not empty order.cancelReason}">
+                                                <div style="margin-top:var(--space-md);padding:14px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius-md);">
+                                                    <h4 style="font-size:0.75rem;font-weight:700;color:#dc2626;text-transform:uppercase;margin-bottom:4px;">Lý do Hủy</h4>
+                                                    <p style="font-size:0.85rem;color:#7f1d1d;line-height:1.4;word-wrap:break-word;">${order.cancelReason}</p>
+                                                    <c:if test="${not empty order.refundStatus}">
+                                                        <div style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+                                                            <div style="font-size:0.75rem;font-weight:600;display:inline-block;padding:3px 8px;border-radius:4px;background:${order.refundStatus == 'Pending' ? '#fee2e2' : '#d1fae5'};color:${order.refundStatus == 'Pending' ? '#b91c1c' : '#065f46'};">
+                                                                Refund: ${order.refundStatus}
+                                                            </div>
+                                                            <c:if test="${order.refundStatus == 'Pending'}">
+                                                                <form action="${pageContext.request.contextPath}/order" method="POST" style="margin:0;">
+                                                                    <input type="hidden" name="action" value="adminMarkRefunded">
+                                                                    <input type="hidden" name="orderId" value="${order.orderid}">
+                                                                    <button type="submit" onclick="return confirm('Xác nhận Đã hoàn tiền cho khách hàng?');" style="background:#dc2626;color:white;border:none;border-radius:4px;padding:3px 10px;font-size:0.75rem;cursor:pointer;font-weight:600;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                                                                        Xác nhận Hoàn Tiền
+                                                                    </button>
+                                                                </form>
+                                                            </c:if>
+                                                        </div>
+                                                    </c:if>
+                                                </div>
+                                            </c:if>
+
                                             <!-- Update Status -->
                                             <div
                                                 style="margin-top:var(--space-xl);padding-top:var(--space-lg);border-top:1px solid var(--color-border-light);">
                                                 <h4
                                                     style="font-size:0.78rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--space-md);">
                                                     Update Status</h4>
-                                                <form action="${pageContext.request.contextPath}/order" method="POST"
+                                                <form id="updateStatusForm" action="${pageContext.request.contextPath}/order" method="POST"
                                                     style="display:flex;gap:10px;">
                                                     <input type="hidden" name="action" value="adminUpdateStatus">
                                                     <input type="hidden" name="orderId" value="${order.orderid}">
-                                                    <select name="newStatus" class="lux-form-select" style="flex:1;">
+                                                    <select name="newStatus" id="newStatusSelect" class="lux-form-select" style="flex:1;" onchange="toggleCancelReason()">
                                                         <option value="Pending" ${order.status=='Pending' ? 'selected'
                                                             : '' }>Pending</option>
                                                         <option value="Processing" ${order.status=='Processing'
@@ -340,6 +382,9 @@
                                                         style="padding:11px 24px;"><i class="fa-solid fa-check"></i>
                                                         Save</button>
                                                 </form>
+                                                <div id="adminCancelReasonBox" style="margin-top:10px; display:none;">
+                                                    <input type="text" name="cancelReason" form="updateStatusForm" placeholder="Nhập lý do hủy (bắt buộc nếu Cancel)" class="lux-form-select" style="border-color:#fca5a5; background:#fff2f2;" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -347,6 +392,14 @@
 
                             </div>
                         </main>
+                        
+                        <script>
+                            function toggleCancelReason() {
+                                var val = document.getElementById('newStatusSelect').value;
+                                document.getElementById('adminCancelReasonBox').style.display = (val === 'Cancelled') ? 'block' : 'none';
+                            }
+                            window.onload = toggleCancelReason;
+                        </script>
             </body>
 
             </html>

@@ -80,7 +80,7 @@ public class TierDetailServlet extends HttpServlet {
                             java.util.List<Integer> recoveredOrderIds = new java.util.ArrayList<>();
                             try (java.sql.PreparedStatement ps = conn.prepareStatement(
                                     "SELECT orderid, totalprice FROM Orders " +
-                                    "WHERE userid = ? AND (status = 'Completed' OR status = 'Paid') " +
+                                    "WHERE userid = ? AND status = 'Completed' " +
                                     "AND createdat >= ?")) {
                                 ps.setInt(1, user.getUserId());
                                 ps.setTimestamp(2, new java.sql.Timestamp(windowStart.getTimeInMillis()));

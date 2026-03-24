@@ -207,18 +207,20 @@ public class OrderService implements IOrderService {
     @Override
     public boolean updateOrderStatus(int orderId, String newStatus) {
         try {
-            // Check if status requires points (Paid or Completed)
-            boolean isPayingStatus = "Completed".equalsIgnoreCase(newStatus) || "Paid".equalsIgnoreCase(newStatus);
+            Order orderBefore = orderDAO.getAdminOrderById(orderId);
+            
+            // Check if status requires points (Completed only)
+            boolean isPayingStatus = "Completed".equalsIgnoreCase(newStatus);
+            
             if (isPayingStatus) {
-                Order order = orderDAO.getAdminOrderById(orderId);
                 // Only add points if transitioning from a non-paying status to avoid duplication
-                if (order != null && !"Completed".equalsIgnoreCase(order.getStatus()) && !"Paid".equalsIgnoreCase(order.getStatus())) {
-                    int pointsEarned = order.getTotalprice().divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
+                if (orderBefore != null && !"Completed".equalsIgnoreCase(orderBefore.getStatus())) {
+                    int pointsEarned = orderBefore.getTotalprice().divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
                             .intValue();
                     if (pointsEarned > 0) {
                         UserDAO userDAO = new UserDAO();
-                        userDAO.updateMembershipPoints(order.getUserid(), pointsEarned, "Points from " + newStatus + " Order #" + orderId);
-                        logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + order.getUserid()
+                        userDAO.updateMembershipPoints(orderBefore.getUserid(), pointsEarned, "Points from " + newStatus + " Order #" + orderId);
+                        logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + orderBefore.getUserid()
                                 + " từ đơn hàng #" + orderId + " (Status: " + newStatus + ")");
                     }
                 }
@@ -253,6 +255,12 @@ public class OrderService implements IOrderService {
             if (order != null) {
                 List<OrderItem> items = orderItemDAO.getOrderItemsByOrderId(orderId);
                 order.setItems(items);
+                
+                if (order.getVoucherId() != null) {
+                    VoucherDAO voucherDAO = new VoucherDAO();
+                    Voucher v = voucherDAO.findById(order.getVoucherId());
+                    order.setVoucher(v);
+                }
             }
             return order;
         } catch (SQLException e) {
@@ -290,11 +298,10 @@ public class OrderService implements IOrderService {
             if ("Pending".equalsIgnoreCase(currentStatus)) {
                 // COD / Chờ xác nhận -> Hủy bình thường, không cần hoàn tiền
                 refundStatus = null;
-            } else if ("Paid".equalsIgnoreCase(currentStatus)) {
-                // Đã thanh toán QR -> Được phép hủy, nhưng cần hoàn tiền -> Refund Pending
-                refundStatus = "Pending";
+            } else if ("Processing".equalsIgnoreCase(currentStatus) || "Shipped".equalsIgnoreCase(currentStatus)) {
+                if ("QR".equalsIgnoreCase(order.getPaymentMethod())) refundStatus = "Pending";
             } else {
-                throw new Exception("Chỉ có thể hủy đơn hàng ở trạng thái 'Pending' hoặc 'Paid'. Đơn hàng này đang ở trạng thái: " + currentStatus);
+                throw new Exception("Quá trình hủy không hợp lệ cho trạng thái: " + currentStatus);
             }
 
             List<OrderItem> items = orderItemDAO.getOrderItemsByOrderId(orderId);
@@ -340,6 +347,36 @@ public class OrderService implements IOrderService {
                 conn.close();
             }
         }
+    }
+
+    public boolean adminCancelOrder(int orderId, String reason) throws Exception {
+        Order order = orderDAO.getAdminOrderById(orderId);
+        if (order == null) throw new Exception("Không tìm thấy đơn hàng.");
+        
+        if ("Cancelled".equalsIgnoreCase(order.getStatus())) {
+            // Already cancelled, just update the reason
+            Connection conn = null;
+            try {
+                conn = DBConnection.getConnection();
+                orderDAO.updateCancelInfo(orderId, reason, order.getRefundStatus(), conn);
+                return true;
+            } finally {
+                if (conn != null) conn.close();
+            }
+        }
+        
+        return cancelOrder(orderId, order.getUserid(), reason);
+    }
+    
+    @Override
+    public boolean markRefunded(int orderId) throws Exception {
+        Order order = orderDAO.getAdminOrderById(orderId);
+        if (order == null) throw new Exception("Không tìm thấy đơn hàng.");
+        if (!"Cancelled".equalsIgnoreCase(order.getStatus()) || !"Pending".equalsIgnoreCase(order.getRefundStatus())) {
+            throw new Exception("Đơn hàng không ở trạng thái cần hoàn tiền.");
+        }
+        
+        return orderDAO.updateRefundStatus(orderId, "Completed");
     }
 
     @Override

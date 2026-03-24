@@ -219,7 +219,7 @@
                                             <button data-status="Pending"
                                                 class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Chờ
                                                 xác nhận</button>
-                                            <button data-status="Paid"
+                                            <button data-status="Processing"
                                                 class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Chờ
                                                 lấy hàng</button>
                                             <button data-status="Shipped"
@@ -278,11 +278,11 @@
                                                                             Chờ xác nhận
                                                                         </span>
                                                                     </c:when>
-                                                                    <c:when test="${order.status eq 'Paid'}">
+                                                                    <c:when test="${order.status eq 'Processing'}">
                                                                         <span
-                                                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-100 flex items-center">
+                                                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 text-sky-600 border border-sky-100 flex items-center">
                                                                             <span
-                                                                                class="w-1.5 h-1.5 rounded-full bg-purple-500 mr-2 animate-pulse"></span>
+                                                                                class="w-1.5 h-1.5 rounded-full bg-sky-500 mr-2 animate-pulse"></span>
                                                                             Chờ lấy hàng
                                                                         </span>
                                                                     </c:when>

@@ -48,10 +48,7 @@
                         color: var(--color-success-text);
                     }
 
-                    .status-Paid {
-                        background: #d1fae5;
-                        color: #065f46;
-                    }
+
 
                     .status-Cancelled {
                         background: #fef2f2;
@@ -259,8 +256,9 @@
                                                 <option value="Processing">Processing</option>
                                                 <option value="Shipped">Shipped</option>
                                                 <option value="Completed">Completed</option>
-                                                <option value="Paid">Paid</option>
+
                                                 <option value="Cancelled">Cancelled</option>
+                                                <option value="RefundPending">Refund Pending</option>
                                             </select>
 
                                             <input type="date" id="filterDate" class="order-filter-bar__date">
@@ -295,6 +293,7 @@
                                                     data-orderid="${order.orderid}"
                                                     data-customer="${order.fullname}"
                                                     data-status="${order.status}"
+                                                    data-refundstatus="${order.refundStatus}"
                                                     data-date="<fmt:formatDate value='${order.createdat}' pattern='yyyy-MM-dd'/>"
                                                     style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
                                                     onmouseover="this.style.background='var(--color-bg)'"
@@ -320,6 +319,12 @@
                                                     </td>
                                                     <td style="padding:16px 20px;text-align:center;">
                                                         <span class="status-badge status-${order.status}">${order.status}</span>
+                                                        <c:if test="${order.status eq 'Cancelled' and not empty order.refundStatus}">
+                                                            <br>
+                                                            <span style="display:inline-block; margin-top:6px; font-size:0.65rem; font-weight:700; text-transform:uppercase; background:${order.refundStatus == 'Pending' ? '#fee2e2' : '#d1fae5'}; color:${order.refundStatus == 'Pending' ? '#b91c1c' : '#065f46'}; padding:3px 8px; border-radius:12px;">
+                                                                REFUND: ${order.refundStatus}
+                                                            </span>
+                                                        </c:if>
                                                     </td>
                                                     <td style="padding:16px 20px;text-align:right;">
                                                         <div style="display:flex;gap:8px;justify-content:flex-end;">
@@ -387,8 +392,14 @@
                         if (fCustomer && (row.getAttribute('data-customer') || '').toLowerCase().indexOf(fCustomer) === -1) {
                             show = false;
                         }
-                        if (fStatus && row.getAttribute('data-status') !== fStatus) {
-                            show = false;
+                        if (fStatus) {
+                            if (fStatus === 'RefundPending') {
+                                if (row.getAttribute('data-status') !== 'Cancelled' || row.getAttribute('data-refundstatus') !== 'Pending') {
+                                    show = false;
+                                }
+                            } else if (row.getAttribute('data-status') !== fStatus) {
+                                show = false;
+                            }
                         }
                         if (fDate && row.getAttribute('data-date') !== fDate) {
                             show = false;

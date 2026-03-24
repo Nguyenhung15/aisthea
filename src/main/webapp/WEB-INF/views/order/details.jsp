@@ -130,7 +130,7 @@
                                                 #${order.orderid}</h1>
                                             <div class="status-badge 
                                         ${order.status == 'Pending' ? 'bg-amber-100 text-amber-700' : ''}
-                                        ${order.status == 'Paid' ? 'bg-blue-100 text-blue-700' : ''}
+                                        ${order.status == 'Processing' ? 'bg-sky-100 text-sky-700' : ''}
                                         ${order.status == 'Processing' ? 'bg-indigo-100 text-indigo-700' : ''}
                                         ${order.status == 'Completed' ? 'bg-emerald-100 text-emerald-700' : ''}
                                         ${order.status == 'Cancelled' ? 'bg-red-100 text-red-700' : ''}">
@@ -194,7 +194,7 @@
                                                     
                                                     <c:if test="${order.confirmedAt != null}">
                                                         <div class="flex justify-between items-center relative pl-4 border-l-[2px] border-emerald-500">
-                                                            <span class="text-slate-500">Đã xác nhận</span>
+                                                            <span class="text-slate-500">Chờ lấy hàng</span>
                                                             <span class="font-medium text-slate-900 text-right text-xs">
                                                                 <fmt:formatDate value="${order.confirmedAt}" pattern="HH:mm — dd/MM/yyyy" />
                                                             </span>
@@ -269,7 +269,7 @@
                                                 <div class="flex justify-between">
                                                     <span class="text-slate-500">Paid Status</span>
                                                     <c:choose>
-                                                        <c:when test="${order.status eq 'Paid' or order.status eq 'Completed'}">  
+                                                        <c:when test="${order.status eq 'Completed' or (order.paymentMethod eq 'QR' and order.status ne 'Pending')}">  
                                                             <span class="text-emerald-600 font-bold">Đã thanh toán</span>
                                                         </c:when>
                                                         <c:when test="${order.status eq 'Cancelled'}">
@@ -319,7 +319,7 @@
                                             </div>
 
                                             <div class="mt-10 space-y-3">
-                                                <c:if test="${order.status == 'Pending' or order.status == 'Paid'}">
+                                                <c:if test="${order.status == 'Pending' or order.status == 'Processing'}">
                                                     <button onclick="openCancelModal()"
                                                         class="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all flex items-center justify-center gap-2">
                                                         <span class="material-symbols-outlined text-sm">cancel</span>
@@ -369,7 +369,7 @@
                         <h3 class="font-serif text-2xl font-semibold text-slate-800 mb-2">Hủy Đơn Hàng</h3>
                         <p class="text-sm text-slate-500 mb-6">Xin vui lòng cho chúng tôi biết lý do bạn muốn hủy đơn hàng này.</p>
                         
-                        <c:if test="${order.status == 'Paid'}">
+                        <c:if test="${order.status == 'Processing' and order.paymentMethod == 'QR'}">
                             <div class="bg-amber-50 text-amber-800 text-xs p-3 rounded-lg border border-amber-200 mb-6">
                                 <strong>Lưu ý:</strong> Đây là đơn hàng đã thanh toán qua mã QR. Sau khi hủy hành công, yêu cầu hoàn tiền của bạn sẽ được chuyển đến bộ phận chăm sóc khách hàng. Thời gian hoàn tiền thường từ 3-5 ngày làm việc.
                             </div>

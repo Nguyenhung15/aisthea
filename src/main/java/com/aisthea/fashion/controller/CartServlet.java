@@ -208,6 +208,8 @@ public class CartServlet extends HttpServlet {
                 if (buyNowCart.isEmpty() || !addSuccess) {
                     redirectUrl = request.getContextPath() + "/product?action=view&id=" + productId + "&error=stock";
                 } else {
+                    session.removeAttribute("appliedVoucher");
+                    session.removeAttribute("appliedDiscount");
                     session.setAttribute("checkoutCart", buyNowCart);
                     redirectUrl = request.getContextPath() + "/checkout";
                 }
@@ -233,6 +235,8 @@ public class CartServlet extends HttpServlet {
                     session.setAttribute("error", "Vui lòng chọn ít nhất một sản phẩm để thanh toán.");
                     redirectUrl = request.getContextPath() + "/cart";
                 } else {
+                    session.removeAttribute("appliedVoucher");
+                    session.removeAttribute("appliedDiscount");
                     session.setAttribute("checkoutCart", checkoutCart);
                     redirectUrl = request.getContextPath() + "/checkout";
                 }

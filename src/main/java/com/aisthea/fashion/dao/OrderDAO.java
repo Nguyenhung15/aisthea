@@ -15,11 +15,12 @@ public class OrderDAO implements IOrderDAO {
     private static final String SELECT_ORDERS_BY_USERID = "SELECT * FROM orders WHERE userid = ? ORDER BY createdat DESC";
     private static final String SELECT_ORDER_BY_ID = "SELECT * FROM orders WHERE orderid = ? AND userid = ?";
     private static final String UPDATE_ORDER_STATUS = "UPDATE orders SET status = ?, updatedat = GETDATE(), "
-            + "confirmed_at = CASE WHEN ? = 'Confirmed' THEN COALESCE(confirmed_at, GETDATE()) ELSE confirmed_at END, "
-            + "shipped_at = CASE WHEN ? = 'Shipping' THEN COALESCE(shipped_at, GETDATE()) ELSE shipped_at END, "
+            + "confirmed_at = CASE WHEN ? = 'Processing' THEN COALESCE(confirmed_at, GETDATE()) ELSE confirmed_at END, "
+            + "shipped_at = CASE WHEN ? = 'Shipped' THEN COALESCE(shipped_at, GETDATE()) ELSE shipped_at END, "
             + "completed_at = CASE WHEN ? = 'Completed' THEN COALESCE(completed_at, GETDATE()) ELSE completed_at END "
             + "WHERE orderid = ?";
     private static final String UPDATE_CANCEL_INFO = "UPDATE orders SET cancel_reason = ?, refund_status = ? WHERE orderid = ?";
+    private static final String UPDATE_REFUND_STATUS = "UPDATE orders SET refund_status = ? WHERE orderid = ?";
     private static final String SELECT_ALL_ORDERS = "SELECT * FROM orders ORDER BY createdat DESC";
     private static final String SELECT_ADMIN_ORDER_BY_ID = "SELECT * FROM orders WHERE orderid = ?";
     private static final String DELETE_ORDER = "DELETE FROM orders WHERE orderid = ?";
@@ -158,6 +159,16 @@ public class OrderDAO implements IOrderDAO {
         }
 
         return order;
+    }
+
+    @Override
+    public boolean updateRefundStatus(int orderId, String refundStatus) throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(UPDATE_REFUND_STATUS)) {
+            ps.setString(1, refundStatus);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
+        }
     }
 
     @Override

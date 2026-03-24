@@ -20,6 +20,7 @@ public class Order {
     private String paymentMethod;
     private Integer voucherId; // nullable
     private java.math.BigDecimal discountAmount;
+    private Voucher voucher; // Details of the applied voucher (loaded on demand)
     private String giftMessage;
 
     private String cancelReason;
@@ -143,6 +144,14 @@ public class Order {
 
     public void setDiscountAmount(java.math.BigDecimal discountAmount) {
         this.discountAmount = discountAmount;
+    }
+
+    public Voucher getVoucher() {
+        return voucher;
+    }
+
+    public void setVoucher(Voucher voucher) {
+        this.voucher = voucher;
     }
 
     public String getGiftMessage() {

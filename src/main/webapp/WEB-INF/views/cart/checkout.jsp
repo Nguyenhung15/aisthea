@@ -686,9 +686,13 @@
                                         <%-- Voucher discount row --%>
                                             <c:if test="${not empty sessionScope.appliedVoucher}">
                                                 <div class="flex justify-between text-sm" id="discountRow">
-                                                    <span class="text-emerald-600 font-medium">🎟️
-                                                        ${sessionScope.appliedVoucher.code}</span>
-                                                    <span class="text-emerald-600 font-medium" id="discountDisplay">
+                                                    <span class="text-emerald-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis mr-4">🎟️
+                                                        ${sessionScope.appliedVoucher.code} 
+                                                        <c:if test="${sessionScope.appliedVoucher.discountType eq 'PERCENT'}">
+                                                            (${sessionScope.appliedVoucher.discountValue}%)
+                                                        </c:if>
+                                                    </span>
+                                                    <span class="text-emerald-600 font-medium flex-shrink-0" id="discountDisplay">
                                                         -
                                                         <fmt:formatNumber value="${sessionScope.appliedDiscount}"
                                                             type="currency" currencyCode="VND" maxFractionDigits="0" />
@@ -697,17 +701,24 @@
                                             </c:if>
                                             <c:if test="${empty sessionScope.appliedVoucher}">
                                                 <div class="flex justify-between text-sm hidden" id="discountRow">
-                                                    <span class="text-emerald-600 font-medium" id="discountCode"></span>
-                                                    <span class="text-emerald-600 font-medium"
+                                                    <span class="text-emerald-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis mr-4" id="discountCode"></span>
+                                                    <span class="text-emerald-600 font-medium flex-shrink-0"
                                                         id="discountDisplay"></span>
                                                 </div>
                                             </c:if>
+                                            
+                                            <c:set var="calcTotal" value="${sessionScope.checkoutCart.totalPrice}" />
+                                            <c:if test="${not empty sessionScope.appliedDiscount}">
+                                                <c:set var="calcTotal" value="${calcTotal - sessionScope.appliedDiscount}" />
+                                            </c:if>
+                                            <c:if test="${calcTotal < 0}">
+                                                <c:set var="calcTotal" value="0" />
+                                            </c:if>
+                                            
                                             <div class="flex justify-between pt-4 border-t border-sky-100">
                                                 <span class="text-xl font-bold text-slate-900">Total</span>
                                                 <span class="text-xl font-bold text-slate-900" id="totalDisplay">
-                                                    <fmt:formatNumber
-                                                        value="${not empty sessionScope.appliedDiscount ? sessionScope.checkoutCart.totalPrice - sessionScope.appliedDiscount : sessionScope.checkoutCart.totalPrice}"
-                                                        type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                    <fmt:formatNumber value="${calcTotal}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                 </span>
                                             </div>
                                     </div>
@@ -1009,7 +1020,7 @@
                             const data = await res.json();
                             if (data.ok) {
                                 showMsg(msg, '✅ ' + data.message, true);
-                                applyDiscountToUI(code.toUpperCase(), data.discount);
+                                applyDiscountToUI(code.toUpperCase(), data.discount, data.message);
                                 document.getElementById('voucherIdInput').value = data.voucherId;
                                 document.getElementById('discountAmountInput').value = data.discount;
                             } else {
@@ -1020,14 +1031,14 @@
                         }
                     }
 
-                    function applyDiscountToUI(code, discountAmt) {
+                    function applyDiscountToUI(code, discountAmt, infoMsg) {
                         const discountRow = document.getElementById('discountRow');
                         const discountDisplay = document.getElementById('discountDisplay');
                         const discountCode = document.getElementById('discountCode');
                         const totalDisplay = document.getElementById('totalDisplay');
                         const appliedBox = document.getElementById('appliedVoucherBox');
 
-                        if (discountCode) discountCode.textContent = '🎟️ ' + code;
+                        if (discountCode) discountCode.textContent = '🎟️ ' + code + (infoMsg ? ' (' + infoMsg + ')' : '');
                         if (discountDisplay) discountDisplay.textContent = '-' + formatVND(discountAmt);
                         if (discountRow) discountRow.classList.remove('hidden');
 

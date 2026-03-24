@@ -109,6 +109,9 @@ public class OrderServlet extends HttpServlet {
                 case "cancel":
                     handleCancelOrder(request, response, user);
                     break;
+                case "adminMarkRefunded":
+                    handleAdminMarkRefunded(request, response, user);
+                    break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/order?action=history");
                     break;
@@ -169,9 +172,9 @@ public class OrderServlet extends HttpServlet {
             String paymentStatus = request.getParameter("payment");
             if ("success".equalsIgnoreCase(paymentStatus)) {
                 Order orderBeforeUpdate = orderService.getOrderDetails(orderId, user.getUserId());
-                if (orderBeforeUpdate != null && !"Paid".equalsIgnoreCase(orderBeforeUpdate.getStatus())) {
-                    logger.info("Payment success detected for order " + orderId + ". Updating status to Paid.");
-                    orderService.updateOrderStatus(orderId, "Paid");
+                if (orderBeforeUpdate != null && "Pending".equalsIgnoreCase(orderBeforeUpdate.getStatus())) {
+                    logger.info("Payment success detected for order " + orderId + ". Updating status to Processing.");
+                    orderService.updateOrderStatus(orderId, "Processing");
                     // Refresh order data and send confirmation email
                     order = orderService.getOrderDetails(orderId, user.getUserId()); // Assign to declared 'order'
                     if (order != null) {
@@ -428,12 +431,21 @@ public class OrderServlet extends HttpServlet {
         try {
             orderId = Integer.parseInt(request.getParameter("orderId"));
             String newStatus = request.getParameter("newStatus");
+            String cancelReason = request.getParameter("cancelReason");
 
             if (newStatus == null || newStatus.trim().isEmpty()) {
                 throw new Exception("Trạng thái mới không được rỗng.");
             }
 
-            orderService.updateOrderStatus(orderId, newStatus);
+            if ("Cancelled".equalsIgnoreCase(newStatus)) {
+                if (cancelReason == null || cancelReason.isBlank()) {
+                    cancelReason = "Đã bị hủy bởi Quản trị viên.";
+                }
+                orderService.adminCancelOrder(orderId, cancelReason);
+            } else {
+                orderService.updateOrderStatus(orderId, newStatus);
+            }
+            
             response.sendRedirect(
                     request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
 
@@ -443,6 +455,23 @@ public class OrderServlet extends HttpServlet {
                     ? "/order?action=adminViewDetail&id=" + orderId + "&update=error"
                     : "/order?action=list&error=true";
             response.sendRedirect(request.getContextPath() + redirectUrl);
+        }
+    }
+    
+    private void handleAdminMarkRefunded(HttpServletRequest request, HttpServletResponse response, User user) throws IOException {
+        if (!isAdmin(user)) {
+            response.sendRedirect(request.getContextPath() + "/order?action=history");
+            return;
+        }
+
+        int orderId = -1;
+        try {
+            orderId = Integer.parseInt(request.getParameter("orderId"));
+            orderService.markRefunded(orderId);
+            response.sendRedirect(request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&error=refundFailed");
         }
     }
 
