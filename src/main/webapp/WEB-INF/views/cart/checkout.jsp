@@ -791,161 +791,90 @@
                                 </div>
 
                                 <%-- ── Available Vouchers list ────────────────────── --%>
-                                    <div class="space-y-3 pt-2">
-                                        <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
-                                            Voucher khả dụng</p>
+                                <div class="space-y-3 pt-2">
+                                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
+                                        Voucher khả dụng</p>
 
-                                        <c:choose>
-                                            <c:when test="${empty activeVouchers}">
-                                                <div class="text-center py-8 text-slate-400 text-xs">
-                                                    <span
-                                                        class="material-symbols-outlined text-3xl block mb-2 opacity-40">confirmation_number</span>
-                                                    Hiện chưa có voucher nào
-                                                </div>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <c:forEach var="vc" items="${activeVouchers}">
-                                                    <c:set var="canUse"
-                                                        value="${empty vc.minOrderValue or sessionScope.checkoutCart.totalPrice >= vc.minOrderValue}" />
-                                                    <div class="voucher-pick-card relative overflow-hidden rounded-xl border-2 transition-all duration-200 ${canUse ? 'cursor-pointer opacity-100 border-slate-200 bg-gradient-to-br from-white to-blue-50/30' : 'cursor-not-allowed opacity-60 border-slate-100 bg-slate-50'}"
-                                                        onclick="${canUse ? 'pickVoucher(this)' : 'void(0)'}"
-                                                        data-code="${vc.code}">
-                                                        <%-- decorative notches --%>
-                                                            <div
-                                                                style="position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;">
-                                                            </div>
-                                                            <div
-                                                                style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;">
-                                                            </div>
+                                    <c:choose>
+                                        <c:when test="${empty activeVouchers}">
+                                            <div class="text-center py-8 text-slate-400 text-xs">
+                                                <span
+                                                    class="material-symbols-outlined text-3xl block mb-2 opacity-40">confirmation_number</span>
+                                                Hiện chưa có voucher nào
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach var="vc" items="${activeVouchers}">
+                                                <c:set var="canUse"
+                                                    value="${empty vc.minOrderValue or sessionScope.checkoutCart.totalPrice >= vc.minOrderValue}" />
+                                                <div class="voucher-pick-card relative overflow-hidden rounded-xl border-2 transition-all duration-200 ${canUse ? 'cursor-pointer opacity-100 border-slate-200 bg-gradient-to-br from-white to-blue-50/30' : 'cursor-not-allowed opacity-60 border-slate-100 bg-slate-50'}"
+                                                    onclick="${canUse ? 'pickVoucher(this)' : 'void(0)'}"
+                                                    data-code="${vc.code}">
+                                                    
+                                                    <div style="position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;"></div>
+                                                    <div style="position:absolute;right:-10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:#f1f5f9;border:2px solid #e2e8f0;"></div>
 
-                                                            <div
-                                                                style="padding:14px 24px;display:flex;align-items:center;gap:14px;">
-                                                                <%-- icon --%>
-                                                                    <div
-                                                                        class="flex-shrink-0 w-[42px] h-[42px] rounded-xl flex items-center justify-center ${vc.discountType eq 'PERCENT' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}">
-                                                                        <span class="material-symbols-outlined text-lg">${vc.discountType
-                                                                            eq 'PERCENT' ? 'percent' :
-                                                                            'payments'}</span>
-                                                                    </div>
-                                                                    <%-- info --%>
-                                                                        <div style="flex:1;min-width:0;">
-                                                                            <p
-                                                                                style="font-size:0.82rem;font-weight:800;letter-spacing:2px;color:#1e293b;font-family:monospace;">
-                                                                                ${vc.code}</p>
-                                                                            <p
-                                                                                style="font-size:0.72rem;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                                                                <c:choose>
-                                                                                    <c:when
-                                                                                        test="${not empty vc.description}">
-                                                                                        ${vc.description}</c:when>
-                                                                                    <c:otherwise>
-                                                                                        <c:choose>
-                                                                                            <c:when
-                                                                                                test="${vc.discountType eq 'PERCENT'}">
-                                                                                                Giảm
-                                                                                                ${vc.discountValue}%
-                                                                                                <c:if
-                                                                                                    test="${not empty vc.maxDiscountAmount}">
-                                                                                                    tối đa
-                                                                                                    <fmt:formatNumber
-                                                                                                        value="${vc.maxDiscountAmount}"
-                                                                                                        type="currency"
-                                                                                                        currencyCode="VND"
-                                                                                                        maxFractionDigits="0" />
-                                                                                                </c:if>
-                                                                                            </c:when>
-                                                                                            <c:otherwise>Giảm
-                                                                                                <fmt:formatNumber
-                                                                                                    value="${vc.discountValue}"
-                                                                                                    type="currency"
-                                                                                                    currencyCode="VND"
-                                                                                                    maxFractionDigits="0" />
-                                                                                            </c:otherwise>
-                                                                                        </c:choose>
-                                                                                    </c:otherwise>
-                                                                                </c:choose>
-                                                                            </p>
-                                                                            <div
-                                                                                style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap;">
-                                                                                <c:if
-                                                                                    test="${not empty vc.minOrderValue}">
-                                                                                    <span
-                                                                                        style="font-size:0.66rem;color:#94a3b8;">Đơn
-                                                                                        từ
-                                                                                        <fmt:formatNumber
-                                                                                            value="${vc.minOrderValue}"
-                                                                                            type="currency"
-                                                                                            currencyCode="VND"
-                                                                                            maxFractionDigits="0" />
-                                                                                    </span>
+                                                    <div style="padding:14px 24px;display:flex;align-items:center;gap:14px;">
+                                                        <div class="flex-shrink-0 w-[42px] h-[42px] rounded-xl flex items-center justify-center ${vc.discountType eq 'PERCENT' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}">
+                                                            <span class="material-symbols-outlined text-lg">${vc.discountType eq 'PERCENT' ? 'percent' : 'payments'}</span>
+                                                        </div>
+                                                        <div style="flex:1;min-width:0;">
+                                                            <p style="font-size:0.82rem;font-weight:800;letter-spacing:2px;color:#1e293b;font-family:monospace;">${vc.code}</p>
+                                                            <p style="font-size:0.72rem;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                                                <c:choose>
+                                                                    <c:when test="${not empty vc.description}">${vc.description}</c:when>
+                                                                    <c:otherwise>
+                                                                        <c:choose>
+                                                                            <c:when test="${vc.discountType eq 'PERCENT'}">
+                                                                                Giảm ${vc.discountValue}%
+                                                                                <c:if test="${not empty vc.maxDiscountAmount}">
+                                                                                    tối đa <fmt:formatNumber value="${vc.maxDiscountAmount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                                                 </c:if>
-                                                                                <c:if test="${not empty vc.endDate}">
-                                                                                    <span
-                                                                                        style="font-size:0.66rem;color:#94a3b8;">HSD:
-                                                                                        <fmt:formatDate
-                                                                                            value="${vc.endDate}"
-                                                                                            pattern="dd/MM/yyyy" />
-                                                                                    </span>
-                                                                                </c:if>
-                                                                                <c:if test="${vc.usageLimit > 0}">
-                                                                                    <span
-                                                                                        style="font-size:0.66rem;color:#94a3b8;">Còn
-                                                                                        ${vc.usageLimit - vc.usedCount}
-                                                                                        lượt</span>
-                                                                                </c:if>
-                                                                            </div>
-                                                                            <c:if
-                                                                                test="${!canUse and not empty vc.minOrderValue}">
-                                                                                <p
-                                                                                    style="font-size:0.66rem;color:#ef4444;margin-top:4px;">
-                                                                                    ⚠ Cần mua thêm
-                                                                                    <fmt:formatNumber
-                                                                                        value="${vc.minOrderValue - sessionScope.checkoutCart.totalPrice}"
-                                                                                        type="currency"
-                                                                                        currencyCode="VND"
-                                                                                        maxFractionDigits="0" /> để dùng
-                                                                                    mã này
-                                                                                </p>
-                                                                            </c:if>
-                                                                        </div>
-                                                                        <%-- discount badge --%>
-                                                                            <div style="flex-shrink:0;">
-                                                                                <span
-                                                                                    class="inline-block px-2.5 py-1.5 rounded-lg text-sm font-extrabold ${vc.discountType eq 'PERCENT' ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'}">
-                                                                                    <c:choose>
-                                                                                        <c:when
-                                                                                            test="${vc.discountType eq 'PERCENT'}">
-                                                                                            ${vc.discountValue}%
-                                                                                        </c:when>
-                                                                                        <c:otherwise>
-                                                                                            <fmt:formatNumber
-                                                                                                value="${vc.discountValue}"
-                                                                                                type="number"
-                                                                                                maxFractionDigits="0" />
-                                                                                            ₫
-                                                                                        </c:otherwise>
-                                                                                    </c:choose>
-                                                                                </span>
-                                                                            </div>
+                                                                            </c:when>
+                                                                            <c:otherwise>Giảm <fmt:formatNumber value="${vc.discountValue}" type="currency" currencyCode="VND" maxFractionDigits="0" /></c:otherwise>
+                                                                        </c:choose>
+                                                                    </c:otherwise>
+                                                                </c:choose>
+                                                            </p>
+                                                            <div style="display:flex;gap:8px;margin-top:5px;flex-wrap:wrap;">
+                                                                <c:if test="${not empty vc.minOrderValue}">
+                                                                    <span style="font-size:0.66rem;color:#94a3b8;">Đơn từ <fmt:formatNumber value="${vc.minOrderValue}" type="currency" currencyCode="VND" maxFractionDigits="0" /></span>
+                                                                </c:if>
+                                                                <c:if test="${not empty vc.endDate}">
+                                                                    <span style="font-size:0.66rem;color:#94a3b8;">HSD: <fmt:formatDate value="${vc.endDate}" pattern="dd/MM/yyyy" /></span>
+                                                                </c:if>
+                                                                <c:if test="${vc.usageLimit > 0}">
+                                                                    <span style="font-size:0.66rem;color:#94a3b8;">Còn ${vc.usageLimit - vc.usedCount} lượt</span>
+                                                                </c:if>
                                                             </div>
+                                                            <c:if test="${!canUse and not empty vc.minOrderValue}">
+                                                                <p style="font-size:0.66rem;color:#ef4444;margin-top:4px;">⚠ Cần mua thêm <fmt:formatNumber value="${vc.minOrderValue - sessionScope.checkoutCart.totalPrice}" type="currency" currencyCode="VND" maxFractionDigits="0" /> để dùng mã này</p>
+                                                            </c:if>
+                                                        </div>
+                                                        <div style="flex-shrink:0;">
+                                                            <span class="inline-block px-2.5 py-1.5 rounded-lg text-sm font-extrabold ${vc.discountType eq 'PERCENT' ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'}">
+                                                                <c:choose>
+                                                                    <c:when test="${vc.discountType eq 'PERCENT'}">${vc.discountValue}%</c:when>
+                                                                    <c:otherwise><fmt:formatNumber value="${vc.discountValue}" type="number" maxFractionDigits="0" /> ₫</c:otherwise>
+                                                                </c:choose>
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                    </div>
+                                                </div>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                            <!-- Footer -->
+                            <div class="p-6 border-t border-slate-100">
+                                <button type="button" onclick="document.getElementById('discount-drawer').classList.add('hidden')"
+                                    class="w-full py-4 border border-slate-900 text-slate-900 text-[10px] uppercase tracking-[0.3em] font-bold rounded-lg hover:bg-slate-900 hover:text-white transition-all duration-300">
+                                    Trở lại Checkout
+                                </button>
                             </div>
                         </div>
-                        </c:forEach>
-                        </c:otherwise>
-                        </c:choose>
                     </div>
-                </div>
-                <!-- Footer -->
-                <div class="p-6 border-t border-slate-100">
-                    <button type="button" onclick="document.getElementById('discount-drawer').classList.add('hidden')"
-                        class="w-full py-4 border border-slate-900 text-slate-900 text-[10px] uppercase tracking-[0.3em] font-bold rounded-lg hover:bg-slate-900 hover:text-white transition-all duration-300">
-                        Trở lại Checkout
-                    </button>
-                </div>
-                </div>
-                </div>
                 </div>
 
                 <script>

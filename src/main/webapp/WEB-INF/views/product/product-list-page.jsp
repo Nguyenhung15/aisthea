@@ -937,6 +937,15 @@
                                                                                         alt="${p.name} Hover"
                                                                                         onerror="this.onerror=null; this.style.display='none'" />
                                                                                         </c:if>
+
+                                                                                        <c:if test="${p.totalStock <= 0}">
+                                                                                            <!-- Prominent Out of Stock Overlay -->
+                                                                                            <div class="absolute inset-0 z-20 bg-white/40 backdrop-blur-[2px] flex items-center justify-center pointer-events-none transition-all duration-300">
+                                                                                                <div style="background:#dc2626; color:white; font-size:0.9rem; font-weight:800; padding:10px 28px; text-transform:uppercase; letter-spacing:2.5px; transform:rotate(-8deg) scale(1.05); box-shadow:0 10px 25px -5px rgba(220,38,38,0.5), inset 0 0 0 2px rgba(255,255,255,0.2); border-radius:6px; backdrop-filter:blur(4px);">
+                                                                                                    Hết Hàng
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </c:if>
                                                                                         </a>
 
                                                                                         <%--===BADGES LAYER (outside <a> so they always show)
@@ -961,13 +970,7 @@
                                                                                         BEST SELLER</span>
                                                                                         </c:if>
 
-                                                                                        <%-- 3. Out of Stock Badge (replaces
-                                                                                        discount badge position if OOS) --%>
-                                                                                        <c:if test="${p.totalStock <= 0}">
-                                                                                        <span class="badge"
-                                                                                        style="top:12px;left:12px;background:#64748b;color:#fff;">Hết
-                                                                                        hàng</span>
-                                                                                        </c:if>
+                                                                                        <%-- 3. Out of Stock Badge (Removed in favor of overlay above) --%>
                                                                                         </div>
 
                                                                                         <div class="space-y-1 px-1">
