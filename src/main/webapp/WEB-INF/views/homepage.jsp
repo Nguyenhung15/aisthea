@@ -238,7 +238,7 @@
                                                 href="${pageContext.request.contextPath}/product?sort=newest">
                                                 <img alt="New Arrivals"
                                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuClZuniow-wivw1Ky_iNaaobCwqYxb33dMuA3_OQDcn4vckac0rZM2Nd8U4ZD3s6qqmW7fuUOCbnBo-WFY8cqK-OERIRDtdA0bohB9Ca_t3fb9ULMnynwUEZvzwqkHFN8ib8eMCqnZpan1KzTaPctI-esptCl86FxeSjndcqS_vH9xsLKHf_jg3Gz8c1VXwhmwkeG7tzfq-WVOtrM_0lqVi3oCZGlXg75NSLwiJek00mTs6kmEgGNIChz6S5t_lSUJ_S9GMn9eK5f1i" />
+                                                    src="https://i.pinimg.com/736x/d0/5a/b3/d05ab337a4721c7b6c8ce9c2c8ddb3e3.jpg" />
                                                 <div
                                                     class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors">
                                                 </div>
@@ -277,12 +277,12 @@
                                                 href="${pageContext.request.contextPath}/product?genderid=1">
                                                 <img alt="Men Collection"
                                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdhNFI9m84PcIwQw8n13AbnisL5Drk8VNglcJa1LGOY0BT9l_i7jNFiCgj8h6m2YjMm3Ya39jM3Ejk6T1rvYYoE-hSnCvI85lctX_c7sj32Gu0LSqy_3sMEJqq73FzaCAs89HTMT-KcmcjFAa1i0u-SrZM35GTod4JCK6AzcKDLWxx6kIauV_kPUimRy90i0KbAGHR4IEax_wCvcGlEF4duZVPwDcV8jdu2kHJeIXypss7yGgTVJYwieq6OXWSxrD0YzasJjB7hMoH" />
+                                                    src="https://i.pinimg.com/736x/ce/4f/55/ce4f55708e83085c5b289c2c83d0225c.jpg" />
                                                 <div
                                                     class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors">
                                                 </div>
                                                 <div
-                                                    class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/60 to-transparent">
+                                                    class="absolute bottom-0 left-0 w-full p-10 bg-gradient-to-t from-black/60 to-transparent">
                                                     <h3
                                                         class="text-white font-serif-display text-3xl italic mb-1 group-hover:translate-x-2 transition-transform duration-300">
                                                         Men

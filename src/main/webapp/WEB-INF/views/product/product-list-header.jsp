@@ -13,19 +13,19 @@
 
                     <%-- ── LEFT: Nav Links (desktop) ── --%>
                         <div class="hidden lg:flex items-center space-x-10 w-1/3">
-                            <a class="text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
+                            <a class="px-7 py-5 text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
                                 href="${pageContext.request.contextPath}/product?genderid=2">
                                 Women
                                 <span
                                     class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                             </a>
-                            <a class="text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
+                            <a class="px-7 py-5 text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
                                 href="${pageContext.request.contextPath}/product?genderid=1">
                                 Men
                                 <span
                                     class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
                             </a>
-                            <a class="text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
+                            <a class="px-7 py-5 text-xs font-semibold uppercase tracking-[0.1em] hover:text-primary transition-colors relative group text-slate-600"
                                 href="${pageContext.request.contextPath}/stylist">
                                 Stylist
                                 <span
@@ -60,9 +60,11 @@
                                                 <a class="text-slate-600 hover:text-primary transition-transform hover:-translate-y-0.5 duration-200 relative"
                                                     href="${pageContext.request.contextPath}/cart" title="Cart">
                                                     <i class="fa-solid fa-bag-shopping text-lg"></i>
-                                                    <span id="cart-badge" class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center
+                                                    <span id="cart-badge"
+                                                        class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center
                                  rounded-full bg-primary text-[10px] text-white font-bold ${empty sessionScope.cart or sessionScope.cart.totalQuantity eq 0 ? 'hidden' : ''}">
-                                                        ${not empty sessionScope.cart ? sessionScope.cart.totalQuantity : 0}
+                                                        ${not empty sessionScope.cart ? sessionScope.cart.totalQuantity
+                                                        : 0}
                                                     </span>
                                                 </a>
 
@@ -178,7 +180,8 @@
                                                                     href="${pageContext.request.contextPath}/login"
                                                                     title="Login">
                                                                     <img src="${pageContext.request.contextPath}/images/ava_default.png"
-                                                                        alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md">
+                                                                        alt="Avatar"
+                                                                        class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md">
                                                                 </a>
                                                         </c:otherwise>
                                                     </c:choose>
