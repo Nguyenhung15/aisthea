@@ -90,10 +90,6 @@ public class CartServlet extends HttpServlet {
             action = "view";
         }
 
-        if (action == null) {
-            action = "view";
-        }
-
         Cart cart = (Cart) session.getAttribute("cart");
         String jspPath = "/WEB-INF/views/cart/cart.jsp";
 
