@@ -95,124 +95,173 @@
                                                                     </span>
                                                                 </c:if>
                                                             </a>
+                                                            <%-- ── Notification Bell ── --%>
+                                                                <c:if test="${not empty sessionScope.user}">
+                                                                    <div class="relative" id="pl-bell-wrapper">
+                                                                        <button id="pl-bell-btn"
+                                                                            class="text-slate-600 hover:text-primary transition-transform hover:-translate-y-0.5 duration-200 relative"
+                                                                            title="Thông báo" aria-label="Thông báo">
+                                                                            <i class="fa-solid fa-bell text-lg"></i>
+                                                                            <span id="pl-bell-badge"
+                                                                                style="display:none;"
+                                                                                class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold leading-none"></span>
+                                                                        </button>
+                                                                        <%-- Dropdown panel --%>
+                                                                            <div id="pl-bell-menu" style="display:none;"
+                                                                                class="absolute top-10 right-0 w-[340px] rounded-2xl shadow-2xl border border-blue-200 z-50 overflow-hidden"
+                                                                                style="background:#F8FBFF;">
+                                                                                <div class="flex items-center justify-between px-4 py-3 border-b border-blue-200"
+                                                                                    style="background:#EFF6FF;">
+                                                                                    <span
+                                                                                        class="text-xs font-bold uppercase tracking-widest text-slate-500">Thông
+                                                                                        báo</span>
+                                                                                    <a href="${pageContext.request.contextPath}/notifications?action=markAllRead"
+                                                                                        class="text-[11px] text-primary hover:underline font-semibold"
+                                                                                        onclick="event.preventDefault();plMarkAllRead();">Dánh
+                                                                                        dấu tất cả đã đọc</a>
+                                                                                </div>
+                                                                                <div id="pl-bell-list"
+                                                                                    class="max-h-[320px] overflow-y-auto divide-y divide-slate-50">
+                                                                                    <div
+                                                                                        class="flex items-center justify-center py-8 text-slate-400 text-sm">
+                                                                                        <i
+                                                                                            class="fa-solid fa-spinner fa-spin mr-2"></i>
+                                                                                        Đang tải...
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="border-t border-blue-200">
+                                                                                    <a href="${pageContext.request.contextPath}/notifications"
+                                                                                        class="flex items-center justify-center gap-2 py-3 text-xs font-bold uppercase tracking-widest text-primary transition-colors"
+                                                                                        style="background:#EFF6FF;"
+                                                                                        onmouseenter="this.style.background='#DBEAFE'"
+                                                                                        onmouseleave="this.style.background='#EFF6FF'">
+                                                                                        <i
+                                                                                            class="fa-solid fa-list text-xs"></i>
+                                                                                        Tất cả thông báo
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+                                                                    </div>
+                                                                </c:if>
 
-                                                            <%-- User / Account --%>
-                                                                <c:choose>
-                                                                    <c:when test="${not empty sessionScope.user}">
-                                                                        <%-- Logged in: avatar + dropdown --%>
-                                                                            <div class="relative flex items-center gap-2 cursor-pointer group"
-                                                                                id="lux-account-btn"
-                                                                                title="${sessionScope.user.fullname}">
-                                                                                <c:choose>
-                                                                                    <c:when
-                                                                                        test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
-                                                                                        <img src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
-                                                                                            alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
+                                                                <%-- User / Account --%>
+                                                                    <c:choose>
+                                                                        <c:when test="${not empty sessionScope.user}">
+                                                                            <%-- Logged in: avatar + dropdown --%>
+                                                                                <div class="relative flex items-center gap-2 cursor-pointer group"
+                                                                                    id="lux-account-btn"
+                                                                                    title="${sessionScope.user.fullname}">
+                                                                                    <c:choose>
+                                                                                        <c:when
+                                                                                            test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
+                                                                                            <img src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
+                                                                                                alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
                                             group-hover:scale-105 transition-transform duration-200">
-                                                                                    </c:when>
-                                                                                    <c:otherwise>
-                                                                                        <img src="${pageContext.request.contextPath}/images/ava_default.png"
-                                                                                            alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
+                                                                                        </c:when>
+                                                                                        <c:otherwise>
+                                                                                            <img src="${pageContext.request.contextPath}/images/ava_default.png"
+                                                                                                alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
                                             group-hover:scale-105 transition-transform duration-200">
-                                                                                    </c:otherwise>
-                                                                                </c:choose>
-                                                                                <span id="lux-user-name"
-                                                                                    data-fullname="${sessionScope.user.fullname}"
-                                                                                    class="text-sm font-medium text-slate-700 group-hover:text-[#024acf] transition-colors hidden md:block select-none">
-                                                                                    ${sessionScope.user.fullname}
-                                                                                </span>
+                                                                                        </c:otherwise>
+                                                                                    </c:choose>
+                                                                                    <span id="lux-user-name"
+                                                                                        data-fullname="${sessionScope.user.fullname}"
+                                                                                        class="text-sm font-medium text-slate-700 group-hover:text-[#024acf] transition-colors hidden md:block select-none">
+                                                                                        ${sessionScope.user.fullname}
+                                                                                    </span>
+                                                                                    <script>
+                                                                                        (function () {
+                                                                                            var nameEl = document.getElementById('lux-user-name');
+                                                                                            if (nameEl) {
+                                                                                                var nameStr = nameEl.getAttribute('data-fullname') || '';
+                                                                                                var parts = nameStr.trim().split(/\s+/);
+                                                                                                if (parts.length > 2) {
+                                                                                                    nameEl.textContent = parts[parts.length - 2] + ' ' + parts[parts.length - 1];
+                                                                                                }
+                                                                                            }
+                                                                                        })();
+                                                                                    </script>
+
+                                                                                    <%-- Dropdown menu --%>
+                                                                                        <div id="lux-account-menu"
+                                                                                            style="display:none;" class="absolute top-12 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl
+                                    border border-slate-100 min-w-[200px] z-50 overflow-hidden">
+                                                                                            <%-- User Info Header --%>
+                                                                                                <div
+                                                                                                    class="px-4 py-3.5 border-b border-slate-100 bg-slate-50/30 mb-1">
+                                                                                                    <p
+                                                                                                        class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+                                                                                                        Welcome back</p>
+                                                                                                    <p
+                                                                                                        class="text-sm font-bold text-slate-800 truncate font-serif-display tracking-wide">
+                                                                                                        ${sessionScope.user.fullname}
+                                                                                                    </p>
+                                                                                                </div>
+                                                                                                <a href="${pageContext.request.contextPath}/profile"
+                                                                                                    class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700
+                                      hover:text-[#024acf] hover:bg-blue-50/60 transition-colors font-medium">
+                                                                                                    <i
+                                                                                                        class="fa-solid fa-id-card text-sm w-4"></i>
+                                                                                                    Profile
+                                                                                                </a>
+                                                                                                <c:if
+                                                                                                    test="${sessionScope.user.role == 'ADMIN'}">
+                                                                                                    <a href="${pageContext.request.contextPath}/dashboard"
+                                                                                                        class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700
+                                          hover:text-[#024acf] hover:bg-blue-50/60 transition-colors font-medium">
+                                                                                                        <i
+                                                                                                            class="fa-solid fa-tachometer-alt text-sm w-4"></i>
+                                                                                                        Dashboard
+                                                                                                    </a>
+                                                                                                </c:if>
+                                                                                                <c:if
+                                                                                                    test="${sessionScope.user.role == 'USER'}">
+                                                                                                    <a href="${pageContext.request.contextPath}/order"
+                                                                                                        class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700
+                                          hover:text-[#024acf] hover:bg-blue-50/60 transition-colors font-medium">
+                                                                                                        <i
+                                                                                                            class="fa-solid fa-box text-sm w-4"></i>
+                                                                                                        Đơn hàng
+                                                                                                    </a>
+                                                                                                </c:if>
+                                                                                                <hr
+                                                                                                    class="my-1 border-slate-100">
+                                                                                                <a href="${pageContext.request.contextPath}/logout"
+                                                                                                    class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-500
+                                      hover:bg-red-50/60 transition-colors font-medium">
+                                                                                                    <i
+                                                                                                        class="fa-solid fa-right-from-bracket text-sm w-4"></i>
+                                                                                                    Logout
+                                                                                                </a>
+                                                                                        </div>
+                                                                                </div>
                                                                                 <script>
                                                                                     (function () {
-                                                                                        var nameEl = document.getElementById('lux-user-name');
-                                                                                        if (nameEl) {
-                                                                                            var nameStr = nameEl.getAttribute('data-fullname') || '';
-                                                                                            var parts = nameStr.trim().split(/\s+/);
-                                                                                            if (parts.length > 2) {
-                                                                                                nameEl.textContent = parts[parts.length - 2] + ' ' + parts[parts.length - 1];
-                                                                                            }
+                                                                                        var btn = document.getElementById('lux-account-btn');
+                                                                                        var menu = document.getElementById('lux-account-menu');
+                                                                                        if (btn && menu) {
+                                                                                            btn.addEventListener('click', function (e) {
+                                                                                                e.stopPropagation();
+                                                                                                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                                                                                            });
+                                                                                            window.addEventListener('click', function () {
+                                                                                                menu.style.display = 'none';
+                                                                                            });
                                                                                         }
                                                                                     })();
                                                                                 </script>
-
-                                                                                <%-- Dropdown menu --%>
-                                                                                    <div id="lux-account-menu"
-                                                                                        style="display:none;" class="absolute top-12 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl
-                                    border border-slate-100 min-w-[200px] z-50 overflow-hidden">
-                                                                                        <%-- User Info Header --%>
-                                                                                            <div
-                                                                                                class="px-4 py-3.5 border-b border-slate-100 bg-slate-50/30 mb-1">
-                                                                                                <p
-                                                                                                    class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
-                                                                                                    Welcome back</p>
-                                                                                                <p
-                                                                                                    class="text-sm font-bold text-slate-800 truncate font-serif-display tracking-wide">
-                                                                                                    ${sessionScope.user.fullname}
-                                                                                                </p>
-                                                                                            </div>
-                                                                                            <a href="${pageContext.request.contextPath}/profile"
-                                                                                                class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700
-                                      hover:text-[#024acf] hover:bg-blue-50/60 transition-colors font-medium">
-                                                                                                <i
-                                                                                                    class="fa-solid fa-id-card text-sm w-4"></i>
-                                                                                                Profile
-                                                                                            </a>
-                                                                                            <c:if
-                                                                                                test="${sessionScope.user.role == 'ADMIN'}">
-                                                                                                <a href="${pageContext.request.contextPath}/dashboard"
-                                                                                                    class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700
-                                          hover:text-[#024acf] hover:bg-blue-50/60 transition-colors font-medium">
-                                                                                                    <i
-                                                                                                        class="fa-solid fa-tachometer-alt text-sm w-4"></i>
-                                                                                                    Dashboard
-                                                                                                </a>
-                                                                                            </c:if>
-                                                                                            <c:if
-                                                                                                test="${sessionScope.user.role == 'USER'}">
-                                                                                                <a href="${pageContext.request.contextPath}/order"
-                                                                                                    class="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700
-                                          hover:text-[#024acf] hover:bg-blue-50/60 transition-colors font-medium">
-                                                                                                    <i
-                                                                                                        class="fa-solid fa-box text-sm w-4"></i>
-                                                                                                    Đơn hàng
-                                                                                                </a>
-                                                                                            </c:if>
-                                                                                            <hr
-                                                                                                class="my-1 border-slate-100">
-                                                                                            <a href="${pageContext.request.contextPath}/logout"
-                                                                                                class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-500
-                                      hover:bg-red-50/60 transition-colors font-medium">
-                                                                                                <i
-                                                                                                    class="fa-solid fa-right-from-bracket text-sm w-4"></i>
-                                                                                                Logout
-                                                                                            </a>
-                                                                                    </div>
-                                                                            </div>
-                                                                            <script>
-                                                                                (function () {
-                                                                                    var btn = document.getElementById('lux-account-btn');
-                                                                                    var menu = document.getElementById('lux-account-menu');
-                                                                                    if (btn && menu) {
-                                                                                        btn.addEventListener('click', function (e) {
-                                                                                            e.stopPropagation();
-                                                                                            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-                                                                                        });
-                                                                                        window.addEventListener('click', function () {
-                                                                                            menu.style.display = 'none';
-                                                                                        });
-                                                                                    }
-                                                                                })();
-                                                                            </script>
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        <%-- Not logged in --%>
-                                                                            <a class="flex items-center gap-2 transition-transform hover:-translate-y-0.5 duration-200 hidden sm:block"
-                                                                                href="${pageContext.request.contextPath}/login"
-                                                                                title="Login">
-                                                                                <img src="${pageContext.request.contextPath}/images/ava_default.png"
-                                                                                    alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md">
-                                                                            </a>
-                                                                    </c:otherwise>
-                                                                </c:choose>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <%-- Not logged in --%>
+                                                                                <a class="flex items-center gap-2 transition-transform hover:-translate-y-0.5 duration-200 hidden sm:block"
+                                                                                    href="${pageContext.request.contextPath}/login"
+                                                                                    title="Login">
+                                                                                    <img src="${pageContext.request.contextPath}/images/ava_default.png"
+                                                                                        alt="Avatar"
+                                                                                        class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md">
+                                                                                </a>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
 
                                                 </div>
                     </nav>
@@ -527,3 +576,136 @@
                                 }
                             })();
                         </script>
+
+                        <%-- ── Notification Bell Script (header-luxury.jsp) ── --%>
+                            <script>
+                                (function () {
+                                    var bellBtn = document.getElementById('pl-bell-btn');
+                                    var bellMenu = document.getElementById('pl-bell-menu');
+                                    var bellList = document.getElementById('pl-bell-list');
+                                    var bellBadge = document.getElementById('pl-bell-badge');
+                                    if (!bellBtn || !bellMenu) return;
+
+                                    var ctxPath = '${pageContext.request.contextPath}';
+                                    var loaded = false;
+
+                                    // ── Toggle dropdown ──
+                                    bellBtn.addEventListener('click', function (e) {
+                                        e.stopPropagation();
+                                        var isOpen = bellMenu.style.display === 'block';
+                                        bellMenu.style.display = isOpen ? 'none' : 'block';
+                                        if (!isOpen && !loaded) { loadNotifications(); }
+                                    });
+
+                                    // ── Close when clicking outside ──
+                                    document.addEventListener('click', function (e) {
+                                        if (!bellMenu.contains(e.target) && e.target !== bellBtn) {
+                                            bellMenu.style.display = 'none';
+                                        }
+                                    });
+
+                                    // ── Fetch & render notifications ──
+                                    function loadNotifications() {
+                                        loaded = true;
+                                        fetch(ctxPath + '/notifications/api?limit=10', { credentials: 'same-origin' })
+                                            .then(function (r) { return r.json(); })
+                                            .then(function (data) {
+                                                renderNotifications(data.notifications || []);
+                                                updateBadge(data.unreadCount || 0);
+                                            })
+                                            .catch(function () {
+                                                if (bellList) bellList.innerHTML =
+                                                    '<div style="display:flex;align-items:center;justify-content:center;padding:32px 16px;color:#94a3b8;font-size:13px;">'
+                                                    + '<i class="fa-solid fa-circle-exclamation" style="margin-right:8px;"></i>Không thể tải thông báo</div>';
+                                            });
+                                    }
+
+                                    function iconForType(type) {
+                                        if (type === 'ORDER') return { icon: 'local_shipping', bg: '#eff6ff', color: '#0056b3', border: '#bfdbfe' };
+                                        if (type === 'PROMOTION') return { icon: 'percent', bg: '#fffbeb', color: '#C5A059', border: '#fde68a' };
+                                        return { icon: 'info', bg: '#f8fafc', color: '#94a3b8', border: '#e2e8f0' };
+                                    }
+
+                                    function labelForType(type) {
+                                        if (type === 'ORDER') return 'Cập nhật đơn hàng';
+                                        if (type === 'PROMOTION') return 'Khuyến mãi';
+                                        return 'Hệ thống';
+                                    }
+
+                                    function renderNotifications(list) {
+                                        if (!bellList) return;
+                                        if (!list.length) {
+                                            bellList.innerHTML =
+                                                '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;color:#94a3b8;gap:10px;">'
+                                                + '<span class="material-symbols-outlined" style="font-size:48px;opacity:0.25;">notifications_off</span>'
+                                                + '<span style="font-size:13px;font-weight:500;">Bạn chưa có thông báo nào</span></div>';
+                                            return;
+                                        }
+                                        var html = '';
+                                        list.forEach(function (n) {
+                                            var ic = iconForType(n.type);
+                                            var lbl = labelForType(n.type);
+                                            var unreadBg = n.read ? '#F8FBFF' : '#EFF6FF';
+                                            var dotStyle = n.read
+                                                ? 'display:none;'
+                                                : 'position:absolute;top:18px;left:14px;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 8px #38bdf8;';
+                                            html += '<a href="' + ctxPath + '/notifications?action=markRead&id=' + n.id + '"'
+                                                + ' onclick="luxBellMarkRead(' + n.id + ')"'
+                                                + ' style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px 14px 20px;'
+                                                + 'background:' + unreadBg + ';border-bottom:1px solid #DBEAFE;'
+                                                + 'text-decoration:none;transition:background 0.2s;position:relative;cursor:pointer;"'
+                                                + ' onmouseenter="this.style.background=\'#DBEAFE\'"'
+                                                + ' onmouseleave="this.style.background=\'' + unreadBg + '\'">'
+                                                /* unread dot */
+                                                + '<span style="' + dotStyle + '"></span>'
+                                                /* type icon circle */
+                                                + '<div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;'
+                                                + 'display:flex;align-items:center;justify-content:center;'
+                                                + 'background:' + ic.bg + ';border:1px solid ' + ic.border + ';margin-left:4px;">'
+                                                + '<span class="material-symbols-outlined" style="font-size:20px;color:' + ic.color + ';">' + ic.icon + '</span>'
+                                                + '</div>'
+                                                /* text block */
+                                                + '<div style="flex:1;min-width:0;">'
+                                                + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;">'
+                                                + '<p style="font-size:13px;font-weight:700;color:#0f172a;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">' + (n.title || 'Thông báo') + '</p>'
+                                                + '<span style="font-size:10px;color:#94a3b8;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9999px;padding:1px 7px;white-space:nowrap;flex-shrink:0;margin-left:6px;">' + (n.time || '') + '</span>'
+                                                + '</div>'
+                                                + '<p style="font-size:12px;color:#475569;margin:0 0 4px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + (n.content || '') + '</p>'
+                                                + '<span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;">' + lbl + '</span>'
+                                                + '</div>'
+                                                + '</a>';
+                                        });
+                                        bellList.innerHTML = html;
+                                    }
+
+                                    function updateBadge(count) {
+                                        if (!bellBadge) return;
+                                        if (count > 0) {
+                                            bellBadge.textContent = count > 99 ? '99+' : count;
+                                            bellBadge.style.display = 'flex';
+                                        } else {
+                                            bellBadge.style.display = 'none';
+                                        }
+                                    }
+
+                                    // ── Mark single read ──
+                                    window.luxBellMarkRead = function (id) {
+                                        fetch(ctxPath + '/notifications/api?action=markRead&id=' + id,
+                                            { method: 'POST', credentials: 'same-origin' }).catch(function () { });
+                                    };
+
+                                    // ── Mark all read ──
+                                    window.plMarkAllRead = function () {
+                                        fetch(ctxPath + '/notifications/api?action=markAllRead',
+                                            { method: 'POST', credentials: 'same-origin' })
+                                            .then(function () { updateBadge(0); loaded = false; loadNotifications(); })
+                                            .catch(function () { });
+                                    };
+
+                                    // ── Auto-fetch badge count on page load ──
+                                    fetch(ctxPath + '/notifications/api?limit=1', { credentials: 'same-origin' })
+                                        .then(function (r) { return r.json(); })
+                                        .then(function (data) { updateBadge(data.unreadCount || 0); })
+                                        .catch(function () { });
+                                })();
+                            </script>

@@ -68,7 +68,52 @@
                                                     </span>
                                                 </a>
 
-                                                <%-- User / Account --%>
+                                                 <%-- ── Notification Bell ── --%>
+                                                    <c:if test="${not empty sessionScope.user}">
+                                                        <div class="relative" id="pl-bell-wrapper">
+                                                            <button id="pl-bell-btn"
+                                                                class="text-slate-600 hover:text-primary transition-transform hover:-translate-y-0.5 duration-200 relative"
+                                                                title="Thông báo" aria-label="Thông báo">
+                                                                <i class="fa-solid fa-bell text-lg"></i>
+                                                                <span id="pl-bell-badge"
+                                                                    style="display:none;"
+                                                                    class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold leading-none"></span>
+                                                            </button>
+                                                            <%-- Dropdown panel --%>
+                                                                <div id="pl-bell-menu" style="display:none;"
+                                                                    class="absolute top-10 right-0 w-[340px] rounded-2xl shadow-2xl border border-blue-100 z-50 overflow-hidden" style="background:#F8FBFF;">
+                                                                    <div
+                                                                        class="flex items-center justify-between px-4 py-3 border-b border-blue-100" style="background:#EFF6FF;">
+                                                                        <span
+                                                                            class="text-xs font-bold uppercase tracking-widest text-slate-500">Thông
+                                                                            báo</span>
+                                                                        <a href="${pageContext.request.contextPath}/notifications?action=markAllRead"
+                                                                            class="text-[11px] text-primary hover:underline font-semibold"
+                                                                            onclick="event.preventDefault();plMarkAllRead();">Đánh
+                                                                            dấu tất cả đã đọc</a>
+                                                                    </div>
+                                                                    <div id="pl-bell-list"
+                                                                        class="max-h-[320px] overflow-y-auto divide-y divide-slate-50">
+                                                                        <div
+                                                                            class="flex items-center justify-center py-8 text-slate-400 text-sm">
+                                                                            <i
+                                                                                class="fa-solid fa-spinner fa-spin mr-2"></i>
+                                                                            Đang tải...
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="border-t border-blue-100">
+                                                                        <a href="${pageContext.request.contextPath}/notifications"
+                                                                            class="flex items-center justify-center gap-2 py-3 text-xs font-bold uppercase tracking-widest text-primary transition-colors" style="background:#EFF6FF;" onmouseenter="this.style.background='#DBEAFE'" onmouseleave="this.style.background='#EFF6FF'">
+                                                                            <i
+                                                                                class="fa-solid fa-list text-xs"></i>
+                                                                            Tất cả thông báo
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                        </div>
+                                                    </c:if>
+
+                                                 <%-- User / Account --%>
                                                     <c:choose>
                                                         <c:when test="${not empty sessionScope.user}">
                                                             <%-- Logged in: avatar + dropdown --%>
@@ -445,4 +490,131 @@
                         html += '</div></div>';
                         container.innerHTML = html;
                     }
+                </script>
+
+                <%-- ── Notification Bell Script ── --%>
+                <script>
+                    (function () {
+                        var bellBtn  = document.getElementById('pl-bell-btn');
+                        var bellMenu = document.getElementById('pl-bell-menu');
+                        var bellList = document.getElementById('pl-bell-list');
+                        var bellBadge = document.getElementById('pl-bell-badge');
+                        if (!bellBtn || !bellMenu) return;
+
+                        var ctxPath = '${pageContext.request.contextPath}';
+                        var loaded  = false;
+
+                        // ── Toggle dropdown ──
+                        bellBtn.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            var isOpen = bellMenu.style.display === 'block';
+                            bellMenu.style.display = isOpen ? 'none' : 'block';
+                            if (!isOpen && !loaded) { loadNotifications(); }
+                        });
+
+                        // ── Close on outside click ──
+                        document.addEventListener('click', function (e) {
+                            if (!bellMenu.contains(e.target) && e.target !== bellBtn) {
+                                bellMenu.style.display = 'none';
+                            }
+                        });
+
+                        // ── Fetch & render notifications ──
+                        function loadNotifications() {
+                            loaded = true;
+                            fetch(ctxPath + '/notifications/api?limit=10', { credentials: 'same-origin' })
+                                .then(function (r) { return r.json(); })
+                                .then(function (data) {
+                                    renderNotifications(data.notifications || []);
+                                    updateBadge(data.unreadCount || 0);
+                                })
+                                .catch(function () {
+                                    if (bellList) bellList.innerHTML =
+                                        '<div class="flex items-center justify-center py-8 text-slate-400 text-sm">'
+                                        + '<i class="fa-solid fa-circle-exclamation mr-2"></i>Không thể tải thông báo</div>';
+                                });
+                        }
+
+                        function iconForType(type) {
+                            if (type === 'ORDER')     return { icon: 'local_shipping', bg: '#eff6ff', color: '#0056b3', border: '#bfdbfe' };
+                            if (type === 'PROMOTION') return { icon: 'percent',        bg: '#fffbeb', color: '#C5A059', border: '#fde68a' };
+                            return                           { icon: 'info',            bg: '#f8fafc', color: '#94a3b8', border: '#e2e8f0' };
+                        }
+                        function labelForType(type) {
+                            if (type === 'ORDER')     return 'Cập nhật đơn hàng';
+                            if (type === 'PROMOTION') return 'Khuyến mãi';
+                            return 'Hệ thống';
+                        }
+
+                        function renderNotifications(list) {
+                            if (!bellList) return;
+                            if (!list.length) {
+                                bellList.innerHTML =
+                                    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px;color:#94a3b8;gap:10px;">'
+                                    + '<span class="material-symbols-outlined" style="font-size:48px;opacity:0.25;">notifications_off</span>'
+                                    + '<span style="font-size:13px;font-weight:500;">Bạn chưa có thông báo nào</span></div>';
+                                return;
+                            }
+                            var html = '';
+                            list.forEach(function (n) {
+                                var ic  = iconForType(n.type);
+                                var lbl = labelForType(n.type);
+                                var unreadBg = n.read ? '#F8FBFF' : '#EFF6FF';
+                                var dotStyle = n.read
+                                    ? 'display:none;'
+                                    : 'position:absolute;top:18px;left:14px;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 8px #38bdf8;';
+                                html += '<a href="' + ctxPath + '/notifications?action=markRead&id=' + n.id + '"'
+                                    + ' onclick="plMarkRead(' + n.id + ')"'
+                                    + ' style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px 14px 20px;'
+                                    +         'background:' + unreadBg + ';border-bottom:1px solid #DBEAFE;'
+                                    +         'text-decoration:none;transition:background 0.2s;position:relative;"'
+                                    + ' onmouseenter="this.style.background=\'#DBEAFE\'"'
+                                    + ' onmouseleave="this.style.background=\'' + unreadBg + '\'">'
+                                    + '<span style="' + dotStyle + '"></span>'
+                                    + '<div style="width:44px;height:44px;border-radius:50%;flex-shrink:0;'
+                                    +           'display:flex;align-items:center;justify-content:center;'
+                                    +           'background:' + ic.bg + ';border:1px solid ' + ic.border + ';margin-left:4px;">'
+                                    +   '<span class="material-symbols-outlined" style="font-size:20px;color:' + ic.color + ';">' + ic.icon + '</span>'
+                                    + '</div>'
+                                    + '<div style="flex:1;min-width:0;">'
+                                    +   '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;">'
+                                    +     '<p style="font-size:13px;font-weight:700;color:#0f172a;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">' + (n.title || 'Thông báo') + '</p>'
+                                    +     '<span style="font-size:10px;color:#94a3b8;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9999px;padding:1px 7px;white-space:nowrap;flex-shrink:0;margin-left:6px;">' + (n.time || '') + '</span>'
+                                    +   '</div>'
+                                    +   '<p style="font-size:12px;color:#475569;margin:0 0 4px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">' + (n.content || '') + '</p>'
+                                    +   '<span style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;">' + lbl + '</span>'
+                                    + '</div>'
+                                    + '</a>';
+                            });
+                            bellList.innerHTML = html;
+                        }
+
+                        function updateBadge(count) {
+                            if (!bellBadge) return;
+                            if (count > 0) {
+                                bellBadge.textContent = count > 99 ? '99+' : count;
+                                bellBadge.style.display = 'flex';
+                            } else {
+                                bellBadge.style.display = 'none';
+                            }
+                        }
+
+                        // ── Mark single read ──
+                        window.plMarkRead = function (id) {
+                            fetch(ctxPath + '/notifications/api?action=markRead&id=' + id, { method: 'POST', credentials: 'same-origin' }).catch(function(){});
+                        };
+
+                        // ── Mark all read ──
+                        window.plMarkAllRead = function () {
+                            fetch(ctxPath + '/notifications/api?action=markAllRead', { method: 'POST', credentials: 'same-origin' })
+                                .then(function () { updateBadge(0); loaded = false; loadNotifications(); })
+                                .catch(function(){});
+                        };
+
+                        // ── Auto-fetch badge count on page load ──
+                        fetch(ctxPath + '/notifications/api?limit=1', { credentials: 'same-origin' })
+                            .then(function (r) { return r.json(); })
+                            .then(function (data) { updateBadge(data.unreadCount || 0); })
+                            .catch(function(){});
+                    })();
                 </script>

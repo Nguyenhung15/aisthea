@@ -207,6 +207,15 @@
         <servlet-name>NotificationServlet</servlet-name>
         <url-pattern>/notifications</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>NotificationApiServlet</servlet-name>
+        <servlet-class>com.aisthea.fashion.controller.NotificationApiServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>NotificationApiServlet</servlet-name>
+        <url-pattern>/notifications/api</url-pattern>
+    </servlet-mapping>
     <servlet>
         <servlet-name>StylistServlet</servlet-name>
         <servlet-class>com.aisthea.fashion.controller.StylistServlet</servlet-class>
