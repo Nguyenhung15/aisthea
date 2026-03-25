@@ -56,7 +56,11 @@
 
                     <style>
                         /* ── Base font override ── */
-                        body, button, input, select, textarea {
+                        body,
+                        button,
+                        input,
+                        select,
+                        textarea {
                             font-family: 'Manrope', sans-serif;
                         }
 
@@ -201,30 +205,32 @@
 
                                 <!-- Left: Images -->
                                 <div class="lg:col-span-7 flex flex-col gap-4">
-                                    <div
-                                        class="relative w-full max-w-xl mx-auto aspect-[4/5] overflow-hidden rounded-sm bg-white shadow-sm group cursor-crosshair"
-                                        onmousemove="zoomImage(event, this)"
-                                        onmouseleave="resetZoom(this)">
+                                    <div class="relative w-full max-w-xl mx-auto aspect-[4/5] overflow-hidden rounded-sm bg-white shadow-sm group cursor-crosshair"
+                                        onmousemove="zoomImage(event, this)" onmouseleave="resetZoom(this)">
                                         <img id="mainImage" src="${primaryImgUrl}" alt="${product.name}"
                                             class="w-full h-full object-cover origin-center transition-transform hover:duration-200 duration-500 ease-out group-hover:scale-[2]"
                                             onerror="this.src='${placeholderImg}'">
-                                            
+
                                         <!-- Prev / Next Buttons -->
-                                        <button onclick="prevImage(event)" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/70 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all z-10 transition-colors">
+                                        <button onclick="prevImage(event)"
+                                            class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/70 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all z-10 transition-colors">
                                             <span class="material-icons-outlined">chevron_left</span>
                                         </button>
-                                        <button onclick="nextImage(event)" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/70 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all z-10 transition-colors">
+                                        <button onclick="nextImage(event)"
+                                            class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white/70 hover:bg-white text-slate-800 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all z-10 transition-colors">
                                             <span class="material-icons-outlined">chevron_right</span>
                                         </button>
                                     </div>
 
                                     <div class="relative w-full max-w-xl mx-auto group/thumbs">
                                         <!-- Prev Button Thumbnails -->
-                                        <button onclick="scrollThumbs('left')" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white border border-slate-100 text-slate-800 rounded-full shadow-md opacity-0 group-hover/thumbs:opacity-100 transition-all z-10 hover:bg-slate-50 hover:scale-105 pointer-events-auto">
+                                        <button onclick="scrollThumbs('left')"
+                                            class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white border border-slate-100 text-slate-800 rounded-full shadow-md opacity-0 group-hover/thumbs:opacity-100 transition-all z-10 hover:bg-slate-50 hover:scale-105 pointer-events-auto">
                                             <span class="material-icons-outlined text-[18px]">chevron_left</span>
                                         </button>
 
-                                        <div class="flex gap-3 overflow-x-auto pb-1 pt-1 w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth" id="thumbnail-container">
+                                        <div class="flex gap-3 overflow-x-auto pb-1 pt-1 w-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth"
+                                            id="thumbnail-container">
                                             <c:forEach var="img" items="${images}">
                                                 <c:set var="thumbUrl" value="${img.imageUrl}" />
                                                 <c:if
@@ -233,8 +239,7 @@
                                                         value="${pageContext.request.contextPath}/uploads/${thumbUrl}" />
                                                 </c:if>
                                                 <div class="flex-shrink-0 w-20 aspect-[3/4] overflow-hidden rounded-sm cursor-pointer border-2 border-transparent hover:border-slate-800 transition-colors thumbnail-item opacity-70 hover:opacity-100"
-                                                    data-color="${img.color}"
-                                                    onclick="changeImage('${thumbUrl}')">
+                                                    data-color="${img.color}" onclick="changeImage('${thumbUrl}')">
                                                     <img src="${thumbUrl}" alt="Thumbnail"
                                                         class="w-full h-full object-cover"
                                                         onerror="this.src='${placeholderImg}'">
@@ -243,7 +248,8 @@
                                         </div>
 
                                         <!-- Next Button Thumbnails -->
-                                        <button onclick="scrollThumbs('right')" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white border border-slate-100 text-slate-800 rounded-full shadow-md opacity-0 group-hover/thumbs:opacity-100 transition-all z-10 hover:bg-slate-50 hover:scale-105 pointer-events-auto">
+                                        <button onclick="scrollThumbs('right')"
+                                            class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white border border-slate-100 text-slate-800 rounded-full shadow-md opacity-0 group-hover/thumbs:opacity-100 transition-all z-10 hover:bg-slate-50 hover:scale-105 pointer-events-auto">
                                             <span class="material-icons-outlined text-[18px]">chevron_right</span>
                                         </button>
                                     </div>
@@ -309,16 +315,19 @@
                                                 <span class="text-3xl text-primary font-bold">
                                                     <c:choose>
                                                         <c:when test="${not empty product.actualPrice}">
-                                                            <fmt:formatNumber value="${product.actualPrice}" type="number" groupingUsed="true" />₫
+                                                            <fmt:formatNumber value="${product.actualPrice}"
+                                                                type="number" groupingUsed="true" />₫
                                                         </c:when>
                                                         <c:otherwise>0₫</c:otherwise>
                                                     </c:choose>
                                                 </span>
                                                 <c:if test="${product.discount != null && product.discount > 0}">
                                                     <span class="text-lg text-slate-400 line-through">
-                                                        <fmt:formatNumber value="${product.price}" type="number" groupingUsed="true" />₫
+                                                        <fmt:formatNumber value="${product.price}" type="number"
+                                                            groupingUsed="true" />₫
                                                     </span>
-                                                    <span class="bg-red-50 text-red-500 text-xs font-bold px-2 py-1 rounded">
+                                                    <span
+                                                        class="bg-red-50 text-red-500 text-xs font-bold px-2 py-1 rounded">
                                                         -${product.discount.intValue()}%
                                                     </span>
                                                 </c:if>
@@ -408,7 +417,7 @@
                                             <div class="flex flex-col gap-4">
                                                 <button type="submit" id="add-to-cart-btn" disabled
                                                     class="btn-luxury w-full py-5 bg-primary text-white text-[11px] font-extrabold tracking-[0.25em] uppercase hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-3 disabled:bg-slate-200 disabled:shadow-none disabled:text-slate-400 disabled:cursor-not-allowed">
-                                                    <span>Add to Cart</span>
+                                                    <span>Thêm vào giỏ hàng</span>
                                                     <span
                                                         class="material-symbols-outlined text-base">shopping_bag</span>
                                                 </button>
@@ -416,7 +425,7 @@
                                                     onclick="document.querySelector('input[name=action]').value='buy'"
                                                     disabled
                                                     class="w-full py-5 border border-slate-900 text-slate-900 text-[11px] font-extrabold tracking-[0.25em] uppercase hover:bg-slate-900 hover:text-white transition-all disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-900 disabled:cursor-not-allowed">
-                                                    Buy Now
+                                                    Mua ngay
                                                 </button>
                                             </div>
 
@@ -566,68 +575,104 @@
                                                         <div class="py-6 group relative">
                                                             <div class="flex items-start gap-4">
                                                                 <!-- Avatar -->
-                                                                <div class="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-serif text-sm font-bold uppercase shrink-0">
-                                                                    ${not empty fb.username ? fn:substring(fb.username, 0, 1) : 'A'}
+                                                                <div
+                                                                    class="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-serif text-sm font-bold uppercase shrink-0">
+                                                                    ${not empty fb.username ? fn:substring(fb.username,
+                                                                    0, 1) : 'A'}
                                                                 </div>
-                                                                
+
                                                                 <div class="flex-1 min-w-0">
                                                                     <!-- Header inline -->
-                                                                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-1">
-                                                                        <h4 class="font-bold text-[14px] text-slate-900 truncate max-w-full">
-                                                                            ${not empty fb.username ? fb.username : 'Anonymous'}
+                                                                    <div
+                                                                        class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-1">
+                                                                        <h4
+                                                                            class="font-bold text-[14px] text-slate-900 truncate max-w-full">
+                                                                            ${not empty fb.username ? fb.username :
+                                                                            'Anonymous'}
                                                                         </h4>
                                                                         <div class="flex gap-0.5 text-xs">
                                                                             <c:forEach begin="1" end="5" var="s">
-                                                                                <span class="material-symbols-outlined text-[12px] ${s <= fb.rating ? 'text-yellow-400' : 'text-slate-200'}" style="${s <= fb.rating ? 'font-variation-settings: \'FILL\' 1;' : ''}">star</span>
+                                                                                <span
+                                                                                    class="material-symbols-outlined text-[12px] ${s <= fb.rating ? 'text-yellow-400' : 'text-slate-200'}"
+                                                                                    style="${s <= fb.rating ? 'font-variation-settings: \'FILL\' 1;' : ''}">star</span>
                                                                             </c:forEach>
                                                                         </div>
                                                                         <c:if test="${fb.verified}">
-                                                                            <span class="inline-flex items-center gap-1 text-[8px] font-extrabold uppercase tracking-widest text-[#024acf] bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100">
-                                                                                <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                                                            <span
+                                                                                class="inline-flex items-center gap-1 text-[8px] font-extrabold uppercase tracking-widest text-[#024acf] bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100">
+                                                                                <span
+                                                                                    class="material-symbols-outlined text-[10px]"
+                                                                                    style="font-variation-settings: 'FILL' 1;">verified</span>
                                                                                 Verified
                                                                             </span>
                                                                         </c:if>
-                                                                        <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-auto shrink-0">
-                                                                            <fmt:formatDate value="${fb.createdat}" pattern="MMM dd, yyyy" />
+                                                                        <div
+                                                                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-auto shrink-0">
+                                                                            <fmt:formatDate value="${fb.createdat}"
+                                                                                pattern="MMM dd, yyyy" />
                                                                         </div>
                                                                     </div>
-                                                                    
+
                                                                     <!-- Message & Actions Horizontal -->
-                                                                    <div class="flex flex-wrap items-end gap-x-4 gap-y-2 mt-1">
-                                                                        <p class="text-[14px] text-slate-800 leading-relaxed font-medium flex-1 min-w-[200px]">
+                                                                    <div
+                                                                        class="flex flex-wrap items-end gap-x-4 gap-y-2 mt-1">
+                                                                        <p
+                                                                            class="text-[14px] text-slate-800 leading-relaxed font-medium flex-1 min-w-[200px]">
                                                                             ${not empty fb.comment ? fb.comment : ''}
                                                                         </p>
 
                                                                         <!-- Helpful/Edit Actions -->
                                                                         <div class="shrink-0 flex items-center">
                                                                             <c:choose>
-                                                                                <c:when test="${not empty sessionScope.user and sessionScope.user.userId == fb.userid}">
-                                                                                    <div class="flex items-center gap-2">
+                                                                                <c:when
+                                                                                    test="${not empty sessionScope.user and sessionScope.user.userId == fb.userid}">
+                                                                                    <div
+                                                                                        class="flex items-center gap-2">
                                                                                         <button type="button"
-                                                                                            onclick="openEditModal(${fb.feedbackid}, ${fb.rating}, '${fn:replace(fb.comment, "'", "&#39;")}', '${pageContext.request.contextPath}')"
+                                                                                            onclick="openEditModal(${fb.feedbackid}, ${fb.rating}, '${fn:replace(fb.comment, "'", "&#39;")}'
+                                                                                            , '${pageContext.request.contextPath}'
+                                                                                            )"
                                                                                             class="flex items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors group/btn">
-                                                                                            <span class="material-symbols-outlined text-[15px]">edit_note</span>
-                                                                                            <span class="text-[10px] font-bold uppercase tracking-widest">Sửa</span>
+                                                                                            <span
+                                                                                                class="material-symbols-outlined text-[15px]">edit_note</span>
+                                                                                            <span
+                                                                                                class="text-[10px] font-bold uppercase tracking-widest">Sửa</span>
                                                                                         </button>
-                                                                                        <span class="text-slate-200">|</span>
+                                                                                        <span
+                                                                                            class="text-slate-200">|</span>
                                                                                         <button type="button"
                                                                                             onclick="openDeleteModal(${fb.feedbackid}, '${pageContext.request.contextPath}')"
                                                                                             class="flex items-center gap-1 text-slate-400 hover:text-red-500 transition-colors group/btn">
-                                                                                            <span class="material-symbols-outlined text-[15px]">delete</span>
-                                                                                            <span class="text-[10px] font-bold uppercase tracking-widest">Xóa</span>
+                                                                                            <span
+                                                                                                class="material-symbols-outlined text-[15px]">delete</span>
+                                                                                            <span
+                                                                                                class="text-[10px] font-bold uppercase tracking-widest">Xóa</span>
                                                                                         </button>
                                                                                     </div>
                                                                                 </c:when>
-                                                                                <c:when test="${not empty sessionScope.likedMap and sessionScope.likedMap[fb.feedbackid]}">
-                                                                                    <button type="button" disabled class="flex items-center gap-1.5 text-rose-500 transition-all duration-300 group/btn cursor-not-allowed">
-                                                                                        <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
-                                                                                        <span class="text-[12px] font-bold tracking-widest ml-1"><span class="count">${fb.helpfulCount}</span></span>
+                                                                                <c:when
+                                                                                    test="${not empty sessionScope.likedMap and sessionScope.likedMap[fb.feedbackid]}">
+                                                                                    <button type="button" disabled
+                                                                                        class="flex items-center gap-1.5 text-rose-500 transition-all duration-300 group/btn cursor-not-allowed">
+                                                                                        <span
+                                                                                            class="material-symbols-outlined text-[24px]"
+                                                                                            style="font-variation-settings: 'FILL' 1;">favorite</span>
+                                                                                        <span
+                                                                                            class="text-[12px] font-bold tracking-widest ml-1"><span
+                                                                                                class="count">${fb.helpfulCount}</span></span>
                                                                                     </button>
                                                                                 </c:when>
                                                                                 <c:otherwise>
-                                                                                    <button type="button" onclick="handleHelpful(${fb.feedbackid}, this)" data-fbid="${fb.feedbackid}" class="helpful-btn flex items-center gap-1.5 text-slate-400 hover:text-rose-500 transition-all duration-300 group/btn">
-                                                                                        <span class="material-symbols-outlined text-[24px] group-hover/btn:scale-110 transition-transform" style="font-variation-settings: 'FILL' 0;">favorite</span>
-                                                                                        <span class="text-[12px] font-bold tracking-widest ml-1"><span class="count">${fb.helpfulCount}</span></span>
+                                                                                    <button type="button"
+                                                                                        onclick="handleHelpful(${fb.feedbackid}, this)"
+                                                                                        data-fbid="${fb.feedbackid}"
+                                                                                        class="helpful-btn flex items-center gap-1.5 text-slate-400 hover:text-rose-500 transition-all duration-300 group/btn">
+                                                                                        <span
+                                                                                            class="material-symbols-outlined text-[24px] group-hover/btn:scale-110 transition-transform"
+                                                                                            style="font-variation-settings: 'FILL' 0;">favorite</span>
+                                                                                        <span
+                                                                                            class="text-[12px] font-bold tracking-widest ml-1"><span
+                                                                                                class="count">${fb.helpfulCount}</span></span>
                                                                                     </button>
                                                                                 </c:otherwise>
                                                                             </c:choose>
@@ -636,22 +681,34 @@
 
                                                                     <div class="flex flex-col items-start">
                                                                         <c:if test="${not empty fb.imageUrl}">
-                                                                            <c:set var="resolvedImageUrl" value="${fb.imageUrl}" />
-                                                                            <c:if test="${not fn:startsWith(resolvedImageUrl, 'http') and not fn:startsWith(resolvedImageUrl, '/')}">
-                                                                                <c:set var="resolvedImageUrl" value="${pageContext.request.contextPath}/uploads/${resolvedImageUrl}" />
+                                                                            <c:set var="resolvedImageUrl"
+                                                                                value="${fb.imageUrl}" />
+                                                                            <c:if
+                                                                                test="${not fn:startsWith(resolvedImageUrl, 'http') and not fn:startsWith(resolvedImageUrl, '/')}">
+                                                                                <c:set var="resolvedImageUrl"
+                                                                                    value="${pageContext.request.contextPath}/uploads/${resolvedImageUrl}" />
                                                                             </c:if>
-                                                                            <div class="mt-2 overflow-hidden rounded border border-slate-100 inline-block group/img">
-                                                                                <img src="${resolvedImageUrl}" alt="User upload" class="max-w-[90px] aspect-square object-cover transition-transform duration-700 group-hover/img:scale-105" onerror="this.parentElement.style.display='none'">
+                                                                            <div
+                                                                                class="mt-2 overflow-hidden rounded border border-slate-100 inline-block group/img">
+                                                                                <img src="${resolvedImageUrl}"
+                                                                                    alt="User upload"
+                                                                                    class="max-w-[90px] aspect-square object-cover transition-transform duration-700 group-hover/img:scale-105"
+                                                                                    onerror="this.parentElement.style.display='none'">
                                                                             </div>
                                                                         </c:if>
 
                                                                         <!-- Admin Reply -->
                                                                         <c:if test="${not empty fb.adminReply}">
-                                                                            <div class="bg-slate-50/80 p-3 rounded-tr-xl rounded-b-xl rounded-bl-sm border-l-2 border-slate-900 mt-2 inline-block">
-                                                                                <div class="flex items-center gap-1.5 mb-1">
-                                                                                    <span class="text-[9px] font-extrabold uppercase tracking-[0.2em] text-slate-900">AISTHÉA Reply</span>
+                                                                            <div
+                                                                                class="bg-slate-50/80 p-3 rounded-tr-xl rounded-b-xl rounded-bl-sm border-l-2 border-slate-900 mt-2 inline-block">
+                                                                                <div
+                                                                                    class="flex items-center gap-1.5 mb-1">
+                                                                                    <span
+                                                                                        class="text-[9px] font-extrabold uppercase tracking-[0.2em] text-slate-900">AISTHÉA
+                                                                                        Reply</span>
                                                                                 </div>
-                                                                                <p class="text-[12px] text-slate-700 font-serif leading-relaxed italic pr-2">
+                                                                                <p
+                                                                                    class="text-[12px] text-slate-700 font-serif leading-relaxed italic pr-2">
                                                                                     "${fb.adminReply}"
                                                                                 </p>
                                                                             </div>
@@ -886,7 +943,7 @@
 
                                     let currentImgIdx = 0;
                                     const mainImgElt = document.getElementById('mainImage');
-                                    
+
                                     function updateThumbStyle(activeIndex) {
                                         if (!thumbs || thumbs.length === 0) return;
                                         thumbs.forEach((t, i) => {
@@ -901,7 +958,7 @@
                                         });
                                     }
 
-                                    if(productImages.length > 0) {
+                                    if (productImages.length > 0) {
                                         const foundIdx = productImages.findIndex(url => mainImgElt.src.includes(url));
                                         if (foundIdx >= 0) currentImgIdx = foundIdx;
                                         updateThumbStyle(currentImgIdx);
@@ -909,7 +966,7 @@
 
                                     window.changeImage = function (url) {
                                         // handle if called from older color switch logic that passes img element
-                                        if(typeof url === 'object' && url.src) {
+                                        if (typeof url === 'object' && url.src) {
                                             url = url.src;
                                         }
                                         mainImgElt.src = url;
@@ -1069,7 +1126,7 @@
                                         selectedColor = c;
 
                                         const targetColorSafe = c ? c.trim().toUpperCase() : null;
-                                        
+
                                         // Case-insensitive lookup for URL map
                                         let mappedUrl = null;
                                         for (const [col, url] of Object.entries(colorToImageUrlMap)) {
@@ -1091,7 +1148,7 @@
                                             const thumbColorSafe = t.dataset.color ? t.dataset.color.trim().toUpperCase() : null;
                                             if (!targetColorSafe || thumbColorSafe === targetColorSafe || !t.dataset.color) {
                                                 t.style.display = 'block';
-                                                
+
                                                 if (!firstVisibleThumbSrc) {
                                                     const imgElt = t.querySelector('img');
                                                     if (imgElt && imgElt.src) firstVisibleThumbSrc = imgElt.src;
@@ -1261,22 +1318,22 @@
                                                         const currentCount = parseInt(countSpan.textContent);
                                                         countSpan.textContent = currentCount + 1;
                                                     }
-                                                    
+
                                                     // Make the button look permanently "liked" and unclickable
                                                     btn.style.color = '#f43f5e'; // rose-500
                                                     btn.style.cursor = 'not-allowed';
                                                     btn.classList.remove('hover:text-rose-500');
-                                                    
+
                                                     const icon = btn.querySelector('.material-symbols-outlined');
                                                     if (icon) {
                                                         icon.style.fontVariationSettings = "'FILL' 1";
                                                         icon.classList.remove('group-hover/btn:scale-110');
-                                                        
+
                                                         // Heart beat animation once
                                                         icon.style.transform = 'scale(1.3)';
                                                         setTimeout(() => icon.style.transform = 'scale(1)', 300);
                                                     }
-                                                    
+
                                                     // Remove the onclick event so it can't be clicked again
                                                     btn.removeAttribute('onclick');
 
@@ -1321,206 +1378,234 @@
                                 })();
                             </script>
 
-                    <!-- ===== Modal SỬA feedback ===== -->
-                    <div id="editFbModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden" onclick="if(event.target===this)closeEditModal()">
-                        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8">
-                            <div class="flex items-center justify-between mb-6">
-                                <h3 class="font-serif text-xl text-slate-900">Chỉnh sửa đánh giá</h3>
-                                <button onclick="closeEditModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
-                                    <span class="material-symbols-outlined text-[18px] text-slate-600">close</span>
-                                </button>
-                            </div>
-                            <form id="editFbForm" method="POST">
-                                <input type="hidden" name="action" value="update">
-                                <input type="hidden" name="feedbackId" id="editFbId">
-                                <input type="hidden" name="redirectUrl" id="editRedirectUrl">
-                                <!-- Stars -->
-                                <div class="mb-5">
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Đánh giá</label>
-                                    <div id="editStars" class="flex gap-1">
-                                        <c:forEach begin="1" end="5" var="es">
-                                            <span class="material-symbols-outlined text-3xl text-slate-300 cursor-pointer edit-star" data-val="${es}"
-                                                style="font-variation-settings:'FILL' 0;"
-                                                onmouseover="hoverEditStar(${es})" onmouseout="unhoverEditStar()" onclick="selectEditStar(${es})">star</span>
-                                        </c:forEach>
+                            <!-- ===== Modal SỬA feedback ===== -->
+                            <div id="editFbModal"
+                                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden"
+                                onclick="if(event.target===this)closeEditModal()">
+                                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <h3 class="font-serif text-xl text-slate-900">Chỉnh sửa đánh giá</h3>
+                                        <button onclick="closeEditModal()"
+                                            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+                                            <span
+                                                class="material-symbols-outlined text-[18px] text-slate-600">close</span>
+                                        </button>
                                     </div>
-                                    <input type="hidden" name="rating" id="editRatingVal" value="5">
+                                    <form id="editFbForm" method="POST">
+                                        <input type="hidden" name="action" value="update">
+                                        <input type="hidden" name="feedbackId" id="editFbId">
+                                        <input type="hidden" name="redirectUrl" id="editRedirectUrl">
+                                        <!-- Stars -->
+                                        <div class="mb-5">
+                                            <label
+                                                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Đánh
+                                                giá</label>
+                                            <div id="editStars" class="flex gap-1">
+                                                <c:forEach begin="1" end="5" var="es">
+                                                    <span
+                                                        class="material-symbols-outlined text-3xl text-slate-300 cursor-pointer edit-star"
+                                                        data-val="${es}" style="font-variation-settings:'FILL' 0;"
+                                                        onmouseover="hoverEditStar(${es})"
+                                                        onmouseout="unhoverEditStar()"
+                                                        onclick="selectEditStar(${es})">star</span>
+                                                </c:forEach>
+                                            </div>
+                                            <input type="hidden" name="rating" id="editRatingVal" value="5">
+                                        </div>
+                                        <!-- Comment -->
+                                        <div class="mb-6">
+                                            <label
+                                                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nhận
+                                                xét</label>
+                                            <textarea name="comment" id="editComment" rows="4"
+                                                class="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-800 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-slate-900"
+                                                placeholder="Chia sẻ cảm nhận của bạn..."></textarea>
+                                        </div>
+                                        <div class="flex gap-3">
+                                            <button type="button" onclick="closeEditModal()"
+                                                class="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Huỷ</button>
+                                            <button type="submit"
+                                                class="flex-1 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition-colors">Lưu
+                                                thay đổi</button>
+                                        </div>
+                                    </form>
                                 </div>
-                                <!-- Comment -->
-                                <div class="mb-6">
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Nhận xét</label>
-                                    <textarea name="comment" id="editComment" rows="4"
-                                        class="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-800 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-slate-900"
-                                        placeholder="Chia sẻ cảm nhận của bạn..."></textarea>
-                                </div>
-                                <div class="flex gap-3">
-                                    <button type="button" onclick="closeEditModal()" class="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Huỷ</button>
-                                    <button type="submit" class="flex-1 py-3 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-700 transition-colors">Lưu thay đổi</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- ===== Modal XÓA feedback ===== -->
-                    <div id="deleteFbModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden" onclick="if(event.target===this)closeDeleteModal()">
-                        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 text-center">
-                            <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-                                <span class="material-symbols-outlined text-red-500 text-3xl">delete_forever</span>
                             </div>
-                            <h3 class="font-serif text-xl text-slate-900 mb-2">Xoá đánh giá?</h3>
-                            <p class="text-sm text-slate-500 mb-6">Hành động này không thể hoàn tác. Đánh giá của bạn sẽ bị xoá vĩnh viễn.</p>
-                            <form id="deleteFbForm" method="POST">
-                                <input type="hidden" name="action" value="delete">
-                                <input type="hidden" name="feedbackId" id="deleteFbId">
-                                <input type="hidden" name="redirectUrl" id="deleteRedirectUrl">
-                                <div class="flex gap-3">
-                                    <button type="button" onclick="closeDeleteModal()" class="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Huỷ</button>
-                                    <button type="submit" class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold transition-colors">Xoá</button>
+
+                            <!-- ===== Modal XÓA feedback ===== -->
+                            <div id="deleteFbModal"
+                                class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden"
+                                onclick="if(event.target===this)closeDeleteModal()">
+                                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8 text-center">
+                                    <div
+                                        class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                                        <span
+                                            class="material-symbols-outlined text-red-500 text-3xl">delete_forever</span>
+                                    </div>
+                                    <h3 class="font-serif text-xl text-slate-900 mb-2">Xoá đánh giá?</h3>
+                                    <p class="text-sm text-slate-500 mb-6">Hành động này không thể hoàn tác. Đánh giá
+                                        của bạn sẽ bị xoá vĩnh viễn.</p>
+                                    <form id="deleteFbForm" method="POST">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="feedbackId" id="deleteFbId">
+                                        <input type="hidden" name="redirectUrl" id="deleteRedirectUrl">
+                                        <div class="flex gap-3">
+                                            <button type="button" onclick="closeDeleteModal()"
+                                                class="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Huỷ</button>
+                                            <button type="submit"
+                                                class="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold transition-colors">Xoá</button>
+                                        </div>
+                                    </form>
                                 </div>
-                            </form>
-                        </div>
-                    </div>
+                            </div>
 
-                    <!-- Tiny Toast for Product Detail -->
-                    <div id="pd-toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[10000] transform transition-all duration-500 opacity-0 translate-y-10 pointer-events-none">
-                        <div class="bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-4 min-w-[300px] border border-white/10">
-                             <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                <span id="pd-toast-icon" class="material-icons-outlined text-emerald-400 text-lg">check_circle</span>
-                             </div>
-                             <div class="flex flex-col">
-                                <span id="pd-toast-msg" class="text-xs font-bold uppercase tracking-[0.2em]">Sản phẩm đã được thêm</span>
-                                <a href="${pageContext.request.contextPath}/cart" class="text-[10px] text-accent-blue font-bold uppercase tracking-widest hover:underline mt-0.5">Xem giỏ hàng →</a>
-                             </div>
-                        </div>
-                    </div>
+                            <!-- Tiny Toast for Product Detail -->
+                            <div id="pd-toast"
+                                class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[10000] transform transition-all duration-500 opacity-0 translate-y-10 pointer-events-none">
+                                <div
+                                    class="bg-slate-900 text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-4 min-w-[300px] border border-white/10">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                                        <span id="pd-toast-icon"
+                                            class="material-icons-outlined text-emerald-400 text-lg">check_circle</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span id="pd-toast-msg" class="text-xs font-bold uppercase tracking-[0.2em]">Sản
+                                            phẩm đã được thêm</span>
+                                        <a href="${pageContext.request.contextPath}/cart"
+                                            class="text-[10px] text-accent-blue font-bold uppercase tracking-widest hover:underline mt-0.5">Xem
+                                            giỏ hàng →</a>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <script>
-                        var _ctxPath = '${pageContext.request.contextPath}';
-                        var _currentUrl = window.location.href;
+                            <script>
+                                var _ctxPath = '${pageContext.request.contextPath}';
+                                var _currentUrl = window.location.href;
 
-                        // ─── AJAX Add to Cart ───
-                        const cartForm = document.getElementById('cartForm');
-                        if (cartForm) {
-                            cartForm.addEventListener('submit', function(e) {
-                                const action = cartForm.querySelector('input[name="action"]').value;
-                                if (action === 'add') {
-                                    e.preventDefault();
-                                    const btn = document.getElementById('add-to-cart-btn');
-                                    const originalContent = btn.innerHTML;
-                                    
-                                    // Visual feedback
-                                    btn.disabled = true;
-                                    btn.innerHTML = '<span class="animate-spin material-symbols-outlined text-base">progress_activity</span>';
+                                // ─── AJAX Add to Cart ───
+                                const cartForm = document.getElementById('cartForm');
+                                if (cartForm) {
+                                    cartForm.addEventListener('submit', function (e) {
+                                        const action = cartForm.querySelector('input[name="action"]').value;
+                                        if (action === 'add') {
+                                            e.preventDefault();
+                                            const btn = document.getElementById('add-to-cart-btn');
+                                            const originalContent = btn.innerHTML;
 
-                                    fetch(cartForm.getAttribute('action'), {
-                                        method: 'POST',
-                                        body: new URLSearchParams(new FormData(cartForm)),
-                                        headers: {
-                                            'Content-Type': 'application/x-www-form-urlencoded',
-                                            'X-Requested-With': 'XMLHttpRequest'
+                                            // Visual feedback
+                                            btn.disabled = true;
+                                            btn.innerHTML = '<span class="animate-spin material-symbols-outlined text-base">progress_activity</span>';
+
+                                            fetch(cartForm.getAttribute('action'), {
+                                                method: 'POST',
+                                                body: new URLSearchParams(new FormData(cartForm)),
+                                                headers: {
+                                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                                    'X-Requested-With': 'XMLHttpRequest'
+                                                }
+                                            })
+                                                .then(res => res.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        showPdToast('Đã thêm vào giỏ hàng!', 'success');
+                                                        // Update badge
+                                                        const badge = document.getElementById('cart-badge');
+                                                        if (badge) {
+                                                            badge.textContent = data.cartCount;
+                                                            badge.classList.remove('hidden');
+                                                            // Bounce effect
+                                                            badge.style.transform = 'scale(1.4)';
+                                                            setTimeout(() => badge.style.transform = 'scale(1)', 300);
+                                                        }
+                                                    } else {
+                                                        showPdToast(data.message || 'Lỗi khi thêm vào giỏ', 'error');
+                                                    }
+                                                })
+                                                .catch(err => {
+                                                    console.error(err);
+                                                    showPdToast('Lỗi kết nối', 'error');
+                                                })
+                                                .finally(() => {
+                                                    btn.disabled = false;
+                                                    btn.innerHTML = originalContent;
+                                                });
                                         }
-                                    })
-                                    .then(res => res.json())
-                                    .then(data => {
-                                        if (data.success) {
-                                            showPdToast('Đã thêm vào giỏ hàng!', 'success');
-                                            // Update badge
-                                            const badge = document.getElementById('cart-badge');
-                                            if (badge) {
-                                                badge.textContent = data.cartCount;
-                                                badge.classList.remove('hidden');
-                                                // Bounce effect
-                                                badge.style.transform = 'scale(1.4)';
-                                                setTimeout(() => badge.style.transform = 'scale(1)', 300);
-                                            }
-                                        } else {
-                                            showPdToast(data.message || 'Lỗi khi thêm vào giỏ', 'error');
-                                        }
-                                    })
-                                    .catch(err => {
-                                        console.error(err);
-                                        showPdToast('Lỗi kết nối', 'error');
-                                    })
-                                    .finally(() => {
-                                        btn.disabled = false;
-                                        btn.innerHTML = originalContent;
                                     });
                                 }
-                            });
-                        }
 
-                        function showPdToast(msg, type = 'success') {
-                            const toast = document.getElementById('pd-toast');
-                            const msgEl = document.getElementById('pd-toast-msg');
-                            const iconEl = document.getElementById('pd-toast-icon');
-                            
-                            msgEl.textContent = msg;
-                            if (type === 'success') {
-                                iconEl.textContent = 'check_circle';
-                                iconEl.className = 'material-icons-outlined text-emerald-400 text-lg';
-                            } else {
-                                iconEl.textContent = 'error';
-                                iconEl.className = 'material-icons-outlined text-red-400 text-lg';
-                            }
+                                function showPdToast(msg, type = 'success') {
+                                    const toast = document.getElementById('pd-toast');
+                                    const msgEl = document.getElementById('pd-toast-msg');
+                                    const iconEl = document.getElementById('pd-toast-icon');
 
-                            toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
-                            toast.classList.add('opacity-100', 'translate-y-0');
+                                    msgEl.textContent = msg;
+                                    if (type === 'success') {
+                                        iconEl.textContent = 'check_circle';
+                                        iconEl.className = 'material-icons-outlined text-emerald-400 text-lg';
+                                    } else {
+                                        iconEl.textContent = 'error';
+                                        iconEl.className = 'material-icons-outlined text-red-400 text-lg';
+                                    }
 
-                            setTimeout(() => {
-                                toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
-                                toast.classList.remove('opacity-100', 'translate-y-0');
-                            }, 4000);
-                        }
-                        // ─── Edit modal ───
-                        var _editSelectedStar = 5;
+                                    toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                                    toast.classList.add('opacity-100', 'translate-y-0');
 
-                        function openEditModal(fbId, rating, comment, ctx) {
-                            document.getElementById('editFbId').value = fbId;
-                            document.getElementById('editComment').value = comment;
-                            document.getElementById('editRedirectUrl').value = _currentUrl;
-                            document.getElementById('editFbForm').setAttribute('action', _ctxPath + '/feedback');
-                            _editSelectedStar = rating;
-                            renderEditStars(rating);
-                            document.getElementById('editRatingVal').value = rating;
-                            document.getElementById('editFbModal').classList.remove('hidden');
-                            document.body.style.overflow = 'hidden';
-                        }
+                                    setTimeout(() => {
+                                        toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+                                        toast.classList.remove('opacity-100', 'translate-y-0');
+                                    }, 4000);
+                                }
+                                // ─── Edit modal ───
+                                var _editSelectedStar = 5;
 
-                        function closeEditModal() {
-                            document.getElementById('editFbModal').classList.add('hidden');
-                            document.body.style.overflow = '';
-                        }
+                                function openEditModal(fbId, rating, comment, ctx) {
+                                    document.getElementById('editFbId').value = fbId;
+                                    document.getElementById('editComment').value = comment;
+                                    document.getElementById('editRedirectUrl').value = _currentUrl;
+                                    document.getElementById('editFbForm').setAttribute('action', _ctxPath + '/feedback');
+                                    _editSelectedStar = rating;
+                                    renderEditStars(rating);
+                                    document.getElementById('editRatingVal').value = rating;
+                                    document.getElementById('editFbModal').classList.remove('hidden');
+                                    document.body.style.overflow = 'hidden';
+                                }
 
-                        function renderEditStars(val) {
-                            document.querySelectorAll('.edit-star').forEach(function(s) {
-                                var v = parseInt(s.getAttribute('data-val'));
-                                s.style.color = v <= val ? '#facc15' : '#cbd5e1';
-                                s.style.fontVariationSettings = v <= val ? "'FILL' 1" : "'FILL' 0";
-                            });
-                        }
+                                function closeEditModal() {
+                                    document.getElementById('editFbModal').classList.add('hidden');
+                                    document.body.style.overflow = '';
+                                }
 
-                        function hoverEditStar(val) { renderEditStars(val); }
-                        function unhoverEditStar()  { renderEditStars(_editSelectedStar); }
-                        function selectEditStar(val) {
-                            _editSelectedStar = val;
-                            document.getElementById('editRatingVal').value = val;
-                            renderEditStars(val);
-                        }
+                                function renderEditStars(val) {
+                                    document.querySelectorAll('.edit-star').forEach(function (s) {
+                                        var v = parseInt(s.getAttribute('data-val'));
+                                        s.style.color = v <= val ? '#facc15' : '#cbd5e1';
+                                        s.style.fontVariationSettings = v <= val ? "'FILL' 1" : "'FILL' 0";
+                                    });
+                                }
 
-                        // ─── Delete modal ───
-                        function openDeleteModal(fbId, ctx) {
-                            document.getElementById('deleteFbId').value = fbId;
-                            document.getElementById('deleteRedirectUrl').value = _currentUrl;
-                            document.getElementById('deleteFbForm').setAttribute('action', _ctxPath + '/feedback');
-                            document.getElementById('deleteFbModal').classList.remove('hidden');
-                            document.body.style.overflow = 'hidden';
-                        }
+                                function hoverEditStar(val) { renderEditStars(val); }
+                                function unhoverEditStar() { renderEditStars(_editSelectedStar); }
+                                function selectEditStar(val) {
+                                    _editSelectedStar = val;
+                                    document.getElementById('editRatingVal').value = val;
+                                    renderEditStars(val);
+                                }
 
-                        function closeDeleteModal() {
-                            document.getElementById('deleteFbModal').classList.add('hidden');
-                            document.body.style.overflow = '';
-                        }
-                    </script>
+                                // ─── Delete modal ───
+                                function openDeleteModal(fbId, ctx) {
+                                    document.getElementById('deleteFbId').value = fbId;
+                                    document.getElementById('deleteRedirectUrl').value = _currentUrl;
+                                    document.getElementById('deleteFbForm').setAttribute('action', _ctxPath + '/feedback');
+                                    document.getElementById('deleteFbModal').classList.remove('hidden');
+                                    document.body.style.overflow = 'hidden';
+                                }
+
+                                function closeDeleteModal() {
+                                    document.getElementById('deleteFbModal').classList.add('hidden');
+                                    document.body.style.overflow = '';
+                                }
+                            </script>
 
                 </body>
 
