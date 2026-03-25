@@ -22,6 +22,8 @@ public class Order {
     private java.math.BigDecimal discountAmount;
     private Voucher voucher; // Details of the applied voucher (loaded on demand)
     private String giftMessage;
+    private BigDecimal tierDiscount; // Tier membership auto-discount
+    private String tierName; // e.g. SILVER, GOLD, PLATINUM
 
     private String cancelReason;
     private String refundStatus;
@@ -160,6 +162,22 @@ public class Order {
 
     public void setGiftMessage(String giftMessage) {
         this.giftMessage = giftMessage;
+    }
+
+    public BigDecimal getTierDiscount() {
+        return tierDiscount;
+    }
+
+    public void setTierDiscount(BigDecimal tierDiscount) {
+        this.tierDiscount = tierDiscount;
+    }
+
+    public String getTierName() {
+        return tierName;
+    }
+
+    public void setTierName(String tierName) {
+        this.tierName = tierName;
     }
 
     public String getCancelReason() {

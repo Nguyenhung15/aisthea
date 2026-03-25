@@ -284,9 +284,18 @@
                                                     <span class="text-slate-500">Shipping</span>
                                                     <span class="text-emerald-600 font-bold italic">Complimentary</span>
                                                 </div>
+                                                <c:if test="${order.tierDiscount != null && order.tierDiscount > 0}">
+                                                <div class="flex justify-between">
+                                                    <span class="text-amber-600 flex items-center gap-1">
+                                                        <span class="material-symbols-outlined text-sm">star</span>
+                                                        Ưu đãi ${order.tierName}
+                                                    </span>
+                                                    <span class="text-amber-600 font-semibold">-<fmt:formatNumber value="${order.tierDiscount}" type="currency" currencyCode="VND" maxFractionDigits="0" /></span>
+                                                </div>
+                                                </c:if>
                                                 <c:if test="${order.discountAmount != null && order.discountAmount > 0}">
                                                 <div class="flex justify-between">
-                                                    <span class="text-slate-500">Giảm giá</span>
+                                                    <span class="text-slate-500">Giảm giá (Voucher)</span>
                                                     <span class="text-red-500 font-semibold">-<fmt:formatNumber value="${order.discountAmount}" type="currency" currencyCode="VND" maxFractionDigits="0" /></span>
                                                 </div>
                                                 </c:if>

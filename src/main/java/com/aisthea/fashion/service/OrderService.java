@@ -64,17 +64,23 @@ public class OrderService implements IOrderService {
             }
         }
 
-        // ── 2. Tính tổng tiền sau giảm ───────────────────────────────────
+        // ── 2. Tính Tier Discount (server validate, không tin client) ────
+        BigDecimal tierDiscountAmount = TierService.calculateTierDiscount(user, cart.getTotalPrice());
+        String tierName = TierService.getTierName(user);
+
+        // ── 3. Tính tổng tiền sau giảm ───────────────────────────────────
         BigDecimal cartTotal = cart.getTotalPrice();
-        BigDecimal finalTotal = cartTotal.subtract(discountAmount);
+        BigDecimal finalTotal = cartTotal.subtract(tierDiscountAmount).subtract(discountAmount);
         if (finalTotal.compareTo(BigDecimal.ZERO) < 0)
             finalTotal = BigDecimal.ZERO;
 
-        // ── 3. Build Order object ────────────────────────────────────────
+        // ── 4. Build Order object ────────────────────────────────────────
         Order newOrder = new Order();
         newOrder.setUserid(user.getUserId());
         newOrder.setTotalprice(finalTotal.setScale(0, java.math.RoundingMode.HALF_UP));
         newOrder.setDiscountAmount(discountAmount.setScale(0, java.math.RoundingMode.HALF_UP));
+        newOrder.setTierDiscount(tierDiscountAmount.setScale(0, java.math.RoundingMode.HALF_UP));
+        newOrder.setTierName(tierName);
         if (voucherId != null)
             newOrder.setVoucherId(voucherId);
         newOrder.setStatus("Pending");
