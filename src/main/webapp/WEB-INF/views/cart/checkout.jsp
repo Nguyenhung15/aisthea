@@ -99,6 +99,8 @@
                             value="${not empty sessionScope.appliedVoucher ? sessionScope.appliedVoucher.voucherId : ''}">
                         <input type="hidden" name="discountAmount" id="discountAmountInput"
                             value="${not empty sessionScope.appliedDiscount ? sessionScope.appliedDiscount : '0'}">
+                        <input type="hidden" name="tierDiscountAmount" id="tierDiscountInput"
+                            value="${not empty tierDiscountAmount ? tierDiscountAmount : '0'}">
 
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
                             <!-- Left Section: Shipping & Payment -->
@@ -683,6 +685,18 @@
                                             <span class="text-slate-500">Shipping (Express)</span>
                                             <span class="text-slate-900">Free</span>
                                         </div>
+                                        <%-- Tier membership discount row --%>
+                                        <c:if test="${not empty tierDiscountAmount and tierDiscountAmount > 0}">
+                                            <div class="flex justify-between text-sm" id="tierDiscountRow">
+                                                <span class="text-amber-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis mr-4 flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-sm">star</span>
+                                                    Ưu đãi ${tierName} (${tierDiscountPercent}%)
+                                                </span>
+                                                <span class="text-amber-600 font-medium flex-shrink-0" id="tierDiscountDisplay">
+                                                    -<fmt:formatNumber value="${tierDiscountAmount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                </span>
+                                            </div>
+                                        </c:if>
                                         <%-- Voucher discount row --%>
                                             <c:if test="${not empty sessionScope.appliedVoucher}">
                                                 <div class="flex justify-between text-sm" id="discountRow">
@@ -708,6 +722,9 @@
                                             </c:if>
                                             
                                             <c:set var="calcTotal" value="${sessionScope.checkoutCart.totalPrice}" />
+                                            <c:if test="${not empty tierDiscountAmount and tierDiscountAmount > 0}">
+                                                <c:set var="calcTotal" value="${calcTotal - tierDiscountAmount}" />
+                                            </c:if>
                                             <c:if test="${not empty sessionScope.appliedDiscount}">
                                                 <c:set var="calcTotal" value="${calcTotal - sessionScope.appliedDiscount}" />
                                             </c:if>
@@ -934,6 +951,7 @@
 
                     // ── Voucher AJAX ──────────────────────────────────────
                     const cartTotal = ${ sessionScope.checkoutCart.totalPrice };
+                    const tierDiscountAmt = ${ not empty tierDiscountAmount ? tierDiscountAmount : 0 };
 
                     async function applyVoucherCode() {
                         const code = document.getElementById('voucherCodeInput').value.trim();
@@ -971,7 +989,7 @@
                         if (discountDisplay) discountDisplay.textContent = '-' + formatVND(discountAmt);
                         if (discountRow) discountRow.classList.remove('hidden');
 
-                        const newTotal = Math.max(0, cartTotal - discountAmt);
+                        const newTotal = Math.max(0, cartTotal - tierDiscountAmt - discountAmt);
                         if (totalDisplay) totalDisplay.textContent = formatVND(newTotal);
                         if (appliedBox) {
                             appliedBox.classList.remove('hidden');

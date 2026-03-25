@@ -152,6 +152,25 @@ public class CartServlet extends HttpServlet {
                     + addrs.size());
             request.setAttribute("userAddresses", addrs);
 
+            // ── Calculate Tier Membership Discount ──────────────────────
+            Cart checkoutCartForTier = (Cart) session.getAttribute("checkoutCart");
+            if (checkoutCartForTier != null) {
+                String tierName = com.aisthea.fashion.service.TierService.getTierName(user);
+                int tierDiscountPercent = com.aisthea.fashion.service.TierService.getTierDiscountPercent(user);
+                java.math.BigDecimal tierDiscountAmount = com.aisthea.fashion.service.TierService.calculateTierDiscount(
+                        user, checkoutCartForTier.getTotalPrice());
+
+                request.setAttribute("tierName", tierName);
+                request.setAttribute("tierDiscountPercent", tierDiscountPercent);
+                request.setAttribute("tierDiscountAmount", tierDiscountAmount);
+
+                System.out.println(">>> CHECKOUT TIER: User=" + user.getUserId()
+                        + " | Tier=" + tierName
+                        + " | Discount=" + tierDiscountPercent + "%"
+                        + " | Amount=" + tierDiscountAmount);
+            }
+            // ────────────────────────────────────────────────────────────
+
             request.getRequestDispatcher("/WEB-INF/views/cart/checkout.jsp")
                     .forward(request, response);
             return;

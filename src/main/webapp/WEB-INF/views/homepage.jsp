@@ -230,11 +230,11 @@
                             </main>
 
                             <%--=====CATEGORY CARDS SECTION=====--%>
-                                <section class="relative z-20 px-6 pb-20 -mt-10">
+                                <section class="relative z-20 px-6 pb-28 -mt-10">
                                     <div class="max-w-7xl mx-auto">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-                                            <a class="group relative block h-80 overflow-hidden"
+                                            <a class="group relative block h-96 overflow-hidden"
                                                 href="${pageContext.request.contextPath}/product?sort=newest">
                                                 <img alt="New Arrivals"
                                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -253,7 +253,7 @@
                                                 </div>
                                             </a>
 
-                                            <a class="group relative block h-80 overflow-hidden mt-0 md:mt-12"
+                                            <a class="group relative block h-96 overflow-hidden mt-0 md:mt-16"
                                                 href="${pageContext.request.contextPath}/product?genderid=2">
                                                 <img alt="Women Collection"
                                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -273,7 +273,7 @@
                                                 </div>
                                             </a>
 
-                                            <a class="group relative block h-80 overflow-hidden"
+                                            <a class="group relative block h-96 overflow-hidden"
                                                 href="${pageContext.request.contextPath}/product?genderid=1">
                                                 <img alt="Men Collection"
                                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -301,8 +301,8 @@
 
                     </div><%-- end overflow-x-hidden wrapper --%>
 
-                    <%-- AI Chatbox Widget --%>
-                    <jsp:include page="/WEB-INF/views/common/chatbox-widget.jsp" />
+                        <%-- AI Chatbox Widget --%>
+                            <jsp:include page="/WEB-INF/views/common/chatbox-widget.jsp" />
 
         </body>
 
