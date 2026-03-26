@@ -1,9 +1,7 @@
 package com.aisthea.fashion.dao;
 
-import com.aisthea.fashion.model.Category;
 import com.aisthea.fashion.model.Product;
-import com.aisthea.fashion.model.ProductColorSize;
-import com.aisthea.fashion.model.ProductImage;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -16,11 +14,35 @@ public interface IProductDAO {
 
     List<Product> getAllProducts() throws SQLException;
 
+    /**
+     * Filter products directly at SQL level for performance.
+     * All parameters are optional (pass null to skip that filter).
+     *
+     * @param categoryId    filter by exact category id (null = no filter)
+     * @param categoryIndex filter by parent-category index name (null = no filter)
+     * @param genderId      filter by gender (null = no filter)
+     * @param color         filter by color keyword in product_color_size (null = no filter)
+     * @param size          filter by exact size in product_color_size with stock>0 (null = no filter)
+     * @param minPrice      minimum price inclusive (null = 0)
+     * @param maxPrice      maximum price inclusive (null = unlimited)
+     * @param keyword       search keyword in name/brand/description (null = no filter)
+     * @param sortBy        "price_asc"|"price_desc"|"newest"|null (null = default/featured)
+     */
+    List<Product> getFilteredProducts(
+            Integer categoryId,
+            String categoryIndex,
+            Integer genderId,
+            String color,
+            String size,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            String keyword,
+            String sortBy
+    ) throws SQLException;
+
     boolean updateProduct(Product product) throws SQLException;
 
     boolean deleteProduct(int productId) throws SQLException;
-
-    List<Product> getProductsByParentCategory(String parentIndex, int genderId) throws SQLException;
 
     List<Product> getTopExpensiveProducts(int limit) throws SQLException;
 

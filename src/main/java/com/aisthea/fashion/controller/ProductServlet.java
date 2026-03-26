@@ -25,8 +25,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 import com.aisthea.fashion.util.Constants;
+import java.util.stream.Collectors;
 
 @WebServlet(name = "ProductServlet", urlPatterns = { "/product" })
 public class ProductServlet extends HttpServlet {
@@ -160,284 +160,144 @@ public class ProductServlet extends HttpServlet {
     private void listProducts(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Get filter parameters
-        String categoryIdParam = request.getParameter("categoryId");
+        request.setCharacterEncoding("UTF-8");
+
+        // ── 1. Read all filter parameters ──────────────────────────────────────
+        String categoryIdParam    = request.getParameter("categoryId");
         String categoryIndexParam = request.getParameter("categoryIndex");
-        String genderIdParam = request.getParameter("genderid");
-        String maxPriceParam = request.getParameter("maxPrice");
-        String minPriceParam = request.getParameter("minPrice");
-        String sortParam = request.getParameter("sort");
-        String colorParam = request.getParameter("color");
-        String sizeParam = request.getParameter("size");
-        String searchParam = request.getParameter("search");
+        String genderIdParam      = request.getParameter("genderid");
+        String colorParam         = request.getParameter("color");
+        String sizeParam          = request.getParameter("size");
+        String minPriceParam      = request.getParameter("minPrice");
+        String maxPriceParam      = request.getParameter("maxPrice");
+        String sortParam          = request.getParameter("sort");
+        String searchParam        = request.getParameter("search");
 
-        List<Product> list;
+        // ── 2. Parse typed values ───────────────────────────────────────────────
+        Integer categoryId    = parseInteger(categoryIdParam);
+        Integer genderId      = parseInteger(genderIdParam);
+        String  categoryIndex = (categoryIndexParam != null && !categoryIndexParam.isBlank()) ? categoryIndexParam.trim() : null;
+        String  color         = (colorParam  != null && !colorParam.isBlank())  ? colorParam.trim()  : null;
+        String  size          = (sizeParam   != null && !sizeParam.isBlank())   ? sizeParam.trim()   : null;
+        String  keyword       = (searchParam != null && !searchParam.isBlank()) ? searchParam.trim() : null;
+        String  sortBy        = (sortParam   != null && !sortParam.isBlank())   ? sortParam.trim()   : null;
 
+        final BigDecimal PRICE_SLIDER_MAX = new BigDecimal("500000000");
+        BigDecimal minPrice = parseBigDecimalOrNull(minPriceParam);
+        BigDecimal maxPrice = parseBigDecimalOrNull(maxPriceParam);
+
+        // Treat slider max as "no upper bound" (don't filter)
+        if (maxPrice != null && maxPrice.compareTo(PRICE_SLIDER_MAX) >= 0) maxPrice = null;
+
+        // ── 3. Build display metadata for breadcrumb / page title ───────────────
         try {
-            // Priority 1: General Keyword Search
-            if (searchParam != null && !searchParam.isBlank()) {
-                final String keyword = searchParam.trim().toLowerCase();
-                list = productService.getAllProducts().stream()
-                        .filter(p -> {
-                            // Match by product name
-                            if (p.getName() != null && p.getName().toLowerCase().contains(keyword))
-                                return true;
-                            // Match by brand
-                            if (p.getBrand() != null && p.getBrand().toLowerCase().contains(keyword))
-                                return true;
-                            // Match by description
-                            if (p.getDescription() != null && p.getDescription().toLowerCase().contains(keyword))
-                                return true;
-                            // Match by category name
-                            if (p.getCategory() != null && p.getCategory().getName() != null
-                                    && p.getCategory().getName().toLowerCase().contains(keyword))
-                                return true;
-                            return false;
-                        })
-                        .collect(Collectors.toList());
-                request.setAttribute("pageTitle", "KẾT QUẢ TÌM KIẾM: \"" + searchParam + "\"");
-            }
-            // Priority 2: If categoryIndex + genderid from UrlRewriteFilter (e.g.
-            // /men/ao_thun)
-            else if (categoryIndexParam != null && !categoryIndexParam.isBlank()
-                    && genderIdParam != null && !genderIdParam.isBlank()) {
-                int genderId = Integer.parseInt(genderIdParam);
-                list = productService.getProductsByParentCategory(categoryIndexParam, genderId);
-                // Look up and set the real category name from DB for proper display
-                Category foundCategory = categoryService.findCategoryByIndexNameAndGender(categoryIndexParam, genderId);
-                if (foundCategory != null) {
-                    request.setAttribute("displayCategory", foundCategory);
-                    request.setAttribute("genderLabel", genderId == 1 ? "Men" : "Women");
-                    request.setAttribute("genderId", genderId);
-                    request.setAttribute("pageTitle", foundCategory.getName());
-                } else {
-                    request.setAttribute("displayCategoryName", categoryIndexParam.replace("_", " "));
-                }
-            }
-            // If categoryId filter (from form submission)
-            else if (categoryIdParam != null && !categoryIdParam.isBlank()) {
-                int categoryId = Integer.parseInt(categoryIdParam);
-                Category selectedCategory = categoryService.getCategoryById(categoryId);
-                request.setAttribute("displayCategory", selectedCategory);
+            if (keyword != null) {
+                request.setAttribute("pageTitle", "KẾT QUẢ TÌM KIẾM: \"" + keyword + "\"");
 
-                if (selectedCategory != null) {
-                    int catGenderId = selectedCategory.getGenderid();
+            } else if (categoryId != null) {
+                Category selected = categoryService.getCategoryById(categoryId);
+                if (selected != null) {
+                    request.setAttribute("displayCategory", selected);
+                    request.setAttribute("pageTitle", selected.getName());
+                    int catGenderId = selected.getGenderid();
+                    request.setAttribute("genderId",   catGenderId);
                     request.setAttribute("genderLabel", catGenderId == 1 ? "Men" : "Women");
-                    request.setAttribute("genderId", catGenderId);
-                    request.setAttribute("pageTitle", selectedCategory.getName());
-
-                    // If this is a CHILD category, also fetch the parent for the breadcrumb
-                    boolean isChildCategory = selectedCategory.getParentid() != null
-                            && !selectedCategory.getParentid().isBlank();
-                    if (isChildCategory) {
-                        Category parentCategory = categoryService
-                                .findCategoryByIndexNameAndGender(selectedCategory.getParentid(), catGenderId);
-                        if (parentCategory != null) {
-                            request.setAttribute("parentCategory", parentCategory);
-                        }
+                    // Breadcrumb: fetch parent when this is a child category
+                    if (selected.getParentid() != null && !selected.getParentid().isBlank()) {
+                        Category parent = categoryService.findCategoryByIndexNameAndGender(
+                                selected.getParentid(), catGenderId);
+                        if (parent != null) request.setAttribute("parentCategory", parent);
                     }
                 }
 
-                List<Product> allProducts = productService.getAllProducts();
-
-                // Determine if this is a parent category (parentid is null or empty)
-                boolean isParentCategory = selectedCategory != null
-                        && (selectedCategory.getParentid() == null || selectedCategory.getParentid().isBlank());
-
-                if (isParentCategory && selectedCategory.getIndexName() != null) {
-                    final String parentIndexName = selectedCategory.getIndexName();
-                    final int genderId = selectedCategory.getGenderid();
-                    List<Category> childCategories = categoryService.getChildCategoriesByGender(parentIndexName,
-                            genderId);
-                    final java.util.Set<Integer> childCategoryIds = new java.util.HashSet<>();
-                    for (Category child : childCategories) {
-                        childCategoryIds.add(child.getCategoryid());
-                    }
-                    list = allProducts.stream()
-                            .filter(p -> p.getCategory() != null
-                                    && (p.getCategory().getCategoryid() == categoryId
-                                            || childCategoryIds.contains(p.getCategory().getCategoryid())))
-                            .collect(Collectors.toList());
-                } else {
-                    // Child (leaf) category selected: show only its products
-                    list = allProducts.stream()
-                            .filter(p -> p.getCategory() != null && p.getCategory().getCategoryid() == categoryId)
-                            .collect(Collectors.toList());
+            } else if (categoryIndex != null) {
+                Category found = categoryService.findCategoryByIndexNameAndGender(
+                        categoryIndex, genderId != null ? genderId : 1);
+                if (found != null) {
+                    request.setAttribute("displayCategory", found);
+                    request.setAttribute("pageTitle",  found.getName());
+                    request.setAttribute("genderId",   found.getGenderid());
+                    request.setAttribute("genderLabel", found.getGenderid() == 1 ? "Men" : "Women");
                 }
-            }
-            // Only genderid given (clicking NAM / NỮ from navbar)
-            else if (genderIdParam != null && !genderIdParam.isBlank()) {
-                int genderId = Integer.parseInt(genderIdParam);
-                String genderLbl = genderId == 1 ? "Men" : "Women";
-                request.setAttribute("genderLabel", genderLbl);
-                request.setAttribute("genderId", genderId);
-                request.setAttribute("pageTitle", genderId == 1 ? "Men's Collection" : "Women's Collection");
-                // Filter all products by gender via their category
-                List<Category> genderCategories = categoryService.getParentCategoriesByGender(genderId);
-                genderCategories.addAll(categoryService.getChildCategoriesByGender(null, genderId) != null
-                        ? new java.util.ArrayList<>()
-                        : new java.util.ArrayList<>());
-                // Simpler: get all products, filter by category.genderid
-                list = productService.getAllProducts().stream()
-                        .filter(p -> p.getCategory() != null && p.getCategory().getGenderid() == genderId)
-                        .collect(Collectors.toList());
-            }
-            // No filter - show all
-            else {
-                list = productService.getAllProducts();
+
+            } else if (genderId != null) {
+                request.setAttribute("genderId",   genderId);
+                request.setAttribute("genderLabel", genderId == 1 ? "Men" : "Women");
+                request.setAttribute("pageTitle",   genderId == 1 ? "Men's Collection" : "Women's Collection");
+
+            } else {
                 request.setAttribute("pageTitle", "BỘ SƯU TẬP");
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error loading products", e);
+            logger.log(Level.WARNING, "Error building breadcrumb metadata", e);
+        }
+
+        // ── 4. Single SQL-level filtered query ──────────────────────────────────
+        List<Product> list;
+        try {
+            list = productService.getFilteredProducts(
+                    categoryId, categoryIndex, genderId,
+                    color, size,
+                    minPrice, maxPrice,
+                    keyword, sortBy);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error loading filtered products", e);
             list = new ArrayList<>();
         }
 
-        // Apply price range filter (minPrice and/or maxPrice)
-        // Defaults: minPrice = 0, maxPrice = 500_000_000 (slider max = no limit)
-        final BigDecimal SLIDER_MAX = new BigDecimal("500000000");
-        boolean hasPriceFilter = false;
-        BigDecimal filteredMin = BigDecimal.ZERO;
-        BigDecimal filteredMax = SLIDER_MAX;
-        try {
-            if (minPriceParam != null && !minPriceParam.isBlank()) {
-                BigDecimal parsed = new BigDecimal(minPriceParam.trim());
-                if (parsed.compareTo(BigDecimal.ZERO) > 0) { filteredMin = parsed; hasPriceFilter = true; }
-            }
-        } catch (NumberFormatException e) { logger.warning("Invalid minPrice: " + minPriceParam); }
-        try {
-            if (maxPriceParam != null && !maxPriceParam.isBlank()) {
-                BigDecimal parsed = new BigDecimal(maxPriceParam.trim());
-                if (parsed.compareTo(SLIDER_MAX) < 0) { filteredMax = parsed; hasPriceFilter = true; }
-            }
-        } catch (NumberFormatException e) { logger.warning("Invalid maxPrice: " + maxPriceParam); }
-        if (hasPriceFilter) {
-            final BigDecimal fMin = filteredMin;
-            final BigDecimal fMax = filteredMax;
-            list = list.stream()
-                    .filter(p -> p.getPrice() != null
-                            && p.getPrice().compareTo(fMin) >= 0
-                            && p.getPrice().compareTo(fMax) <= 0)
-                    .collect(Collectors.toList());
-        }
-
-
-        // Apply color filter (check product images or colorSizes)
-        if (colorParam != null && !colorParam.isBlank()) {
-            final String colorFilter = colorParam.trim().toLowerCase();
-            list = list.stream()
-                    .filter(p -> {
-                        // Check in images
-                        if (p.getImages() != null) {
-                            for (var img : p.getImages()) {
-                                if (img.getColor() != null
-                                        && img.getColor().trim().toLowerCase().contains(colorFilter)) {
-                                    return true;
-                                }
-                            }
-                        }
-                        // Check in colorSizes
-                        if (p.getColorSizes() != null) {
-                            for (var cs : p.getColorSizes()) {
-                                if (cs.getColor() != null && cs.getColor().trim().toLowerCase().contains(colorFilter)) {
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-                    })
-                    .collect(Collectors.toList());
-        }
-
-        // Apply size filter
-        if (sizeParam != null && !sizeParam.isBlank()) {
-            final String sizeFilter = sizeParam.trim().toUpperCase();
-            list = list.stream()
-                    .filter(p -> {
-                        if (p.getColorSizes() != null) {
-                            for (var cs : p.getColorSizes()) {
-                                if (cs.getSize() != null && cs.getSize().trim().toUpperCase().equals(sizeFilter)
-                                        && cs.getStock() > 0) {
-                                    return true;
-                                }
-                            }
-                        }
-                        return false;
-                    })
-                    .collect(Collectors.toList());
-        }
-
-        // Apply sorting
-        // Apply sorting
-        if (sortParam != null) {
-            switch (sortParam) {
-                case "price_asc":
-                    list.sort((p1, p2) -> p1.getPrice().compareTo(p2.getPrice()));
-                    break;
-                case "price_desc":
-                    list.sort((p1, p2) -> p2.getPrice().compareTo(p1.getPrice()));
-                    break;
-                case "newest":
-                    list.sort((p1, p2) -> Integer.compare(p2.getProductId(), p1.getProductId()));
-                    break;
-                default: // featured
-                    break;
-            }
-        }
-
-        // Pagination
+        // ── 5. Pagination ───────────────────────────────────────────────────────
+        int recordsPerPage = 12;
         int page = 1;
-        int recordsPerPage = 12; // 12 items per page
-        if (request.getParameter("page") != null && !request.getParameter("page").isBlank()) {
-            try {
-                page = Integer.parseInt(request.getParameter("page"));
-            } catch (Exception e) {
-                page = 1;
-            }
-        }
+        try {
+            String pageParam = request.getParameter("page");
+            if (pageParam != null && !pageParam.isBlank()) page = Integer.parseInt(pageParam.trim());
+        } catch (NumberFormatException ignored) { }
+        if (page < 1) page = 1;
 
         int totalRecords = list.size();
-        int totalPages = (int) Math.ceil(totalRecords * 1.0 / recordsPerPage);
-        int start = (page - 1) * recordsPerPage;
-        int end = Math.min(start + recordsPerPage, totalRecords);
+        int totalPages   = (int) Math.ceil((double) totalRecords / recordsPerPage);
+        int start        = (page - 1) * recordsPerPage;
+        int end          = Math.min(start + recordsPerPage, totalRecords);
 
         List<Product> listForPage;
-        if (start < 0 || start >= totalRecords) {
-            // handle empty list or out of bounds (but if list is empty, totalRecords=0,
-            // start=0, end=0 -> subList(0,0) is fine)
-            if (totalRecords == 0)
-                listForPage = new ArrayList<>();
-            else
-                listForPage = new ArrayList<>(); // weird out of bound
-        } else {
-            listForPage = new ArrayList<>(list.subList(start, end)); // Use ArrayList copy to avoid serialization issues
-                                                                     // with subList
-        }
-
-        // Handle empty list case correctly
-        if (totalRecords > 0 && start < totalRecords) {
-            listForPage = new ArrayList<>(list.subList(start, end));
-        } else {
+        if (totalRecords == 0 || start >= totalRecords) {
             listForPage = new ArrayList<>();
+        } else {
+            listForPage = new ArrayList<>(list.subList(start, end));
         }
 
-        // Populate rating data for the displayed products
-        if (listForPage != null) {
-            for (Product p : listForPage) {
-                double[] ratingData = feedbackService.getAvgRatingForProduct(p.getProductId());
-                p.setAvgRating(ratingData[0]);
-                p.setReviewCount((int) ratingData[1]);
-            }
+        // ── 6. Populate rating data only for the visible page ───────────────────
+        for (Product p : listForPage) {
+            double[] ratingData = feedbackService.getAvgRatingForProduct(p.getProductId());
+            p.setAvgRating(ratingData[0]);
+            p.setReviewCount((int) ratingData[1]);
         }
 
-        // Set attributes
-        request.setAttribute("productList", listForPage);
-        request.setAttribute("totalPages", totalPages);
-        request.setAttribute("currentPage", page);
-        request.setAttribute("totalRecords", totalRecords);
-        request.setAttribute("categories", categoryService.getAllCategories());
-        request.setAttribute("parentCategoriesMale", categoryService.getParentCategoriesByGender(1));
+        // ── 7. Set request attributes & forward ────────────────────────────────
+        request.setAttribute("productList",            listForPage);
+        request.setAttribute("totalPages",             totalPages);
+        request.setAttribute("currentPage",            page);
+        request.setAttribute("totalRecords",           totalRecords);
+        request.setAttribute("categories",             categoryService.getAllCategories());
+        request.setAttribute("parentCategoriesMale",   categoryService.getParentCategoriesByGender(1));
         request.setAttribute("parentCategoriesFemale", categoryService.getParentCategoriesByGender(2));
-        request.getRequestDispatcher("/WEB-INF/views/product/product-list-page.jsp").forward(request, response);
+
+        request.getRequestDispatcher("/WEB-INF/views/product/product-list-page.jsp")
+               .forward(request, response);
+    }
+
+    // ── Helper parsers ────────────────────────────────────────────────────────
+    private static Integer parseInteger(String s) {
+        if (s == null || s.isBlank()) return null;
+        try { return Integer.parseInt(s.trim()); } catch (NumberFormatException e) { return null; }
+    }
+
+    private static BigDecimal parseBigDecimalOrNull(String s) {
+        if (s == null || s.isBlank()) return null;
+        try {
+            BigDecimal v = new BigDecimal(s.trim());
+            return v.compareTo(BigDecimal.ZERO) > 0 ? v : null;
+        } catch (NumberFormatException e) { return null; }
     }
 
     private void manageProducts(HttpServletRequest request, HttpServletResponse response)

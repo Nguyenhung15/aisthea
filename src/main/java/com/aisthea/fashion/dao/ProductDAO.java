@@ -1,6 +1,7 @@
 package com.aisthea.fashion.dao;
 
 import com.aisthea.fashion.model.*;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -43,27 +44,6 @@ public class ProductDAO implements IProductDAO {
                 WHERE productid = ?
             """;
     private static final String DELETE_SQL = "DELETE FROM Products WHERE productid = ?";
-    private static final String SELECT_BY_PARENT_CATEGORY_OPTIMIZED = """
-            SELECT
-                p.productid, p.name, p.description, p.price, p.brand, p.discount, p.is_bestseller,
-                p.createdat, p.updatedat, p.categoryid,
-                c.name AS category_name, c.type AS category_type,
-                c.genderid AS category_genderid, c.parentid AS category_parentid,
-                c.INDEX_name AS category_index,
-                img.imageid AS image_id, img.imageurl AS image_url, img.color AS image_color, img.isprimary AS image_isprimary,
-                img.createdat AS image_createdat, img.updatedat AS image_updatedat,
-                (SELECT COALESCE(SUM(pcs.stock), 0) FROM product_color_size pcs WHERE pcs.productid = p.productid) AS total_stock
-            FROM
-                Products p
-            JOIN
-                Categories c ON p.categoryid = c.categoryid
-            LEFT JOIN
-                product_image img ON p.productid = img.productid
-            WHERE
-                c.genderid = ?
-                AND (c.INDEX_name = ? OR c.parentid = ?)
-            ORDER BY p.productid
-            """;
 
     public ProductDAO() {
         this.categoryDAO = new CategoryDAO();
@@ -249,33 +229,152 @@ public class ProductDAO implements IProductDAO {
     }
 
     @Override
-    public List<Product> getProductsByParentCategory(String parentIndex, int genderId) throws SQLException {
+    public List<Product> getFilteredProducts(
+            Integer categoryId,
+            String categoryIndex,
+            Integer genderId,
+            String color,
+            String size,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            String keyword,
+            String sortBy
+    ) throws SQLException {
+
         List<Product> list = new ArrayList<>();
-        java.util.Map<Integer, Product> productMap = new java.util.LinkedHashMap<>();
+        Map<Integer, Product> productMap = new LinkedHashMap<>();
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT
+                p.productid, p.name, p.description, p.price, p.brand, p.discount, p.is_bestseller,
+                p.createdat, p.updatedat, p.categoryid,
+                c.name AS category_name, c.type AS category_type,
+                c.genderid AS category_genderid, c.parentid AS category_parentid,
+                c.INDEX_name AS category_index,
+                img.imageid AS image_id, img.imageurl AS image_url,
+                img.color AS image_color, img.isprimary AS image_isprimary,
+                img.createdat AS image_createdat, img.updatedat AS image_updatedat,
+                (SELECT COALESCE(SUM(pcs2.stock),0)
+                 FROM product_color_size pcs2
+                 WHERE pcs2.productid = p.productid) AS total_stock
+            FROM Products p
+            LEFT JOIN Categories c ON p.categoryid = c.categoryid
+            LEFT JOIN product_image img ON p.productid = img.productid
+            WHERE 1=1
+        """);
+
+        List<Object> params = new ArrayList<>();
+
+        // -- CATEGORY filters --
+        if (categoryId != null) {
+            // Show products in this category OR any child category whose parentid = this category's index
+            sql.append("""
+                AND (
+                    p.categoryid = ?
+                    OR p.categoryid IN (
+                        SELECT c2.categoryid FROM Categories c2
+                        JOIN Categories cp ON c2.parentid = cp.INDEX_name
+                        WHERE cp.categoryid = ?
+                    )
+                )
+            """);
+            params.add(categoryId);
+            params.add(categoryId);
+        } else if (categoryIndex != null && !categoryIndex.isBlank()) {
+            // Parent category index filter (e.g. navigating to /men/ao_thun)
+            sql.append("""
+                AND c.genderid = ?
+                AND (c.INDEX_name = ? OR c.parentid = ?)
+            """);
+            params.add(genderId != null ? genderId : 1);
+            params.add(categoryIndex);
+            params.add(categoryIndex);
+        } else if (genderId != null) {
+            // Gender-only filter
+            sql.append(" AND c.genderid = ? ");
+            params.add(genderId);
+        }
+
+        // -- KEYWORD search --
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (p.name LIKE ? OR p.brand LIKE ? OR p.description LIKE ? OR c.name LIKE ?) ");
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw); params.add(kw); params.add(kw); params.add(kw);
+        }
+
+        // -- PRICE range --
+        if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) > 0) {
+            sql.append(" AND p.price >= ? ");
+            params.add(minPrice);
+        }
+        if (maxPrice != null) {
+            sql.append(" AND p.price <= ? ");
+            params.add(maxPrice);
+        }
+
+        // -- COLOR filter --
+        if (color != null && !color.isBlank()) {
+            sql.append("""
+                AND EXISTS (
+                    SELECT 1 FROM product_color_size pcs
+                    WHERE pcs.productid = p.productid
+                    AND LOWER(pcs.color) LIKE LOWER(?)
+                )
+            """);
+            params.add("%" + color.trim() + "%");
+        }
+
+        // -- SIZE filter --
+        if (size != null && !size.isBlank()) {
+            sql.append("""
+                AND EXISTS (
+                    SELECT 1 FROM product_color_size pcs
+                    WHERE pcs.productid = p.productid
+                    AND UPPER(pcs.size) = UPPER(?)
+                    AND pcs.stock > 0
+                )
+            """);
+            params.add(size.trim());
+        }
+
+        // -- SORT --
+        if (sortBy != null) {
+            switch (sortBy) {
+                case "price_asc"  -> sql.append(" ORDER BY p.price ASC, p.productid ");
+                case "price_desc" -> sql.append(" ORDER BY p.price DESC, p.productid ");
+                case "newest"     -> sql.append(" ORDER BY p.productid DESC ");
+                default           -> sql.append(" ORDER BY p.productid ");
+            }
+        } else {
+            sql.append(" ORDER BY p.productid ");
+        }
 
         try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(SELECT_BY_PARENT_CATEGORY_OPTIMIZED)) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            ps.setInt(1, genderId);
-            ps.setString(2, parentIndex);
-            ps.setString(3, parentIndex);
+            for (int i = 0; i < params.size(); i++) {
+                Object p = params.get(i);
+                if (p instanceof Integer)       ps.setInt(i + 1, (Integer) p);
+                else if (p instanceof BigDecimal) ps.setBigDecimal(i + 1, (BigDecimal) p);
+                else                             ps.setString(i + 1, (String) p);
+            }
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     int productId = rs.getInt("productid");
-                    Product p = productMap.get(productId);
-                    if (p == null) {
-                        p = new Product();
-                        p.setProductId(productId);
-                        p.setName(rs.getString("name"));
-                        p.setDescription(rs.getString("description"));
-                        p.setPrice(rs.getBigDecimal("price"));
-                        p.setBrand(rs.getString("brand"));
-                        p.setDiscount(rs.getBigDecimal("discount"));
-                        p.setBestseller(rs.getBoolean("is_bestseller"));
-                        p.setCreatedAt(rs.getTimestamp("createdat"));
-                        p.setUpdatedAt(rs.getTimestamp("updatedat"));
-                        p.setTotalStock(rs.getInt("total_stock"));
+                    Product product = productMap.get(productId);
+                    if (product == null) {
+                        product = new Product();
+                        product.setProductId(productId);
+                        product.setName(rs.getString("name"));
+                        product.setDescription(rs.getString("description"));
+                        product.setPrice(rs.getBigDecimal("price"));
+                        product.setBrand(rs.getString("brand"));
+                        product.setDiscount(rs.getBigDecimal("discount"));
+                        product.setBestseller(rs.getBoolean("is_bestseller"));
+                        product.setCreatedAt(rs.getTimestamp("createdat"));
+                        product.setUpdatedAt(rs.getTimestamp("updatedat"));
+                        product.setTotalStock(rs.getInt("total_stock"));
 
                         Category category = new Category();
                         category.setCategoryid(rs.getInt("categoryid"));
@@ -284,14 +383,13 @@ public class ProductDAO implements IProductDAO {
                         category.setGenderid(rs.getInt("category_genderid"));
                         category.setParentid(rs.getString("category_parentid"));
                         category.setIndexName(rs.getString("category_index"));
-                        p.setCategory(category);
+                        product.setCategory(category);
 
-                        p.setImages(new ArrayList<>());
-                        p.setColorSizes(new ArrayList<>());
-                        productMap.put(productId, p);
+                        product.setImages(new ArrayList<>());
+                        product.setColorSizes(new ArrayList<>());
+                        productMap.put(productId, product);
                     }
 
-                    // Add image if exists
                     String imageUrl = rs.getString("image_url");
                     if (imageUrl != null && !imageUrl.isBlank()) {
                         ProductImage img = new ProductImage();
@@ -301,15 +399,24 @@ public class ProductDAO implements IProductDAO {
                         img.setPrimary(rs.getBoolean("image_isprimary"));
                         img.setCreatedAt(rs.getTimestamp("image_createdat"));
                         img.setUpdatedAt(rs.getTimestamp("image_updatedat"));
-                        img.setProduct(p);
-                        p.getImages().add(img);
+                        product.getImages().add(img);
                     }
                 }
             }
         } catch (SQLException e) {
             printSQLException(e);
         }
-        list.addAll(productMap.values());
+
+        // Load colorSizes for each product (needed for swatch rendering on listing page)
+        for (Product p : productMap.values()) {
+            try {
+                p.setColorSizes(colorSizeDAO.getByProductId(p.getProductId()));
+            } catch (SQLException e) {
+                logger.warning("Could not load colorSizes for product " + p.getProductId());
+            }
+            list.add(p);
+        }
+
         return list;
     }
 

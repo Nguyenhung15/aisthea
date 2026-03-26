@@ -3,6 +3,7 @@ package com.aisthea.fashion.service;
 import com.aisthea.fashion.dao.*;
 import com.aisthea.fashion.model.*;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
@@ -163,11 +164,24 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    public List<Product> getProductsByParentCategory(String parentIndex, int genderId) {
+    public List<Product> getFilteredProducts(
+            Integer categoryId,
+            String categoryIndex,
+            Integer genderId,
+            String color,
+            String size,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            String keyword,
+            String sortBy
+    ) {
         try {
-            return productDAO.getProductsByParentCategory(parentIndex, genderId);
+            return productDAO.getFilteredProducts(
+                    categoryId, categoryIndex, genderId,
+                    color, size, minPrice, maxPrice,
+                    keyword, sortBy);
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error fetching products by parent category: " + parentIndex, e);
+            logger.log(Level.SEVERE, "Error in getFilteredProducts", e);
             return List.of();
         }
     }
