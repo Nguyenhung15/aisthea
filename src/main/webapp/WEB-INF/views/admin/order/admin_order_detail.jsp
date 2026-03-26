@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
         <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+            <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
             <!DOCTYPE html>
             <html lang="en">
 
@@ -251,7 +252,11 @@
                                                     style="margin-right:8px;font-size:0.9rem;"></i>Products</h3>
                                             <c:forEach var="item" items="${order.items}">
                                                 <div class="product-item">
-                                                    <img src="${item.imageUrl}"
+                                                    <c:set var="aImgUrl" value="${item.imageUrl}" />
+                                                    <c:if test="${not empty aImgUrl and not fn:startsWith(aImgUrl, 'http') and not fn:startsWith(aImgUrl, '/')}">
+                                                        <c:set var="aImgUrl" value="${pageContext.request.contextPath}/uploads/${aImgUrl}" />
+                                                    </c:if>
+                                                    <img src="${aImgUrl}"
                                                         onerror="this.src='https://placehold.co/100x100/f0f2f5/9ca3af?text=No+Image'"
                                                         alt="${item.productName}">
                                                     <div class="product-item__info">

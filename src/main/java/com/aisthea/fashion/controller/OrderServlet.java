@@ -640,23 +640,38 @@ public class OrderServlet extends HttpServlet {
      * absolute URL that remote email clients can load.
      *
      * Resolution rules:
-     *  1. Already absolute (http / https) -> returned as-is.
-     *  2. Starts with '/'               -> context-relative; baseUrl prepended.
-     *  3. Otherwise                     -> treated as a relative upload path
-     *     (e.g. "product/abc.jpg") and resolved to baseUrl + "/uploads/" + path.
+     *  1. Already absolute (http / https)                         → returned as-is.
+     *  2. Starts with contextPath (e.g. "/AistheaFashion/uploads/...") → strip contextPath, prepend baseUrl.
+     *  3. Starts with '/' but without contextPath                 → prepend baseUrl.
+     *  4. Otherwise (bare relative, e.g. "product/abc.jpg")       → baseUrl + "/uploads/" + path.
      */
     private String resolveImageUrlForEmail(String rawUrl, String baseUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
             return baseUrl + "/images/product-placeholder.png";
         }
         String url = rawUrl.trim();
+
+        // 1. Already absolute
         if (url.startsWith("http://") || url.startsWith("https://")) {
             return url;
         }
+
+        // 2 & 3. Starts with '/'
         if (url.startsWith("/")) {
+            // Extract contextPath from baseUrl (e.g. "/AistheaFashion")
+            // baseUrl looks like "http://host:port/AistheaFashion"
+            try {
+                java.net.URI uri = java.net.URI.create(baseUrl);
+                String ctxPath = uri.getPath(); // e.g. "/AistheaFashion"
+                if (ctxPath != null && !ctxPath.isEmpty() && url.startsWith(ctxPath + "/")) {
+                    // Strip duplicate contextPath → "/uploads/product/uuid.jpg"
+                    url = url.substring(ctxPath.length());
+                }
+            } catch (Exception ignored) { /* fallback: use url as-is */ }
             return baseUrl + url;
         }
-        // Relative path stored by ProductServlet, e.g. "product/uuid.jpg"
+
+        // 4. Bare relative path stored by ProductServlet, e.g. "product/uuid.jpg"
         return baseUrl + "/uploads/" + url;
     }
 

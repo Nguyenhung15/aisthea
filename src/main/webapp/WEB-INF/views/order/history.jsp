@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
         <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+            <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
             <% if (session.getAttribute("user")==null) { response.sendRedirect(request.getContextPath() + "/login" );
                 return; } %>
                 <!DOCTYPE html>
@@ -330,9 +331,13 @@
                                                                 <c:forEach var="item" items="${order.items}"
                                                                     varStatus="status">
                                                                     <c:if test="${status.index < 3}">
+                                                                        <c:set var="hImgUrl" value="${item.imageUrl}" />
+                                                                        <c:if test="${not empty hImgUrl and not fn:startsWith(hImgUrl, 'http') and not fn:startsWith(hImgUrl, '/')}">
+                                                                            <c:set var="hImgUrl" value="${pageContext.request.contextPath}/uploads/${hImgUrl}" />
+                                                                        </c:if>
                                                                         <img alt="${item.productName}"
                                                                             class="inline-block h-16 w-16 rounded-lg ring-2 ring-white object-cover shadow-sm bg-slate-50"
-                                                                            src="${item.imageUrl}"
+                                                                            src="${hImgUrl}"
                                                                             onerror="this.src='https://via.placeholder.com/150'" />
                                                                     </c:if>
                                                                 </c:forEach>

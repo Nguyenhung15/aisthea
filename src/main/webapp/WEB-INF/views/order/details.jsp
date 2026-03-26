@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
         <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+            <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
             <!DOCTYPE html>
             <html lang="en">
@@ -196,8 +197,12 @@
                                                         class="p-6 flex items-center gap-6 hover:bg-sky-50/40 transition-colors block">
                                                         <div
                                                             class="w-20 h-24 flex-shrink-0 rounded-lg bg-slate-100 overflow-hidden shadow-sm">
+                                                            <c:set var="oImgUrl" value="${item.imageUrl}" />
+                                                            <c:if test="${not empty oImgUrl and not fn:startsWith(oImgUrl, 'http') and not fn:startsWith(oImgUrl, '/')}">
+                                                                <c:set var="oImgUrl" value="${pageContext.request.contextPath}/uploads/${oImgUrl}" />
+                                                            </c:if>
                                                             <img class="w-full h-full object-cover"
-                                                                src="${item.imageUrl}" alt="${item.productName}"
+                                                                src="${oImgUrl}" alt="${item.productName}"
                                                                 onerror="this.src='https://placehold.co/100x120?text=No+Image'" />
                                                         </div>
                                                         <div class="flex-grow">
