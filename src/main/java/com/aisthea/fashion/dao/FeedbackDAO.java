@@ -332,14 +332,24 @@ public class FeedbackDAO implements IFeedbackDAO {
 
     @Override
     public boolean updateFeedback(int feedbackId, int userId, int rating, String comment) throws SQLException {
-        String sql = "UPDATE feedback SET rating = ?, comment = ? WHERE feedbackid = ? AND userid = ?";
-        logger.info("[FeedbackDAO.updateFeedback] feedbackId=" + feedbackId + " userId=" + userId);
+        return updateFeedbackWithImage(feedbackId, userId, rating, comment, null);
+    }
+
+    @Override
+    public boolean updateFeedbackWithImage(int feedbackId, int userId,
+                                           int rating, String comment,
+                                           String imageUrl) throws SQLException {
+        String sql = "UPDATE feedback " +
+                     "SET rating = ?, comment = ?, image_url = ?, updatedat = GETDATE() " +
+                     "WHERE feedbackid = ? AND userid = ?";
+        logger.info("[FeedbackDAO.updateFeedbackWithImage] id=" + feedbackId + " user=" + userId + " img=" + imageUrl);
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, rating);
-            ps.setString(2, comment);
-            ps.setInt(3, feedbackId);
-            ps.setInt(4, userId);
+            ps.setString(2, comment != null ? comment : "");
+            ps.setString(3, imageUrl);   // null clears the column
+            ps.setInt(4, feedbackId);
+            ps.setInt(5, userId);
             return ps.executeUpdate() > 0;
         }
     }

@@ -3,16 +3,23 @@ package com.aisthea.fashion.service;
 import com.aisthea.fashion.dao.FeedbackDAO;
 import com.aisthea.fashion.dao.IFeedbackDAO;
 import com.aisthea.fashion.model.Feedback;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Service layer for feedback operations.
+ * All methods swallow {@link SQLException} and log at SEVERE level so that
+ * callers receive clean boolean / empty-list returns.
+ */
 public class FeedbackService implements IFeedbackService {
 
-    private final IFeedbackDAO feedbackDAO;
     private static final Logger logger = Logger.getLogger(FeedbackService.class.getName());
+
+    private final IFeedbackDAO feedbackDAO;
 
     public FeedbackService() {
         this.feedbackDAO = new FeedbackDAO();
@@ -23,7 +30,7 @@ public class FeedbackService implements IFeedbackService {
         try {
             return feedbackDAO.getFeedbacksByProductId(productId);
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error getting feedbacks", e);
+            logger.log(Level.SEVERE, "Error getting feedbacks for product " + productId, e);
             return new ArrayList<>();
         }
     }
@@ -89,29 +96,27 @@ public class FeedbackService implements IFeedbackService {
     }
 
     @Override
-    public double[] getAvgRatingForProduct(int productId) {
-        try {
-            return ((FeedbackDAO) feedbackDAO).getAvgRatingForProduct(productId);
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error getting avg rating for product " + productId, e);
-            return new double[]{0.0, 0};
-        }
-    }
-
-    @Override
     public List<Feedback> getFeedbacksByUserId(int userId) {
         try {
             return feedbackDAO.getFeedbacksByUserId(userId);
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error getting feedbacks for userId=" + userId, e);
+            logger.log(Level.SEVERE, "Error getting feedbacks for user " + userId, e);
             return new ArrayList<>();
         }
     }
 
+    /**
+     * Updates a user's own feedback.
+     *
+     * @param imageUrl new relative image path, same as existing to keep it,
+     *                 or {@code null} to clear the image.
+     */
     @Override
-    public boolean updateFeedback(int feedbackId, int userId, int rating, String comment) {
+    public boolean updateFeedback(int feedbackId, int userId,
+                                  int rating, String comment,
+                                  String imageUrl) {
         try {
-            return feedbackDAO.updateFeedback(feedbackId, userId, rating, comment);
+            return feedbackDAO.updateFeedbackWithImage(feedbackId, userId, rating, comment, imageUrl);
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error updating feedback id=" + feedbackId, e);
             return false;
@@ -127,5 +132,14 @@ public class FeedbackService implements IFeedbackService {
             return false;
         }
     }
-}
 
+    @Override
+    public double[] getAvgRatingForProduct(int productId) {
+        try {
+            return ((FeedbackDAO) feedbackDAO).getAvgRatingForProduct(productId);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error getting avg rating for product " + productId, e);
+            return new double[]{0.0, 0};
+        }
+    }
+}
