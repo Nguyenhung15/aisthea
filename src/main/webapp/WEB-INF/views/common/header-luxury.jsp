@@ -649,8 +649,18 @@
                                             var dotStyle = n.read
                                                 ? 'display:none;'
                                                 : 'position:absolute;top:18px;left:14px;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 8px #38bdf8;';
-                                            html += '<a href="' + ctxPath + '/notifications?action=markRead&id=' + n.id + '"'
-                                                + ' onclick="luxBellMarkRead(' + n.id + ')"'
+                                            
+                                            var redirectQuery = '';
+                                            if (n.type === 'ORDER' && n.content) {
+                                                var match = n.content.match(/#(\d+)/);
+                                                if (match && match[1]) {
+                                                    redirectQuery = '&redirectUrl=' + encodeURIComponent('/order?action=view&id=' + match[1]);
+                                                }
+                                            } else if (n.type === 'PROMOTION') {
+                                                redirectQuery = '&redirectUrl=' + encodeURIComponent('/home');
+                                            }
+
+                                            html += '<a href="' + ctxPath + '/notifications?action=markRead&id=' + n.id + redirectQuery + '"'
                                                 + ' style="display:flex;align-items:flex-start;gap:12px;padding:14px 16px 14px 20px;'
                                                 + 'background:' + unreadBg + ';border-bottom:1px solid #DBEAFE;'
                                                 + 'text-decoration:none;transition:background 0.2s;position:relative;cursor:pointer;"'
