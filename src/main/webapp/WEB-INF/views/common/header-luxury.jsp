@@ -649,7 +649,7 @@
                                             var dotStyle = n.read
                                                 ? 'display:none;'
                                                 : 'position:absolute;top:18px;left:14px;width:8px;height:8px;border-radius:50%;background:#38bdf8;box-shadow:0 0 8px #38bdf8;';
-                                            
+
                                             var redirectQuery = '';
                                             if (n.type === 'ORDER' && n.content) {
                                                 var match = n.content.match(/#(\d+)/);

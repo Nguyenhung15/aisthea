@@ -692,7 +692,8 @@
                                                                                 class="mt-2 overflow-hidden rounded border border-slate-100 inline-block group/img">
                                                                                 <img src="${resolvedImageUrl}"
                                                                                     alt="User upload"
-                                                                                    class="max-w-[90px] aspect-square object-cover transition-transform duration-700 group-hover/img:scale-105"
+                                                                                    class="max-w-[90px] aspect-square object-cover transition-transform duration-700 group-hover/img:scale-105 cursor-pointer"
+                                                                                    onclick="openImageZoomModal('${resolvedImageUrl}')"
                                                                                     onerror="this.parentElement.style.display='none'">
                                                                             </div>
                                                                         </c:if>
@@ -1459,6 +1460,18 @@
                                 </div>
                             </div>
 
+                            <!-- ===== Modal Phóng To Ảnh Tự Động ===== -->
+                            <div id="imageZoomModal"
+                                class="fixed inset-0 z-[11000] flex items-center justify-center bg-black/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300"
+                                onclick="if(event.target===this)closeImageZoomModal()">
+                                <button type="button" onclick="closeImageZoomModal()"
+                                    class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-[11001]">
+                                    <span class="material-symbols-outlined text-xl">close</span>
+                                </button>
+                                <img id="zoomedImage" src="" alt="Zoomed Feedback"
+                                    class="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl scale-95 transition-transform duration-300">
+                            </div>
+
                             <!-- Tiny Toast for Product Detail -->
                             <div id="pd-toast"
                                 class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[10000] transform transition-all duration-500 opacity-0 translate-y-10 pointer-events-none">
@@ -1604,6 +1617,38 @@
                                 function closeDeleteModal() {
                                     document.getElementById('deleteFbModal').classList.add('hidden');
                                     document.body.style.overflow = '';
+                                }
+
+                                // ─── Image Zoom Modal ───
+                                function openImageZoomModal(imgUrl) {
+                                    const modal = document.getElementById('imageZoomModal');
+                                    const img = document.getElementById('zoomedImage');
+                                    img.src = imgUrl;
+                                    modal.classList.remove('hidden');
+                                    document.body.style.overflow = 'hidden';
+                                    
+                                    // Trigger animations
+                                    requestAnimationFrame(() => {
+                                        modal.classList.remove('opacity-0');
+                                        img.classList.remove('scale-95');
+                                        img.classList.add('scale-100');
+                                    });
+                                }
+
+                                function closeImageZoomModal() {
+                                    const modal = document.getElementById('imageZoomModal');
+                                    const img = document.getElementById('zoomedImage');
+                                    
+                                    // Reverse animations
+                                    modal.classList.add('opacity-0');
+                                    img.classList.remove('scale-100');
+                                    img.classList.add('scale-95');
+                                    
+                                    setTimeout(() => {
+                                        modal.classList.add('hidden');
+                                        document.body.style.overflow = '';
+                                        img.src = '';
+                                    }, 300);
                                 }
                             </script>
 

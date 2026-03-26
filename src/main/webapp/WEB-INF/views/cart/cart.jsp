@@ -114,6 +114,21 @@
                                                 <form id="checkoutForm" action="${pageContext.request.contextPath}/cart"
                                                     method="POST">
                                                     <input type="hidden" name="action" value="prepareCheckout">
+
+                                                    <!-- ===== Chọn tất cả ===== -->
+                                                    <div
+                                                        class="px-8 py-4 border-b border-sky-100 bg-sky-50/30 flex items-center">
+                                                        <label class="flex items-center gap-3 cursor-pointer group">
+                                                            <input type="checkbox" id="selectAllCheckbox"
+                                                                class="w-5 h-5 text-accent-blue border-slate-300 rounded focus:ring-accent-blue cursor-pointer"
+                                                                onchange="toggleSelectAll(this)">
+                                                            <span
+                                                                class="text-xs font-bold text-slate-800 uppercase tracking-widest group-hover:text-accent-blue transition-colors">
+                                                                Chọn tất cả
+                                                            </span>
+                                                        </label>
+                                                    </div>
+
                                                     <div class="divide-y divide-sky-100">
                                                         <c:forEach var="item" items="${sessionScope.cart.items}">
                                                             <div class="p-8 flex flex-col md:flex-row gap-8 items-center transition-all duration-500"
@@ -122,7 +137,7 @@
                                                                     <input type="checkbox" name="selectedItems"
                                                                         value="${item.productColorSizeId}"
                                                                         class="item-checkbox w-5 h-5 text-accent-blue border-slate-300 rounded focus:ring-accent-blue cursor-pointer"
-                                                                        data-subtotal="${item.subtotal}" checked
+                                                                        data-subtotal="${item.subtotal}"
                                                                         onchange="updateSelectedTotal()">
                                                                 </div>
                                                                 <div
@@ -279,6 +294,10 @@
                     <script>
                         const contextPath = '${pageContext.request.contextPath}';
 
+                        document.addEventListener('DOMContentLoaded', () => {
+                            updateSelectedTotal();
+                        });
+
                         function submitCheckout() {
                             const form = document.getElementById('checkoutForm');
                             const checkboxes = form.querySelectorAll('.item-checkbox:checked');
@@ -289,10 +308,25 @@
                             form.submit();
                         }
 
-                        function updateSelectedTotal() {
-                            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
-                            let total = 0;
+                        function toggleSelectAll(source) {
+                            const checkboxes = document.querySelectorAll('.item-checkbox');
                             checkboxes.forEach(cb => {
+                                cb.checked = source.checked;
+                            });
+                            updateSelectedTotal();
+                        }
+
+                        function updateSelectedTotal() {
+                            const checkboxes = document.querySelectorAll('.item-checkbox');
+                            const checkedBoxes = document.querySelectorAll('.item-checkbox:checked');
+                            const selectAllCb = document.getElementById('selectAllCheckbox');
+
+                            if (selectAllCb) {
+                                selectAllCb.checked = (checkboxes.length > 0 && checkboxes.length === checkedBoxes.length);
+                            }
+
+                            let total = 0;
+                            checkedBoxes.forEach(cb => {
                                 total += parseFloat(cb.getAttribute('data-subtotal'));
                             });
                             document.getElementById('summary-subtotal').textContent = formatVND(total);

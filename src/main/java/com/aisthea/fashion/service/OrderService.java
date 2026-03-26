@@ -124,7 +124,9 @@ public class OrderService implements IOrderService {
                 orderItem.setColor(cartItem.getColor());
                 orderItem.setSize(cartItem.getSize());
                 orderItem.setQuantity(cartItem.getQuantity());
-                orderItem.setPrice(cartItem.getPrice() != null ? cartItem.getPrice().setScale(0, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO);
+                orderItem.setPrice(
+                        cartItem.getPrice() != null ? cartItem.getPrice().setScale(0, java.math.RoundingMode.HALF_UP)
+                                : BigDecimal.ZERO);
                 orderItem.setImageUrl(cartItem.getProductImageUrl());
                 orderItem.setProductName(cartItem.getProductName());
 
@@ -147,10 +149,10 @@ public class OrderService implements IOrderService {
             conn.commit();
 
             // Send notification for new order
-            notificationService.sendNotification(user.getUserId(), 
-                "Đặt hàng thành công", 
-                "Đơn hàng #" + newOrderId + " của bạn đã được đặt thành công và đang chờ xác nhận.", 
-                "ORDER");
+            notificationService.sendNotification(user.getUserId(),
+                    "Đặt hàng thành công",
+                    "Đơn hàng #" + newOrderId + " của bạn đã được đặt thành công và đang chờ xác nhận.",
+                    "ORDER");
 
             // Points are added when order is Paid or Completed to avoid duplication.
 
@@ -228,33 +230,36 @@ public class OrderService implements IOrderService {
     public boolean updateOrderStatus(int orderId, String newStatus) {
         try {
             Order orderBefore = orderDAO.getAdminOrderById(orderId);
-            
+
             // Check if status requires points (Completed only)
             boolean isPayingStatus = "Completed".equalsIgnoreCase(newStatus);
-            
+
             if (isPayingStatus) {
-                // Only add points if transitioning from a non-paying status to avoid duplication
+                // Only add points if transitioning from a non-paying status to avoid
+                // duplication
                 if (orderBefore != null && !"Completed".equalsIgnoreCase(orderBefore.getStatus())) {
-                    int pointsEarned = orderBefore.getTotalprice().divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
+                    int pointsEarned = orderBefore.getTotalprice()
+                            .divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
                             .intValue();
                     if (pointsEarned > 0) {
                         UserDAO userDAO = new UserDAO();
-                        userDAO.updateMembershipPoints(orderBefore.getUserid(), pointsEarned, "Points from " + newStatus + " Order #" + orderId);
+                        userDAO.updateMembershipPoints(orderBefore.getUserid(), pointsEarned,
+                                "Points from " + newStatus + " Order #" + orderId);
                         logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + orderBefore.getUserid()
                                 + " từ đơn hàng #" + orderId + " (Status: " + newStatus + ")");
                     }
                 }
             }
-            
+
             boolean updated = orderDAO.updateOrderStatus(orderId, newStatus);
             if (updated) {
                 try {
                     Order order = orderDAO.getAdminOrderById(orderId);
                     if (order != null) {
-                        notificationService.sendNotification(order.getUserid(), 
-                            "Cập nhật đơn hàng", 
-                            "Đơn hàng #" + orderId + " của bạn đã được cập nhật trạng thái sang: " + newStatus, 
-                            "ORDER");
+                        notificationService.sendNotification(order.getUserid(),
+                                "Cập nhật đơn hàng",
+                                "Đơn hàng #" + orderId + " của bạn đã được cập nhật trạng thái sang: " + newStatus,
+                                "ORDER");
                     }
                 } catch (Exception e) {
                     logger.warning("Could not send status update notification: " + e.getMessage());
@@ -275,7 +280,7 @@ public class OrderService implements IOrderService {
             if (order != null) {
                 List<OrderItem> items = orderItemDAO.getOrderItemsByOrderId(orderId);
                 order.setItems(items);
-                
+
                 if (order.getVoucherId() != null) {
                     VoucherDAO voucherDAO = new VoucherDAO();
                     Voucher v = voucherDAO.findById(order.getVoucherId());
@@ -311,15 +316,16 @@ public class OrderService implements IOrderService {
             if (order == null) {
                 throw new Exception("Không tìm thấy đơn hàng hoặc bạn không có quyền.");
             }
-            
+
             String currentStatus = order.getStatus();
             String refundStatus = null;
-            
+
             if ("Pending".equalsIgnoreCase(currentStatus)) {
                 // COD / Chờ xác nhận -> Hủy bình thường, không cần hoàn tiền
                 refundStatus = null;
             } else if ("Processing".equalsIgnoreCase(currentStatus) || "Shipped".equalsIgnoreCase(currentStatus)) {
-                if ("QR".equalsIgnoreCase(order.getPaymentMethod())) refundStatus = "Pending";
+                if ("QR".equalsIgnoreCase(order.getPaymentMethod()))
+                    refundStatus = "Pending";
             } else {
                 throw new Exception("Quá trình hủy không hợp lệ cho trạng thái: " + currentStatus);
             }
@@ -341,18 +347,18 @@ public class OrderService implements IOrderService {
             if (!statusUpdated) {
                 throw new SQLException("Lỗi: Không thể cập nhật trạng thái đơn hàng.");
             }
-            
+
             boolean cancelInfoUpdated = orderDAO.updateCancelInfo(orderId, reason, refundStatus, conn);
             if (!cancelInfoUpdated) {
                 logger.warning("Không thể lưu lý do hủy và trạng thái hoàn tiền cho đơn #" + orderId);
             }
 
             conn.commit();
-            
-            notificationService.sendNotification(userId, 
-                "Hủy đơn hàng thành công", 
-                "Đơn hàng #" + orderId + " của bạn đã được hủy thành công.", 
-                "ORDER");
+
+            notificationService.sendNotification(userId,
+                    "Hủy đơn hàng thành công",
+                    "Đơn hàng #" + orderId + " của bạn đã được hủy thành công.",
+                    "ORDER");
             return true;
 
         } catch (Exception e) {
@@ -371,8 +377,9 @@ public class OrderService implements IOrderService {
 
     public boolean adminCancelOrder(int orderId, String reason) throws Exception {
         Order order = orderDAO.getAdminOrderById(orderId);
-        if (order == null) throw new Exception("Không tìm thấy đơn hàng.");
-        
+        if (order == null)
+            throw new Exception("Không tìm thấy đơn hàng.");
+
         if ("Cancelled".equalsIgnoreCase(order.getStatus())) {
             // Already cancelled, just update the reason
             Connection conn = null;
@@ -381,21 +388,23 @@ public class OrderService implements IOrderService {
                 orderDAO.updateCancelInfo(orderId, reason, order.getRefundStatus(), conn);
                 return true;
             } finally {
-                if (conn != null) conn.close();
+                if (conn != null)
+                    conn.close();
             }
         }
-        
+
         return cancelOrder(orderId, order.getUserid(), reason);
     }
-    
+
     @Override
     public boolean markRefunded(int orderId) throws Exception {
         Order order = orderDAO.getAdminOrderById(orderId);
-        if (order == null) throw new Exception("Không tìm thấy đơn hàng.");
+        if (order == null)
+            throw new Exception("Không tìm thấy đơn hàng.");
         if (!"Cancelled".equalsIgnoreCase(order.getStatus()) || !"Pending".equalsIgnoreCase(order.getRefundStatus())) {
             throw new Exception("Đơn hàng không ở trạng thái cần hoàn tiền.");
         }
-        
+
         return orderDAO.updateRefundStatus(orderId, "Completed");
     }
 

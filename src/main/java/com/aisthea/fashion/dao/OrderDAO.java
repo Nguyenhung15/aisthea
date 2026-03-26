@@ -124,7 +124,8 @@ public class OrderDAO implements IOrderDAO {
     }
 
     @Override
-    public boolean updateCancelInfo(int orderId, String cancelReason, String refundStatus, Connection conn) throws SQLException {
+    public boolean updateCancelInfo(int orderId, String cancelReason, String refundStatus, Connection conn)
+            throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(UPDATE_CANCEL_INFO)) {
             ps.setString(1, cancelReason);
             ps.setString(2, refundStatus);
@@ -152,7 +153,7 @@ public class OrderDAO implements IOrderDAO {
             order.setVoucherId(rs.wasNull() ? null : voucherId);
             order.setDiscountAmount(rs.getBigDecimal("discountamount"));
             order.setGiftMessage(rs.getString("gift_message"));
-            
+
             // Tier discount columns
             try {
                 order.setTierDiscount(rs.getBigDecimal("tier_discount"));
@@ -161,7 +162,7 @@ public class OrderDAO implements IOrderDAO {
             } catch (SQLException ignored) {
                 // columns may not exist yet if migration hasn't run
             }
-            
+
             // New columns
             order.setCancelReason(rs.getString("cancel_reason"));
             order.setRefundStatus(rs.getString("refund_status"));
@@ -253,7 +254,7 @@ public class OrderDAO implements IOrderDAO {
         }
 
         sql.append(" ORDER BY createdat DESC");
-        
+
         System.out.println(">>> SQL Filter: " + sql.toString());
         System.out.println(">>> Params: " + params);
 
