@@ -160,6 +160,8 @@
                                     <a href="${pageContext.request.contextPath}/notifications?type=PROMOTION"
                                         class="px-5 py-2 rounded-lg text-sm font-semibold ${activeType == 'PROMOTION' ? 'text-primary bg-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'} transition-all duration-200">Khuyến
                                         mãi</a>
+                                    <a href="${pageContext.request.contextPath}/notifications?type=RETURN"
+                                        class="px-5 py-2 rounded-lg text-sm font-semibold ${activeType == 'RETURN' ? 'text-primary bg-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'} transition-all duration-200">Hoàn trả</a>
                                 </div>
 
                                 <div class="space-y-1">
@@ -171,7 +173,7 @@
                                     </c:if>
                                     
                                     <c:forEach var="n" items="${notifications}">
-                                        <div onclick="handleNotificationClick(${n.notificationId}, '${n.type}', this)"
+                                        <div onclick="handleNotificationClick('${n.notificationId}', '${n.type}', this)"
                                             data-content="<c:out value='${n.content}' escapeXml='true'/>"
                                             class="group relative ${n.read ? 'bg-white/20' : 'bg-white/40'} hover:bg-white/80 rounded-2xl p-5 border border-slate-100 transition-all duration-300 hover:shadow-glass-sm flex gap-4 items-start cursor-pointer ${n.read ? 'opacity-80' : ''}">
                                             
@@ -182,10 +184,12 @@
                                             <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ml-3
                                                 ${n.type == 'ORDER' ? 'bg-blue-50 text-primary border-blue-100' : 
                                                   n.type == 'PROMOTION' ? 'bg-amber-50 text-accent-gold border-amber-100' : 
+                                                  n.type == 'RETURN' ? 'bg-red-50 text-red-500 border-red-100' : 
                                                   'bg-slate-50 text-slate-400 border-slate-100'} border">
                                                 <span class="material-symbols-outlined text-[24px]">
                                                     ${n.type == 'ORDER' ? 'local_shipping' : 
                                                       n.type == 'PROMOTION' ? 'percent' : 
+                                                      n.type == 'RETURN' ? 'assignment_return' : 
                                                       'info'}
                                                 </span>
                                             </div>
@@ -205,6 +209,7 @@
                                                 <span class="inline-block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                                     ${n.type == 'ORDER' ? 'Cập nhật đơn hàng' : 
                                                       n.type == 'PROMOTION' ? 'Khuyến mãi' : 
+                                                      n.type == 'RETURN' ? 'Hoàn trả' : 
                                                       'Hệ thống'}
                                                 </span>
                                             </div>
@@ -233,6 +238,13 @@
                     if (type === 'ORDER') {
                         const content = element.getAttribute('data-content');
                         // Lấy mã đơn hàng từ nội dung (VD: "Đơn hàng #123 - Trạng thái...")
+                        const match = content.match(/#(\d+)/);
+                        if (match && match[1]) {
+                            const orderId = match[1];
+                            redirectUrl = "&redirectUrl=" + encodeURIComponent("/order?action=view&id=" + orderId);
+                        }
+                    } else if (type === 'RETURN') {
+                        const content = element.getAttribute('data-content');
                         const match = content.match(/#(\d+)/);
                         if (match && match[1]) {
                             const orderId = match[1];

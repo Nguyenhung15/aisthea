@@ -43,4 +43,7 @@ public interface IOrderService {
 
     /** Admin approves or rejects a pending return request. */
     boolean processReturnRequest(int returnId, String newStatus, String adminNote) throws Exception;
+
+    /** Customer cancels a pending return request. */
+    boolean cancelReturnRequest(int returnId, int userId) throws Exception;
 }

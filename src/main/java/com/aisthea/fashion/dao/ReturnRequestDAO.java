@@ -88,6 +88,21 @@ public class ReturnRequestDAO {
         }
     }
 
+    /**
+     * User cancels a pending return request (hard delete).
+     * @param returnId PK of return_requests
+     * @param userId Owner of the request
+     * @return true if deleted
+     */
+    public boolean delete(int returnId, int userId) throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM return_requests WHERE return_id = ? AND user_id = ? AND status = 'Pending'")) {
+            ps.setInt(1, returnId);
+            ps.setInt(2, userId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     private ReturnRequest mapRow(ResultSet rs) throws SQLException {
         ReturnRequest rr = new ReturnRequest();
         rr.setReturnId(rs.getInt("return_id"));

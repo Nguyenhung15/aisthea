@@ -544,11 +544,13 @@
                         function iconForType(type) {
                             if (type === 'ORDER')     return { icon: 'local_shipping', bg: '#eff6ff', color: '#0056b3', border: '#bfdbfe' };
                             if (type === 'PROMOTION') return { icon: 'percent',        bg: '#fffbeb', color: '#C5A059', border: '#fde68a' };
+                            if (type === 'RETURN')    return { icon: 'assignment_return', bg: '#fef2f2', color: '#ef4444', border: '#fee2e2' };
                             return                           { icon: 'info',            bg: '#f8fafc', color: '#94a3b8', border: '#e2e8f0' };
                         }
                         function labelForType(type) {
                             if (type === 'ORDER')     return 'Cập nhật đơn hàng';
                             if (type === 'PROMOTION') return 'Khuyến mãi';
+                            if (type === 'RETURN')    return 'Hoàn trả';
                             return 'Hệ thống';
                         }
 
@@ -572,6 +574,11 @@
                                 
                                 var redirectQuery = '';
                                 if (n.type === 'ORDER' && n.content) {
+                                    var match = n.content.match(/#(\d+)/);
+                                    if (match && match[1]) {
+                                        redirectQuery = '&redirectUrl=' + encodeURIComponent('/order?action=view&id=' + match[1]);
+                                    }
+                                } else if (n.type === 'RETURN' && n.content) {
                                     var match = n.content.match(/#(\d+)/);
                                     if (match && match[1]) {
                                         redirectQuery = '&redirectUrl=' + encodeURIComponent('/order?action=view&id=' + match[1]);

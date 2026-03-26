@@ -232,6 +232,8 @@
                                             <button data-status="Cancelled"
                                                 class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Đã
                                                 hủy</button>
+                                            <button data-status="Return"
+                                                class="whitespace-nowrap pb-3 px-1 text-sm text-slate-500 hover:text-slate-800 tab-underline filter-tab">Trả hàng / Hoàn tiền</button>
                                         </div>
                                     </header>
 
@@ -257,7 +259,8 @@
                                             </c:when>
                                             <c:otherwise>
                                                 <c:forEach var="order" items="${orderList}">
-                                                    <div data-status="${order.status}"
+                                                    <c:set var="rr" value="${returnRequestsMap[order.orderid]}" />
+                                                    <div data-status="${order.status}" data-return="${not empty rr ? 'true' : 'false'}"
                                                         class="order-card bg-white/60 border border-white rounded-2xl p-6 shadow-glass-sm hover:shadow-glass transition-all duration-300">
                                                         <div
                                                             class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-4 border-b border-slate-100">
@@ -322,6 +325,21 @@
                                                                         </span>
                                                                     </c:otherwise>
                                                                 </c:choose>
+                                                                <%-- Return Status Badge --%>
+                                                                <c:set var="rr" value="${returnRequestsMap[order.orderid]}" />
+                                                                <c:if test="${not empty rr}">
+                                                                    <div class="ml-2 flex items-center">
+                                                                        <div class="w-1 h-3 bg-slate-200 mr-2 rounded-full"></div>
+                                                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                                                            ${rr.status == 'Pending' ? 'bg-amber-100 text-amber-700' : ''}
+                                                                            ${rr.status == 'Approved' ? 'bg-emerald-100 text-emerald-700' : ''}
+                                                                            ${rr.status == 'Rejected' ? 'bg-red-100 text-red-700' : ''}">
+                                                                            ${rr.status == 'Pending' ? 'Đang chờ hoàn trả' : ''}
+                                                                            ${rr.status == 'Approved' ? 'Chấp nhận hoàn trả' : ''}
+                                                                            ${rr.status == 'Rejected' ? 'Bị từ chối hoàn trả' : ''}
+                                                                        </span>
+                                                                    </div>
+                                                                </c:if>
                                                             </div>
                                                         </div>
 
@@ -440,7 +458,19 @@
                                     // Filter orders
                                     let visibleCount = 0;
                                     orderCards.forEach(card => {
-                                        if (filter === 'All' || card.getAttribute('data-status') === filter) {
+                                        const orderStatus = card.getAttribute('data-status');
+                                        const hasReturn = card.getAttribute('data-return') === 'true';
+
+                                        let show = false;
+                                        if (filter === 'All') {
+                                            show = true;
+                                        } else if (filter === 'Return') {
+                                            show = hasReturn;
+                                        } else {
+                                            show = (orderStatus === filter);
+                                        }
+
+                                        if (show) {
                                             card.style.display = 'block';
                                             visibleCount++;
                                         } else {

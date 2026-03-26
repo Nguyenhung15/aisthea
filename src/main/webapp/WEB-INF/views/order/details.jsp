@@ -344,39 +344,33 @@
                                                 <%-- Payment Method --%>
                                                     <div class="flex justify-between">
                                                         <span class="text-slate-500">Payment</span>
-                                                        <span class="font-semibold">
-                                                            <c:choose>
-                                                                <c:when test="${order.paymentMethod eq 'QR'}">
-                                                                    <span class="text-blue-600"> QR / Online</span>
-                                                                </c:when>
-                                                                <c:otherwise>
-                                                                    <span class="text-slate-700"> COD / Tiền mặt</span>
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                        </span>
+                                                        <c:choose>
+                                                            <c:when test="${order.paymentMethod eq 'QR'}">
+                                                                <span class="font-medium text-slate-900">QR / Online</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="font-medium text-slate-900">COD / Tiền mặt</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                     </div>
                                                     <%-- Paid / Unpaid badge --%>
                                                         <div class="flex justify-between">
                                                             <span class="text-slate-500">Paid Status</span>
                                                             <c:choose>
-                                                                <c:when
-                                                                    test="${order.status eq 'Completed' or (order.paymentMethod eq 'QR' and order.status ne 'Pending')}">
-                                                                    <span class="text-emerald-600 font-bold">Đã thanh
-                                                                        toán</span>
+                                                                <c:when test="${order.status eq 'Completed' or (order.paymentMethod eq 'QR' and order.status ne 'Pending')}">
+                                                                    <span class="font-medium text-slate-900">Đã thanh toán</span>
                                                                 </c:when>
                                                                 <c:when test="${order.status eq 'Cancelled'}">
-                                                                    <span class="text-red-500 font-bold">Đã hủy</span>
+                                                                    <span class="font-medium text-slate-900">Đã hủy</span>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <span class="text-amber-600 font-bold">Chưa thanh
-                                                                        toán</span>
+                                                                    <span class="font-medium text-slate-900">Chưa thanh toán</span>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </div>
                                                         <div class="flex justify-between">
                                                             <span class="text-slate-500">Shipping</span>
-                                                            <span
-                                                                class="text-emerald-600 font-bold italic">Complimentary</span>
+                                                            <span class="font-medium text-slate-900">Complimentary</span>
                                                         </div>
                                                         <c:if
                                                             test="${order.tierDiscount != null && order.tierDiscount > 0}">
@@ -504,9 +498,22 @@
                                                                         <c:if test="${not empty returnRequest.adminNote}">
                                                                             <p class="text-slate-500 italic">Phản hồi: ${returnRequest.adminNote}</p>
                                                                         </c:if>
-                                                                        <p class="text-slate-400">
-                                                                            <fmt:formatDate value="${returnRequest.createdAt}" pattern="HH:mm dd/MM/yyyy" />
-                                                                        </p>
+                                                                        <div class="flex items-center justify-between gap-4 mt-2">
+                                                                            <p class="text-slate-400">
+                                                                                <fmt:formatDate value="${returnRequest.createdAt}" pattern="HH:mm dd/MM/yyyy" />
+                                                                            </p>
+                                                                            <c:if test="${returnRequest.status == 'Pending'}">
+                                                                                <form action="${pageContext.request.contextPath}/order" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy yêu cầu hoàn đơn?')">
+                                                                                    <input type="hidden" name="action" value="cancelReturn">
+                                                                                    <input type="hidden" name="returnId" value="${returnRequest.returnId}">
+                                                                                    <input type="hidden" name="orderId" value="${order.orderid}">
+                                                                                    <button type="submit" class="text-red-500 hover:text-red-700 font-bold uppercase text-[10px] tracking-wider flex items-center gap-1 transition-colors">
+                                                                                        <span class="material-icons-outlined text-xs">close</span>
+                                                                                        Hủy Yêu Cầu
+                                                                                    </button>
+                                                                                </form>
+                                                                            </c:if>
+                                                                        </div>
                                                                     </div>
                                                                 </c:when>
                                                                 <c:otherwise>

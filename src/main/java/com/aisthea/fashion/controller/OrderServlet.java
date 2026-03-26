@@ -130,6 +130,9 @@ public class OrderServlet extends HttpServlet {
                 case "processReturn":
                     handleProcessReturn(request, response, user);
                     break;
+                case "cancelReturn":
+                    handleCancelReturn(request, response, user);
+                    break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/order?action=history");
                     break;
@@ -164,6 +167,21 @@ public class OrderServlet extends HttpServlet {
             request.setAttribute("perOrderReviewedMap", perOrderReviewed);
         } catch (Exception e) {
             request.setAttribute("perOrderReviewedMap", new java.util.HashMap<>());
+        }
+
+        // Fetch Return Requests for history view
+        try {
+            com.aisthea.fashion.dao.ReturnRequestDAO rrDao = new com.aisthea.fashion.dao.ReturnRequestDAO();
+            java.util.Map<Integer, ReturnRequest> returnRequestsMap = new java.util.HashMap<>();
+            for (Order o : orderList) {
+                ReturnRequest rr = rrDao.getByOrderId(o.getOrderid());
+                if (rr != null) {
+                    returnRequestsMap.put(o.getOrderid(), rr);
+                }
+            }
+            request.setAttribute("returnRequestsMap", returnRequestsMap);
+        } catch (Exception e) {
+            request.setAttribute("returnRequestsMap", new java.util.HashMap<>());
         }
 
         request.getRequestDispatcher("/WEB-INF/views/order/history.jsp").forward(request, response);
@@ -564,6 +582,22 @@ public class OrderServlet extends HttpServlet {
             logger.warning("handleProcessReturn error: " + e.getMessage());
             response.sendRedirect(request.getContextPath()
                     + "/order?action=adminViewDetail&id=" + orderId + "&update=error");
+        }
+    }
+
+    private void handleCancelReturn(HttpServletRequest request, HttpServletResponse response, User user)
+            throws IOException {
+        int orderId = -1;
+        try {
+            int returnId = Integer.parseInt(request.getParameter("returnId"));
+            orderId = Integer.parseInt(request.getParameter("orderId"));
+            orderService.cancelReturnRequest(returnId, user.getUserId());
+            response.sendRedirect(request.getContextPath()
+                    + "/order?action=view&orderid=" + orderId + "&returnCancelled=true");
+        } catch (Exception e) {
+            logger.warning("handleCancelReturn error: " + e.getMessage());
+            response.sendRedirect(request.getContextPath()
+                    + (orderId != -1 ? "/order?action=view&orderid=" + orderId : "/order?action=history"));
         }
     }
 

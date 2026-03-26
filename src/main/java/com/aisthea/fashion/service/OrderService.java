@@ -242,7 +242,7 @@ public class OrderService implements IOrderService {
                 // duplication
                 if (orderBefore != null && !"Completed".equalsIgnoreCase(orderBefore.getStatus())) {
                     int pointsEarned = orderBefore.getTotalprice()
-                            .divide(new BigDecimal("10000"), 0, BigDecimal.ROUND_DOWN)
+                            .divide(new BigDecimal("10000"), 0, java.math.RoundingMode.DOWN)
                             .intValue();
                     if (pointsEarned > 0) {
                         UserDAO userDAO = new UserDAO();
@@ -497,7 +497,7 @@ public class OrderService implements IOrderService {
         notificationService.sendNotification(rr.getUserId(),
                 "Yêu cầu hoàn trả đã gửi",
                 "Yêu cầu hoàn trả cho đơn hàng #" + rr.getOrderId() + " đã được gửi. Chúng tôi sẽ xử lý trong vòng 24-48 giờ.",
-                "ORDER");
+                "RETURN");
 
         logger.info("Return request #" + newId + " submitted for order #" + rr.getOrderId());
         return rr;
@@ -524,15 +524,33 @@ public class OrderService implements IOrderService {
             notificationService.sendNotification(rr.getUserId(),
                     "Yêu cầu hoàn trả được chấp nhận",
                     "Yêu cầu hoàn trả đơn hàng #" + rr.getOrderId() + " đã được chấp nhận. Tiền sẽ hoàn về tài khoản trong 3-5 ngày làm việc.",
-                    "ORDER");
+                    "RETURN");
         } else if ("Rejected".equalsIgnoreCase(newStatus)) {
             notificationService.sendNotification(rr.getUserId(),
                     "Yêu cầu hoàn trả bị từ chối",
                     "Yêu cầu hoàn trả đơn hàng #" + rr.getOrderId() + " bị từ chối. Lý do: " + (adminNote != null ? adminNote : "Không có ghi chú."),
-                    "ORDER");
+                    "RETURN");
         }
 
         logger.info("Return request #" + returnId + " → " + newStatus);
         return true;
+    }
+
+    @Override
+    public boolean cancelReturnRequest(int returnId, int userId) throws Exception {
+        ReturnRequestDAO rrDao = new ReturnRequestDAO();
+        ReturnRequest rr = rrDao.getAll().stream()
+                .filter(r -> r.getReturnId() == returnId && r.getUserId() == userId)
+                .findFirst()
+                .orElse(null);
+        
+        boolean deleted = rrDao.delete(returnId, userId);
+        if (deleted && rr != null) {
+            notificationService.sendNotification(userId,
+                "Đã hủy yêu cầu hoàn trả",
+                "Yêu cầu hoàn trả đơn hàng #" + rr.getOrderId() + " đã được hủy thành công.",
+                "RETURN");
+        }
+        return deleted;
     }
 }
