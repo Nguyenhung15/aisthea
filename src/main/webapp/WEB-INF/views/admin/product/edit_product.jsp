@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
@@ -664,9 +664,30 @@
                         </div>
                     </div>
 
+                    <!-- Bestseller Toggle -->
+                    <div class="ep-card">
+                        <div class="ep-card__header">
+                            <div class="ep-card__header-icon"><i class="fa-solid fa-star"></i></div>
+                            <h3 class="ep-card__title">Bestseller</h3>
+                        </div>
+                        <div class="ep-card__body">
+                            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;color:#cbd5e1;">
+                                <!-- hidden input ensures false is sent when checkbox is unchecked -->
+                                <input type="hidden" name="bestseller" value="false">
+                                <input type="checkbox" name="bestseller" value="true"
+                                       ${product.bestseller ? 'checked' : ''}
+                                       style="width:18px;height:18px;accent-color:#9B774E;cursor:pointer;">
+                                Mark as Bestseller
+                            </label>
+                        </div>
+                    </div>
+
                 </div><!-- end ep-sidebar -->
 
+
+
             </div><!-- end ep-wrapper -->
+
         </form>
 
     </div>

@@ -746,7 +746,7 @@
                                 class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 bg-white/60"
                                 placeholder="Thấp nhất"
                                 value="<c:if test='${not empty param.minPrice}'><fmt:formatNumber value='${param.minPrice}' type='number' groupingUsed='true'/></c:if>"
-                                oninput="formatPriceInput(this)" />
+                                onblur="formatPriceInput(this)" />
                                 <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-medium pointer-events-none">₫</span>
                                 </div>
                                 <span class="text-slate-300 font-bold text-base">—</span>
@@ -755,7 +755,7 @@
                                 class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 bg-white/60"
                                 placeholder="Cao nhất"
                                 value="<c:if test='${not empty param.maxPrice}'><fmt:formatNumber value='${param.maxPrice}' type='number' groupingUsed='true'/></c:if>"
-                                oninput="formatPriceInput(this)" />
+                                onblur="formatPriceInput(this)" />
                                 <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-medium pointer-events-none">₫</span>
                                 </div>
                                 </div>
@@ -1679,7 +1679,7 @@
                                     return v === '' ? '' : fmt.format(v);
                                 }
 
-                                // Auto-format while typing (insert dots)
+                                // Format on blur (not on input) to prevent cursor-jumping bug
                                 function formatPriceInput(el) {
                                     const raw = parsePriceStr(el.value);
                                     if (raw !== '') {
@@ -1689,14 +1689,19 @@
                                     }
                                 }
 
-                                // Apply button → submit with price params
+                                // Apply button → parse raw digits from input, submit with clean numeric params
                                 function applyPriceFilter() {
-                                    const minIn = document.getElementById('minPriceInput').value;
-                                    const maxIn = document.getElementById('maxPriceInput').value;
-                                    
-                                    const minVal = parsePriceStr(minIn);
-                                    const maxVal = parsePriceStr(maxIn);
-                                    
+                                    const minEl = document.getElementById('minPriceInput');
+                                    const maxEl = document.getElementById('maxPriceInput');
+
+                                    // Strip all non-digit characters to get the raw number
+                                    const minVal = parsePriceStr(minEl.value);
+                                    const maxVal = parsePriceStr(maxEl.value);
+
+                                    // Update display to formatted value
+                                    if (minVal !== '') minEl.value = fmtPrice(minVal);
+                                    if (maxVal !== '') maxEl.value = fmtPrice(maxVal);
+
                                     const minH = document.getElementById('minPriceHidden');
                                     const maxH = document.getElementById('maxPriceHidden');
 

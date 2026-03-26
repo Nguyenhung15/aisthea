@@ -475,105 +475,132 @@ public class OrderServlet extends HttpServlet {
         }
     }
 
-    private void sendOrderEmail(Order order) {
-        if (order == null)
-            return;
 
+    // ─── EMAIL HELPERS ────────────────────────────────────────────────────────
+
+    /**
+     * Sends a professional HTML order-confirmation email.
+     * The KEY fix: product image URLs are resolved to absolute URLs so that
+     * remote email clients (Gmail, Outlook, etc.) can load them.
+     */
+    private void sendOrderEmail(Order order) {
+        if (order == null) return;
         try {
+            @SuppressWarnings("deprecation")
             Locale localeVN = new Locale("vi", "VN");
-            NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance(localeVN);
+            NumberFormat currencyFmt = NumberFormat.getCurrencyInstance(localeVN);
+
             String customerEmail = order.getEmail();
             if (customerEmail == null || customerEmail.trim().isEmpty()) {
-                logger.warning(
-                        "Không thể gửi mail cho đơn hàng #" + order.getOrderid() + " vì thiếu email khách hàng.");
+                logger.warning("Cannot send email for order #" + order.getOrderid() + ": missing customer email.");
                 return;
             }
-            String customerName = order.getFullname();
-            String subject = "AISTHÉA - Xác nhận đơn hàng #" + order.getOrderid();
 
-            logger.info("Đang chuẩn bị gửi mail tới: " + customerEmail + " cho đơn hàng #" + order.getOrderid());
+            // Read configured base URL (e.g. http://localhost:8080/AistheaFashion)
+            String baseUrl = com.aisthea.fashion.config.AppConfig
+                    .getProperty("app.base.url", "http://localhost:8080/AistheaFashion");
+
+            String subject = "AISTH\u00c9A - X\u00e1c nh\u1eadn \u0111\u01a1n h\u00e0ng #" + order.getOrderid();
+            logger.info("Sending order email \u2192 " + customerEmail + " (order #" + order.getOrderid() + ")");
 
             StringBuilder html = new StringBuilder();
-            html.append("<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>");
-            html.append("<div style='max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px;'>");
-            html.append("<h2 style='text-align: center; color: #000; letter-spacing: 2px;'>AISTHÉA</h2>");
-            html.append("<p>Chào <b>" + customerName + "</b>,</p>");
-            html.append("<p>Cảm ơn bạn đã tin tưởng và chọn sở hữu những thiết kế từ <b>AISTHÉA</b>.</p>");
-            html.append("<p>Đơn hàng <strong>#" + order.getOrderid()
-                    + "</strong> của bạn đã được xác nhận thành công.</p>");
+            html.append("<!DOCTYPE html><html lang='vi'><body style='margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;'>");
+            html.append("<div style='max-width:600px;margin:24px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);'>");
+            html.append("<div style='background:#0f172a;padding:28px 32px;text-align:center;'>");
+            html.append("<h1 style='margin:0;color:#fff;letter-spacing:6px;font-size:24px;'>AISTH\u00c9A</h1>");
+            html.append("</div><div style='padding:32px;'>");
+            html.append("<p>Ch\u00e0o <strong>").append(order.getFullname()).append("</strong>,</p>");
+            html.append("<p style='color:#555;'>C\u1ea3m \u01a1n b\u1ea1n \u0111\u00e3 tin t\u01b0\u1edfng mua s\u1eafm t\u1ea1i <strong>AISTH\u00c9A</strong>. \u0110\u01a1n h\u00e0ng <strong>#").append(order.getOrderid()).append("</strong> \u0111\u00e3 \u0111\u01b0\u1ee3c x\u00e1c nh\u1eadn.</p>");
 
-            html.append(
-                    "<h3 style='border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px;'>CHI TIẾT ĐƠN HÀNG</h3>");
-            html.append("<table style='width: 100%; border-collapse: collapse;'>");
+            html.append("<h3 style='border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:28px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;'>Chi ti\u1ebft \u0111\u01a1n h\u00e0ng</h3>");
+            html.append("<table style='width:100%;border-collapse:collapse;'>");
 
             if (order.getItems() != null) {
                 for (OrderItem item : order.getItems()) {
-                    html.append("<tr style='border-bottom: 1px solid #eee;'>");
-                    html.append("<td style='padding: 10px 0; width: 85px; vertical-align: top;'>");
-                    html.append("<img src='" + item.getImageUrl() + "' width='70' style='border-radius: 4px;'>");
-                    html.append("</td>");
-                    html.append("<td style='padding: 10px 0; vertical-align: top;'>");
-                    html.append("<strong>" + item.getProductName() + "</strong><br>");
-                    html.append("<span style='color: #777; font-size: 0.85em;'>" + item.getColor() + " / "
-                            + item.getSize() + "</span>");
-                    html.append("</td>");
-                    html.append("<td style='padding: 10px 0; text-align: right; width: 50px; vertical-align: top;'>x"
-                            + item.getQuantity() + "</td>");
-                    html.append(
-                            "<td style='padding: 10px 0; text-align: right; white-space: nowrap; width: 120px; vertical-align: top;'><strong>"
-                                    + currencyFormatter
-                                            .format(item.getPrice().multiply(new BigDecimal(item.getQuantity())))
-                                    + "</strong></td>");
+                    // KEY FIX: resolve relative URL -> absolute URL for email clients
+                    String imgUrl = resolveImageUrlForEmail(item.getImageUrl(), baseUrl);
+                    BigDecimal lineTotal = item.getPrice().multiply(new BigDecimal(item.getQuantity()));
+                    html.append("<tr style='border-bottom:1px solid #f1f5f9;'>");
+                    html.append("<td style='padding:12px 0;width:80px;vertical-align:top;'>")
+                        .append("<img src='").append(imgUrl).append("' width='68' height='85'")
+                        .append(" style='border-radius:6px;object-fit:cover;border:1px solid #e2e8f0;' /></td>");
+                    html.append("<td style='padding:12px 8px;vertical-align:top;'>")
+                        .append("<strong>").append(item.getProductName()).append("</strong><br>")
+                        .append("<span style='font-size:12px;color:#94a3b8;'>")
+                        .append(item.getColor()).append(" / ").append(item.getSize()).append("</span></td>");
+                    html.append("<td style='padding:12px 4px;text-align:center;vertical-align:top;font-size:13px;color:#64748b;'>x").append(item.getQuantity()).append("</td>");
+                    html.append("<td style='padding:12px 0 12px 8px;text-align:right;vertical-align:top;'>")
+                        .append("<strong>").append(currencyFmt.format(lineTotal)).append("</strong></td>");
                     html.append("</tr>");
                 }
             }
-
             html.append("</table>");
-            html.append("<p style='text-align: right; font-size: 1.2em; margin-top: 20px;'>");
-            html.append("TỔNG THANH TOÁN: <strong style='color: #9B774E;'>"
-                    + currencyFormatter.format(order.getTotalprice()) + "</strong>");
-            html.append("</p>");
+            html.append("<div style='text-align:right;padding:16px 0 0;border-top:2px solid #f1f5f9;'>")
+                .append("<span style='font-size:13px;color:#64748b;'>T\u1ed4NG THANH TO\u00c1N&nbsp;&nbsp;</span>")
+                .append("<strong style='font-size:20px;color:#9B774E;'>").append(currencyFmt.format(order.getTotalprice())).append("</strong></div>");
 
-            html.append(
-                    "<h3 style='border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 30px;'>THÔNG TIN GIAO HÀNG</h3>");
-            html.append(
-                    "<p style='background-color: #fcfcfc; padding: 15px; border: 1px solid #f0f0f0; border-radius: 4px;'>");
-            html.append("<b>Người nhận:</b> " + order.getFullname() + "<br>");
-            html.append("<b>Số điện thoại:</b> " + order.getPhone() + "<br>");
-            html.append("<b>Địa chỉ:</b> " + order.getAddress() + "<br>");
-            html.append("<b>Phương thức:</b> " + order.getPaymentMethod());
-            html.append("</p>");
+            html.append("<h3 style='border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:28px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;'>Th\u00f4ng tin giao h\u00e0ng</h3>");
+            html.append("<div style='background:#f8fafc;padding:16px;border-radius:8px;font-size:14px;line-height:1.8;'>")
+                .append("<b>Ng\u01b0\u1eddi nh\u1eadn:</b> ").append(order.getFullname()).append("<br>")
+                .append("<b>\u0110i\u1ec7n tho\u1ea1i:</b> ").append(order.getPhone()).append("<br>")
+                .append("<b>\u0110\u1ecba ch\u1ec9:</b> ").append(order.getAddress()).append("<br>")
+                .append("<b>Ph\u01b0\u01a1ng th\u1ee9c:</b> ").append(order.getPaymentMethod()).append("</div>");
 
-            html.append(
-                    "<p style='margin-top: 30px; text-align: center; color: #777; font-style: italic;'>Chúng tôi sẽ sớm liên hệ để giao hàng đến bạn.</p>");
-            html.append("<p style='text-align: center; font-weight: bold;'>Trân trọng,<br>Đội ngũ AISTHÉA</p>");
+            html.append("<p style='margin-top:28px;text-align:center;color:#94a3b8;font-size:13px;font-style:italic;'>Ch\u00fang t\u00f4i s\u1ebd li\u00ean h\u1ec7 s\u1edbm \u0111\u1ec3 giao h\u00e0ng.</p>");
+            html.append("<p style='text-align:center;font-weight:700;'>Tr\u00e2n tr\u1ecdng,<br>\u0110\u1ed9i ng\u0169 AISTH\u00c9A</p>");
             html.append("</div>");
-            html.append("</body></html>");
+            html.append("<div style='background:#f8fafc;padding:16px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;'>\u00a9 2025 AISTH\u00c9A. All rights reserved.</div>");
+            html.append("</div></body></html>");
 
             EmailConfig.sendMail(customerEmail, subject, html.toString(),
                     EmailConfig.TYPE_ORDER_CONFIRM, order.getUserid());
-            logger.info("Email xác nhận đơn hàng #" + order.getOrderid() + " đã được gửi tới " + customerEmail);
+            logger.info("Order confirmation email #" + order.getOrderid() + " sent to " + customerEmail);
 
         } catch (Exception e) {
-            logger.warning("Gửi mail cho đơn hàng #" + order.getOrderid() + " thất bại: " + e.getMessage());
+            logger.warning("Failed to send email for order #" + order.getOrderid() + ": " + e.getMessage());
         }
     }
 
+    /**
+     * Resolves a raw imageUrl (as stored in the database) to a fully-qualified
+     * absolute URL that remote email clients can load.
+     *
+     * Resolution rules:
+     *  1. Already absolute (http / https) -> returned as-is.
+     *  2. Starts with '/'               -> context-relative; baseUrl prepended.
+     *  3. Otherwise                     -> treated as a relative upload path
+     *     (e.g. "product/abc.jpg") and resolved to baseUrl + "/uploads/" + path.
+     */
+    private String resolveImageUrlForEmail(String rawUrl, String baseUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return baseUrl + "/images/product-placeholder.png";
+        }
+        String url = rawUrl.trim();
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return url;
+        }
+        if (url.startsWith("/")) {
+            return baseUrl + url;
+        }
+        // Relative path stored by ProductServlet, e.g. "product/uuid.jpg"
+        return baseUrl + "/uploads/" + url;
+    }
+
+    // ─── SESSION HELPER ───────────────────────────────────────────────────────
+
     private void refreshSessionUser(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        if (session != null) {
-            User user = (User) session.getAttribute("user");
-            if (user != null) {
-                try {
-                    User freshUser = new com.aisthea.fashion.dao.UserDAO().selectUser(user.getUserId());
-                    if (freshUser != null) {
-                        freshUser.setPassword(null);
-                        session.setAttribute("user", freshUser);
-                    }
-                } catch (Exception e) {
-                    logger.warning("Failed to refresh session user: " + e.getMessage());
-                }
+        if (session == null) return;
+        User user = (User) session.getAttribute("user");
+        if (user == null) return;
+        try {
+            User freshUser = new com.aisthea.fashion.dao.UserDAO().selectUser(user.getUserId());
+            if (freshUser != null) {
+                freshUser.setPassword(null);
+                session.setAttribute("user", freshUser);
             }
+        } catch (Exception e) {
+            logger.warning("Failed to refresh session user: " + e.getMessage());
         }
     }
 }

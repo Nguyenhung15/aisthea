@@ -1,4 +1,4 @@
-package com.aisthea.fashion.controller;
+﻿package com.aisthea.fashion.controller;
 
 import com.aisthea.fashion.model.*;
 import com.aisthea.fashion.service.CategoryService;
@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Part;
 import java.io.File;
@@ -28,6 +29,18 @@ import java.util.Scanner;
 import com.aisthea.fashion.util.Constants;
 import java.util.stream.Collectors;
 
+/**
+ * Handles all product-related requests for both public browsing and admin CRUD.
+ *
+ * <p>The {@code @MultipartConfig} annotation is required for file upload processing
+ * ({@link Part}-based API). Without it, {@code request.getPart()} throws
+ * {@link IllegalStateException} and all device uploads would silently fail.
+ */
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024,        // 1 MB — spool to disk above this
+    maxFileSize       = 10L * 1024 * 1024,  // 10 MB per file
+    maxRequestSize    = 50L * 1024 * 1024   // 50 MB total per request
+)
 @WebServlet(name = "ProductServlet", urlPatterns = { "/product" })
 public class ProductServlet extends HttpServlet {
 
@@ -468,12 +481,26 @@ public class ProductServlet extends HttpServlet {
 
         Product product = new Product();
 
+        // ── Basic fields ──────────────────────────────────────────────────────
         product.setName(request.getParameter("name"));
         product.setDescription(request.getParameter("description"));
         product.setBrand(request.getParameter("brand"));
         product.setPrice(parseBigDecimal(request.getParameter("price")));
         product.setDiscount(parseBigDecimal(request.getParameter("discount")));
 
+        // Bestseller: form sends hidden "bestseller=false" + optional checkbox "bestseller=true".
+        // getParameterValues gives both; the last value wins for a checkbox trick,
+        // so we check if any submitted value equals "true".
+        String[] bestsellerValues = request.getParameterValues("bestseller");
+        boolean isBestseller = false;
+        if (bestsellerValues != null) {
+            for (String v : bestsellerValues) {
+                if ("true".equalsIgnoreCase(v.trim())) { isBestseller = true; break; }
+            }
+        }
+        product.setBestseller(isBestseller);
+
+        // ── Category resolution ───────────────────────────────────────────────
         String categoryIdParam = request.getParameter("categoryid");
         // Fallback 1: Javascript-synced hidden input
         if (categoryIdParam == null || categoryIdParam.isBlank()) {
@@ -483,49 +510,53 @@ public class ProductServlet extends HttpServlet {
         if (categoryIdParam == null || categoryIdParam.isBlank()) {
             categoryIdParam = request.getParameter("parentCategory");
         }
-        
-        String genderIdParam = request.getParameter("genderid");
+
+        String genderIdParam    = request.getParameter("genderid");
         String parentCategoryParam = request.getParameter("parentCategory");
 
-        logger.info("DEBUG Categories: categoryid=" + categoryIdParam + ", backup=" + request.getParameter("categoryid_backup") + ", gender=" + genderIdParam + ", parent=" + parentCategoryParam);
+        logger.info("DEBUG Categories: categoryid=" + categoryIdParam
+                + ", backup=" + request.getParameter("categoryid_backup")
+                + ", gender=" + genderIdParam
+                + ", parent=" + parentCategoryParam);
 
         if (categoryIdParam == null || categoryIdParam.isBlank()) {
-            throw new ServletException("Danh mục con không được rỗng. Chi tiết nhận được: {child=" + categoryIdParam + ", backup=" + request.getParameter("categoryid_backup") + ", parent=" + parentCategoryParam + "}. Vui lòng chọn lại danh mục và nhấn Publish.");
+            throw new ServletException("Danh mục con không được rỗng. "
+                    + "Chi tiết: {child=" + categoryIdParam
+                    + ", backup=" + request.getParameter("categoryid_backup")
+                    + ", parent=" + parentCategoryParam
+                    + "}. Vui lòng chọn lại danh mục.");
         }
 
         int categoryId;
         try {
             categoryId = Integer.parseInt(categoryIdParam.trim());
         } catch (NumberFormatException e) {
-            throw new ServletException("Lỗi: categoryid không phải là số. Giá trị: " + categoryIdParam + " (parent=" + parentCategoryParam + ")");
+            throw new ServletException("Lỗi: categoryid không phải số. Giá trị: "
+                    + categoryIdParam + " (parent=" + parentCategoryParam + ")");
         }
 
         product.setCategory(categoryService.getCategoryById(categoryId));
 
+        // ── Color / Size / Stock variants ─────────────────────────────────────
         List<ProductColorSize> colorSizeList = new ArrayList<>();
         String[] colors = request.getParameterValues("stock_color");
-        String[] sizes = request.getParameterValues("stock_size");
+        String[] sizes  = request.getParameterValues("stock_size");
         String[] stocks = request.getParameterValues("stock_stock");
 
         if (colors != null && sizes != null && stocks != null) {
             int rowCount = Math.min(colors.length, Math.min(sizes.length, stocks.length));
             for (int i = 0; i < rowCount; i++) {
-                String color = colors[i];
-                String size = sizes[i];
+                String color    = colors[i];
+                String size     = sizes[i];
                 String stockStr = stocks[i];
-
                 if (color != null && !color.isBlank()
-                        && size != null && !size.isBlank()
+                        && size  != null && !size.isBlank()
                         && stockStr != null && !stockStr.isBlank()) {
-
                     ProductColorSize pcs = new ProductColorSize();
-                    pcs.setColor(color);
-                    pcs.setSize(size);
-                    try {
-                        pcs.setStock(Integer.parseInt(stockStr));
-                    } catch (NumberFormatException e) {
-                        pcs.setStock(0);
-                    }
+                    pcs.setColor(color.trim().toUpperCase());
+                    pcs.setSize(size.trim().toUpperCase());
+                    try { pcs.setStock(Integer.parseInt(stockStr.trim())); }
+                    catch (NumberFormatException e) { pcs.setStock(0); }
                     pcs.setProduct(product);
                     colorSizeList.add(pcs);
                 }
@@ -533,61 +564,83 @@ public class ProductServlet extends HttpServlet {
         }
         product.setColorSizes(colorSizeList);
 
-        List<ProductImage> imageList = new ArrayList<>();
-        String[] urls = request.getParameterValues("image_url");
-        String[] imgColors = request.getParameterValues("image_color");
-        String[] imgIndexes = request.getParameterValues("image_index");
-        String primaryImageIndex = request.getParameter("image_isprimary");
+        // ── Image processing ───────────────────────────────────────────────────
+        // Allowed upload extensions (whitelist against arbitrary file upload).
+        java.util.Set<String> ALLOWED_EXTS = new java.util.HashSet<>(
+                java.util.Arrays.asList(".jpg", ".jpeg", ".png", ".gif", ".webp"));
+
+        List<ProductImage> imageList     = new ArrayList<>();
+        String[]  urls       = request.getParameterValues("image_url");
+        String[]  imgColors  = request.getParameterValues("image_color");
+        String[]  imgIndexes = request.getParameterValues("image_index");
+        String    primaryImageIndex = request.getParameter("image_isprimary");
 
         if (urls != null && imgColors != null && imgIndexes != null) {
             int imageRowCount = Math.min(urls.length, Math.min(imgColors.length, imgIndexes.length));
 
             for (int i = 0; i < imageRowCount; i++) {
-                String url = urls[i];
-                String idx = imgIndexes[i];
-                
-                // Tiên quyết: Xử lý file upload nếu người dùng dùng tab "Upload from Device"
+                String url   = urls[i];
+                String idx   = imgIndexes[i];
+                String color = (imgColors[i] != null && !imgColors[i].isBlank())
+                               ? imgColors[i].trim() : "";
+
+                // Priority: device-upload overrides the URL field
                 try {
                     Part filePart = request.getPart("image_file_" + idx);
                     if (filePart != null && filePart.getSize() > 0) {
-                        String originalName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                        String ext = "";
-                        int dotIdx = originalName.lastIndexOf('.');
-                        if (dotIdx >= 0) ext = originalName.substring(dotIdx).toLowerCase();
+                        String submittedName = filePart.getSubmittedFileName();
+                        if (submittedName != null && !submittedName.isBlank()) {
+                            String originalName = Paths.get(submittedName).getFileName().toString();
+                            String ext = "";
+                            int dotPos = originalName.lastIndexOf('.');
+                            if (dotPos >= 0) ext = originalName.substring(dotPos).toLowerCase();
 
-                        String savedName = UUID.randomUUID().toString() + ext;
+                            if (!ALLOWED_EXTS.contains(ext)) {
+                                logger.warning("Rejected upload (extension '" + ext + "'): " + originalName);
+                            } else {
+                                String savedName = UUID.randomUUID().toString() + ext;
 
-                        File productDir = new File(Constants.UPLOAD_DIR, "product");
-                        if (!productDir.exists()) {
-                            boolean created = productDir.mkdirs();
-                            logger.info("Created upload directory: " + productDir.getAbsolutePath() + " result=" + created);
+                                File productDir = new File(Constants.UPLOAD_DIR, "product");
+                                if (!productDir.exists()) {
+                                    boolean created = productDir.mkdirs();
+                                    logger.info("Created upload dir: "
+                                            + productDir.getAbsolutePath() + " -> " + created);
+                                }
+
+                                File savedFile = new File(productDir, savedName);
+                                try (InputStream is = filePart.getInputStream()) {
+                                    Files.copy(is, savedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                                }
+                                url = "product/" + savedName;
+                                logger.info("Saved uploaded image -> " + url);
+                            }
                         }
-
-                        File savedFile = new File(productDir, savedName);
-                        try (InputStream is = filePart.getInputStream()) {
-                            Files.copy(is, savedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                        }
-
-                        // Set URL mới về đường dẫn file đã lưu
-                        url = "product/" + savedName;
                     }
                 } catch (Exception uploadEx) {
-                    logger.warning("Upload image failed for index " + i + ": " + uploadEx.getMessage());
+                    logger.warning("Upload image failed for idx=" + idx + ": " + uploadEx.getMessage());
                 }
 
                 if (url != null && !url.isBlank()) {
                     ProductImage img = new ProductImage();
-                    img.setImageUrl(url);
-                    img.setColor(imgColors[i]);
-                    // Mark as primary based on the index string equality (radio value is idx)
+                    img.setImageUrl(url.trim());
+                    img.setColor(color);
                     img.setPrimary(idx != null && idx.equals(primaryImageIndex));
                     img.setProduct(product);
                     imageList.add(img);
                 }
             }
         }
-        product.setImages(imageList);
 
+        // Guarantee at least one primary image — fall back to first
+        if (!imageList.isEmpty()) {
+            boolean hasPrimary = imageList.stream().anyMatch(ProductImage::isPrimary);
+            if (!hasPrimary) {
+                imageList.get(0).setPrimary(true);
+                logger.info("No primary image selected; defaulting to first image.");
+            }
+        }
+
+        product.setImages(imageList);
         return product;
     }
 
