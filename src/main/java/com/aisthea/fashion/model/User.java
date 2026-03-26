@@ -122,6 +122,12 @@ public class User {
         this.dob = dob;
     }
 
+    public java.util.Date getUserDobAsDate() {
+        if (dob == null)
+            return null;
+        return new java.util.Date(dob.getTime());
+    }
+
     public int getMembershipPoints() {
         return membershipPoints;
     }

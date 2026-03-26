@@ -68,9 +68,15 @@ public class OrderService implements IOrderService {
         BigDecimal tierDiscountAmount = TierService.calculateTierDiscount(user, cart.getTotalPrice());
         String tierName = TierService.getTierName(user);
 
+        // ── 2b. Tính Birthday Discount (server validate) ────
+        BigDecimal birthdayDiscountAmount = TierService.calculateBirthdayDiscount(user, cart.getTotalPrice());
+
         // ── 3. Tính tổng tiền sau giảm ───────────────────────────────────
         BigDecimal cartTotal = cart.getTotalPrice();
-        BigDecimal finalTotal = cartTotal.subtract(tierDiscountAmount).subtract(discountAmount);
+        BigDecimal finalTotal = cartTotal
+                .subtract(tierDiscountAmount)
+                .subtract(birthdayDiscountAmount)
+                .subtract(discountAmount);
         if (finalTotal.compareTo(BigDecimal.ZERO) < 0)
             finalTotal = BigDecimal.ZERO;
 
@@ -81,6 +87,7 @@ public class OrderService implements IOrderService {
         newOrder.setDiscountAmount(discountAmount.setScale(0, java.math.RoundingMode.HALF_UP));
         newOrder.setTierDiscount(tierDiscountAmount.setScale(0, java.math.RoundingMode.HALF_UP));
         newOrder.setTierName(tierName);
+        newOrder.setBirthdayDiscount(birthdayDiscountAmount.setScale(0, java.math.RoundingMode.HALF_UP));
         if (voucherId != null)
             newOrder.setVoucherId(voucherId);
         newOrder.setStatus("Pending");
@@ -100,6 +107,13 @@ public class OrderService implements IOrderService {
                 throw new SQLException("Không thể tạo đơn hàng. DAO trả về -1.");
             }
             newOrder.setOrderid(newOrderId);
+
+            // ── Record birthday discount usage (1 lần/năm) ──
+            if (birthdayDiscountAmount.compareTo(BigDecimal.ZERO) > 0) {
+                com.aisthea.fashion.dao.BirthdayDiscountDAO bdDao = new com.aisthea.fashion.dao.BirthdayDiscountDAO();
+                int currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
+                bdDao.recordUsage(user.getUserId(), currentYear, newOrderId, birthdayDiscountAmount, conn);
+            }
 
             // ── 4. Order items + stock ───────────────────────────────────
             List<OrderItem> items = new ArrayList<>();

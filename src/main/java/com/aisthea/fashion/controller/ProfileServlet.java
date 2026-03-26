@@ -79,11 +79,15 @@ public class ProfileServlet extends HttpServlet {
         if (dobStr != null && !dobStr.isEmpty()) {
             try {
                 user.setDob(java.sql.Date.valueOf(dobStr));
+                System.out.println(">>> PROFILE UPDATE: Set DOB to " + dobStr + " for User " + user.getUserId());
             } catch (IllegalArgumentException e) {
-                user.setDob(null);
+                System.err.println(">>> PROFILE UPDATE ERROR: Invalid DOB format: " + dobStr);
+                // Keep original DOB if format is invalid instead of nulling it
             }
         } else {
-            user.setDob(null);
+            // If dobStr is empty, we keep the existing DOB from the session user 
+            // instead of setting it to null, to prevent accidental loss.
+            System.out.println(">>> PROFILE UPDATE: dobStr is empty, keeping existing DOB for User " + user.getUserId());
         }
 
         Part filePart = request.getPart("avatar");

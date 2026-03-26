@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
         <% if (session.getAttribute("user")==null) { response.sendRedirect(request.getContextPath() + "/login" );
             return; } %>
             <!DOCTYPE html>
@@ -338,7 +339,9 @@
                                         <div class="relative">
                                             <input name="dob"
                                                 class="w-full pl-5 pr-5 py-3.5 glass-input rounded-xl text-slate-800 font-medium cursor-pointer"
-                                                id="dob" type="date" value="${sessionScope.user.dob}" max="" />
+                                                id="dob" type="date" 
+                                                value="<fmt:formatDate value='${sessionScope.user.userDobAsDate}' pattern='yyyy-MM-dd' />" 
+                                                max="" />
                                             <span
                                                 class="material-symbols-outlined absolute right-4 top-3.5 pointer-events-none text-slate-500 text-[20px]">calendar_today</span>
                                         </div>

@@ -10,8 +10,8 @@ public class OrderDAO implements IOrderDAO {
 
     private static final Logger logger = Logger.getLogger(OrderDAO.class.getName());
 
-    private static final String INSERT_ORDER = "INSERT INTO orders (userid, totalprice, status, fullname, email, phone, address, payment_method, voucherid, discountamount, gift_message, tier_discount, tier_name) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String INSERT_ORDER = "INSERT INTO orders (userid, totalprice, status, fullname, email, phone, address, payment_method, voucherid, discountamount, gift_message, tier_discount, tier_name, birthday_discount) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_ORDERS_BY_USERID = "SELECT * FROM orders WHERE userid = ? ORDER BY createdat DESC";
     private static final String SELECT_ORDER_BY_ID = "SELECT * FROM orders WHERE orderid = ? AND userid = ?";
     private static final String UPDATE_ORDER_STATUS = "UPDATE orders SET status = ?, updatedat = GETDATE(), "
@@ -51,6 +51,8 @@ public class OrderDAO implements IOrderDAO {
             psOrder.setBigDecimal(12,
                     order.getTierDiscount() != null ? order.getTierDiscount() : java.math.BigDecimal.ZERO);
             psOrder.setString(13, order.getTierName());
+            psOrder.setBigDecimal(14,
+                    order.getBirthdayDiscount() != null ? order.getBirthdayDiscount() : java.math.BigDecimal.ZERO);
 
             psOrder.executeUpdate();
 
@@ -155,6 +157,7 @@ public class OrderDAO implements IOrderDAO {
             try {
                 order.setTierDiscount(rs.getBigDecimal("tier_discount"));
                 order.setTierName(rs.getString("tier_name"));
+                order.setBirthdayDiscount(rs.getBigDecimal("birthday_discount"));
             } catch (SQLException ignored) {
                 // columns may not exist yet if migration hasn't run
             }

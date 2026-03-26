@@ -697,6 +697,18 @@
                                                 </span>
                                             </div>
                                         </c:if>
+                                        <%-- Birthday discount row --%>
+                                        <c:if test="${not empty birthdayDiscountAmount and birthdayDiscountAmount > 0}">
+                                            <div class="flex justify-between text-sm" id="birthdayDiscountRow">
+                                                <span class="text-pink-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis mr-4 flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-sm">cake</span>
+                                                    Ưu đãi Sinh nhật (${birthdayDiscountPercent}%)
+                                                </span>
+                                                <span class="text-pink-600 font-medium flex-shrink-0" id="birthdayDiscountDisplay">
+                                                    -<fmt:formatNumber value="${birthdayDiscountAmount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                </span>
+                                            </div>
+                                        </c:if>
                                         <%-- Voucher discount row --%>
                                             <c:if test="${not empty sessionScope.appliedVoucher}">
                                                 <div class="flex justify-between text-sm" id="discountRow">
@@ -724,6 +736,9 @@
                                             <c:set var="calcTotal" value="${sessionScope.checkoutCart.totalPrice}" />
                                             <c:if test="${not empty tierDiscountAmount and tierDiscountAmount > 0}">
                                                 <c:set var="calcTotal" value="${calcTotal - tierDiscountAmount}" />
+                                            </c:if>
+                                            <c:if test="${not empty birthdayDiscountAmount and birthdayDiscountAmount > 0}">
+                                                <c:set var="calcTotal" value="${calcTotal - birthdayDiscountAmount}" />
                                             </c:if>
                                             <c:if test="${not empty sessionScope.appliedDiscount}">
                                                 <c:set var="calcTotal" value="${calcTotal - sessionScope.appliedDiscount}" />
@@ -952,6 +967,7 @@
                     // ── Voucher AJAX ──────────────────────────────────────
                     const cartTotal = ${ sessionScope.checkoutCart.totalPrice };
                     const tierDiscountAmt = ${ not empty tierDiscountAmount ? tierDiscountAmount : 0 };
+                    const birthdayDiscountAmt = ${ not empty birthdayDiscountAmount ? birthdayDiscountAmount : 0 };
 
                     async function applyVoucherCode() {
                         const code = document.getElementById('voucherCodeInput').value.trim();
@@ -989,7 +1005,7 @@
                         if (discountDisplay) discountDisplay.textContent = '-' + formatVND(discountAmt);
                         if (discountRow) discountRow.classList.remove('hidden');
 
-                        const newTotal = Math.max(0, cartTotal - tierDiscountAmt - discountAmt);
+                        const newTotal = Math.max(0, cartTotal - tierDiscountAmt - birthdayDiscountAmt - discountAmt);
                         if (totalDisplay) totalDisplay.textContent = formatVND(newTotal);
                         if (appliedBox) {
                             appliedBox.classList.remove('hidden');

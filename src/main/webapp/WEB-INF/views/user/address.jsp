@@ -272,9 +272,8 @@
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Số Điện
                                     Thoại</label>
                                 <input type="text" name="phone" id="modalPhone" required
-                                    pattern="(84|0[3|5|7|8|9])+([0-9]{8})"
-                                    title="Số điện thoại không hợp lệ. Vui lòng nhập 10 số, bắt đầu bằng 0 (VD: 0912345678)"
                                     class="w-full bg-slate-50 border-slate-200 rounded-lg focus:ring-primary focus:border-primary px-4 py-3 text-sm">
+                                <div id="phoneError" class="text-red-500 text-xs font-semibold mt-1 hidden"></div>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -302,9 +301,8 @@
                                     Tên Đường</label>
                                 <input type="text" name="street" id="modalStreet" required
                                     class="w-full bg-slate-50 border-slate-200 rounded-lg focus:ring-primary focus:border-primary px-4 py-3 text-sm"
-                                    placeholder="VD: Số 12 Đường Lê Lợi, Lô B Tòa nhà..."
-                                    pattern="^(?=.*[a-zA-Z\u00C0-\u1EF9])(?=.*\d)[a-zA-Z0-9\u00C0-\u1EF9\s,.\-\/]+$"
-                                    title="Vui lòng nhập định dạng có cả số nhà và tên đường (VD: 123 Lê Lợi).">
+                                    placeholder="VD: Số 12 Đường Lê Lợi, Lô B Tòa nhà...">
+                                <div id="streetError" class="text-red-500 text-xs font-semibold mt-1 hidden"></div>
                             </div>
 
                             <div class="flex items-center gap-2 pt-2">
@@ -474,6 +472,57 @@
                         const modal = document.getElementById('deleteModal');
                         if (modal) modal.classList.add('hidden');
                     }
+
+                    // Form Validation Logic
+                    document.getElementById('addressForm').addEventListener('submit', function (e) {
+                        let hasError = false;
+
+                        const phoneInput = document.getElementById('modalPhone');
+                        const phoneError = document.getElementById('phoneError');
+                        const phonePattern = /^(84|0[3|5|7|8|9])+([0-9]{8})$/;
+                        
+                        if (!phonePattern.test(phoneInput.value.trim())) {
+                            phoneError.textContent = 'Số điện thoại không hợp lệ. Vui lòng nhập 10 số (VD: 0912345678).';
+                            phoneError.classList.remove('hidden');
+                            phoneInput.classList.add('border-red-500');
+                            hasError = true;
+                        } else {
+                            phoneError.classList.add('hidden');
+                            phoneInput.classList.remove('border-red-500');
+                        }
+
+                        const streetInput = document.getElementById('modalStreet');
+                        const streetError = document.getElementById('streetError');
+                        const streetValue = streetInput.value.trim();
+                        // Phải có chữ VÀ có số
+                        const hasLetters = /[a-zA-Z\u00C0-\u1EF9]/.test(streetValue);
+                        const hasNumbers = /\d/.test(streetValue);
+                        
+                        if (!hasLetters || !hasNumbers) {
+                            streetError.textContent = 'Vui lòng nhập rõ số nhà và tên đường (VD: 123 Lê Lợi). Phải có cả chữ và số.';
+                            streetError.classList.remove('hidden');
+                            streetInput.classList.add('border-red-500');
+                            hasError = true;
+                        } else {
+                            streetError.classList.add('hidden');
+                            streetInput.classList.remove('border-red-500');
+                        }
+
+                        if (hasError) {
+                            e.preventDefault(); // Stop form submission
+                        }
+                    });
+
+                    // Clear errors smoothly while typing
+                    document.getElementById('modalPhone').addEventListener('input', function() {
+                        document.getElementById('phoneError').classList.add('hidden');
+                        this.classList.remove('border-red-500');
+                    });
+                    document.getElementById('modalStreet').addEventListener('input', function() {
+                        document.getElementById('streetError').classList.add('hidden');
+                        this.classList.remove('border-red-500');
+                    });
+
                 </script>
 
             </body>

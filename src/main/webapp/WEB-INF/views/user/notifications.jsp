@@ -171,7 +171,8 @@
                                     </c:if>
                                     
                                     <c:forEach var="n" items="${notifications}">
-                                        <div onclick="window.location.href='${pageContext.request.contextPath}/notifications?action=markRead&id=${n.notificationId}'"
+                                        <div onclick="handleNotificationClick(${n.notificationId}, '${n.type}', this)"
+                                            data-content="<c:out value='${n.content}' escapeXml='true'/>"
                                             class="group relative ${n.read ? 'bg-white/20' : 'bg-white/40'} hover:bg-white/80 rounded-2xl p-5 border border-slate-100 transition-all duration-300 hover:shadow-glass-sm flex gap-4 items-start cursor-pointer ${n.read ? 'opacity-80' : ''}">
                                             
                                             <c:if test="${!n.read}">
@@ -226,6 +227,23 @@
             <!-- Footer -->
             <jsp:include page="/WEB-INF/views/common/footer-luxury.jsp" />
 
+            <script>
+                function handleNotificationClick(id, type, element) {
+                    let redirectUrl = "";
+                    if (type === 'ORDER') {
+                        const content = element.getAttribute('data-content');
+                        // Lấy mã đơn hàng từ nội dung (VD: "Đơn hàng #123 - Trạng thái...")
+                        const match = content.match(/#(\d+)/);
+                        if (match && match[1]) {
+                            const orderId = match[1];
+                            redirectUrl = "&redirectUrl=" + encodeURIComponent("/order?action=view&id=" + orderId);
+                        }
+                    } else if (type === 'PROMOTION') {
+                         redirectUrl = "&redirectUrl=" + encodeURIComponent("/home");
+                    }
+                    window.location.href = '${pageContext.request.contextPath}/notifications?action=markRead&id=' + id + redirectUrl;
+                }
+            </script>
         </body>
 
         </html>

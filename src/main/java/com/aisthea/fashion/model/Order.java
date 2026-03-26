@@ -24,6 +24,7 @@ public class Order {
     private String giftMessage;
     private BigDecimal tierDiscount; // Tier membership auto-discount
     private String tierName; // e.g. SILVER, GOLD, PLATINUM
+    private BigDecimal birthdayDiscount; // Birthday month discount
 
     private String cancelReason;
     private String refundStatus;
@@ -178,6 +179,14 @@ public class Order {
 
     public void setTierName(String tierName) {
         this.tierName = tierName;
+    }
+
+    public BigDecimal getBirthdayDiscount() {
+        return birthdayDiscount;
+    }
+
+    public void setBirthdayDiscount(BigDecimal birthdayDiscount) {
+        this.birthdayDiscount = birthdayDiscount;
     }
 
     public String getCancelReason() {

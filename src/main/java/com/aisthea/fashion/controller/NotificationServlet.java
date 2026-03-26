@@ -44,7 +44,12 @@ public class NotificationServlet extends HttpServlet {
             if ("markRead".equals(action)) {
                 int id = Integer.parseInt(request.getParameter("id"));
                 notificationService.markAsRead(id);
-                response.sendRedirect(request.getContextPath() + "/notifications");
+                String redirectUrl = request.getParameter("redirectUrl");
+                if (redirectUrl != null && !redirectUrl.trim().isEmpty()) {
+                    response.sendRedirect(request.getContextPath() + redirectUrl);
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/notifications");
+                }
                 return;
             } else if ("markAllRead".equals(action)) {
                 notificationService.markAllAsRead(user.getUserId());

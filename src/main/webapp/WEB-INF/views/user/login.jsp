@@ -610,7 +610,7 @@
                 <div class="overlay-container">
                     <div class="overlay">
                         <div class="logo-container logo-left">
-                            <a href="${pageContext.request.contextPath}/views/homepage.jsp" class="logo">
+                            <a href="${pageContext.request.contextPath}/home" class="logo">
                                 <img src="${pageContext.request.contextPath}/images/ata-logo.png"
                                     onerror="this.src='${pageContext.request.contextPath}/assets/images/ata-logo.png'">
                                 <span>AISTHÉA</span>
@@ -622,7 +622,7 @@
                             <button class="ghost" id="signIn">Đăng Nhập</button>
                         </div>
                         <div class="logo-container logo-right">
-                            <a href="${pageContext.request.contextPath}/views/homepage.jsp" class="logo">
+                            <a href="${pageContext.request.contextPath}/home" class="logo">
                                 <img src="${pageContext.request.contextPath}/images/ata-logo.png"
                                     onerror="this.src='${pageContext.request.contextPath}/assets/images/ata-logo.png'">
                                 <span>AISTHÉA</span>

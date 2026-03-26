@@ -41,7 +41,7 @@ public class TierService {
     public static int getTierDiscountPercent(User user) {
         String tier = getTierName(user);
         switch (tier) {
-            case "PLATINUM": return 5;
+            case "PLATINUM": return 7;
             case "GOLD": return 5;
             case "SILVER": return 3;
             default: return 0;
@@ -79,6 +79,13 @@ public class TierService {
      * PLATINUM → 15%
      * Only applicable during the user's birthday month.
      */
+    /**
+     * Returns the birthday discount percentage based on tier.
+     * SILVER  → 5%
+     * GOLD    → 10%
+     * PLATINUM → 15%
+     * Only applicable during the user's birthday month.
+     */
     public static int getBirthdayDiscountPercent(User user) {
         if (!isBirthdayMonth(user)) return 0;
         String tier = getTierName(user);
@@ -88,5 +95,35 @@ public class TierService {
             case "SILVER": return 5;
             default: return 0;
         }
+    }
+
+    /**
+     * Checks if the user is eligible for birthday discount:
+     * - Must be their birthday month
+     * - Must be Silver or above
+     * - Must NOT have used it already this year
+     */
+    public static boolean isEligibleForBirthdayDiscount(User user) {
+        if (!isBirthdayMonth(user)) return false;
+        int percent = getBirthdayDiscountPercent(user);
+        if (percent <= 0) return false;
+        // Check yearly usage
+        com.aisthea.fashion.dao.BirthdayDiscountDAO bdDao = new com.aisthea.fashion.dao.BirthdayDiscountDAO();
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        return !bdDao.hasUsedBirthdayDiscount(user.getUserId(), currentYear);
+    }
+
+    /**
+     * Calculates the birthday discount amount for order subtotal.
+     * Returns ZERO if not eligible.
+     */
+    public static BigDecimal calculateBirthdayDiscount(User user, BigDecimal orderSubtotal) {
+        if (!isEligibleForBirthdayDiscount(user)) return BigDecimal.ZERO;
+        int percent = getBirthdayDiscountPercent(user);
+        if (percent <= 0 || orderSubtotal == null || orderSubtotal.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return orderSubtotal.multiply(BigDecimal.valueOf(percent))
+                .divide(BigDecimal.valueOf(100), 0, RoundingMode.DOWN);
     }
 }

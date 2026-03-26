@@ -160,10 +160,21 @@ public class CartServlet extends HttpServlet {
                 request.setAttribute("tierDiscountPercent", tierDiscountPercent);
                 request.setAttribute("tierDiscountAmount", tierDiscountAmount);
 
+                // Birthday discount
+                int bdPercent = com.aisthea.fashion.service.TierService.getBirthdayDiscountPercent(user);
+                boolean bdEligible = com.aisthea.fashion.service.TierService.isEligibleForBirthdayDiscount(user);
+                java.math.BigDecimal bdAmount = com.aisthea.fashion.service.TierService.calculateBirthdayDiscount(
+                        user, checkoutCartForTier.getTotalPrice());
+
+                request.setAttribute("birthdayDiscountPercent", bdPercent);
+                request.setAttribute("birthdayDiscountEligible", bdEligible);
+                request.setAttribute("birthdayDiscountAmount", bdAmount);
+
                 System.out.println(">>> CHECKOUT TIER: User=" + user.getUserId()
                         + " | Tier=" + tierName
                         + " | Discount=" + tierDiscountPercent + "%"
-                        + " | Amount=" + tierDiscountAmount);
+                        + " | Amount=" + tierDiscountAmount
+                        + " | Birthday=" + bdPercent + "% eligible=" + bdEligible + " amt=" + bdAmount);
             }
             // ────────────────────────────────────────────────────────────
 

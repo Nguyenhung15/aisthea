@@ -564,7 +564,7 @@
                                                                 </h4>
                                                                 <p class="text-xs text-slate-500 leading-relaxed">Nhận
                                                                     voucher
-                                                                    giảm 5% trong tháng sinh nhật của bạn.</p>
+                                                                    giảm 5% trong tháng sinh nhật (chỉ được sử dụng 1 lần trong năm).</p>
                                                             </div>
                                                             <div
                                                                 class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
@@ -605,14 +605,13 @@
                                                                     style="background: ${iconBg};">
                                                                     <span
                                                                         class="material-symbols-outlined text-3xl font-light"
-                                                                        style="color: ${iconColor};">cake</span>
+                                                                        style="color: ${iconColor};">percent</span>
                                                                 </div>
-                                                                <h4 class="font-bold text-slate-800 mb-2">Giảm 10% sinh
-                                                                    nhật
-                                                                </h4>
-                                                                <p class="text-xs text-slate-500 leading-relaxed">
-                                                                    Voucher giảm
-                                                                    giá 10% đặc biệt trong tháng sinh nhật.</p>
+                                                                <h4 class="font-bold text-slate-800 mb-2">Giảm 5% mọi
+                                                                    đơn</h4>
+                                                                <p class="text-xs text-slate-500 leading-relaxed">Tự
+                                                                    động áp
+                                                                    dụng giảm giá 5% cho tất cả đơn hàng.</p>
                                                             </div>
                                                             <div
                                                                 class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
@@ -620,13 +619,14 @@
                                                                     style="background: ${iconBg};">
                                                                     <span
                                                                         class="material-symbols-outlined text-3xl font-light"
-                                                                        style="color: ${iconColor};">stars</span>
+                                                                        style="color: ${iconColor};">cake</span>
                                                                 </div>
-                                                                <h4 class="font-bold text-slate-800 mb-2">Ưu tiên săn
-                                                                    Sale</h4>
-                                                                <p class="text-xs text-slate-500 leading-relaxed">Quyền
-                                                                    truy cập
-                                                                    sớm vào các chương trình khuyến mãi lớn.</p>
+                                                                <h4 class="font-bold text-slate-800 mb-2">Giảm 10% sinh
+                                                                    nhật
+                                                                </h4>
+                                                                <p class="text-xs text-slate-500 leading-relaxed">
+                                                                    Voucher giảm
+                                                                    giá 10% đặc biệt trong tháng sinh nhật (chỉ được sử dụng 1 lần trong năm).</p>
                                                             </div>
                                                         </c:if>
 
@@ -653,6 +653,20 @@
                                                                     style="background: ${iconBg};">
                                                                     <span
                                                                         class="material-symbols-outlined text-3xl font-light"
+                                                                        style="color: ${iconColor};">percent</span>
+                                                                </div>
+                                                                <h4 class="font-bold text-slate-800 mb-2">Giảm 7% mọi
+                                                                    đơn</h4>
+                                                                <p class="text-xs text-slate-500 leading-relaxed">Tự
+                                                                    động áp
+                                                                    dụng giảm giá 7% cho tất cả đơn hàng.</p>
+                                                            </div>
+                                                            <div
+                                                                class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
+                                                                <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
+                                                                    style="background: ${iconBg};">
+                                                                    <span
+                                                                        class="material-symbols-outlined text-3xl font-light"
                                                                         style="color: ${iconColor};">redeem</span>
                                                                 </div>
                                                                 <h4 class="font-bold text-slate-800 mb-2">Giảm 15% sinh
@@ -660,65 +674,8 @@
                                                                 </h4>
                                                                 <p class="text-xs text-slate-500 leading-relaxed">
                                                                     Voucher giảm
-                                                                    giá 15% + quà tặng đặc biệt trong tháng sinh nhật.
+                                                                    giá 15% + quà tặng đặc biệt trong tháng sinh nhật (chỉ được sử dụng 1 lần trong năm).
                                                                 </p>
-                                                            </div>
-                                                            <div
-                                                                class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
-                                                                <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
-                                                                    style="background: ${iconBg};">
-                                                                    <span
-                                                                        class="material-symbols-outlined text-3xl font-light"
-                                                                        style="color: ${iconColor};">diamond</span>
-                                                                </div>
-                                                                <h4 class="font-bold text-slate-800 mb-2">Tư vấn cá nhân
-                                                                </h4>
-                                                                <p class="text-xs text-slate-500 leading-relaxed">Được
-                                                                    tư vấn
-                                                                    style và chăm sóc 1-1 bởi chuyên gia thời trang.</p>
-                                                            </div>
-                                                            <div
-                                                                class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
-                                                                <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
-                                                                    style="background: ${iconBg};">
-                                                                    <span
-                                                                        class="material-symbols-outlined text-3xl font-light"
-                                                                        style="color: ${iconColor};">stars</span>
-                                                                </div>
-                                                                <h4 class="font-bold text-slate-800 mb-2">Truy cập sớm
-                                                                    BST mới
-                                                                </h4>
-                                                                <p class="text-xs text-slate-500 leading-relaxed">Quyền
-                                                                    mua sớm
-                                                                    24h trước khi bộ sưu tập mới mở bán.</p>
-                                                            </div>
-                                                            <div
-                                                                class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
-                                                                <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
-                                                                    style="background: ${iconBg};">
-                                                                    <span
-                                                                        class="material-symbols-outlined text-3xl font-light"
-                                                                        style="color: ${iconColor};">percent</span>
-                                                                </div>
-                                                                <h4 class="font-bold text-slate-800 mb-2">Giảm 5% mọi
-                                                                    đơn</h4>
-                                                                <p class="text-xs text-slate-500 leading-relaxed">Tự
-                                                                    động áp
-                                                                    dụng giảm giá 5% cho tất cả đơn hàng.</p>
-                                                            </div>
-                                                            <div
-                                                                class="perk-card group p-6 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center">
-                                                                <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300"
-                                                                    style="background: ${iconBg};">
-                                                                    <span
-                                                                        class="material-symbols-outlined text-3xl font-light"
-                                                                        style="color: ${iconColor};">celebration</span>
-                                                                </div>
-                                                                <h4 class="font-bold text-slate-800 mb-2">Sự kiện VIP
-                                                                </h4>
-                                                                <p class="text-xs text-slate-500 leading-relaxed">Được
-                                                                    mời tham
-                                                                    gia các sự kiện thời trang độc quyền.</p>
                                                             </div>
                                                         </c:if>
                                                     </div>
