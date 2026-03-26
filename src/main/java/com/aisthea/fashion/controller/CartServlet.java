@@ -1,4 +1,4 @@
-package com.aisthea.fashion.controller;
+﻿package com.aisthea.fashion.controller;
 
 import com.aisthea.fashion.model.Cart;
 import com.aisthea.fashion.model.CartItem;
@@ -90,7 +90,7 @@ public class CartServlet extends HttpServlet {
             action = "view";
         }
 
-        Cart cart = (Cart) session.getAttribute("cart");
+        Cart cart = getCartFromSession(request);
         String jspPath = "/WEB-INF/views/cart/cart.jsp";
 
         try {
@@ -160,21 +160,10 @@ public class CartServlet extends HttpServlet {
                 request.setAttribute("tierDiscountPercent", tierDiscountPercent);
                 request.setAttribute("tierDiscountAmount", tierDiscountAmount);
 
-                // Birthday discount
-                int bdPercent = com.aisthea.fashion.service.TierService.getBirthdayDiscountPercent(user);
-                boolean bdEligible = com.aisthea.fashion.service.TierService.isEligibleForBirthdayDiscount(user);
-                java.math.BigDecimal bdAmount = com.aisthea.fashion.service.TierService.calculateBirthdayDiscount(
-                        user, checkoutCartForTier.getTotalPrice());
-
-                request.setAttribute("birthdayDiscountPercent", bdPercent);
-                request.setAttribute("birthdayDiscountEligible", bdEligible);
-                request.setAttribute("birthdayDiscountAmount", bdAmount);
-
                 System.out.println(">>> CHECKOUT TIER: User=" + user.getUserId()
                         + " | Tier=" + tierName
                         + " | Discount=" + tierDiscountPercent + "%"
-                        + " | Amount=" + tierDiscountAmount
-                        + " | Birthday=" + bdPercent + "% eligible=" + bdEligible + " amt=" + bdAmount);
+                        + " | Amount=" + tierDiscountAmount);
             }
             // ────────────────────────────────────────────────────────────
 

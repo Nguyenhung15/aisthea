@@ -140,7 +140,7 @@ public class OrderServlet extends HttpServlet {
             for (Order o : orderList) {
                 if ("Completed".equalsIgnoreCase(o.getStatus())) {
                     perOrderReviewed.put(o.getOrderid(),
-                        fbDao.getReviewedProductIdsForOrder(user.getUserId(), o.getOrderid()));
+                            fbDao.getReviewedProductIdsForOrder(user.getUserId(), o.getOrderid()));
                 }
             }
             request.setAttribute("perOrderReviewedMap", perOrderReviewed);
@@ -216,11 +216,12 @@ public class OrderServlet extends HttpServlet {
 
             if (order != null) {
                 request.setAttribute("order", order);
-                // Per-ORDER review check: user can review the same product again if bought in a new order
+                // Per-ORDER review check: user can review the same product again if bought in a
+                // new order
                 try {
                     com.aisthea.fashion.dao.FeedbackDAO fbDao = new com.aisthea.fashion.dao.FeedbackDAO();
-                    java.util.Set<Integer> reviewedIds =
-                        fbDao.getReviewedProductIdsForOrder(user.getUserId(), order.getOrderid());
+                    java.util.Set<Integer> reviewedIds = fbDao.getReviewedProductIdsForOrder(user.getUserId(),
+                            order.getOrderid());
                     request.setAttribute("reviewedProductIds", reviewedIds);
                 } catch (Exception ignored) {
                     request.setAttribute("reviewedProductIds", new java.util.HashSet<>());
@@ -445,7 +446,7 @@ public class OrderServlet extends HttpServlet {
             } else {
                 orderService.updateOrderStatus(orderId, newStatus);
             }
-            
+
             response.sendRedirect(
                     request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
 
@@ -457,8 +458,9 @@ public class OrderServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + redirectUrl);
         }
     }
-    
-    private void handleAdminMarkRefunded(HttpServletRequest request, HttpServletResponse response, User user) throws IOException {
+
+    private void handleAdminMarkRefunded(HttpServletRequest request, HttpServletResponse response, User user)
+            throws IOException {
         if (!isAdmin(user)) {
             response.sendRedirect(request.getContextPath() + "/order?action=history");
             return;
@@ -468,10 +470,12 @@ public class OrderServlet extends HttpServlet {
         try {
             orderId = Integer.parseInt(request.getParameter("orderId"));
             orderService.markRefunded(orderId);
-            response.sendRedirect(request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
+            response.sendRedirect(
+                    request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&error=refundFailed");
+            response.sendRedirect(
+                    request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&error=refundFailed");
         }
     }
 

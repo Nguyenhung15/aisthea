@@ -1,5 +1,6 @@
 package com.aisthea.fashion.controller;
 
+import com.aisthea.fashion.dao.CartDAO;
 import com.aisthea.fashion.dao.UserDAO;
 import com.aisthea.fashion.model.Cart;
 import com.aisthea.fashion.model.User;
@@ -7,7 +8,7 @@ import com.aisthea.fashion.service.IUserService;
 import com.aisthea.fashion.service.UserService;
 import com.aisthea.fashion.config.GoogleConfig;
 import com.aisthea.fashion.util.BCryptUtil;
-import com.aisthea.fashion.util.CartStore;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -108,11 +109,13 @@ public class GoogleLoginServlet extends HttpServlet {
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
 
-            // Restore cart saved at logout time and merge with current session cart
-            Cart merged = CartStore.popAndMerge(
-                    user.getUserId(),
-                    (Cart) session.getAttribute("cart"));
-            session.setAttribute("cart", merged);
+            // Merge session/guest cart into user cart via DB
+            CartDAO cartDao = new CartDAO();
+            cartDao.mergeCarts(session.getId(), user.getUserId());
+            Cart merged = cartDao.getCart(user.getUserId(), null);
+            if (merged != null) {
+                session.setAttribute("cart", merged);
+            }
 
             // Redirect to returnUrl if set (e.g. redirected from checkout)
             String returnUrl = (String) session.getAttribute("returnUrl");
