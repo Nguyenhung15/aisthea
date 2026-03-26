@@ -28,7 +28,7 @@ import java.util.logging.Logger;
     maxFileSize       = 5L * 1024 * 1024,   // 5 MB max
     maxRequestSize    = 10L * 1024 * 1024   // 10 MB total
 )
-@WebServlet(name = "ProfileServlet", urlPatterns = { "/profile" })
+@WebServlet(name = "ProfileServlet", urlPatterns = { "/profile", "/updateProfile" })
 public class ProfileServlet extends HttpServlet {
 
     private static final Logger logger = Logger.getLogger(ProfileServlet.class.getName());

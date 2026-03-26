@@ -234,7 +234,7 @@
                                                 class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative bg-slate-100 cursor-pointer group">
                                                 <c:choose>
                                                     <c:when
-                                                        test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
+                                                        test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png'}">
                                                         <img id="avatarPreview"
                                                             src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
                                                             class="w-full h-full object-cover" alt="Avatar">
