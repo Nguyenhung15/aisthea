@@ -586,96 +586,115 @@
                     </div>
                 </div>
 
-                <%-- ══════  RETURN REQUEST MODAL  ══════ --%>
+                <%-- ══════  RETURN REQUEST MODAL (Voucher Style) ══════ --%>
                 <div id="returnModal" class="modal">
-                    <div class="glass-card bg-white/98 rounded-2xl w-full max-w-lg p-8 shadow-2xl" style="max-height:90vh;overflow-y:auto;">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="font-serif text-2xl font-semibold text-slate-800">Yêu Cầu Hoàn Trả</h3>
-                            <button onclick="document.getElementById('returnModal').classList.remove('active')"
-                                class="text-slate-400 hover:text-slate-600 transition-colors">
-                                <span class="material-symbols-outlined">close</span>
+                    <div class="bg-slate-50 w-full max-w-md h-[90vh] md:h-[85vh] md:rounded-2xl flex flex-col relative overflow-hidden shadow-2xl animate-scale-in">
+                        
+                        <%-- Header --%>
+                        <div class="bg-white px-6 py-5 flex items-center justify-between border-b border-slate-100 shrink-0">
+                            <h3 class="text-xl font-semibold text-slate-800 tracking-tight">Yêu Cầu Hoàn Trả</h3>
+                            <button type="button" onclick="document.getElementById('returnModal').classList.remove('active')"
+                                class="text-slate-400 hover:text-slate-600 transition-colors flex items-center justify-center p-1">
+                                <span class="material-symbols-outlined font-bold" style="font-size: 22px;">close</span>
                             </button>
                         </div>
-                        <p class="text-xs text-slate-500 mb-6 leading-relaxed">
-                            Đơn hàng <strong>#${order.orderid}</strong> — Yêu cầu phải được gửi trong vòng <strong>7 ngày</strong> kể từ khi đơn hoàn thành.
-                        </p>
 
-                        <form action="${pageContext.request.contextPath}/order" method="post" class="space-y-5">
-                            <input type="hidden" name="action" value="submitReturn">
-                            <input type="hidden" name="orderid" value="${order.orderid}">
+                        <%-- Scrollable Body --%>
+                        <%-- Scrollable Body --%>
+                        <div class="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar">
+                            
+                            <form id="returnForm" action="${pageContext.request.contextPath}/order" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="action" value="submitReturn">
+                                <input type="hidden" name="orderid" value="${order.orderid}">
 
-                            <div>
-                                <p class="text-[10px] uppercase tracking-[0.18em] font-bold text-slate-400 mb-3">Lý do hoàn trả <span class="text-red-400">*</span></p>
-                                <div class="space-y-2">
-                                    <c:forEach var="reason" items="${[
-                                        'Hàng lỗi / hư hỏng',
-                                        'Giao sai sản phẩm / sai màu / sai size',
-                                        'Sản phẩm không đúng mô tả',
-                                        'Thiếu phụ kiện / quà tặng kèm',
-                                        'Tôi đổi ý / không còn cần nữa'
-                                    ]}">
-                                        <label class="return-reason-option">
-                                            <input type="radio" name="reasonType" value="${reason}" required class="accent-sky-500">
-                                            <span class="text-sm text-slate-700">${reason}</span>
+                                <div class="space-y-5">
+                                    <%-- Info note --%>
+                                    <div class="text-xs text-slate-500 leading-relaxed bg-white p-3.5 rounded-xl border border-slate-100 shadow-sm">
+                                        Đơn hàng <strong>#${order.orderid}</strong>. Yêu cầu phải được gửi trong vòng <strong>7 ngày</strong> kể từ khi đơn hoàn thành.
+                                    </div>
+
+                                    <%-- Reason --%>
+                                    <div>
+                                        <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2.5">Lý do hoàn trả <span class="text-red-400">*</span></p>
+                                        <div class="space-y-2">
+                                            <c:forEach var="reason" items="${[
+                                                'Hàng lỗi / hư hỏng',
+                                                'Giao sai sản phẩm / sai màu / sai size',
+                                                'Sản phẩm không đúng mô tả',
+                                                'Thiếu phụ kiện / quà tặng kèm',
+                                                'Tôi đổi ý / không còn cần nữa'
+                                            ]}">
+                                                <label class="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-100 hover:border-slate-300 cursor-pointer transition-all shadow-sm">
+                                                    <input type="radio" name="reasonType" value="${reason}" required class="w-4 h-4 text-slate-800 border-slate-300 focus:ring-slate-800">
+                                                    <span class="text-sm font-medium text-slate-700">${reason}</span>
+                                                </label>
+                                            </c:forEach>
+                                        </div>
+                                    </div>
+
+                                    <%-- Detail --%>
+                                    <div>
+                                        <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2.5">Mô tả chi tiết <span class="text-red-400">*</span></p>
+                                        <div class="relative bg-white rounded-xl border border-slate-100 shadow-sm p-3 hover:border-slate-300 transition-colors">
+                                            <textarea name="reasonDetail" rows="2"
+                                                class="w-full bg-transparent border-0 focus:ring-0 text-sm p-0 outline-none resize-none"
+                                                placeholder="Mô tả tình trạng hàng hóa..." required></textarea>
+                                        </div>
+                                    </div>
+
+                                    <%-- Evidence: File Upload --%>
+                                    <div>
+                                        <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2.5">Hình ảnh / Video bằng chứng <span class="text-red-400">*</span></p>
+                                        <label class="relative bg-white rounded-xl border-2 border-dashed border-slate-200 p-5 hover:border-slate-400 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5 group">
+                                            <span class="material-symbols-outlined text-3xl text-slate-300 group-hover:text-slate-500 transition-colors">cloud_upload</span>
+                                            <span class="text-sm font-medium text-slate-500 group-hover:text-slate-700 transition-colors text-center px-2" id="evidenceFileName">Chọn ảnh / video từ máy</span>
+                                            <span class="text-[10px] text-slate-400">JPG, PNG, MP4 (tối đa 10MB)</span>
+                                            <input type="file" name="evidenceFiles" accept="image/*,video/*" multiple required
+                                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                onchange="updateFileLabel(this)">
                                         </label>
-                                    </c:forEach>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] uppercase tracking-[0.18em] font-bold text-slate-400 block mb-2">Mô tả chi tiết</label>
-                                <textarea name="reasonDetail" rows="3"
-                                    class="w-full bg-white/50 border border-slate-200 rounded-xl text-sm p-3 outline-none"
-                                    placeholder="Mô tả tình trạng hàng hóa, khi nào phát hiện vấn đề..."></textarea>
-                            </div>
-
-                            <div>
-                                <label class="text-[10px] uppercase tracking-[0.18em] font-bold text-slate-400 block mb-2">Link hình ảnh / video bằng chứng</label>
-                                <input type="text" name="evidenceUrls"
-                                    class="w-full bg-white/50 border border-slate-200 rounded-xl text-sm p-3 outline-none"
-                                    placeholder="https://drive.google.com/... hoặc link video">
-                                <p class="text-[10px] text-slate-400 mt-1">Tải ảnh/video lên Google Drive rồi dán link vào đây.</p>
-                            </div>
-
-                            <div class="rounded-xl border border-sky-100 bg-sky-50/60 p-4 space-y-3">
-                                <p class="text-[10px] uppercase tracking-[0.18em] font-bold text-sky-600 mb-1">Thông tin nhận tiền hoàn</p>
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="text-[10px] text-slate-500 font-semibold block mb-1">Ngân hàng</label>
-                                        <input type="text" name="bankName"
-                                            class="w-full bg-white border border-slate-200 rounded-lg text-sm p-2 outline-none"
-                                            placeholder="VD: Vietcombank">
                                     </div>
+
+                                    <%-- Bank Info --%>
                                     <div>
-                                        <label class="text-[10px] text-slate-500 font-semibold block mb-1">Tên chủ TK</label>
-                                        <input type="text" name="bankAccountName"
-                                            class="w-full bg-white border border-slate-200 rounded-lg text-sm p-2 outline-none"
-                                            placeholder="NGUYEN VAN A">
+                                        <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2.5">Thông tin nhận tiền hoàn <span class="text-red-400">*</span></p>
+
+                                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-3">
+                                            <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                                                <span class="text-[10px] text-slate-500 font-semibold">Số tiền hoàn (dự kiến)</span>
+                                                <span class="text-base font-bold text-blue-600">
+                                                    <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                </span>
+                                            </div>
+                                            <div class="relative">
+                                                <label class="text-[10px] text-slate-400 font-semibold block mb-0.5 uppercase tracking-wider">Ngân hàng</label>
+                                                <input type="text" name="bankName" placeholder="VD: Vietcombank"
+                                                    class="w-full bg-transparent border-0 border-b border-slate-100 focus:border-slate-800 focus:ring-0 text-sm py-1.5 px-0 outline-none transition-colors font-medium" required>
+                                            </div>
+                                            <div class="relative mt-2">
+                                                <label class="text-[10px] text-slate-400 font-semibold block mb-0.5 uppercase tracking-wider">Tên chủ thẻ</label>
+                                                <input type="text" name="bankAccountName" placeholder="NGUYEN VAN A"
+                                                    class="w-full bg-transparent border-0 border-b border-slate-100 focus:border-slate-800 focus:ring-0 text-sm py-1.5 px-0 outline-none transition-colors font-medium" required>
+                                            </div>
+                                            <div class="relative mt-2">
+                                                <label class="text-[10px] text-slate-400 font-semibold block mb-0.5 uppercase tracking-wider">Số tài khoản</label>
+                                                <input type="text" name="bankAccountNumber" placeholder="0123456789"
+                                                    class="w-full bg-transparent border-0 focus:ring-0 text-sm py-1.5 px-0 outline-none transition-colors font-medium tracking-wide" required>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <label class="text-[10px] text-slate-500 font-semibold block mb-1">Số tài khoản</label>
-                                    <input type="text" name="bankAccountNumber"
-                                        class="w-full bg-white border border-slate-200 rounded-lg text-sm p-2 outline-none"
-                                        placeholder="0123456789">
-                                </div>
-                                <p class="text-[10px] text-slate-400">
-                                    Số tiền hoàn dự kiến: <strong class="text-sky-700">
-                                        <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" /></strong>
-                                </p>
-                            </div>
+                                <div class="h-1"></div>
+                            </form>
+                        </div>
 
-                            <div class="flex gap-3 pt-2">
-                                <button type="button" onclick="document.getElementById('returnModal').classList.remove('active')"
-                                    class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-400 hover:text-slate-600 bg-slate-100 rounded-lg transition-colors">
-                                    Quay lại
-                                </button>
-                                <button type="submit"
-                                    class="flex-1 bg-slate-900 text-white py-3 rounded-lg text-[10px] uppercase font-bold tracking-widest hover:opacity-90 shadow-lg transition-all">
-                                    Gửi Yêu Cầu
-                                </button>
-                            </div>
-                        </form>
+                        <%-- Sticky Footer --%>
+                        <div class="bg-slate-50 p-6 shrink-0 border-t border-slate-200">
+                            <button type="submit" form="returnForm"
+                                class="w-full bg-transparent border border-slate-800 text-slate-800 py-4 rounded font-semibold text-[11px] uppercase tracking-[0.2em] hover:bg-slate-800 hover:text-white transition-all text-center">
+                                GỬI YÊU CẦU HOÀN TRẢ
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -687,6 +706,18 @@
 
                     function openCancelModal() { modal.classList.add("active"); }
                     function closeCancelModal() { modal.classList.remove("active"); }
+
+                    function updateFileLabel(input) {
+                        const label = document.getElementById('evidenceFileName');
+                        if (input.files.length > 0) {
+                            const names = Array.from(input.files).map(f => f.name);
+                            label.textContent = names.length + ' file đã chọn: ' + names.join(', ');
+                            label.classList.add('text-slate-800');
+                        } else {
+                            label.textContent = 'Chọn ảnh hoặc video từ máy';
+                            label.classList.remove('text-slate-800');
+                        }
+                    }
 
                     function toggleOtherReason() {
                         const selected = document.querySelector('input[name="reason"]:checked');
