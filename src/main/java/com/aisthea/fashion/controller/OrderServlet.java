@@ -1,8 +1,10 @@
 package com.aisthea.fashion.controller;
 
+import com.aisthea.fashion.dao.ReturnRequestDAO;
 import com.aisthea.fashion.model.Cart;
 import com.aisthea.fashion.model.Order;
 import com.aisthea.fashion.model.OrderItem;
+import com.aisthea.fashion.model.ReturnRequest;
 import com.aisthea.fashion.model.User;
 import com.aisthea.fashion.service.IOrderService;
 import com.aisthea.fashion.service.OrderService;
@@ -111,6 +113,12 @@ public class OrderServlet extends HttpServlet {
                     break;
                 case "adminMarkRefunded":
                     handleAdminMarkRefunded(request, response, user);
+                    break;
+                case "submitReturn":
+                    handleSubmitReturn(request, response, user);
+                    break;
+                case "processReturn":
+                    handleProcessReturn(request, response, user);
                     break;
                 default:
                     response.sendRedirect(request.getContextPath() + "/order?action=history");
@@ -226,6 +234,11 @@ public class OrderServlet extends HttpServlet {
                 } catch (Exception ignored) {
                     request.setAttribute("reviewedProductIds", new java.util.HashSet<>());
                 }
+                // Load existing return request for customer view
+                try {
+                    ReturnRequest existingReturn = new ReturnRequestDAO().getByOrderId(order.getOrderid());
+                    request.setAttribute("returnRequest", existingReturn);
+                } catch (Exception ignored) { /* table may not exist yet */ }
                 request.getRequestDispatcher("/WEB-INF/views/order/details.jsp").forward(request, response);
             } else {
                 response.sendRedirect(request.getContextPath() + "/order?action=history&error=notfound");
@@ -394,6 +407,11 @@ public class OrderServlet extends HttpServlet {
 
             if (order != null) {
                 request.setAttribute("order", order);
+                // Load return request for admin view
+                try {
+                    ReturnRequest rr = new ReturnRequestDAO().getByOrderId(orderId);
+                    request.setAttribute("returnRequest", rr);
+                } catch (Exception ignored) { /* table may not exist yet */ }
                 request.getRequestDispatcher("/WEB-INF/views/admin/order/admin_order_detail.jsp").forward(request,
                         response);
             } else {
@@ -479,6 +497,59 @@ public class OrderServlet extends HttpServlet {
         }
     }
 
+    // ─── Return Request Handlers ──────────────────────────────────────────────
+
+    private void handleSubmitReturn(HttpServletRequest request, HttpServletResponse response, User user)
+            throws IOException {
+        int orderId = -1;
+        try {
+            orderId = Integer.parseInt(request.getParameter("orderid"));
+            ReturnRequest rr = new ReturnRequest();
+            rr.setOrderId(orderId);
+            rr.setUserId(user.getUserId());
+            rr.setReasonType(request.getParameter("reasonType"));
+            rr.setReasonDetail(request.getParameter("reasonDetail"));
+            rr.setEvidenceUrls(request.getParameter("evidenceUrls"));
+            rr.setBankName(request.getParameter("bankName"));
+            rr.setBankAccountName(request.getParameter("bankAccountName"));
+            rr.setBankAccountNumber(request.getParameter("bankAccountNumber"));
+            orderService.submitReturnRequest(rr);
+            response.sendRedirect(request.getContextPath()
+                    + "/order?action=view&orderid=" + orderId + "&returnSubmitted=true");
+        } catch (Exception e) {
+            logger.warning("handleSubmitReturn error: " + e.getMessage());
+            try {
+                String encodedMsg = java.net.URLEncoder.encode(e.getMessage(), "UTF-8");
+                response.sendRedirect(request.getContextPath()
+                        + "/order?action=view&orderid=" + orderId + "&returnError=" + encodedMsg);
+            } catch (Exception ex) {
+                response.sendRedirect(request.getContextPath() + "/order?action=history");
+            }
+        }
+    }
+
+    private void handleProcessReturn(HttpServletRequest request, HttpServletResponse response, User user)
+            throws IOException {
+        if (!isAdmin(user)) {
+            response.sendRedirect(request.getContextPath() + "/order?action=history");
+            return;
+        }
+        int returnId = -1;
+        int orderId = -1;
+        try {
+            returnId = Integer.parseInt(request.getParameter("returnId"));
+            orderId  = Integer.parseInt(request.getParameter("orderId"));
+            String newStatus = request.getParameter("newStatus");
+            String adminNote = request.getParameter("adminNote");
+            orderService.processReturnRequest(returnId, newStatus, adminNote);
+            response.sendRedirect(request.getContextPath()
+                    + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
+        } catch (Exception e) {
+            logger.warning("handleProcessReturn error: " + e.getMessage());
+            response.sendRedirect(request.getContextPath()
+                    + "/order?action=adminViewDetail&id=" + orderId + "&update=error");
+        }
+    }
 
     // ─── EMAIL HELPERS ────────────────────────────────────────────────────────
 

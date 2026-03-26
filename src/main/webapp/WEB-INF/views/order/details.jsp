@@ -76,6 +76,26 @@
                     .modal.active {
                         display: flex;
                     }
+
+                    /* Return request status colours */
+                    .return-status-Pending  { background:#fef3c7; color:#d97706; }
+                    .return-status-Approved { background:#d1fae5; color:#065f46; }
+                    .return-status-Rejected { background:#fee2e2; color:#b91c1c; }
+
+                    .return-reason-option {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        padding: 10px 14px;
+                        border: 1.5px solid #e2e8f0;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        transition: all 0.18s;
+                    }
+                    .return-reason-option:has(input:checked) {
+                        border-color: #0288D1;
+                        background: #e1f5fe;
+                    }
                 </style>
             </head>
 
@@ -121,6 +141,32 @@
                                         </div>
                                     </div>
                                 </c:if>
+
+                        <%-- Return submitted success alert --%>
+                        <c:if test="${param.returnSubmitted == 'true'}">
+                            <div class="glass-card border-emerald-100 bg-emerald-50 rounded-xl p-6 mb-6 flex items-center gap-4 shadow-lg shadow-emerald-100/50">
+                                <div class="bg-emerald-500 text-white rounded-full p-2">
+                                    <span class="material-symbols-outlined text-lg">check</span>
+                                </div>
+                                <div class="flex-grow">
+                                    <h3 class="font-bold text-emerald-900">Yêu cầu hoàn trả đã được gửi!</h3>
+                                    <p class="text-sm text-emerald-700/80">Chúng tôi sẽ xem xét và phản hồi trong vòng 24–48 giờ.</p>
+                                </div>
+                            </div>
+                        </c:if>
+
+                        <%-- Return error alert --%>
+                        <c:if test="${not empty param.returnError}">
+                            <div class="glass-card border-red-100 bg-red-50 rounded-xl p-6 mb-6 flex items-center gap-4 shadow-lg shadow-red-100/50">
+                                <div class="bg-red-500 text-white rounded-full p-2">
+                                    <span class="material-symbols-outlined text-lg">priority_high</span>
+                                </div>
+                                <div class="flex-grow">
+                                    <h3 class="font-bold text-red-900">Không thể gửi yêu cầu</h3>
+                                    <p class="text-sm text-red-700/80">${param.returnError}</p>
+                                </div>
+                            </div>
+                        </c:if>
 
                                 <div class="flex flex-col lg:flex-row gap-12">
                                     <div class="lg:col-span-8 flex-grow space-y-8">
@@ -437,6 +483,37 @@
                                                         </c:choose>
                                                     </c:if>
 
+                                                        <%-- Return Request Section (shown only for Completed orders) --%>
+                                                        <c:if test="${order.status == 'Completed'}">
+                                                            <c:choose>
+                                                                <c:when test="${not empty returnRequest}">
+                                                                    <div class="w-full rounded-xl border p-4 text-xs space-y-2
+                                                                        ${returnRequest.status == 'Pending'  ? 'bg-amber-50  border-amber-200'  : ''}
+                                                                        ${returnRequest.status == 'Approved' ? 'bg-emerald-50 border-emerald-200' : ''}
+                                                                        ${returnRequest.status == 'Rejected' ? 'bg-red-50   border-red-200'   : ''}">
+                                                                        <div class="flex items-center justify-between">
+                                                                            <span class="font-bold uppercase tracking-wider text-[10px] text-slate-400">Yêu Cầu Hoàn Trả</span>
+                                                                            <span class="return-status-${returnRequest.status} font-bold uppercase text-[10px] tracking-wider px-2 py-1 rounded-full">${returnRequest.status}</span>
+                                                                        </div>
+                                                                        <p class="text-slate-600">Lý do: <span class="font-semibold">${returnRequest.reasonType}</span></p>
+                                                                        <c:if test="${not empty returnRequest.adminNote}">
+                                                                            <p class="text-slate-500 italic">Phản hồi: ${returnRequest.adminNote}</p>
+                                                                        </c:if>
+                                                                        <p class="text-slate-400">
+                                                                            <fmt:formatDate value="${returnRequest.createdAt}" pattern="HH:mm dd/MM/yyyy" />
+                                                                        </p>
+                                                                    </div>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <button onclick="document.getElementById('returnModal').classList.add('active')"
+                                                                        class="w-full bg-white border border-slate-200 text-red-500 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-50 hover:border-red-200 transition-all flex items-center justify-center gap-2">
+                                                                        <span class="material-symbols-outlined text-sm">undo</span>
+                                                                        Yêu Cầu Hoàn Trả
+                                                                    </button>
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </c:if>
+
 
                                                     <a href="${pageContext.request.contextPath}/order?action=history"
                                                         class="w-full bg-slate-900 text-white py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 text-center">
@@ -499,6 +576,99 @@
                                 <button type="submit"
                                     class="flex-1 bg-red-500 text-white py-3 rounded-lg text-[10px] uppercase font-bold tracking-widest hover:bg-red-600 shadow-lg shadow-red-200 transition-all">Xác
                                     Nhận Hủy</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <%-- ══════  RETURN REQUEST MODAL  ══════ --%>
+                <div id="returnModal" class="modal">
+                    <div class="glass-card bg-white/98 rounded-2xl w-full max-w-lg p-8 shadow-2xl" style="max-height:90vh;overflow-y:auto;">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-serif text-2xl font-semibold text-slate-800">Yêu Cầu Hoàn Trả</h3>
+                            <button onclick="document.getElementById('returnModal').classList.remove('active')"
+                                class="text-slate-400 hover:text-slate-600 transition-colors">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-6 leading-relaxed">
+                            Đơn hàng <strong>#${order.orderid}</strong> — Yêu cầu phải được gửi trong vòng <strong>7 ngày</strong> kể từ khi đơn hoàn thành.
+                        </p>
+
+                        <form action="${pageContext.request.contextPath}/order" method="post" class="space-y-5">
+                            <input type="hidden" name="action" value="submitReturn">
+                            <input type="hidden" name="orderid" value="${order.orderid}">
+
+                            <div>
+                                <p class="text-[10px] uppercase tracking-[0.18em] font-bold text-slate-400 mb-3">Lý do hoàn trả <span class="text-red-400">*</span></p>
+                                <div class="space-y-2">
+                                    <c:forEach var="reason" items="${[
+                                        'Hàng lỗi / hư hỏng',
+                                        'Giao sai sản phẩm / sai màu / sai size',
+                                        'Sản phẩm không đúng mô tả',
+                                        'Thiếu phụ kiện / quà tặng kèm',
+                                        'Tôi đổi ý / không còn cần nữa'
+                                    ]}">
+                                        <label class="return-reason-option">
+                                            <input type="radio" name="reasonType" value="${reason}" required class="accent-sky-500">
+                                            <span class="text-sm text-slate-700">${reason}</span>
+                                        </label>
+                                    </c:forEach>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] uppercase tracking-[0.18em] font-bold text-slate-400 block mb-2">Mô tả chi tiết</label>
+                                <textarea name="reasonDetail" rows="3"
+                                    class="w-full bg-white/50 border border-slate-200 rounded-xl text-sm p-3 outline-none"
+                                    placeholder="Mô tả tình trạng hàng hóa, khi nào phát hiện vấn đề..."></textarea>
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] uppercase tracking-[0.18em] font-bold text-slate-400 block mb-2">Link hình ảnh / video bằng chứng</label>
+                                <input type="text" name="evidenceUrls"
+                                    class="w-full bg-white/50 border border-slate-200 rounded-xl text-sm p-3 outline-none"
+                                    placeholder="https://drive.google.com/... hoặc link video">
+                                <p class="text-[10px] text-slate-400 mt-1">Tải ảnh/video lên Google Drive rồi dán link vào đây.</p>
+                            </div>
+
+                            <div class="rounded-xl border border-sky-100 bg-sky-50/60 p-4 space-y-3">
+                                <p class="text-[10px] uppercase tracking-[0.18em] font-bold text-sky-600 mb-1">Thông tin nhận tiền hoàn</p>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="text-[10px] text-slate-500 font-semibold block mb-1">Ngân hàng</label>
+                                        <input type="text" name="bankName"
+                                            class="w-full bg-white border border-slate-200 rounded-lg text-sm p-2 outline-none"
+                                            placeholder="VD: Vietcombank">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-500 font-semibold block mb-1">Tên chủ TK</label>
+                                        <input type="text" name="bankAccountName"
+                                            class="w-full bg-white border border-slate-200 rounded-lg text-sm p-2 outline-none"
+                                            placeholder="NGUYEN VAN A">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-500 font-semibold block mb-1">Số tài khoản</label>
+                                    <input type="text" name="bankAccountNumber"
+                                        class="w-full bg-white border border-slate-200 rounded-lg text-sm p-2 outline-none"
+                                        placeholder="0123456789">
+                                </div>
+                                <p class="text-[10px] text-slate-400">
+                                    Số tiền hoàn dự kiến: <strong class="text-sky-700">
+                                        <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" /></strong>
+                                </p>
+                            </div>
+
+                            <div class="flex gap-3 pt-2">
+                                <button type="button" onclick="document.getElementById('returnModal').classList.remove('active')"
+                                    class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-400 hover:text-slate-600 bg-slate-100 rounded-lg transition-colors">
+                                    Quay lại
+                                </button>
+                                <button type="submit"
+                                    class="flex-1 bg-slate-900 text-white py-3 rounded-lg text-[10px] uppercase font-bold tracking-widest hover:opacity-90 shadow-lg transition-all">
+                                    Gửi Yêu Cầu
+                                </button>
                             </div>
                         </form>
                     </div>

@@ -4,6 +4,7 @@ import com.aisthea.fashion.dao.IOrderDAO;
 import com.aisthea.fashion.dao.IOrderItemDAO;
 import com.aisthea.fashion.dao.OrderDAO;
 import com.aisthea.fashion.dao.OrderItemDAO;
+import com.aisthea.fashion.dao.ReturnRequestDAO;
 import com.aisthea.fashion.dao.UserDAO;
 import com.aisthea.fashion.dao.VoucherDAO;
 import com.aisthea.fashion.model.*;
@@ -13,6 +14,8 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -451,5 +454,85 @@ public class OrderService implements IOrderService {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+
+    // ─── Return Request ───────────────────────────────────────────────────────
+
+    @Override
+    public ReturnRequest submitReturnRequest(ReturnRequest rr) throws Exception {
+        ReturnRequestDAO rrDao = new ReturnRequestDAO();
+
+        Order order = orderDAO.getOrderById(rr.getOrderId(), rr.getUserId());
+        if (order == null) {
+            throw new Exception("Không tìm thấy đơn hàng hoặc bạn không có quyền thực hiện.");
+        }
+        if (!"Completed".equalsIgnoreCase(order.getStatus())) {
+            throw new Exception("Chỉ có thể yêu cầu hoàn trả đối với đơn hàng đã hoàn thành.");
+        }
+
+        // 7-day return window
+        if (order.getCompletedAt() != null) {
+            Calendar deadline = Calendar.getInstance();
+            deadline.setTime(order.getCompletedAt());
+            deadline.add(Calendar.DAY_OF_YEAR, 7);
+            if (new Date().after(deadline.getTime())) {
+                throw new Exception("Đã quá 7 ngày kể từ khi đơn hoàn thành. Không thể yêu cầu hoàn trả.");
+            }
+        }
+
+        // No duplicate active request
+        ReturnRequest existing = rrDao.getByOrderId(rr.getOrderId());
+        if (existing != null && !"Rejected".equalsIgnoreCase(existing.getStatus())) {
+            throw new Exception("Đơn hàng này đã có yêu cầu hoàn trả đang được xử lý.");
+        }
+
+        rr.setRefundAmount(order.getTotalprice());
+
+        int newId = rrDao.insert(rr);
+        if (newId == -1) {
+            throw new Exception("Không thể tạo yêu cầu hoàn trả. Vui lòng thử lại.");
+        }
+        rr.setReturnId(newId);
+
+        notificationService.sendNotification(rr.getUserId(),
+                "Yêu cầu hoàn trả đã gửi",
+                "Yêu cầu hoàn trả cho đơn hàng #" + rr.getOrderId() + " đã được gửi. Chúng tôi sẽ xử lý trong vòng 24-48 giờ.",
+                "ORDER");
+
+        logger.info("Return request #" + newId + " submitted for order #" + rr.getOrderId());
+        return rr;
+    }
+
+    @Override
+    public boolean processReturnRequest(int returnId, String newStatus, String adminNote) throws Exception {
+        ReturnRequestDAO rrDao = new ReturnRequestDAO();
+
+        ReturnRequest rr = rrDao.getAll().stream()
+                .filter(r -> r.getReturnId() == returnId)
+                .findFirst()
+                .orElseThrow(() -> new Exception("Không tìm thấy yêu cầu hoàn trả #" + returnId));
+
+        if (!"Pending".equalsIgnoreCase(rr.getStatus())) {
+            throw new Exception("Yêu cầu này đã được xử lý rồi (trạng thái: " + rr.getStatus() + ").");
+        }
+
+        boolean updated = rrDao.updateStatus(returnId, newStatus, adminNote);
+        if (!updated) return false;
+
+        if ("Approved".equalsIgnoreCase(newStatus)) {
+            orderDAO.updateOrderStatus(rr.getOrderId(), "ReturnApproved");
+            notificationService.sendNotification(rr.getUserId(),
+                    "Yêu cầu hoàn trả được chấp nhận",
+                    "Yêu cầu hoàn trả đơn hàng #" + rr.getOrderId() + " đã được chấp nhận. Tiền sẽ hoàn về tài khoản trong 3-5 ngày làm việc.",
+                    "ORDER");
+        } else if ("Rejected".equalsIgnoreCase(newStatus)) {
+            notificationService.sendNotification(rr.getUserId(),
+                    "Yêu cầu hoàn trả bị từ chối",
+                    "Yêu cầu hoàn trả đơn hàng #" + rr.getOrderId() + " bị từ chối. Lý do: " + (adminNote != null ? adminNote : "Không có ghi chú."),
+                    "ORDER");
+        }
+
+        logger.info("Return request #" + returnId + " → " + newStatus);
+        return true;
     }
 }

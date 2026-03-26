@@ -53,6 +53,11 @@
                         color: #dc2626;
                     }
 
+                    .status-ReturnApproved {
+                        background: #ecfdf5;
+                        color: #059669;
+                    }
+
                     .detail-grid {
                         display: grid;
                         grid-template-columns: 1.6fr 1fr;
@@ -287,6 +292,74 @@
                                         </div>
                                     </div>
 
+                                    <%-- Return Request Panel (admin view) --%>
+                                    <c:if test="${not empty returnRequest}">
+                                        <c:set var="rBorder" value="#f59e0b" />
+                                        <c:if test="${returnRequest.status == 'Approved'}"><c:set var="rBorder" value="#10b981" /></c:if>
+                                        <c:if test="${returnRequest.status == 'Rejected'}"><c:set var="rBorder" value="#ef4444" /></c:if>
+                                        <c:set var="rBadgeBg" value="#fef3c7" />
+                                        <c:set var="rBadgeColor" value="#d97706" />
+                                        <c:if test="${returnRequest.status == 'Approved'}"><c:set var="rBadgeBg" value="#d1fae5"/><c:set var="rBadgeColor" value="#065f46"/></c:if>
+                                        <c:if test="${returnRequest.status == 'Rejected'}"><c:set var="rBadgeBg" value="#fee2e2"/><c:set var="rBadgeColor" value="#b91c1c"/></c:if>
+
+                                        <div class="detail-card" style="margin-top:var(--space-xl);border-left:4px solid ${rBorder};">
+                                            <h3 class="detail-card__title">
+                                                <i class="fa-solid fa-rotate-left" style="margin-right:8px;font-size:0.9rem;"></i>Yêu Cầu Hoàn Trả
+                                                <span style="float:right;font-size:0.7rem;padding:3px 10px;border-radius:99px;font-weight:700;background:${rBadgeBg};color:${rBadgeColor};">
+                                                    ${returnRequest.status}
+                                                </span>
+                                            </h3>
+                                            <div class="info-row">
+                                                <span class="info-row__label">Lý do</span>
+                                                <span class="info-row__value">${returnRequest.reasonType}</span>
+                                            </div>
+                                            <c:if test="${not empty returnRequest.reasonDetail}">
+                                                <div class="info-row">
+                                                    <span class="info-row__label">Chi tiết</span>
+                                                    <span class="info-row__value" style="max-width:280px;">${returnRequest.reasonDetail}</span>
+                                                </div>
+                                            </c:if>
+                                            <c:if test="${not empty returnRequest.evidenceUrls}">
+                                                <div class="info-row">
+                                                    <span class="info-row__label">Bằng chứng</span>
+                                                    <a href="${returnRequest.evidenceUrls}" target="_blank" class="info-row__value" style="color:#0288D1;text-decoration:underline;">Xem link</a>
+                                                </div>
+                                            </c:if>
+                                            <c:if test="${not empty returnRequest.bankName}">
+                                                <div class="info-row"><span class="info-row__label">Ngân hàng</span><span class="info-row__value">${returnRequest.bankName}</span></div>
+                                                <div class="info-row"><span class="info-row__label">Tên TK</span><span class="info-row__value">${returnRequest.bankAccountName}</span></div>
+                                                <div class="info-row"><span class="info-row__label">Số TK</span><span class="info-row__value" style="font-weight:700;letter-spacing:1px;">${returnRequest.bankAccountNumber}</span></div>
+                                            </c:if>
+                                            <div class="info-row">
+                                                <span class="info-row__label">Hoàn tiền</span>
+                                                <span class="info-row__value" style="font-weight:700;color:#0288D1;">
+                                                    <fmt:formatNumber value="${returnRequest.refundAmount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                </span>
+                                            </div>
+                                            <div class="info-row" style="border-bottom:none;">
+                                                <span class="info-row__label">Ngày gửi</span>
+                                                <span class="info-row__value" style="font-size:0.78rem;">
+                                                    <fmt:formatDate value="${returnRequest.createdAt}" pattern="HH:mm dd/MM/yyyy" />
+                                                </span>
+                                            </div>
+                                            <c:if test="${returnRequest.status == 'Pending'}">
+                                                <div style="margin-top:var(--space-md);padding-top:var(--space-md);border-top:1px solid var(--color-border-light);display:flex;gap:10px;">
+                                                    <button onclick="openReturnDecision('Approved')" style="flex:1;padding:10px;border:none;border-radius:8px;background:#10b981;color:#fff;font-weight:700;font-size:0.8rem;cursor:pointer;">
+                                                        <i class="fa-solid fa-check" style="margin-right:6px;"></i>Chấp nhận
+                                                    </button>
+                                                    <button onclick="openReturnDecision('Rejected')" style="flex:1;padding:10px;border:none;border-radius:8px;background:#ef4444;color:#fff;font-weight:700;font-size:0.8rem;cursor:pointer;">
+                                                        <i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Từ chối
+                                                    </button>
+                                                </div>
+                                            </c:if>
+                                            <c:if test="${not empty returnRequest.adminNote}">
+                                                <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px;font-size:0.82rem;color:#64748b;">
+                                                    <strong>Ghi chú admin:</strong> ${returnRequest.adminNote}
+                                                </div>
+                                            </c:if>
+                                        </div>
+                                    </c:if>
+
                                     <!-- Right Column: Summary + Status Update -->
                                     <div>
                                         <div class="detail-card" style="position:sticky;top:90px;">
@@ -392,13 +465,53 @@
 
                             </div>
                         </main>
-                        
+
+                        <%-- Return decision modal --%>
+                        <div id="returnDecisionModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(4px);z-index:999;justify-content:center;align-items:center;">
+                            <div style="background:#fff;border-radius:16px;padding:32px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.15);">
+                                <h3 id="returnDecisionTitle" style="font-size:1.1rem;font-weight:700;margin-bottom:8px;">Xử lý yêu cầu hoàn trả</h3>
+                                <p style="font-size:0.85rem;color:#64748b;margin-bottom:16px;">Ghi chú sẽ được gửi đến khách hàng qua thông báo.</p>
+                                <form action="${pageContext.request.contextPath}/order" method="POST">
+                                    <input type="hidden" name="action" value="processReturn">
+                                    <input type="hidden" name="returnId" value="${returnRequest.returnId}">
+                                    <input type="hidden" name="orderId" value="${order.orderid}">
+                                    <input type="hidden" id="returnDecisionStatus" name="newStatus" value="">
+                                    <textarea name="adminNote" rows="3"
+                                        style="width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:0.88rem;outline:none;resize:vertical;box-sizing:border-box;"
+                                        placeholder="Nhập ghi chú cho khách hàng (tuỳ chọn)..."></textarea>
+                                    <div style="display:flex;gap:10px;margin-top:16px;">
+                                        <button type="button" onclick="document.getElementById('returnDecisionModal').style.display='none'"
+                                            style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:8px;background:#f1f5f9;font-weight:600;font-size:0.82rem;cursor:pointer;">Huỷ</button>
+                                        <button type="submit" id="returnDecisionBtn"
+                                            style="flex:1;padding:10px;border:none;border-radius:8px;color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;">Xác nhận</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
                         <script>
                             function toggleCancelReason() {
                                 var val = document.getElementById('newStatusSelect').value;
                                 document.getElementById('adminCancelReasonBox').style.display = (val === 'Cancelled') ? 'block' : 'none';
                             }
                             window.onload = toggleCancelReason;
+
+                            function openReturnDecision(status) {
+                                var modal = document.getElementById('returnDecisionModal');
+                                var title = document.getElementById('returnDecisionTitle');
+                                var btn   = document.getElementById('returnDecisionBtn');
+                                document.getElementById('returnDecisionStatus').value = status;
+                                if (status === 'Approved') {
+                                    title.textContent = 'Chấp nhận yêu cầu hoàn trả';
+                                    btn.style.background = '#10b981';
+                                    btn.textContent = 'Xác nhận Chấp nhận';
+                                } else {
+                                    title.textContent = 'Từ chối yêu cầu hoàn trả';
+                                    btn.style.background = '#ef4444';
+                                    btn.textContent = 'Xác nhận Từ chối';
+                                }
+                                modal.style.display = 'flex';
+                            }
                         </script>
             </body>
 

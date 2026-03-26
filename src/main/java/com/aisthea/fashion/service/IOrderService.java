@@ -2,6 +2,7 @@ package com.aisthea.fashion.service;
 
 import com.aisthea.fashion.model.Cart;
 import com.aisthea.fashion.model.Order;
+import com.aisthea.fashion.model.ReturnRequest;
 import com.aisthea.fashion.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
@@ -36,4 +37,10 @@ public interface IOrderService {
     boolean markRefunded(int orderId) throws Exception;
 
     List<Order> getFilteredOrders(String orderId, String status, String customerName, String date);
+
+    /** Customer submits a return request for a Completed order (7-day window). */
+    ReturnRequest submitReturnRequest(ReturnRequest rr) throws Exception;
+
+    /** Admin approves or rejects a pending return request. */
+    boolean processReturnRequest(int returnId, String newStatus, String adminNote) throws Exception;
 }
