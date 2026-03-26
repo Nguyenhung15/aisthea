@@ -11,6 +11,7 @@ import com.aisthea.fashion.service.OrderService;
 import com.aisthea.fashion.config.EmailConfig;
 import com.aisthea.fashion.config.PayOSConfig;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @WebServlet(name = "OrderServlet", urlPatterns = { "/order" })
+@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 50)
 public class OrderServlet extends HttpServlet {
 
     private IOrderService orderService;
@@ -98,6 +100,10 @@ public class OrderServlet extends HttpServlet {
         if (user == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
+        }
+
+        if (action == null) {
+            action = "";
         }
 
         try {

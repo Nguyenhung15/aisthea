@@ -666,20 +666,46 @@
                                                     <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                 </span>
                                             </div>
-                                            <div class="relative">
+                                            <div class="relative" id="customBankSelect">
                                                 <label class="text-[10px] text-slate-400 font-semibold block mb-0.5 uppercase tracking-wider">Ngân hàng</label>
-                                                <input type="text" name="bankName" placeholder="VD: Vietcombank"
-                                                    class="w-full bg-transparent border-0 border-b border-slate-100 focus:border-slate-800 focus:ring-0 text-sm py-1.5 px-0 outline-none transition-colors font-medium" required>
+                                                <input type="hidden" name="bankName" id="bankNameHidden" required>
+                                                
+                                                <button type="button" id="bankSelectBtn" class="w-full bg-transparent border-0 border-b border-slate-100 focus:border-slate-800 px-0 outline-none transition-colors font-medium flex items-center justify-between shadow-none relative pb-1.5 pt-1.5">
+                                                    <div class="flex items-center gap-3 overflow-hidden" id="bankSelectContent">
+                                                        <span class="text-slate-400 text-sm font-normal">Chọn ngân hàng</span>
+                                                    </div>
+                                                    <span class="material-symbols-outlined text-sm text-slate-400 flex-shrink-0 transition-transform duration-200" id="bankSelectIcon">expand_more</span>
+                                                </button>
+                                                
+                                                <div id="bankDropdownMenu" class="absolute left-0 bottom-full mb-1 w-full bg-white border border-slate-100 rounded-xl shadow-2xl z-[999] opacity-0 invisible transition-all duration-200 translate-y-2 origin-bottom">
+                                                    <div class="p-2 border-b border-slate-50 relative">
+                                                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                                                        <input type="text" id="bankSearchInput" autocomplete="off" placeholder="Tìm ngân hàng..." class="w-full bg-slate-50 border-0 rounded-lg text-xs py-2.5 pl-9 pr-3 focus:ring-1 focus:ring-slate-200 text-slate-700 outline-none">
+                                                    </div>
+                                                    <ul class="max-h-[220px] overflow-y-auto custom-scrollbar p-1.5 space-y-0.5" id="bankList">
+                                                        <li class="p-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                                                            <span class="material-symbols-outlined animate-spin text-[16px]">sync</span> Đang tải...
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                             </div>
-                                            <div class="relative mt-2">
+                                            <div class="relative mt-3">
                                                 <label class="text-[10px] text-slate-400 font-semibold block mb-0.5 uppercase tracking-wider">Tên chủ thẻ</label>
                                                 <input type="text" name="bankAccountName" placeholder="NGUYEN VAN A"
-                                                    class="w-full bg-transparent border-0 border-b border-slate-100 focus:border-slate-800 focus:ring-0 text-sm py-1.5 px-0 outline-none transition-colors font-medium" required>
+                                                    class="w-full bg-transparent border-0 border-b border-slate-100 focus:border-slate-800 focus:ring-0 text-sm py-1.5 px-0 outline-none transition-colors font-medium uppercase" 
+                                                    required 
+                                                    pattern="[a-zA-ZáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđÁÀẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÉÈẺẼẸÊẾỀỂỄỆÍÌỈĨỊÓÒỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÚÙỦŨỤƯỨỪỬỮỰÝỲỶỸỴĐ\s]+"
+                                                    title="Tên chủ thẻ chỉ chứa chữ cái và khoảng trắng"
+                                                    oninput="this.value = this.value.toUpperCase().replace(/[0-9!@#$%^&*()_+=\[\]{};':\\|.<>\/?,-]/g, '')">
                                             </div>
-                                            <div class="relative mt-2">
+                                            <div class="relative mt-3">
                                                 <label class="text-[10px] text-slate-400 font-semibold block mb-0.5 uppercase tracking-wider">Số tài khoản</label>
                                                 <input type="text" name="bankAccountNumber" placeholder="0123456789"
-                                                    class="w-full bg-transparent border-0 focus:ring-0 text-sm py-1.5 px-0 outline-none transition-colors font-medium tracking-wide" required>
+                                                    class="w-full bg-transparent border-0 focus:ring-0 text-sm py-1.5 px-0 outline-none transition-colors font-medium tracking-wide" 
+                                                    required 
+                                                    pattern="[0-9]{8,15}" 
+                                                    title="Số tài khoản ngân hàng phải từ 8 đến 15 chữ số"
+                                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                             </div>
                                         </div>
                                     </div>
@@ -727,6 +753,134 @@
                             otherBox.classList.add("hidden");
                         }
                     }
+
+                    // Custom Bank Select Logic
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const bankSelectBtn = document.getElementById('bankSelectBtn');
+                        const bankDropdownMenu = document.getElementById('bankDropdownMenu');
+                        const bankSearchInput = document.getElementById('bankSearchInput');
+                        const bankList = document.getElementById('bankList');
+                        const bankNameHidden = document.getElementById('bankNameHidden');
+                        const bankSelectContent = document.getElementById('bankSelectContent');
+                        const bankSelectIcon = document.getElementById('bankSelectIcon');
+                        
+                        let allBanks = [];
+
+                        // Fetch banks
+                        fetch('https://api.vietqr.io/v2/banks')
+                            .then(res => res.json())
+                            .then(data => {
+                                if(data.code === "00") {
+                                    allBanks = data.data;
+                                    renderBanks(allBanks);
+                                } else {
+                                    bankList.innerHTML = '<li class="p-4 text-center text-xs text-red-400">Không thể tải danh sách</li>';
+                                }
+                            })
+                            .catch(err => {
+                                bankList.innerHTML = '<li class="p-4 text-center text-xs text-red-400">Lỗi kết nối</li>';
+                            });
+
+                        function renderBanks(banks) {
+                            if(banks.length === 0) {
+                                bankList.innerHTML = '<li class="p-4 text-center text-xs text-slate-400">Không tìm thấy ngân hàng</li>';
+                                return;
+                            }
+                            bankList.innerHTML = banks.map(bank => 
+                                '<li class="bank-item flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"' +
+                                '    data-name="' + bank.shortName + '" data-fullname="' + bank.name + '" data-logo="' + bank.logo + '">' +
+                                '    <div class="flex items-center gap-3">' +
+                                '        <div class="w-10 h-10 rounded bg-white border border-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0 p-1">' +
+                                '            <img src="' + bank.logo + '" alt="' + bank.shortName + '" class="w-full h-full object-contain" referrerpolicy="no-referrer">' +
+                                '        </div>' +
+                                '        <div class="flex flex-col">' +
+                                '            <span class="text-sm font-semibold text-slate-700">' + bank.shortName + '</span>' +
+                                '            <span class="text-[10px] text-slate-400 max-w-[200px] truncate">' + bank.name + '</span>' +
+                                '        </div>' +
+                                '    </div>' +
+                                '</li>'
+                            ).join('');
+                            
+                            // Add click events to items
+                            const items = bankList.querySelectorAll('.bank-item');
+                            items.forEach(item => {
+                                item.addEventListener('click', (e) => {
+                                    const shortName = item.dataset.name;
+                                    const logoUrl = item.dataset.logo;
+                                    
+                                    // Update hidden input
+                                    bankNameHidden.value = shortName;
+                                    
+                                    // Update display
+                                    bankSelectContent.innerHTML = 
+                                        '<div class="w-6 h-6 rounded bg-white border border-slate-100 flex items-center justify-center overflow-hidden flex-shrink-0 p-0.5">' +
+                                        '    <img src="' + logoUrl + '" class="w-full h-full object-contain" referrerpolicy="no-referrer">' +
+                                        '</div>' +
+                                        '<span class="text-slate-800 text-sm font-semibold">' + shortName + '</span>';
+                                    
+                                    closeBankDropdown();
+                                    
+                                    // Clear error state if any
+                                    bankSelectBtn.classList.remove('border-red-500', 'border-b');
+                                });
+                            });
+                        }
+
+                        function toggleBankDropdown(e) {
+                            e.preventDefault();
+                            const isOpen = bankDropdownMenu.classList.contains('opacity-100');
+                            if(isOpen) {
+                                closeBankDropdown();
+                            } else {
+                                openBankDropdown();
+                            }
+                        }
+
+                        function openBankDropdown() {
+                            bankDropdownMenu.classList.remove('opacity-0', 'invisible', 'translate-y-2');
+                            bankDropdownMenu.classList.add('opacity-100', 'visible', 'translate-y-0');
+                            bankSelectIcon.classList.add('rotate-180');
+                            bankSearchInput.focus();
+                        }
+
+                        function closeBankDropdown() {
+                            bankDropdownMenu.classList.add('opacity-0', 'invisible', 'translate-y-2');
+                            bankDropdownMenu.classList.remove('opacity-100', 'visible', 'translate-y-0');
+                            bankSelectIcon.classList.remove('rotate-180');
+                        }
+
+                        bankSelectBtn.addEventListener('click', toggleBankDropdown);
+
+                        // Search functionality
+                        bankSearchInput.addEventListener('input', (e) => {
+                            const val = e.target.value.toLowerCase();
+                            const filtered = allBanks.filter(b => 
+                                b.shortName.toLowerCase().includes(val) || 
+                                b.name.toLowerCase().includes(val) ||
+                                (b.code && b.code.toLowerCase().includes(val))
+                            );
+                            renderBanks(filtered);
+                        });
+
+                        // Click outside to close
+                        document.addEventListener('click', (e) => {
+                            if(document.getElementById('customBankSelect') && !document.getElementById('customBankSelect').contains(e.target)) {
+                                closeBankDropdown();
+                            }
+                        });
+                        
+                        // Validate on submit
+                        const returnForm = document.getElementById('returnForm');
+                        if (returnForm) {
+                            returnForm.addEventListener('submit', function(e) {
+                                if(!bankNameHidden.value) {
+                                    e.preventDefault();
+                                    bankSelectBtn.classList.add('border-red-500', 'border-b', 'border-2');
+                                    bankSelectContent.innerHTML = '<span class="text-red-500 text-sm font-normal">Vui lòng chọn ngân hàng</span>';
+                                }
+                            });
+                        }
+                    });
 
                     // Handle browser back button
                     if (window.history && window.history.pushState) {
