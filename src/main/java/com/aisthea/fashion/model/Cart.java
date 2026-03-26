@@ -25,10 +25,9 @@ public class Cart {
 
     public void addItem(CartItem newItem) {
         int key = newItem.getProductColorSizeId();
-
         if (this.items.containsKey(key)) {
-            CartItem existingItem = this.items.get(key);
-            existingItem.setQuantity(existingItem.getQuantity() + newItem.getQuantity());
+            CartItem itemToPut = this.items.get(key);
+            itemToPut.setQuantity(itemToPut.getQuantity() + newItem.getQuantity());
         } else {
             this.items.put(key, newItem);
         }

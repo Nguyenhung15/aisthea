@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 
         <%--============================================================header-luxury.jsp New luxury glassmorphism nav
             for homepage & future pages. Dependencies (must be loaded in parent page's <head>):
@@ -151,19 +152,24 @@
                                                                                 <div class="relative flex items-center gap-2 cursor-pointer group"
                                                                                     id="lux-account-btn"
                                                                                     title="${sessionScope.user.fullname}">
-                                                                                    <c:choose>
-                                                                                        <c:when
-                                                                                            test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png'}">
-                                                                                            <img src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
-                                                                                                alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
-                                            group-hover:scale-105 transition-transform duration-200">
-                                                                                        </c:when>
-                                                                                        <c:otherwise>
-                                                                                            <img src="${pageContext.request.contextPath}/images/ava_default.png"
-                                                                                                alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
-                                            group-hover:scale-105 transition-transform duration-200">
-                                                                                        </c:otherwise>
-                                                                                    </c:choose>
+                                                                                    <c:set var="userAvatar" value="${sessionScope.user.avatar}" />
+                                                    <c:if test="${empty userAvatar}">
+                                                        <c:set var="userAvatar" value="images/ava_default.png" />
+                                                    </c:if>
+                                                    <c:choose>
+                                                        <c:when test="${fn:startsWith(userAvatar, 'http') or fn:startsWith(userAvatar, '/')}">
+                                                            <c:set var="resolvedAvatar" value="${userAvatar}" />
+                                                        </c:when>
+                                                        <c:when test="${fn:startsWith(userAvatar, 'images/')}">
+                                                            <c:set var="resolvedAvatar" value="${pageContext.request.contextPath}/${userAvatar}" />
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <c:set var="resolvedAvatar" value="${pageContext.request.contextPath}/uploads/${userAvatar}" />
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                    <img src="${resolvedAvatar}"
+                                                         alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
+                                                         group-hover:scale-105 transition-transform duration-200">
                                                                                     <span id="lux-user-name"
                                                                                         data-fullname="${sessionScope.user.fullname}"
                                                                                         class="text-sm font-medium text-slate-700 group-hover:text-[#024acf] transition-colors hidden md:block select-none">

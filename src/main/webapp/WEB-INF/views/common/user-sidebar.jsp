@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
         <%@ page import="com.aisthea.fashion.model.User" %>
             <%@ page import="com.aisthea.fashion.service.NotificationService" %>
                 <%@ page import="java.math.BigDecimal" %>
@@ -73,19 +74,24 @@
                                         <div
                                             class="absolute inset-0 rounded-full gold-border-glow opacity-60 group-hover:opacity-100 transition-opacity duration-500">
                                         </div>
+                                        <c:set var="userAvatar" value="${sessionScope.user.avatar}" />
+                                        <c:if test="${empty userAvatar}">
+                                            <c:set var="userAvatar" value="images/ava_default.png" />
+                                        </c:if>
                                         <c:choose>
-                                            <c:when
-                                                test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png'}">
-                                                <img id="sidebar-avatar" alt="Profile Avatar"
-                                                    class="w-full h-full rounded-full object-cover border-4 border-white shadow-md relative z-10"
-                                                    src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}" />
+                                            <c:when test="${fn:startsWith(userAvatar, 'http') or fn:startsWith(userAvatar, '/')}">
+                                                <c:set var="resolvedAvatar" value="${userAvatar}" />
+                                            </c:when>
+                                            <c:when test="${fn:startsWith(userAvatar, 'images/')}">
+                                                <c:set var="resolvedAvatar" value="${pageContext.request.contextPath}/${userAvatar}" />
                                             </c:when>
                                             <c:otherwise>
-                                                <img id="sidebar-avatar" alt="Profile Avatar"
-                                                    class="w-full h-full rounded-full object-cover border-4 border-white shadow-md relative z-10"
-                                                    src="${pageContext.request.contextPath}/images/ava_default.png" />
+                                                <c:set var="resolvedAvatar" value="${pageContext.request.contextPath}/uploads/${userAvatar}" />
                                             </c:otherwise>
                                         </c:choose>
+                                        <img id="sidebar-avatar" alt="Profile Avatar"
+                                            class="w-full h-full rounded-full object-cover border-4 border-white shadow-md relative z-10"
+                                            src="${resolvedAvatar}" />
                                     </div>
                                     <h2
                                         class="font-display font-bold text-lg text-slate-900 mb-2 text-center leading-tight">

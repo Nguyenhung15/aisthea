@@ -91,6 +91,15 @@ public class CartServlet extends HttpServlet {
         }
 
         Cart cart = getCartFromSession(request);
+        // Force reload from database whenever looking at cart page or checkout
+        com.aisthea.fashion.model.User currentUser = (com.aisthea.fashion.model.User) session.getAttribute("user");
+        Integer userId = (currentUser != null) ? currentUser.getUserId() : null;
+        Cart dbCart = new com.aisthea.fashion.dao.CartDAO().getCart(userId, session.getId());
+        if (dbCart != null) {
+            cart = dbCart;
+            session.setAttribute("cart", cart);
+        }
+
         String jspPath = "/WEB-INF/views/cart/cart.jsp";
 
         try {

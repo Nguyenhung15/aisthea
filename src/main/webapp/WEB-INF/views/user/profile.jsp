@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
     <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+    <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
         <% if (session.getAttribute("user")==null) { response.sendRedirect(request.getContextPath() + "/login" );
             return; } %>
             <!DOCTYPE html>
@@ -231,20 +232,24 @@
                                         <!-- Avatar Section -->
                                         <div class="flex flex-col items-center justify-center mb-10">
                                             <div onclick="document.getElementById('avatarInput').click()"
-                                                class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative bg-slate-100 cursor-pointer group">
+                                                 class="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative bg-slate-100 cursor-pointer group">
+                                                <c:set var="userAvatar" value="${sessionScope.user.avatar}" />
+                                                <c:if test="${empty userAvatar}">
+                                                    <c:set var="userAvatar" value="images/ava_default.png" />
+                                                </c:if>
                                                 <c:choose>
-                                                    <c:when
-                                                        test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png'}">
-                                                        <img id="avatarPreview"
-                                                            src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
-                                                            class="w-full h-full object-cover" alt="Avatar">
+                                                    <c:when test="${fn:startsWith(userAvatar, 'http') or fn:startsWith(userAvatar, '/')}">
+                                                        <c:set var="resolvedAvatar" value="${userAvatar}" />
+                                                    </c:when>
+                                                    <c:when test="${fn:startsWith(userAvatar, 'images/')}">
+                                                        <c:set var="resolvedAvatar" value="${pageContext.request.contextPath}/${userAvatar}" />
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <img id="avatarPreview"
-                                                            src="${pageContext.request.contextPath}/images/ava_default.png"
-                                                            class="w-full h-full object-cover" alt="Avatar">
+                                                        <c:set var="resolvedAvatar" value="${pageContext.request.contextPath}/uploads/${userAvatar}" />
                                                     </c:otherwise>
                                                 </c:choose>
+                                                <img id="avatarPreview" src="${resolvedAvatar}"
+                                                     class="w-full h-full object-cover" alt="Avatar">
 
                                                 <!-- Camera Overlay on Hover -->
                                                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
