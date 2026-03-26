@@ -27,6 +27,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.Scanner;
 import com.aisthea.fashion.util.Constants;
+import com.aisthea.fashion.util.ImageUploadHelper;
 import java.util.stream.Collectors;
 
 /**
@@ -585,39 +586,10 @@ public class ProductServlet extends HttpServlet {
                                ? imgColors[i].trim() : "";
 
                 // Priority: device-upload overrides the URL field
-                try {
-                    Part filePart = request.getPart("image_file_" + idx);
-                    if (filePart != null && filePart.getSize() > 0) {
-                        String submittedName = filePart.getSubmittedFileName();
-                        if (submittedName != null && !submittedName.isBlank()) {
-                            String originalName = Paths.get(submittedName).getFileName().toString();
-                            String ext = "";
-                            int dotPos = originalName.lastIndexOf('.');
-                            if (dotPos >= 0) ext = originalName.substring(dotPos).toLowerCase();
-
-                            if (!ALLOWED_EXTS.contains(ext)) {
-                                logger.warning("Rejected upload (extension '" + ext + "'): " + originalName);
-                            } else {
-                                String savedName = UUID.randomUUID().toString() + ext;
-
-                                File productDir = new File(Constants.UPLOAD_DIR, "product");
-                                if (!productDir.exists()) {
-                                    boolean created = productDir.mkdirs();
-                                    logger.info("Created upload dir: "
-                                            + productDir.getAbsolutePath() + " -> " + created);
-                                }
-
-                                File savedFile = new File(productDir, savedName);
-                                try (InputStream is = filePart.getInputStream()) {
-                                    Files.copy(is, savedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                                }
-                                url = "product/" + savedName;
-                                logger.info("Saved uploaded image -> " + url);
-                            }
-                        }
-                    }
-                } catch (Exception uploadEx) {
-                    logger.warning("Upload image failed for idx=" + idx + ": " + uploadEx.getMessage());
+                Part filePart = request.getPart("image_file_" + idx);
+                String uploaded = ImageUploadHelper.save(filePart, "product");
+                if (uploaded != null) {
+                    url = uploaded;
                 }
 
                 if (url != null && !url.isBlank()) {

@@ -20,14 +20,18 @@ import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
 import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
 import vn.payos.model.v2.paymentRequests.PaymentLinkItem;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import com.aisthea.fashion.util.Constants;
 
 @WebServlet(name = "OrderServlet", urlPatterns = { "/order" })
 public class OrderServlet extends HttpServlet {
@@ -215,8 +219,11 @@ public class OrderServlet extends HttpServlet {
                 Cart checkoutCart = (Cart) sess.getAttribute("checkoutCart");
                 Cart mainCart = (Cart) sess.getAttribute("cart");
                 if (checkoutCart != null && mainCart != null) {
+                    com.aisthea.fashion.dao.CartDAO cd = new com.aisthea.fashion.dao.CartDAO();
+                    Integer cartId = cd.getCartId(user.getUserId(), sess.getId());
                     for (com.aisthea.fashion.model.CartItem item : checkoutCart.getItems()) {
                         mainCart.removeItem(item.getProductColorSizeId());
+                        if (cartId != null) cd.removeItem(cartId, item.getProductColorSizeId());
                     }
                 }
                 sess.removeAttribute("checkoutCart");
@@ -320,8 +327,11 @@ public class OrderServlet extends HttpServlet {
             // Remove purchased items from the main cart
             Cart mainCart = (Cart) session.getAttribute("cart");
             if (mainCart != null && cart != null) {
+                com.aisthea.fashion.dao.CartDAO cd = new com.aisthea.fashion.dao.CartDAO();
+                Integer cartId = cd.getCartId(user.getUserId(), session.getId());
                 for (com.aisthea.fashion.model.CartItem item : cart.getItems()) {
                     mainCart.removeItem(item.getProductColorSizeId());
+                    if (cartId != null) cd.removeItem(cartId, item.getProductColorSizeId());
                 }
             }
             session.removeAttribute("checkoutCart");
@@ -555,8 +565,11 @@ public class OrderServlet extends HttpServlet {
 
     /**
      * Sends a professional HTML order-confirmation email.
-     * The KEY fix: product image URLs are resolved to absolute URLs so that
-     * remote email clients (Gmail, Outlook, etc.) can load them.
+     * <p>
+     * For product images uploaded from device (local files), the images are
+     * embedded directly into the email using CID inline attachments.
+     * This ensures images display correctly even when the server runs on localhost.
+     * External HTTP images are linked normally.
      */
     private void sendOrderEmail(Order order, HttpServletRequest request) {
         if (order == null) return;
@@ -571,11 +584,16 @@ public class OrderServlet extends HttpServlet {
                 return;
             }
 
-            // Build base URL dynamically from the real request — avoids localhost in emails
+            // Build base URL dynamically from the real request
             String baseUrl = com.aisthea.fashion.config.PayOSConfig.getBaseUrl(request);
+            String contextPath = request.getContextPath(); // e.g. "/AistheaFashion"
 
             String subject = "AISTH\u00c9A - X\u00e1c nh\u1eadn \u0111\u01a1n h\u00e0ng #" + order.getOrderid();
             logger.info("Sending order email \u2192 " + customerEmail + " (order #" + order.getOrderid() + ")");
+
+            // Collect local images to embed as CID inline attachments
+            Map<String, File> inlineImages = new HashMap<>();
+            int cidIndex = 0;
 
             StringBuilder html = new StringBuilder();
             html.append("<!DOCTYPE html><html lang='vi'><body style='margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;'>");
@@ -591,12 +609,24 @@ public class OrderServlet extends HttpServlet {
 
             if (order.getItems() != null) {
                 for (OrderItem item : order.getItems()) {
-                    // KEY FIX: resolve relative URL -> absolute URL for email clients
-                    String imgUrl = resolveImageUrlForEmail(item.getImageUrl(), baseUrl);
+                    String rawUrl = item.getImageUrl();
+                    String imgSrc;
+                    File localFile = resolveLocalImageFile(rawUrl, contextPath);
+
+                    if (localFile != null && localFile.exists()) {
+                        // Local uploaded image → embed via CID
+                        String cid = "img_" + cidIndex++;
+                        inlineImages.put(cid, localFile);
+                        imgSrc = "cid:" + cid;
+                    } else {
+                        // External HTTP or fallback → use resolved URL
+                        imgSrc = resolveImageUrlForEmail(rawUrl, baseUrl);
+                    }
+
                     BigDecimal lineTotal = item.getPrice().multiply(new BigDecimal(item.getQuantity()));
                     html.append("<tr style='border-bottom:1px solid #f1f5f9;'>");
                     html.append("<td style='padding:12px 0;width:80px;vertical-align:top;'>")
-                        .append("<img src='").append(imgUrl).append("' width='68' height='85'")
+                        .append("<img src='").append(imgSrc).append("' width='68' height='85'")
                         .append(" style='border-radius:6px;object-fit:cover;border:1px solid #e2e8f0;' /></td>");
                     html.append("<td style='padding:12px 8px;vertical-align:top;'>")
                         .append("<strong>").append(item.getProductName()).append("</strong><br>")
@@ -626,9 +656,11 @@ public class OrderServlet extends HttpServlet {
             html.append("<div style='background:#f8fafc;padding:16px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;'>\u00a9 2025 AISTH\u00c9A. All rights reserved.</div>");
             html.append("</div></body></html>");
 
-            EmailConfig.sendMail(customerEmail, subject, html.toString(),
-                    EmailConfig.TYPE_ORDER_CONFIRM, order.getUserid());
-            logger.info("Order confirmation email #" + order.getOrderid() + " sent to " + customerEmail);
+            // Use CID inline images if any local files were found
+            EmailConfig.sendMailWithInlineImages(customerEmail, subject, html.toString(),
+                    inlineImages, EmailConfig.TYPE_ORDER_CONFIRM, order.getUserid());
+            logger.info("Order confirmation email #" + order.getOrderid() + " sent to " + customerEmail
+                    + " (" + inlineImages.size() + " inline image(s))");
 
         } catch (Exception e) {
             logger.warning("Failed to send email for order #" + order.getOrderid() + ": " + e.getMessage());
@@ -673,6 +705,44 @@ public class OrderServlet extends HttpServlet {
 
         // 4. Bare relative path stored by ProductServlet, e.g. "product/uuid.jpg"
         return baseUrl + "/uploads/" + url;
+    }
+
+    /**
+     * Attempts to resolve a raw imageUrl to a local File in UPLOAD_DIR.
+     * Returns null if the URL points to an external HTTP resource or the file
+     * doesn't exist locally — meaning it should be linked by URL instead of CID.
+     *
+     * Handles these stored formats:
+     *  - "product/uuid.jpg"                              → UPLOAD_DIR/product/uuid.jpg
+     *  - "/AistheaFashion/uploads/product/uuid.jpg"      → UPLOAD_DIR/product/uuid.jpg
+     *  - "/uploads/product/uuid.jpg"                     → UPLOAD_DIR/product/uuid.jpg
+     *  - "https://example.com/img.jpg"                   → null (external)
+     */
+    private File resolveLocalImageFile(String rawUrl, String contextPath) {
+        if (rawUrl == null || rawUrl.isBlank()) return null;
+        String url = rawUrl.trim();
+
+        // External URL → not local
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return null;
+        }
+
+        // Strip contextPath prefix if present (e.g. "/AistheaFashion/uploads/..." → "/uploads/...")
+        if (contextPath != null && !contextPath.isEmpty() && url.startsWith(contextPath + "/")) {
+            url = url.substring(contextPath.length());
+        }
+
+        // Strip "/uploads/" prefix to get the relative path inside UPLOAD_DIR
+        if (url.startsWith("/uploads/")) {
+            url = url.substring("/uploads/".length());
+        } else if (url.startsWith("/")) {
+            // Some other absolute path that doesn't point to uploads
+            return null;
+        }
+
+        // url is now "product/uuid.jpg" or "avatars/uuid.jpg" etc.
+        File file = new File(Constants.UPLOAD_DIR, url);
+        return file.exists() ? file : null;
     }
 
     // ─── SESSION HELPER ───────────────────────────────────────────────────────

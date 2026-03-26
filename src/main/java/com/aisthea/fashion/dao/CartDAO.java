@@ -62,15 +62,17 @@ public class CartDAO {
             return cart;
         }
 
-        String sql = "SELECT ci.quantity, ci.productcolorsizeid, p.productid, p.name, " +
+        String sql = "SELECT ci.quantity, ci.productcolorsizeid, p.productid, p.name, pcs.stock as pstock, " +
                 "p.price - (p.price * ISNULL(p.discount, 0) / 100.0) AS actualPrice, " +
                 "pcs.color, pcs.size, " +
+                "(SELECT TOP 1 imageurl FROM product_image pi WHERE pi.productid = p.productid AND pi.color = pcs.color ORDER BY pi.isprimary DESC) AS colorImage, " +
                 "(SELECT TOP 1 imageurl FROM product_image pi WHERE pi.productid = p.productid AND pi.isprimary = 1) AS thumbnail, " +
                 "(SELECT TOP 1 imageurl FROM product_image pi WHERE pi.productid = p.productid) AS anyimage " +
                 "FROM cart_items ci " +
                 "JOIN product_color_size pcs ON ci.productcolorsizeid = pcs.productcolorsizeid " +
                 "JOIN Products p ON pcs.productid = p.productid " +
-                "WHERE ci.cartid = ?";
+                "WHERE ci.cartid = ? " +
+                "ORDER BY ci.createdat DESC";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -86,9 +88,14 @@ public class CartDAO {
                     item.setPrice(rs.getBigDecimal("actualPrice"));
                     item.setQuantity(rs.getInt("quantity"));
                     
-                    String img = rs.getString("thumbnail");
-                    if (img == null) img = rs.getString("anyimage");
+                    String img = rs.getString("colorImage");
+                    if (img == null || img.isBlank()) img = rs.getString("thumbnail");
+                    if (img == null || img.isBlank()) img = rs.getString("anyimage");
                     item.setProductImageUrl(img);
+
+                    int stock = rs.getInt("pstock");
+                    item.setStock(stock);
+                    item.setAvailable(stock > 0);
 
                     cart.addItem(item); // this just puts it in the map
                 }

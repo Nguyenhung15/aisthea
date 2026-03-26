@@ -14,6 +14,9 @@ public class CartItem {
     private BigDecimal price;
     private int quantity;
 
+    private boolean available = true;
+    private int stock = -1;
+
     public CartItem() {
     }
 
@@ -26,6 +29,24 @@ public class CartItem {
         this.size = oldItem.size;
         this.price = oldItem.price;
         this.quantity = oldItem.quantity;
+        this.available = oldItem.available;
+        this.stock = oldItem.stock;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
     }
 
     public BigDecimal getSubtotal() {
