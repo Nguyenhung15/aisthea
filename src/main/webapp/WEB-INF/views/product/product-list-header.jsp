@@ -122,7 +122,7 @@
                                                                     title="${sessionScope.user.fullname}">
                                                                     <c:choose>
                                                                         <c:when
-                                                                            test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
+                                                                            test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png'}">
                                                                             <img src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
                                                                                 alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-white shadow-md
                                              group-hover:scale-105 transition-transform duration-200">

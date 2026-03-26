@@ -186,7 +186,7 @@ public class OrderServlet extends HttpServlet {
                     // Refresh order data and send confirmation email
                     order = orderService.getOrderDetails(orderId, user.getUserId()); // Assign to declared 'order'
                     if (order != null) {
-                        sendOrderEmail(order);
+                        sendOrderEmail(order, request);
                     }
                 }
             } else if ("cancel".equalsIgnoreCase(paymentStatus)) {
@@ -315,7 +315,7 @@ public class OrderServlet extends HttpServlet {
                 return;
             }
 
-            sendOrderEmail(newOrder);
+            sendOrderEmail(newOrder, request);
 
             // Remove purchased items from the main cart
             Cart mainCart = (Cart) session.getAttribute("cart");
@@ -558,7 +558,7 @@ public class OrderServlet extends HttpServlet {
      * The KEY fix: product image URLs are resolved to absolute URLs so that
      * remote email clients (Gmail, Outlook, etc.) can load them.
      */
-    private void sendOrderEmail(Order order) {
+    private void sendOrderEmail(Order order, HttpServletRequest request) {
         if (order == null) return;
         try {
             @SuppressWarnings("deprecation")
@@ -571,9 +571,8 @@ public class OrderServlet extends HttpServlet {
                 return;
             }
 
-            // Read configured base URL (e.g. http://localhost:8080/AistheaFashion)
-            String baseUrl = com.aisthea.fashion.config.AppConfig
-                    .getProperty("app.base.url", "http://localhost:8080/AistheaFashion");
+            // Build base URL dynamically from the real request — avoids localhost in emails
+            String baseUrl = com.aisthea.fashion.config.PayOSConfig.getBaseUrl(request);
 
             String subject = "AISTH\u00c9A - X\u00e1c nh\u1eadn \u0111\u01a1n h\u00e0ng #" + order.getOrderid();
             logger.info("Sending order email \u2192 " + customerEmail + " (order #" + order.getOrderid() + ")");

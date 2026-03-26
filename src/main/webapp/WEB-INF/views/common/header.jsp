@@ -80,7 +80,7 @@
                         <div id="account-btn" class="icon-btn" style="position:relative;">
                             <c:choose>
                                 <c:when
-                                    test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
+                                    test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png'}">
                                     <img src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}"
                                         alt="Avatar"
                                         style="width:36px;height:36px;border-radius:50%;object-fit:cover;vertical-align:middle;">

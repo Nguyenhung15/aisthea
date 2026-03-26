@@ -75,7 +75,7 @@
                                         </div>
                                         <c:choose>
                                             <c:when
-                                                test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png' and !sessionScope.user.avatar.contains('/')}">
+                                                test="${not empty sessionScope.user.avatar and sessionScope.user.avatar != 'images/ava_default.png'}">
                                                 <img id="sidebar-avatar" alt="Profile Avatar"
                                                     class="w-full h-full rounded-full object-cover border-4 border-white shadow-md relative z-10"
                                                     src="${pageContext.request.contextPath}/uploads/${sessionScope.user.avatar}" />
