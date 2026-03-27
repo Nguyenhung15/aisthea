@@ -24,6 +24,11 @@
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Analytics</span>
                 </a>
+                <a href="${pageContext.request.contextPath}/admin-notifs" class="lux-sidebar__link"
+                    data-path="/admin-notifs">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>System Notifications</span>
+                </a>
 
                 <!-- Management Group -->
                 <span class="lux-sidebar__section-label">Inventory</span>

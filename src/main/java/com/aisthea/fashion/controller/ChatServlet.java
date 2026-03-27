@@ -486,6 +486,27 @@ public class ChatServlet extends HttpServlet {
         logTrace("handleHandoff DB handoff result: " + success + " (Assigned staff: " + assignedStaffId + ")");
 
         if (success) {
+            // Gửi thông báo cho tất cả Admin/Staff khi có yêu cầu hỗ trợ chat mới
+            try {
+                com.aisthea.fashion.dao.NotificationDAO notifDao = new com.aisthea.fashion.dao.NotificationDAO();
+                try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
+                     java.sql.PreparedStatement ps = conn.prepareStatement("SELECT userid FROM Users WHERE UPPER(role) IN ('ADMIN', 'STAFF')");
+                     java.sql.ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        com.aisthea.fashion.model.Notification n = new com.aisthea.fashion.model.Notification();
+                        n.setUserId(rs.getInt("userid"));
+                        n.setTitle("Yêu cầu hỗ trợ chat");
+                        n.setContent("Khách hàng " + (user.getFullname() != null ? user.getFullname() : user.getUsername()) + " cần hỗ trợ trực tuyến.");
+                        n.setType("CHAT");
+                        n.setTargetId(convoId);
+                        n.setRead(false);
+                        notifDao.addNotification(n);
+                    }
+                }
+            } catch (Exception e) {
+                logTrace("Lỗi gửi thông báo chat: " + e.getMessage());
+            }
+
             String msg = "Cuộc trò chuyện đã được chuyển cho nhân viên hỗ trợ. Vui lòng đợi trong giây lát, nhân viên sẽ phản hồi sớm nhất có thể! 🧑‍💼";
             int msgId = chatMessageDAO.saveMessageReturnId(convoId, "AI", msg);
             out.print(gson.toJson(safeMap("success", true, "chatType", "STAFF", "systemMsg", msg, "msgId", msgId,
@@ -519,6 +540,19 @@ public class ChatServlet extends HttpServlet {
             }
 
             boolean success = chatMessageDAO.closeConversation(convoId);
+            
+            // Mark corresponding CHAT system notifications as read so they disappear from Dashboard
+            if (success) {
+                try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
+                     java.sql.PreparedStatement ps = conn.prepareStatement(
+                         "UPDATE Notifications SET is_read = 1 WHERE UPPER(type) IN ('CHAT', 'SUPPORT') AND target_id = ?")) {
+                    ps.setInt(1, convoId);
+                    ps.executeUpdate();
+                } catch (Exception e) {
+                    logTrace("Failed to mark chat notification as read on close: " + e.getMessage());
+                }
+            }
+
             // Messenger-style: no goodbye message — conversation will be reused
             out.print(gson.toJson(safeMap("success", success, "status", "CLOSED")));
         } catch (Throwable t) {

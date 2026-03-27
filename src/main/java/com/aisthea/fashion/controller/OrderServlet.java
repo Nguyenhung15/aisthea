@@ -85,6 +85,9 @@ public class OrderServlet extends HttpServlet {
                 case "adminDelete":
                     handleAdminDelete(request, response, user);
                     break;
+                case "adminUpdateStatus":
+                    handleAdminUpdateStatus(request, response, user);
+                    break;
                 case "history":
                 default:
                     showOrderHistory(request, response, user);
@@ -222,6 +225,25 @@ public class OrderServlet extends HttpServlet {
                     order = orderService.getOrderDetails(orderId, user.getUserId()); // Assign to declared 'order'
                     if (order != null) {
                         sendOrderEmail(order, request);
+                        
+                        // Gửi thông báo cho Admin/Staff là có đơn hàng mới đã thanh toán QR
+                        try {
+                            com.aisthea.fashion.dao.NotificationDAO notifDao = new com.aisthea.fashion.dao.NotificationDAO();
+                            try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
+                                 java.sql.PreparedStatement ps = conn.prepareStatement("SELECT userid FROM Users WHERE UPPER(role) IN ('ADMIN', 'STAFF')");
+                                 java.sql.ResultSet rs = ps.executeQuery()) {
+                                while (rs.next()) {
+                                    com.aisthea.fashion.model.Notification n = new com.aisthea.fashion.model.Notification();
+                                    n.setUserId(rs.getInt("userid"));
+                                    n.setTitle("Thanh toán mới #" + orderId);
+                                    n.setContent("Đơn hàng #" + orderId + " đã được thanh toán QR qua PayOS.");
+                                    n.setType("ORDER");
+                                    n.setTargetId(orderId);
+                                    n.setRead(false);
+                                    notifDao.addNotification(n);
+                                }
+                            }
+                        } catch (Exception e) {}
                     }
                 }
             } else if ("cancel".equalsIgnoreCase(paymentStatus)) {
@@ -254,7 +276,8 @@ public class OrderServlet extends HttpServlet {
                     Integer cartId = cd.getCartId(user.getUserId(), sess.getId());
                     for (com.aisthea.fashion.model.CartItem item : checkoutCart.getItems()) {
                         mainCart.removeItem(item.getProductColorSizeId());
-                        if (cartId != null) cd.removeItem(cartId, item.getProductColorSizeId());
+                        if (cartId != null)
+                            cd.removeItem(cartId, item.getProductColorSizeId());
                     }
                 }
                 sess.removeAttribute("checkoutCart");
@@ -276,7 +299,8 @@ public class OrderServlet extends HttpServlet {
                 try {
                     ReturnRequest existingReturn = new ReturnRequestDAO().getByOrderId(order.getOrderid());
                     request.setAttribute("returnRequest", existingReturn);
-                } catch (Exception ignored) { /* table may not exist yet */ }
+                } catch (Exception ignored) {
+                    /* table may not exist yet */ }
                 request.getRequestDispatcher("/WEB-INF/views/order/details.jsp").forward(request, response);
             } else {
                 response.sendRedirect(request.getContextPath() + "/order?action=history&error=notfound");
@@ -355,6 +379,27 @@ public class OrderServlet extends HttpServlet {
 
             sendOrderEmail(newOrder, request);
 
+            // Gửi thông báo cho Admin/Staff khi có đơn mới (COD)
+            try {
+                com.aisthea.fashion.dao.NotificationDAO notifDao = new com.aisthea.fashion.dao.NotificationDAO();
+                try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
+                     java.sql.PreparedStatement ps = conn.prepareStatement("SELECT userid FROM Users WHERE UPPER(role) IN ('ADMIN', 'STAFF')");
+                     java.sql.ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        com.aisthea.fashion.model.Notification n = new com.aisthea.fashion.model.Notification();
+                        n.setUserId(rs.getInt("userid"));
+                        n.setTitle("Đơn hàng mới #" + newOrder.getOrderid());
+                        n.setContent("Khách hàng " + user.getFullname() + " đã đặt đơn hàng COD mới. Cần xác nhận!");
+                        n.setType("ORDER");
+                        n.setTargetId(newOrder.getOrderid());
+                        n.setRead(false);
+                        notifDao.addNotification(n);
+                    }
+                }
+            } catch (Exception e) {
+                logger.warning("Lỗi gửi thông báo admin (COD): " + e.getMessage());
+            }
+
             // Remove purchased items from the main cart
             Cart mainCart = (Cart) session.getAttribute("cart");
             if (mainCart != null && cart != null) {
@@ -362,7 +407,8 @@ public class OrderServlet extends HttpServlet {
                 Integer cartId = cd.getCartId(user.getUserId(), session.getId());
                 for (com.aisthea.fashion.model.CartItem item : cart.getItems()) {
                     mainCart.removeItem(item.getProductColorSizeId());
-                    if (cartId != null) cd.removeItem(cartId, item.getProductColorSizeId());
+                    if (cartId != null)
+                        cd.removeItem(cartId, item.getProductColorSizeId());
                 }
             }
             session.removeAttribute("checkoutCart");
@@ -416,6 +462,7 @@ public class OrderServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + redirectUrl);
         }
     }
+
     private void handleUpdateAddress(HttpServletRequest request, HttpServletResponse response, User user)
             throws Exception {
         int orderId = -1;
@@ -437,10 +484,10 @@ public class OrderServlet extends HttpServlet {
             }
 
             String fullname = request.getParameter("newFullname");
-            String phone    = request.getParameter("newPhone");
+            String phone = request.getParameter("newPhone");
             String province = request.getParameter("newProvince");
-            String ward     = request.getParameter("newWard");
-            String detail   = request.getParameter("newAddressDetail");
+            String ward = request.getParameter("newWard");
+            String detail = request.getParameter("newAddressDetail");
 
             // Build full address string: detail, ward, province
             String fullAddress = detail + ", " + ward + ", " + province;
@@ -500,7 +547,8 @@ public class OrderServlet extends HttpServlet {
                 try {
                     ReturnRequest rr = new ReturnRequestDAO().getByOrderId(orderId);
                     request.setAttribute("returnRequest", rr);
-                } catch (Exception ignored) { /* table may not exist yet */ }
+                } catch (Exception ignored) {
+                    /* table may not exist yet */ }
                 request.getRequestDispatcher("/WEB-INF/views/admin/order/admin_order_detail.jsp").forward(request,
                         response);
             } else {
@@ -629,7 +677,8 @@ public class OrderServlet extends HttpServlet {
                         // Use save() which only allows image extensions
                         String savedPath = com.aisthea.fashion.util.ImageUploadHelper.save(part, "returns");
                         if (savedPath != null) {
-                            if (evidencePaths.length() > 0) evidencePaths.append(",");
+                            if (evidencePaths.length() > 0)
+                                evidencePaths.append(",");
                             evidencePaths.append(savedPath);
                         }
                     }
@@ -638,6 +687,26 @@ public class OrderServlet extends HttpServlet {
             rr.setEvidenceUrls(evidencePaths.length() > 0 ? evidencePaths.toString() : null);
 
             orderService.submitReturnRequest(rr);
+            
+            // Gửi thông báo cho Admin/Staff khi có yêu cầu hoàn hàng mới
+            try {
+                com.aisthea.fashion.dao.NotificationDAO notifDao = new com.aisthea.fashion.dao.NotificationDAO();
+                try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
+                     java.sql.PreparedStatement ps = conn.prepareStatement("SELECT userid FROM Users WHERE UPPER(role) IN ('ADMIN', 'STAFF')");
+                     java.sql.ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        com.aisthea.fashion.model.Notification n = new com.aisthea.fashion.model.Notification();
+                        n.setUserId(rs.getInt("userid"));
+                        n.setTitle("Yêu cầu hoàn trả #" + orderId);
+                        n.setContent("Khách hàng " + user.getFullname() + " đã gửi yêu cầu bảo hành/hoàn trả cho đơn #" + orderId);
+                        n.setType("RETURN");
+                        n.setTargetId(orderId);
+                        n.setRead(false);
+                        notifDao.addNotification(n);
+                    }
+                }
+            } catch (Exception e) {}
+
             response.sendRedirect(request.getContextPath()
                     + "/order?action=view&orderid=" + orderId + "&returnSubmitted=true");
         } catch (Exception e) {
@@ -662,7 +731,7 @@ public class OrderServlet extends HttpServlet {
         int orderId = -1;
         try {
             returnId = Integer.parseInt(request.getParameter("returnId"));
-            orderId  = Integer.parseInt(request.getParameter("orderId"));
+            orderId = Integer.parseInt(request.getParameter("orderId"));
             String newStatus = request.getParameter("newStatus");
             String adminNote = request.getParameter("adminNote");
             orderService.processReturnRequest(returnId, newStatus, adminNote);
@@ -715,7 +784,8 @@ public class OrderServlet extends HttpServlet {
      * External HTTP images are linked normally.
      */
     private void sendOrderEmail(Order order, HttpServletRequest request) {
-        if (order == null) return;
+        if (order == null)
+            return;
         try {
             @SuppressWarnings("deprecation")
             Locale localeVN = new Locale("vi", "VN");
@@ -739,15 +809,21 @@ public class OrderServlet extends HttpServlet {
             int cidIndex = 0;
 
             StringBuilder html = new StringBuilder();
-            html.append("<!DOCTYPE html><html lang='vi'><body style='margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;'>");
-            html.append("<div style='max-width:600px;margin:24px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);'>");
+            html.append(
+                    "<!DOCTYPE html><html lang='vi'><body style='margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;'>");
+            html.append(
+                    "<div style='max-width:600px;margin:24px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);'>");
             html.append("<div style='background:#0f172a;padding:28px 32px;text-align:center;'>");
             html.append("<h1 style='margin:0;color:#fff;letter-spacing:6px;font-size:24px;'>AISTH\u00c9A</h1>");
             html.append("</div><div style='padding:32px;'>");
             html.append("<p>Ch\u00e0o <strong>").append(order.getFullname()).append("</strong>,</p>");
-            html.append("<p style='color:#555;'>C\u1ea3m \u01a1n b\u1ea1n \u0111\u00e3 tin t\u01b0\u1edfng mua s\u1eafm t\u1ea1i <strong>AISTH\u00c9A</strong>. \u0110\u01a1n h\u00e0ng <strong>#").append(order.getOrderid()).append("</strong> \u0111\u00e3 \u0111\u01b0\u1ee3c x\u00e1c nh\u1eadn.</p>");
+            html.append(
+                    "<p style='color:#555;'>C\u1ea3m \u01a1n b\u1ea1n \u0111\u00e3 tin t\u01b0\u1edfng mua s\u1eafm t\u1ea1i <strong>AISTH\u00c9A</strong>. \u0110\u01a1n h\u00e0ng <strong>#")
+                    .append(order.getOrderid())
+                    .append("</strong> \u0111\u00e3 \u0111\u01b0\u1ee3c x\u00e1c nh\u1eadn.</p>");
 
-            html.append("<h3 style='border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:28px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;'>Chi ti\u1ebft \u0111\u01a1n h\u00e0ng</h3>");
+            html.append(
+                    "<h3 style='border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:28px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;'>Chi ti\u1ebft \u0111\u01a1n h\u00e0ng</h3>");
             html.append("<table style='width:100%;border-collapse:collapse;'>");
 
             if (order.getItems() != null) {
@@ -769,34 +845,42 @@ public class OrderServlet extends HttpServlet {
                     BigDecimal lineTotal = item.getPrice().multiply(new BigDecimal(item.getQuantity()));
                     html.append("<tr style='border-bottom:1px solid #f1f5f9;'>");
                     html.append("<td style='padding:12px 0;width:80px;vertical-align:top;'>")
-                        .append("<img src='").append(imgSrc).append("' width='68' height='85'")
-                        .append(" style='border-radius:6px;object-fit:cover;border:1px solid #e2e8f0;' /></td>");
+                            .append("<img src='").append(imgSrc).append("' width='68' height='85'")
+                            .append(" style='border-radius:6px;object-fit:cover;border:1px solid #e2e8f0;' /></td>");
                     html.append("<td style='padding:12px 8px;vertical-align:top;'>")
-                        .append("<strong>").append(item.getProductName()).append("</strong><br>")
-                        .append("<span style='font-size:12px;color:#94a3b8;'>")
-                        .append(item.getColor()).append(" / ").append(item.getSize()).append("</span></td>");
-                    html.append("<td style='padding:12px 4px;text-align:center;vertical-align:top;font-size:13px;color:#64748b;'>x").append(item.getQuantity()).append("</td>");
+                            .append("<strong>").append(item.getProductName()).append("</strong><br>")
+                            .append("<span style='font-size:12px;color:#94a3b8;'>")
+                            .append(item.getColor()).append(" / ").append(item.getSize()).append("</span></td>");
+                    html.append(
+                            "<td style='padding:12px 4px;text-align:center;vertical-align:top;font-size:13px;color:#64748b;'>x")
+                            .append(item.getQuantity()).append("</td>");
                     html.append("<td style='padding:12px 0 12px 8px;text-align:right;vertical-align:top;'>")
-                        .append("<strong>").append(currencyFmt.format(lineTotal)).append("</strong></td>");
+                            .append("<strong>").append(currencyFmt.format(lineTotal)).append("</strong></td>");
                     html.append("</tr>");
                 }
             }
             html.append("</table>");
             html.append("<div style='text-align:right;padding:16px 0 0;border-top:2px solid #f1f5f9;'>")
-                .append("<span style='font-size:13px;color:#64748b;'>T\u1ed4NG THANH TO\u00c1N&nbsp;&nbsp;</span>")
-                .append("<strong style='font-size:20px;color:#9B774E;'>").append(currencyFmt.format(order.getTotalprice())).append("</strong></div>");
+                    .append("<span style='font-size:13px;color:#64748b;'>T\u1ed4NG THANH TO\u00c1N&nbsp;&nbsp;</span>")
+                    .append("<strong style='font-size:20px;color:#9B774E;'>")
+                    .append(currencyFmt.format(order.getTotalprice())).append("</strong></div>");
 
-            html.append("<h3 style='border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:28px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;'>Th\u00f4ng tin giao h\u00e0ng</h3>");
-            html.append("<div style='background:#f8fafc;padding:16px;border-radius:8px;font-size:14px;line-height:1.8;'>")
-                .append("<b>Ng\u01b0\u1eddi nh\u1eadn:</b> ").append(order.getFullname()).append("<br>")
-                .append("<b>\u0110i\u1ec7n tho\u1ea1i:</b> ").append(order.getPhone()).append("<br>")
-                .append("<b>\u0110\u1ecba ch\u1ec9:</b> ").append(order.getAddress()).append("<br>")
-                .append("<b>Ph\u01b0\u01a1ng th\u1ee9c:</b> ").append(order.getPaymentMethod()).append("</div>");
+            html.append(
+                    "<h3 style='border-bottom:2px solid #f1f5f9;padding-bottom:8px;margin-top:28px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#64748b;'>Th\u00f4ng tin giao h\u00e0ng</h3>");
+            html.append(
+                    "<div style='background:#f8fafc;padding:16px;border-radius:8px;font-size:14px;line-height:1.8;'>")
+                    .append("<b>Ng\u01b0\u1eddi nh\u1eadn:</b> ").append(order.getFullname()).append("<br>")
+                    .append("<b>\u0110i\u1ec7n tho\u1ea1i:</b> ").append(order.getPhone()).append("<br>")
+                    .append("<b>\u0110\u1ecba ch\u1ec9:</b> ").append(order.getAddress()).append("<br>")
+                    .append("<b>Ph\u01b0\u01a1ng th\u1ee9c:</b> ").append(order.getPaymentMethod()).append("</div>");
 
-            html.append("<p style='margin-top:28px;text-align:center;color:#94a3b8;font-size:13px;font-style:italic;'>Ch\u00fang t\u00f4i s\u1ebd li\u00ean h\u1ec7 s\u1edbm \u0111\u1ec3 giao h\u00e0ng.</p>");
-            html.append("<p style='text-align:center;font-weight:700;'>Tr\u00e2n tr\u1ecdng,<br>\u0110\u1ed9i ng\u0169 AISTH\u00c9A</p>");
+            html.append(
+                    "<p style='margin-top:28px;text-align:center;color:#94a3b8;font-size:13px;font-style:italic;'>Ch\u00fang t\u00f4i s\u1ebd li\u00ean h\u1ec7 s\u1edbm \u0111\u1ec3 giao h\u00e0ng.</p>");
+            html.append(
+                    "<p style='text-align:center;font-weight:700;'>Tr\u00e2n tr\u1ecdng,<br>\u0110\u1ed9i ng\u0169 AISTH\u00c9A</p>");
             html.append("</div>");
-            html.append("<div style='background:#f8fafc;padding:16px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;'>\u00a9 2025 AISTH\u00c9A. All rights reserved.</div>");
+            html.append(
+                    "<div style='background:#f8fafc;padding:16px;text-align:center;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;'>\u00a9 2025 AISTH\u00c9A. All rights reserved.</div>");
             html.append("</div></body></html>");
 
             // Use CID inline images if any local files were found
@@ -815,10 +899,12 @@ public class OrderServlet extends HttpServlet {
      * absolute URL that remote email clients can load.
      *
      * Resolution rules:
-     *  1. Already absolute (http / https)                         → returned as-is.
-     *  2. Starts with contextPath (e.g. "/AistheaFashion/uploads/...") → strip contextPath, prepend baseUrl.
-     *  3. Starts with '/' but without contextPath                 → prepend baseUrl.
-     *  4. Otherwise (bare relative, e.g. "product/abc.jpg")       → baseUrl + "/uploads/" + path.
+     * 1. Already absolute (http / https) → returned as-is.
+     * 2. Starts with contextPath (e.g. "/AistheaFashion/uploads/...") → strip
+     * contextPath, prepend baseUrl.
+     * 3. Starts with '/' but without contextPath → prepend baseUrl.
+     * 4. Otherwise (bare relative, e.g. "product/abc.jpg") → baseUrl + "/uploads/"
+     * + path.
      */
     private String resolveImageUrlForEmail(String rawUrl, String baseUrl) {
         if (rawUrl == null || rawUrl.isBlank()) {
@@ -842,7 +928,8 @@ public class OrderServlet extends HttpServlet {
                     // Strip duplicate contextPath → "/uploads/product/uuid.jpg"
                     url = url.substring(ctxPath.length());
                 }
-            } catch (Exception ignored) { /* fallback: use url as-is */ }
+            } catch (Exception ignored) {
+                /* fallback: use url as-is */ }
             return baseUrl + url;
         }
 
@@ -856,13 +943,14 @@ public class OrderServlet extends HttpServlet {
      * doesn't exist locally — meaning it should be linked by URL instead of CID.
      *
      * Handles these stored formats:
-     *  - "product/uuid.jpg"                              → UPLOAD_DIR/product/uuid.jpg
-     *  - "/AistheaFashion/uploads/product/uuid.jpg"      → UPLOAD_DIR/product/uuid.jpg
-     *  - "/uploads/product/uuid.jpg"                     → UPLOAD_DIR/product/uuid.jpg
-     *  - "https://example.com/img.jpg"                   → null (external)
+     * - "product/uuid.jpg" → UPLOAD_DIR/product/uuid.jpg
+     * - "/AistheaFashion/uploads/product/uuid.jpg" → UPLOAD_DIR/product/uuid.jpg
+     * - "/uploads/product/uuid.jpg" → UPLOAD_DIR/product/uuid.jpg
+     * - "https://example.com/img.jpg" → null (external)
      */
     private File resolveLocalImageFile(String rawUrl, String contextPath) {
-        if (rawUrl == null || rawUrl.isBlank()) return null;
+        if (rawUrl == null || rawUrl.isBlank())
+            return null;
         String url = rawUrl.trim();
 
         // External URL → not local
@@ -870,7 +958,8 @@ public class OrderServlet extends HttpServlet {
             return null;
         }
 
-        // Strip contextPath prefix if present (e.g. "/AistheaFashion/uploads/..." → "/uploads/...")
+        // Strip contextPath prefix if present (e.g. "/AistheaFashion/uploads/..." →
+        // "/uploads/...")
         if (contextPath != null && !contextPath.isEmpty() && url.startsWith(contextPath + "/")) {
             url = url.substring(contextPath.length());
         }
@@ -892,9 +981,11 @@ public class OrderServlet extends HttpServlet {
 
     private void refreshSessionUser(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        if (session == null) return;
+        if (session == null)
+            return;
         User user = (User) session.getAttribute("user");
-        if (user == null) return;
+        if (user == null)
+            return;
         try {
             User freshUser = new com.aisthea.fashion.dao.UserDAO().selectUser(user.getUserId());
             if (freshUser != null) {

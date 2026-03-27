@@ -172,6 +172,7 @@
         <servlet-name>DashboardServlet</servlet-name>
         <url-pattern>/admin/dashboard</url-pattern>
     </servlet-mapping>
+    <!-- Move this to after servlet definition -->
     <servlet>
         <servlet-name>ChangePasswordServlet</servlet-name>
         <servlet-class>com.aisthea.fashion.controller.ChangePasswordServlet</servlet-class>
@@ -209,14 +210,6 @@
         <url-pattern>/address</url-pattern>
     </servlet-mapping>
 
-    <servlet>
-        <servlet-name>NotificationServlet</servlet-name>
-        <servlet-class>com.aisthea.fashion.controller.NotificationServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>NotificationServlet</servlet-name>
-        <url-pattern>/notifications</url-pattern>
-    </servlet-mapping>
 
     <servlet>
         <servlet-name>NotificationApiServlet</servlet-name>

@@ -54,11 +54,10 @@
                                         <div class="lux-kpi-card__value">
                                             <c:choose>
                                                 <c:when test="${not empty totalRevenue}">
-                                                    $
                                                     <fmt:formatNumber value="${totalRevenue}" type="number"
                                                         maxFractionDigits="0" groupingUsed="true" />
                                                 </c:when>
-                                                <c:otherwise>$0</c:otherwise>
+                                                <c:otherwise>0</c:otherwise>
                                             </c:choose>
                                         </div>
                                         <div class="lux-kpi-card__growth">
@@ -172,7 +171,7 @@
                                             <div class="lux-perf-revenue-card">
                                                 <div class="lux-perf-revenue-card__upper">
                                                     <div class="lux-perf-revenue-card__label">Total Revenue</div>
-                                                    <div class="lux-perf-revenue-card__amount">$
+                                                    <div class="lux-perf-revenue-card__amount">
                                                         <fmt:formatNumber value="${totalRevenue}" type="number"
                                                             maxFractionDigits="0" groupingUsed="true" />
                                                     </div>
@@ -194,21 +193,21 @@
                                                 <div class="lux-perf-revenue-card__metrics">
                                                     <div class="lux-perf-metric">
                                                         <div class="lux-perf-metric__label">Today</div>
-                                                        <div class="lux-perf-metric__value">$
+                                                        <div class="lux-perf-metric__value">
                                                             <fmt:formatNumber value="${revenueToday}" type="number"
                                                                 maxFractionDigits="0" groupingUsed="true" />
                                                         </div>
                                                     </div>
                                                     <div class="lux-perf-metric">
                                                         <div class="lux-perf-metric__label">This Week</div>
-                                                        <div class="lux-perf-metric__value">$
+                                                        <div class="lux-perf-metric__value">
                                                             <fmt:formatNumber value="${revenueThisWeek}" type="number"
                                                                 maxFractionDigits="0" groupingUsed="true" />
                                                         </div>
                                                     </div>
                                                     <div class="lux-perf-metric">
                                                         <div class="lux-perf-metric__label">This Month</div>
-                                                        <div class="lux-perf-metric__value">$
+                                                        <div class="lux-perf-metric__value">
                                                             <fmt:formatNumber value="${revenueThisMonth}" type="number"
                                                                 maxFractionDigits="0" groupingUsed="true" />
                                                         </div>
@@ -254,7 +253,6 @@
                                         <div class="lux-chart">
                                             <div class="lux-chart__highlight">
                                                 <span class="lux-chart__highlight-value" id="chartTotal">
-                                                    $
                                                     <fmt:formatNumber value="${revenueThisWeek}" type="number"
                                                         maxFractionDigits="0" groupingUsed="true" />
                                                 </span>
@@ -323,7 +321,7 @@
                                                 displayColors: false,
                                                 callbacks: {
                                                     label: function (ctx) {
-                                                        return '$' + ctx.parsed.y.toLocaleString();
+                                                        return ctx.parsed.y.toLocaleString();
                                                     }
                                                 }
                                             }
@@ -339,9 +337,9 @@
                                                 ticks: {
                                                     font: { size: 11 },
                                                     callback: function (val) {
-                                                        if (val >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
-                                                        if (val >= 1000) return '$' + (val / 1000).toFixed(0) + 'k';
-                                                        return '$' + val;
+                                                        if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+                                                        if (val >= 1000) return (val / 1000).toFixed(0) + 'k';
+                                                        return val;
                                                     }
                                                 },
                                                 beginAtZero: true

@@ -736,8 +736,9 @@
 
                         // Update mode display
                         function updateModeUI(chatType) {
-                            currentChatType = chatType;
-                            if (chatType === 'STAFF') {
+                            var type = (chatType || 'AI').trim();
+                            currentChatType = type;
+                            if (type === 'STAFF') {
                                 modeBar.className = 'aisthea-chat-mode staff';
                                 modeBar.innerHTML = '<i class="fa-solid fa-headset"></i> Đang chat với nhân viên hỗ trợ';
                                 headerSt.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f59e0b;margin-right:4px;"></span>Staff Mode';
@@ -756,9 +757,18 @@
                                 .then(function (res) { return res.json(); })
                                 .then(function (data) {
                                     currentConvoId = data.convoId || 0;
-                                    updateModeUI(data.chatType || 'AI');
                                     // Track conversation status for bubble color
                                     if (data.status) updateBubbleState(data.status);
+                                    
+                                    // If conversation is CLOSED, reset to AI mode
+                                    // so customer doesn't stay stuck in Staff Mode
+                                    if (data.status === 'CLOSED') {
+                                        updateModeUI('AI');
+                                        currentConvoId = 0; // Next message will create fresh convo
+                                    } else {
+                                        updateModeUI(data.chatType || 'AI');
+                                    }
+                                    
                                     if (data.messages && data.messages.length > 0) {
                                         data.messages.forEach(function (m) {
                                             addMessage(m.text, m.sender || (m.role === 'user' ? 'CUSTOMER' : 'AI'), false);
@@ -1010,6 +1020,10 @@
                                             chatWin.classList.remove('open');
                                             bubble.style.transform = 'scale(1)';
                                             bubble.style.opacity = '1';
+                                            
+                                            // Reset the chat mode to AI so when they open again, it's AI
+                                            updateModeUI('AI');
+                                            currentConvoId = 0; // Next message will create fresh convo
                                         }
                                     });
                             });

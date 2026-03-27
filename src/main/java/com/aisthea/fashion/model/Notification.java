@@ -9,9 +9,18 @@ public class Notification {
     private String content;
     private String type; // ORDER, PROMOTION, SYSTEM
     private boolean read;
+    private int targetId; // orderid, returnid, or convoid
     private Timestamp createdAt;
 
     public Notification() {}
+
+    public int getTargetId() {
+        return targetId;
+    }
+
+    public void setTargetId(int targetId) {
+        this.targetId = targetId;
+    }
 
     public int getNotificationId() {
         return notificationId;

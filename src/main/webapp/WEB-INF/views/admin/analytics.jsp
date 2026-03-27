@@ -606,7 +606,6 @@
                                             </c:choose>
                                         </div>
                                         <div class="analytics-kpi-card__value">
-                                            $
                                             <fmt:formatNumber value="${totalRevenue}" type="number"
                                                 maxFractionDigits="0" groupingUsed="true" />
                                         </div>
@@ -747,7 +746,6 @@
                                                             </div>
                                                         </div>
                                                         <div class="analytics-rank-value">
-                                                            $
                                                             <fmt:formatNumber value="${prod.totalRevenue}" type="number"
                                                                 maxFractionDigits="0" groupingUsed="true" />
                                                         </div>
@@ -846,7 +844,6 @@
                                                                 </td>
                                                                 <td>${cust.orderCount}</td>
                                                                 <td style="font-weight:700;">
-                                                                    $
                                                                     <fmt:formatNumber value="${cust.totalSpent}"
                                                                         type="number" maxFractionDigits="0"
                                                                         groupingUsed="true" />
@@ -968,7 +965,7 @@
                                                     displayColors: false,
                                                     callbacks: {
                                                         label: function (ctx) {
-                                                            return '$' + ctx.parsed.y.toLocaleString();
+                                                            return ctx.parsed.y.toLocaleString();
                                                         }
                                                     }
                                                 }
@@ -984,9 +981,9 @@
                                                     ticks: {
                                                         font: { size: 11 },
                                                         callback: function (val) {
-                                                            if (val >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
-                                                            if (val >= 1000) return '$' + (val / 1000).toFixed(0) + 'k';
-                                                            return '$' + val;
+                                                            if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+                                                            if (val >= 1000) return (val / 1000).toFixed(0) + 'k';
+                                                            return val;
                                                         }
                                                     }
                                                 }

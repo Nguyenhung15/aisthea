@@ -70,6 +70,28 @@ public class DatabaseConfig {
                         logger.info("✅ Database Migration: Added 'status' column to Products table");
                     }
                 }
+                
+                // Migrate Notifications: Create table and add target_id
+                try {
+                    stmt.execute("IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Notifications') " +
+                                 "CREATE TABLE Notifications (" +
+                                 "notification_id INT PRIMARY KEY IDENTITY(1,1), " +
+                                 "userid INT NOT NULL, " +
+                                 "title NVARCHAR(255) NOT NULL, " +
+                                 "content NVARCHAR(MAX) NOT NULL, " +
+                                 "type NVARCHAR(50), " +
+                                 "is_read BIT DEFAULT 0, " +
+                                 "createdat DATETIME DEFAULT GETDATE())");
+                    
+                    try {
+                        stmt.executeQuery("SELECT target_id FROM Notifications WHERE 1=0");
+                    } catch (SQLException e) {
+                        stmt.executeUpdate("ALTER TABLE Notifications ADD target_id INT DEFAULT 0");
+                        logger.info("✅ Database Migration: Added 'target_id' column to Notifications table");
+                    }
+                } catch (Exception ex) {
+                    logger.warn("⚠️ Cannot auto-migrate Notifications table: " + ex.getMessage());
+                }
             } catch (Exception ex) {
                 logger.warn("⚠️ Cannot auto-migrate database schema: " + ex.getMessage());
             }

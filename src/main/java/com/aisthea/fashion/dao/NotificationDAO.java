@@ -23,6 +23,7 @@ public class NotificationDAO implements INotificationDAO {
                     n.setContent(rs.getString("content"));
                     n.setType(rs.getString("type"));
                     n.setRead(rs.getBoolean("is_read"));
+                    n.setTargetId(rs.getInt("target_id"));
                     n.setCreatedAt(rs.getTimestamp("createdat"));
                     list.add(n);
                 }
@@ -53,7 +54,7 @@ public class NotificationDAO implements INotificationDAO {
 
     @Override
     public boolean addNotification(Notification notification) throws SQLException {
-        String sql = "INSERT INTO Notifications (userid, title, content, type, is_read, createdat) VALUES (?, ?, ?, ?, ?, GETDATE())";
+        String sql = "INSERT INTO Notifications (userid, title, content, type, is_read, target_id, createdat) VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, notification.getUserId());
@@ -61,6 +62,7 @@ public class NotificationDAO implements INotificationDAO {
             ps.setString(3, notification.getContent());
             ps.setString(4, notification.getType());
             ps.setBoolean(5, notification.isRead());
+            ps.setInt(6, notification.getTargetId());
             return ps.executeUpdate() > 0;
         }
     }
