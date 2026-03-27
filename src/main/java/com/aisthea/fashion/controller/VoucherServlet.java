@@ -103,6 +103,25 @@ public class VoucherServlet extends HttpServlet {
                     errorMessage = "Mã voucher '" + v.getCode() + "' đã tồn tại!";
                 } else {
                     ok = voucherDAO.insert(v);
+                    
+                    // --- SEND NOTIFICATION TO ALL USERS ---
+                    if (ok && v.isActive()) {
+                        try {
+                            com.aisthea.fashion.dao.UserDAO userDAO = new com.aisthea.fashion.dao.UserDAO();
+                            com.aisthea.fashion.service.NotificationService notifSvc = new com.aisthea.fashion.service.NotificationService();
+                            java.util.List<com.aisthea.fashion.model.User> allUsers = userDAO.selectAllUsers();
+                            
+                            String desc = v.getDescription() != null && !v.getDescription().isBlank() ? v.getDescription() : "Nhập mã " + v.getCode() + " ngay!";
+                            String title = "Ưu đãi mới từ AISTHÉA";
+                            String content = desc;
+                            
+                            for (com.aisthea.fashion.model.User u : allUsers) {
+                                if (u.getRole() == null || !"Admin".equalsIgnoreCase(u.getRole())) {
+                                    notifSvc.sendNotification(u.getUserId(), title, content, "PROMOTION");
+                                }
+                            }
+                        } catch(Exception ignored) { }
+                    }
                 }
             }
         } catch (Exception e) {
@@ -113,7 +132,8 @@ public class VoucherServlet extends HttpServlet {
         if (ok) {
             res.sendRedirect(req.getContextPath() + "/voucher?action=list&success=true");
         } else {
-            session.setAttribute("voucherError", errorMessage != null ? errorMessage : "Không thể lưu voucher. Vui lòng kiểm tra lại thông tin.");
+            session.setAttribute("voucherError",
+                    errorMessage != null ? errorMessage : "Không thể lưu voucher. Vui lòng kiểm tra lại thông tin.");
             res.sendRedirect(req.getContextPath() + "/voucher?action=list&error=true");
         }
     }

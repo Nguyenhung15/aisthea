@@ -60,9 +60,6 @@ public class NotificationServlet extends HttpServlet {
             // 1. Sync old orders into notifications
             syncOrderNotifications(user.getUserId());
 
-            // 2. Seed promotions if none exist
-            seedPromotions(user.getUserId());
-
             // 3. Get all notifications
             String type = request.getParameter("type");
             List<Notification> notifications = notificationService.getNotificationsByUserId(user.getUserId());
@@ -113,29 +110,6 @@ public class NotificationServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Seed promotional notifications if user has none.
-     */
-    private void seedPromotions(int userId) {
-        try {
-            List<Notification> existing = notificationService.getNotificationsByUserId(userId);
-            boolean hasPromo = existing.stream()
-                .anyMatch(n -> "PROMOTION".equalsIgnoreCase(n.getType()));
-
-            if (!hasPromo) {
-                notificationService.sendNotification(userId,
-                    "Chào mừng bạn đến với AISTHÉA",
-                    "Khám phá bộ sưu tập Thu Đông mới nhất với ưu đãi lên đến 50%. Nhập mã SPRING50 ngay!",
-                    "PROMOTION");
-                notificationService.sendNotification(userId,
-                    "Ưu đãi thành viên mới",
-                    "Bạn đã nhận được phiếu giảm giá 20% cho đơn hàng đầu tiên. Hạn dùng: 30 ngày.",
-                    "PROMOTION");
-            }
-        } catch (Exception e) {
-            System.err.println("seedPromotions error: " + e.getMessage());
-        }
-    }
 
     private String getOrderTitle(String status) {
         if (status == null) return "Cập nhật đơn hàng";
