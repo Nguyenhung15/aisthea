@@ -346,6 +346,9 @@ public class OrderService implements IOrderService {
                 }
             }
 
+            com.aisthea.fashion.dao.BirthdayDiscountDAO bdDao = new com.aisthea.fashion.dao.BirthdayDiscountDAO();
+            bdDao.removeUsageByOrderId(orderId, conn);
+
             boolean statusUpdated = orderDAO.updateOrderStatus(orderId, "Cancelled", conn);
             if (!statusUpdated) {
                 throw new SQLException("Lỗi: Không thể cập nhật trạng thái đơn hàng.");
@@ -520,6 +523,12 @@ public class OrderService implements IOrderService {
         if (!updated) return false;
 
         if ("Approved".equalsIgnoreCase(newStatus)) {
+            try (Connection conn = DBConnection.getConnection()) {
+                com.aisthea.fashion.dao.BirthdayDiscountDAO bdDao = new com.aisthea.fashion.dao.BirthdayDiscountDAO();
+                bdDao.removeUsageByOrderId(rr.getOrderId(), conn);
+            } catch (Exception e) {
+                logger.warning("Could not restore birthday discount for order #" + rr.getOrderId() + ": " + e.getMessage());
+            }
             orderDAO.updateOrderStatus(rr.getOrderId(), "ReturnApproved");
             notificationService.sendNotification(rr.getUserId(),
                     "Yêu cầu hoàn trả được chấp nhận",

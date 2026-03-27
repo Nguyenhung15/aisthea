@@ -727,26 +727,37 @@
                                                         </span>
                                                     </div>
                                                 </c:if>
-                                                <%-- Birthday discount row --%>
-                                                    <c:if
-                                                        test="${not empty birthdayDiscountAmount and birthdayDiscountAmount > 0}">
-                                                        <div class="flex justify-between text-sm"
-                                                            id="birthdayDiscountRow">
+                                                <%-- Birthday discount row (Already Used Info) --%>
+                                                <c:if test="${alreadyUsedBirthdayDiscount}">
+                                                    <div class="flex justify-between text-sm items-center opacity-60">
+                                                        <span class="text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis mr-4 flex items-center gap-1">
+                                                            <span class="material-symbols-outlined text-sm">cake</span>
+                                                            Ưu đãi Sinh nhật (${birthdayDiscountPercent}%)
+                                                        </span>
+                                                        <span class="text-slate-400 text-[11px] italic font-semibold tracking-wider uppercase">
+                                                            (Đã sử dụng)
+                                                        </span>
+                                                    </div>
+                                                </c:if>
+                                                <%-- Birthday discount row (Active) --%>
+                                                <c:if test="${not empty birthdayDiscountAmount and birthdayDiscountAmount > 0}">
+                                                    <div class="flex justify-between text-sm"
+                                                        id="birthdayDiscountRow">
+                                                        <span
+                                                            class="text-pink-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis mr-4 flex items-center gap-1">
                                                             <span
-                                                                class="text-pink-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis mr-4 flex items-center gap-1">
-                                                                <span
-                                                                    class="material-symbols-outlined text-sm">cake</span>
-                                                                Ưu đãi Sinh nhật (${birthdayDiscountPercent}%)
-                                                            </span>
-                                                            <span class="text-pink-600 font-medium flex-shrink-0"
-                                                                id="birthdayDiscountDisplay">
-                                                                -
-                                                                <fmt:formatNumber value="${birthdayDiscountAmount}"
-                                                                    type="currency" currencyCode="VND"
-                                                                    maxFractionDigits="0" />
-                                                            </span>
-                                                        </div>
-                                                    </c:if>
+                                                                class="material-symbols-outlined text-sm">cake</span>
+                                                            Ưu đãi Sinh nhật (${birthdayDiscountPercent}%)
+                                                        </span>
+                                                        <span class="text-pink-600 font-medium flex-shrink-0"
+                                                            id="birthdayDiscountDisplay">
+                                                            -
+                                                            <fmt:formatNumber value="${birthdayDiscountAmount}"
+                                                                type="currency" currencyCode="VND"
+                                                                maxFractionDigits="0" />
+                                                        </span>
+                                                    </div>
+                                                </c:if>
                                                     <%-- Voucher discount row --%>
                                                         <c:if test="${not empty sessionScope.appliedVoucher}">
                                                             <div class="flex justify-between text-sm" id="discountRow">

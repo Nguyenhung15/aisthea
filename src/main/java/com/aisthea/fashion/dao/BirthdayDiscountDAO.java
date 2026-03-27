@@ -39,4 +39,14 @@ public class BirthdayDiscountDAO {
             ps.executeUpdate();
         }
     }
+    /**
+     * Remove the birthday discount usage record for a cancelled or returned order.
+     */
+    public void removeUsageByOrderId(int orderId, Connection conn) throws SQLException {
+        String sql = "DELETE FROM birthday_discount_usage WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.executeUpdate();
+        }
+    }
 }
