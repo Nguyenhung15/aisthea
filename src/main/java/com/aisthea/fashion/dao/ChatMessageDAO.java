@@ -129,7 +129,8 @@ public class ChatMessageDAO {
     }
 
     /**
-     * Close a conversation (set status = 'CLOSED').
+     * Close a conversation (set status = 'CLOSED'). 
+     * We keep messages but stop active polling in UI.
      */
     public boolean closeConversation(int conversationId) {
         String sql = "UPDATE conversations SET status = 'CLOSED', updatedat = GETDATE() WHERE conversationid = ?";

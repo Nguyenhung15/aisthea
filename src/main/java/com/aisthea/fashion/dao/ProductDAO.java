@@ -735,13 +735,19 @@ public class ProductDAO implements IProductDAO {
 
     @Override
     public String getInventorySummary() throws SQLException {
-        // Giảm xuống TOP 12 để ưu tiên tính năng "đổi màu hiện ảnh" mà không lo hết token (6000 limit)
-        String sql = "SELECT TOP 12 p.productid, p.name, p.price, p.is_bestseller, c.name as cat_name, "
+        // Tăng lên 18 sản phẩm quan trọng nhất để AI có dữ liệu phong phú (nhờ gói $5 - 500k TPM)
+        String sql = "SELECT TOP 18 p.productid, p.name, p.price, p.is_bestseller, c.name as cat_name, "
                 + "(SELECT COALESCE(SUM(oi.quantity), 0) FROM orderitems oi "
                 + " JOIN product_color_size pcs ON oi.productcolorsizeid = pcs.productcolorsizeid "
-                + " WHERE pcs.productid = p.productid) as sold_qty "
+                + " WHERE pcs.productid = p.productid) as sold_qty, "
+                + "(CASE "
+                + "  WHEN p.name LIKE N'%Linear%' OR p.name LIKE N'%Tera%' OR p.name LIKE N'%Hào Quang%' OR p.name LIKE N'%Editorial%' THEN 5 "
+                + "  WHEN p.name LIKE N'%Digital Pulse%' OR p.name LIKE N'%Boxy%' OR p.name LIKE N'%Fragment%' THEN 4 "
+                + "  WHEN p.name LIKE N'%Sơ mi%' OR p.name LIKE N'%Quần tây%' OR p.name LIKE N'%Cà vạt%' THEN 3 "
+                + "  WHEN p.name LIKE N'%Thể thao%' OR p.name LIKE N'%Giày%' OR p.name LIKE N'%Băng đô%' THEN 2 "
+                + "  ELSE 0 END) as priority "
                 + "FROM Products p JOIN Categories c ON p.categoryid = c.categoryid "
-                + "ORDER BY sold_qty DESC, p.updatedat DESC";
+                + "ORDER BY priority DESC, sold_qty DESC, p.updatedat DESC";
         
         StringBuilder sb = new StringBuilder();
         try (Connection conn = DBConnection.getConnection();
@@ -750,17 +756,14 @@ public class ProductDAO implements IProductDAO {
             
             while (rs.next()) {
                 int pid = rs.getInt("productid");
-                StringBuilder colorMap = new StringBuilder("[");
+                String primaryImg = "";
                 
-                String imgSql = "SELECT imageurl, color FROM product_image WHERE productid = ? ORDER BY isprimary DESC";
+                // CHỈ lấy 1 ảnh chính duy nhất (isprimary=1) để AI không bị loạn dữ liệu màu sắc
+                String imgSql = "SELECT TOP 1 imageurl FROM product_image WHERE productid = ? ORDER BY isprimary DESC";
                 try (PreparedStatement ips = conn.prepareStatement(imgSql)) {
                     ips.setInt(1, pid);
                     try (ResultSet irs = ips.executeQuery()) {
-                        while (irs.next()) {
-                            String color = irs.getString("color");
-                            String url = irs.getString("imageurl");
-                            colorMap.append(color != null && !color.isEmpty() ? color : "Default").append(":").append(url).append(",");
-                        }
+                        if (irs.next()) primaryImg = irs.getString("imageurl");
                     }
                 }
                 
@@ -768,7 +771,7 @@ public class ProductDAO implements IProductDAO {
                   .append("|").append(rs.getString("name"))
                   .append("|").append(String.format("%.0f", rs.getBigDecimal("price")))
                   .append("|S:").append(rs.getInt("sold_qty"))
-                  .append("|M-A:").append(colorMap.toString())
+                  .append("|IMG:").append(primaryImg != null ? primaryImg : "")
                   .append("\n");
             }
         }

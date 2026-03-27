@@ -891,6 +891,19 @@
                             if (!text || isSending) return;
                             isSending = true; sendBtn.disabled = true; input.value = '';
                             console.log('[Chat] User sending:', text);
+                            
+                            // ══════ INVISIBLE SYSTEM RULES (GIẤU KHỎI KHÁCH HÀNG) ══════
+                            // Mã này chỉ gửi ngầm cho AI, KHÔNG hiển thị trên khung chat của khách.
+                            var strictText = text;
+                            if (currentChatType === 'AI') {
+                                strictText = "[STRICT RULES: 1. Keep response 2-3 sentences. 2. NEVER show Product IDs. 3. Image must match name exactly. "
+                                    + "4. WORK Combo: Digital Pulse + Linear Pants + Tera Tie. "
+                                    + "5. OUTDOOR NAM: [Nam Shirt] + [Nam Jacket] + [Nam Pants]. "
+                                    + "6. OUTDOOR NỮ: [Nữ Top] + [Nữ Jacket] + [Nữ Skirt/Pants]. "
+                                    + "7. Only show product cards if requested.] Customer: " + text;
+                            }
+                            
+                            // CHỈ hiển thị nội dung gốc tinh khiết của khách lên giao diện
                             addMessage(text, 'CUSTOMER', true);
 
                             if (currentChatType === 'AI') showTyping();
@@ -898,7 +911,7 @@
                             fetch(ctxPath + '/chat', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ message: text, history: chatHistory })
+                                body: JSON.stringify({ message: strictText, history: chatHistory })
                             })
                                 .then(function (res) {
                                     console.log('[Chat] Response status:', res.status, res.statusText);
@@ -1021,9 +1034,9 @@
                                             bubble.style.transform = 'scale(1)';
                                             bubble.style.opacity = '1';
                                             
-                                            // Reset the chat mode to AI so when they open again, it's AI
+                                            // Messenger-style: keep UI and history when pausing
                                             updateModeUI('AI');
-                                            currentConvoId = 0; // Next message will create fresh convo
+                                            // currentConvoId will remain same and chatHistory is not cleared
                                         }
                                     });
                             });
