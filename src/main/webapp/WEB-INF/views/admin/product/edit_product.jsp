@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
@@ -427,17 +427,17 @@
             </div>
         </c:if>
 
-        <c:set var="actionUrl" value="${pageContext.request.contextPath}/product?action=insert" />
-        <c:if test="${not empty product}">
-            <c:set var="actionUrl" value="${pageContext.request.contextPath}/product?action=update" />
-        </c:if>
+        <%-- isEdit = product exists AND has a persisted ID (edit mode vs insert-error mode) --%>
+        <c:set var="isEdit" value="${not empty product and product.productId > 0}" />
+        <c:set var="actionUrl" value="${pageContext.request.contextPath}/product?action=${isEdit ? 'update' : 'insert'}" />
 
         <form action="${actionUrl}" method="post" enctype="multipart/form-data" id="productForm">
-            <c:if test="${not empty product}">
+            <c:if test="${isEdit}">
                 <input type="hidden" name="id" value="${product.productId}">
             </c:if>
-            <!-- Backup categoryid - synced by JS before submit -->
-            <input type="hidden" name="categoryid_backup" id="categoryid_backup" value="">
+            <%-- JS syncs childCategorySelect value here before submit; pre-fill for edit mode --%>
+            <input type="hidden" name="categoryid_backup" id="categoryid_backup"
+                   value="<c:out value='${isEdit ? product.category.categoryid : ""}' />">
 
             <div class="ep-wrapper">
 
@@ -454,23 +454,32 @@
                             <div class="ep-form-grid">
                                 <div class="ep-field full">
                                     <label class="ep-label">Product Name <span class="req">*</span></label>
-                                    <input type="text" name="name" value="<c:out value='${product.name}' />" required class="ep-input" placeholder="e.g. Classic Fitted Blazer">
+                                    <input type="text" name="name"
+                                           value="<c:out value='${not empty product.name ? product.name : param.name}' />"
+                                           required class="ep-input" placeholder="e.g. Classic Fitted Blazer">
                                 </div>
                                 <div class="ep-field full">
                                     <label class="ep-label">Description</label>
-                                    <textarea name="description" class="ep-textarea" placeholder="Describe the product — material, fit, occasion...">${product.description}</textarea>
+                                    <textarea name="description" class="ep-textarea"
+                                              placeholder="Describe the product — material, fit, occasion..."><c:out value='${not empty product.description ? product.description : param.description}' /></textarea>
                                 </div>
                                 <div class="ep-field">
                                     <label class="ep-label">Price (VND) <span class="req">*</span></label>
-                                    <input type="number" name="price" step="1000" value="${product.price}" required class="ep-input" placeholder="0">
+                                    <input type="number" name="price" step="1000"
+                                           value="<c:out value='${not empty product.price ? product.price : param.price}' />"
+                                           required class="ep-input" placeholder="0">
                                 </div>
                                 <div class="ep-field">
                                     <label class="ep-label">Brand</label>
-                                    <input type="text" name="brand" value="${empty product.brand ? 'AISTHÉA' : product.brand}" class="ep-input" placeholder="e.g. AISTHÉA">
+                                    <input type="text" name="brand"
+                                           value="<c:out value='${not empty product.brand ? product.brand : (not empty param.brand ? param.brand : \"AISTHÉA\")}' />"
+                                           class="ep-input" placeholder="e.g. AISTHÉA">
                                 </div>
                                 <div class="ep-field">
                                     <label class="ep-label">Discount (%)</label>
-                                    <input type="number" name="discount" min="0" max="100" value="${product.discount}" step="1" class="ep-input" placeholder="0">
+                                    <input type="number" name="discount" min="0" max="100" step="1"
+                                           value="<c:out value='${not empty product.discount ? product.discount : param.discount}' />"
+                                           class="ep-input" placeholder="0">
                                 </div>
                             </div>
                         </div>
@@ -828,7 +837,7 @@ function createImageRow(idx, mode) {
 
     document.getElementById('imageContainer').appendChild(row);
 
-    if (mode === 'file') {
+    if (mode === 'file' && !window._suppressFileClick) {
         setTimeout(function() {
             var fi = document.getElementById('fileInput_' + idx);
             if (fi) fi.click();
@@ -988,6 +997,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ── FORM SUBMIT GUARD ── */
     document.getElementById('productForm').addEventListener('submit', function(e) {
+        // Prevent empty file inputs from sending to avoid Tomcat FileCountLimit exceeded error 
+        var fileInputs = this.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(function(fi) {
+            if (!fi.value) {
+                fi.disabled = true;
+            }
+        });
+        
         var catVal = childSelect.value;
         // Fallback: if child is empty but parent has a value, use parent's value
         if ((!catVal || catVal === '') && parentSelect.value) {
@@ -1003,6 +1020,9 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('categoryError').style.display = 'block';
             childSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
             childSelect.focus();
+            
+            // Re-enable file inputs if form submission is prevented
+            fileInputs.forEach(function(fi) { fi.disabled = false; });
         } else {
             document.getElementById('categoryid_backup').value = catVal;
         }
@@ -1039,8 +1059,53 @@ document.addEventListener('DOMContentLoaded', function () {
         createImageRow(imgIdx++, 'url');
     });
 
-    document.getElementById('addFileBtn').addEventListener('click', function () {
-        createImageRow(imgIdx++, 'file');
+    // Hidden input to allow selecting multiple files at once
+    var bulkUploadInp = document.createElement('input');
+    bulkUploadInp.type = 'file';
+    bulkUploadInp.multiple = true;
+    bulkUploadInp.accept = 'image/*';
+    bulkUploadInp.style.display = 'none';
+    document.body.appendChild(bulkUploadInp);
+
+    bulkUploadInp.addEventListener('change', function(e) {
+        if (!this.files.length) return;
+        window._suppressFileClick = true; // Prevent individual dialog popups
+        
+        var filesArr = Array.from(this.files);
+        filesArr.sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+        });
+        
+        filesArr.forEach(function(file) {
+            createImageRow(imgIdx, 'file');
+            var newFileInp = document.getElementById('fileInput_' + imgIdx);
+            if (newFileInp) {
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                newFileInp.files = dt.files;
+                
+                var reader = new FileReader();
+                let currentIdx = imgIdx;
+                reader.onload = function(evt) {
+                    var img = document.getElementById('thumbImg_' + currentIdx);
+                    if (img) {
+                        img.src = evt.target.result;
+                        img.style.display = 'block';
+                        var icon = document.querySelector('#thumb_' + currentIdx + ' i');
+                        if (icon) icon.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+            imgIdx++;
+        });
+        window._suppressFileClick = false;
+        this.value = ''; // Reset for next time
+    });
+
+    document.getElementById('addFileBtn').addEventListener('click', function (e) {
+        e.preventDefault();
+        bulkUploadInp.click();
     });
 
     /* ── GENERATE MATRIX BTN ── */
@@ -1104,6 +1169,53 @@ document.addEventListener('DOMContentLoaded', function () {
             if (ico) ico.style.display = 'none';
         }
     });
+
+    /* ── AVOID TOMCAT PART COUNT LIMIT (FileCountLimitExceededException) ── */
+    var form = document.getElementById('productForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // 1. Pack Variants: COLOR|SIZE|STOCK;COLOR|SIZE|STOCK...
+            var vArr = [];
+            document.querySelectorAll('.stock-row').forEach(function(row) {
+                var c = row.querySelector('[name="stock_color"]');
+                var s = row.querySelector('[name="stock_size"]');
+                var stk = row.querySelector('[name="stock_stock"]');
+                if (c && s && stk && c.value.trim() && s.value.trim()) {
+                    vArr.push(c.value.trim() + '|' + s.value.trim() + '|' + stk.value.trim());
+                }
+                if(c) c.removeAttribute('name');
+                if(s) s.removeAttribute('name');
+                if(stk) stk.removeAttribute('name');
+            });
+            var vInput = document.createElement('input');
+            vInput.type = 'hidden';
+            vInput.name = 'variants_combined';
+            vInput.value = vArr.join(';');
+            this.appendChild(vInput);
+
+            // 2. Pack Image Info: URL|COLOR|INDEX;URL|COLOR|INDEX...
+            var iArr = [];
+            document.querySelectorAll('.img-row').forEach(function(row) {
+                var url = row.querySelector('[name="image_url"]');
+                var clr = row.querySelector('[name="image_color"]');
+                var idx = row.querySelector('[name="image_index"]');
+                if (url && idx) {
+                    var cVal = (clr && clr.value) ? clr.value.trim() : '';
+                    iArr.push(url.value.trim() + '|' + cVal + '|' + idx.value);
+                }
+                if(url) url.removeAttribute('name');
+                if(clr) clr.removeAttribute('name');
+                if(idx) idx.removeAttribute('name');
+                // The `<input type="file" name="image_file_X">` MUST KEEP ITS NAME
+                // The `<input type="radio" name="image_isprimary">` MUST KEEP ITS NAME to know primary index
+            });
+            var iInput = document.createElement('input');
+            iInput.type = 'hidden';
+            iInput.name = 'images_combined';
+            iInput.value = iArr.join(';');
+            this.appendChild(iInput);
+        });
+    }
 });
 </script>
 

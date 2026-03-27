@@ -21,7 +21,7 @@ public class Product {
     private boolean bestseller; // true = show Best Seller badge
     private double avgRating;   // average star rating (0.0 – 5.0)
     private int reviewCount;    // number of visible reviews
-
+    private int status = 1;     // 1 = Active/Visible, 0 = Hidden
 
     public Product() {
     }
@@ -196,6 +196,14 @@ public class Product {
             return price.multiply(factor).setScale(0, java.math.RoundingMode.HALF_UP);
         }
         return price;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }
 

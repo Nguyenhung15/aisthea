@@ -185,4 +185,34 @@ public class ProductService implements IProductService {
             return List.of();
         }
     }
+
+    @Override
+    public List<Product> getAdminProducts(int page, int pageSize, String sortCol, String sortDir, String search) {
+        try {
+            return productDAO.getAdminProducts(page, pageSize, sortCol, sortDir, search);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error getting admin products", e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public int countAdminProducts(String search) {
+        try {
+            return productDAO.countAdminProducts(search);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error counting admin products", e);
+            return 0;
+        }
+    }
+
+    @Override
+    public boolean toggleProductStatus(int productId) {
+        try {
+            return productDAO.toggleProductStatus(productId);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error toggling product status", e);
+            return false;
+        }
+    }
 }

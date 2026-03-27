@@ -19,16 +19,7 @@ import java.util.logging.Logger;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.Part;
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.UUID;
-import java.util.Scanner;
-import com.aisthea.fashion.util.Constants;
 import com.aisthea.fashion.util.ImageUploadHelper;
-import java.util.stream.Collectors;
 
 /**
  * Handles all product-related requests for both public browsing and admin CRUD.
@@ -102,29 +93,31 @@ public class ProductServlet extends HttpServlet {
 
         try {
             switch (action) {
-                case "insert":
+                case "insert": {
                     productForRollback = extractProductFromRequest(request);
                     if (productService.addProduct(productForRollback)) {
-                        response.sendRedirect(request.getContextPath() + "/product?action=manage");
+                        String newName = productForRollback.getName() != null
+                                ? java.net.URLEncoder.encode(productForRollback.getName(), "UTF-8") : "";
+                        response.sendRedirect(request.getContextPath()
+                                + "/product?action=manage&flash=created&pname=" + newName);
                     } else {
-                        throw new Exception("productService.addProduct trả về false.");
+                        throw new Exception("Lưu sản phẩm vào database thất bại. Kiểm tra log server để biết chi tiết.");
                     }
                     break;
+                }
 
-                case "update":
+                case "update": {
                     String idParam = request.getParameter("id");
                     if (idParam == null || idParam.isBlank()) {
-                        // Attempt to read from part if it's there but getParameter failed (can happen in some multipart configs)
                         Part idPart = request.getPart("id");
                         if (idPart != null) {
-                            try (Scanner scanner = new Scanner(idPart.getInputStream())) {
+                            try (java.util.Scanner scanner = new java.util.Scanner(idPart.getInputStream())) {
                                 if (scanner.hasNext()) idParam = scanner.next();
                             }
                         }
                     }
-
                     if (idParam == null || idParam.isBlank()) {
-                        throw new Exception("ID của sản phẩm không được cung cấp (null). Vui lòng thử lại.");
+                        throw new Exception("ID sản phẩm không hợp lệ. Vui lòng quay lại và thử lại.");
                     }
 
                     int id = Integer.parseInt(idParam.trim());
@@ -132,38 +125,76 @@ public class ProductServlet extends HttpServlet {
                     productForRollback.setProductId(id);
 
                     if (productService.updateProduct(productForRollback)) {
-                        response.sendRedirect(request.getContextPath() + "/product?action=manage");
+                        String updName = productForRollback.getName() != null
+                                ? java.net.URLEncoder.encode(productForRollback.getName(), "UTF-8") : "";
+                        response.sendRedirect(request.getContextPath()
+                                + "/product?action=manage&flash=updated&pname=" + updName);
                     } else {
-                        throw new Exception("productService.updateProduct trả về false (Lỗi logic/DAO).");
+                        throw new Exception("Cập nhật sản phẩm thất bại. Có thể sản phẩm không tồn tại hoặc dữ liệu không hợp lệ.");
                     }
                     break;
+                }
+
+                case "toggle_status":
+                    response.setContentType("application/json;charset=UTF-8");
+                    try {
+                        int toggleId = Integer.parseInt(request.getParameter("id"));
+                        boolean tz = productService.toggleProductStatus(toggleId);
+                        response.getWriter().write("{\"success\":" + tz + "}");
+                    } catch (Exception ex) {
+                        response.getWriter().write("{\"success\":false,\"message\":\"" + ex.getMessage().replace("\"", "\\\"") + "\"}");
+                    }
+                    return;
+
+                case "quick_stock":
+                    response.setContentType("application/json;charset=UTF-8");
+                    try {
+                        int pcsId = Integer.parseInt(request.getParameter("pcsId"));
+                        int newStock = Integer.parseInt(request.getParameter("stock"));
+                        if (newStock < 0) throw new Exception("Stock không được âm.");
+                        productService.updateStock(pcsId, newStock);
+                        response.getWriter().write("{\"success\":true}");
+                    } catch (Exception ex) {
+                        response.getWriter().write("{\"success\":false,\"message\":\"" + ex.getMessage().replace("\"", "\\\"") + "\"}");
+                    }
+                    return;
 
                 default:
                     response.sendRedirect(request.getContextPath() + "/product?action=manage");
                     break;
             }
         } catch (Exception e) {
-            String errorMsg = e.getMessage();
-            if (e.getCause() != null) {
-                errorMsg += " -> " + e.getCause().getMessage();
+            String errorMsg = "Lỗi: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                errorMsg += " → " + e.getCause().getMessage();
             }
-            logger.log(Level.SEVERE, "Lỗi doPost ProductServlet (action=" + action + "): " + errorMsg, e);
+            logger.log(Level.SEVERE, "doPost ProductServlet (action=" + action + "): " + errorMsg, e);
 
-            request.setAttribute("error", "Lỗi xử lý " + action + ": " + errorMsg);
-            request.setAttribute("product", productForRollback);
+            /* ── Restore form with error: for 'update' load existing product from DB as fallback ── */
+            Product formProduct = productForRollback; // may be null if extractProductFromRequest threw
+            if (formProduct == null && "update".equals(action)) {
+                try {
+                    String idStr = getMultipartParam(request, "id");
+                    if (idStr != null && !idStr.isBlank()) {
+                        formProduct = productService.getProductById(Integer.parseInt(idStr.trim()));
+                    }
+                } catch (Exception ignored) { }
+            }
+
+            request.setAttribute("error", errorMsg);
+            request.setAttribute("product", formProduct);
             request.setAttribute("allCategories", categoryService.getAllCategories());
 
-            if (productForRollback != null && productForRollback.getCategory() != null) {
+            if (formProduct != null && formProduct.getCategory() != null) {
                 try {
-                    String parentIndexName = productForRollback.getCategory().getParentid();
-                    if (parentIndexName != null && !parentIndexName.isEmpty()) {
-                        Category parentCategory = categoryService.findCategoryByIndexNameAndGender(
-                                parentIndexName,
-                                productForRollback.getCategory().getGenderid());
-                        request.setAttribute("parentCategory", parentCategory);
+                    String parentIndexName = formProduct.getCategory().getParentid();
+                    if (parentIndexName != null && !parentIndexName.isBlank()) {
+                        Category parentCat = categoryService.findCategoryByIndexNameAndGender(
+                                parentIndexName, formProduct.getCategory().getGenderid());
+                        if (parentCat != null) request.setAttribute("parentCategory", parentCat);
                     }
                 } catch (Exception ex) {
-                    logger.warning("Không thể lấy thông tin danh mục cha để hiển thị lại: " + ex.getMessage());
+                    logger.warning("Could not resolve parent category for error rollback: " + ex.getMessage());
                 }
             }
 
@@ -317,21 +348,66 @@ public class ProductServlet extends HttpServlet {
     private void manageProducts(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, SQLException {
 
-        String searchName = request.getParameter("searchName");
+        String searchName    = request.getParameter("searchName");
+        String sortCol       = request.getParameter("sort");
+        String sortDir       = request.getParameter("dir");
+        String statusParam   = request.getParameter("statusFilter");
+        String psParam       = request.getParameter("ps");
+        
+        // Advanced filters
+        Integer genderId = null;
+        try {
+            String gid = request.getParameter("genderId");
+            if (gid != null && !gid.isBlank()) genderId = Integer.parseInt(gid.trim());
+        } catch (NumberFormatException ignored) {}
+        
+        String parentCategory = request.getParameter("parentCategory");
+        if (parentCategory != null && parentCategory.isBlank()) parentCategory = null;
+        
+        Integer subCategoryId = null;
+        try {
+            String sid = request.getParameter("subCategoryId");
+            if (sid != null && !sid.isBlank()) subCategoryId = Integer.parseInt(sid.trim());
+        } catch (NumberFormatException ignored) {}
 
-        List<Product> list = productService.getAllProducts();
+        // Parse page
+        int page = 1;
+        try {
+            String p = request.getParameter("page");
+            if (p != null) page = Math.max(1, Integer.parseInt(p.trim()));
+        } catch (NumberFormatException ignored) {}
 
-        if (searchName != null && !searchName.trim().isEmpty()) {
-            String searchLower = searchName.trim().toLowerCase();
+        // Parse pageSize (default 15, min 5, max 100)
+        int pageSize = 15;
+        try {
+            if (psParam != null) pageSize = Math.min(100, Math.max(5, Integer.parseInt(psParam.trim())));
+        } catch (NumberFormatException ignored) {}
 
-            list = list.stream()
-                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(searchLower))
-                    .collect(Collectors.toList());
-        }
+        // Parse statusFilter (null = all, 0 = hidden, 1 = active)
+        Integer statusFilter = null;
+        if ("1".equals(statusParam)) statusFilter = 1;
+        else if ("0".equals(statusParam)) statusFilter = 0;
 
-        request.setAttribute("productList", list);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/admin/product/manage_products.jsp");
-        dispatcher.forward(request, response);
+        // DAO overloads that support statusFilter and Categories
+        com.aisthea.fashion.dao.ProductDAO dao = new com.aisthea.fashion.dao.ProductDAO();
+        List<Product> list  = dao.getAdminProducts(page, pageSize, sortCol, sortDir, searchName, statusFilter, genderId, parentCategory, subCategoryId);
+        int totalRecords    = dao.countAdminProducts(searchName, statusFilter, genderId, parentCategory, subCategoryId);
+        int totalPages      = (int) Math.ceil((double) totalRecords / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        
+        // Fetch low stock system-wide
+        List<Product> lowStockList = dao.getLowStockProducts(5);
+
+        request.setAttribute("productList",   list);
+        request.setAttribute("currentPage",   page);
+        request.setAttribute("totalPages",    totalPages);
+        request.setAttribute("totalRecords",  totalRecords);
+        request.setAttribute("pageSize",      pageSize);
+        request.setAttribute("lowStockList",  lowStockList);
+        request.setAttribute("allCategories", categoryService.getAllCategories());
+
+        request.getRequestDispatcher("/WEB-INF/views/admin/product/manage_products.jsp")
+               .forward(request, response);
     }
 
     private void showNewForm(HttpServletRequest request, HttpServletResponse response)
@@ -342,20 +418,54 @@ public class ProductServlet extends HttpServlet {
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        int id = Integer.parseInt(request.getParameter("id"));
-        Product product = productService.getProductById(id);
 
-        if (product != null && product.getCategory() != null) {
-            Category childCategory = product.getCategory();
-            String parentIndexName = childCategory.getParentid();
-            if (parentIndexName != null && !parentIndexName.isEmpty()) {
-                Category parentCategory = categoryService.findCategoryByIndexNameAndGender(
-                        parentIndexName,
-                        childCategory.getGenderid());
-                request.setAttribute("parentCategory", parentCategory);
+        // ── 1. Validate parameter ID ─────────────────────────────────────────
+        String idParam = request.getParameter("id");
+        if (idParam == null || idParam.isBlank()) {
+            response.sendRedirect(request.getContextPath() + "/product?action=manage&error=invalid_id");
+            return;
+        }
+
+        int productId;
+        try {
+            productId = Integer.parseInt(idParam.trim());
+            if (productId <= 0) throw new NumberFormatException("non-positive");
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/product?action=manage&error=invalid_id");
+            return;
+        }
+
+        // ── 2. Load product via single JOIN query ────────────────────────────
+        Product product;
+        try {
+            product = productService.getProductById(productId);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error loading product id=" + productId, e);
+            response.sendRedirect(request.getContextPath() + "/product?action=manage&error=load_failed");
+            return;
+        }
+
+        // ── 3. Guard: product must exist ─────────────────────────────────────
+        if (product == null) {
+            response.sendRedirect(request.getContextPath() + "/product?action=manage&error=not_found");
+            return;
+        }
+
+        // ── 4. Resolve parent category for breadcrumb / form pre-fill ───────
+        if (product.getCategory() != null) {
+            String parentIndexName = product.getCategory().getParentid();
+            if (parentIndexName != null && !parentIndexName.isBlank()) {
+                try {
+                    Category parentCategory = categoryService.findCategoryByIndexNameAndGender(
+                            parentIndexName, product.getCategory().getGenderid());
+                    request.setAttribute("parentCategory", parentCategory);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, "Could not resolve parent category", e);
+                }
             }
         }
 
+        // ── 5. Set attributes & forward ──────────────────────────────────────
         request.setAttribute("product", product);
         request.setAttribute("allCategories", categoryService.getAllCategories());
         request.getRequestDispatcher("/WEB-INF/views/admin/product/edit_product.jsp").forward(request, response);
@@ -363,28 +473,38 @@ public class ProductServlet extends HttpServlet {
 
     private void viewProductDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        int id = Integer.parseInt(request.getParameter("id"));
+        int id;
+        try {
+            id = Integer.parseInt(request.getParameter("id"));
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/product?action=list");
+            return;
+        }
+
         Product product = productService.getProductById(id);
 
-        request.setAttribute("product", product);
-        request.setAttribute("colorSizes", productService.getColorSizesByProductId(id));
-        request.setAttribute("images", productService.getImagesByProductId(id));
+        // Block hidden or non-existent products from user-facing pages
+        if (product == null || product.getStatus() == 0) {
+            response.sendRedirect(request.getContextPath() + "/product?action=list");
+            return;
+        }
+
+        request.setAttribute("product",   product);
+        request.setAttribute("colorSizes", product.getColorSizes()); // already loaded by getProductById
+        request.setAttribute("images",    product.getImages());       // already loaded by getProductById
         request.setAttribute("feedbacks", feedbackService.getFeedbacksByProductId(id));
 
-        // Build breadcrumb data (same pattern as product list page)
-        if (product != null && product.getCategory() != null) {
+        // Build breadcrumb data
+        if (product.getCategory() != null) {
             Category category = product.getCategory();
             int genderId = category.getGenderid();
             request.setAttribute("genderLabel", genderId == 1 ? "Men" : "Women");
-            request.setAttribute("genderId", genderId);
+            request.setAttribute("genderId",    genderId);
 
-            // If this product's category is a child, fetch its parent too
             if (category.getParentid() != null && !category.getParentid().isBlank()) {
                 Category parentCat = categoryService.findCategoryByIndexNameAndGender(
                         category.getParentid(), genderId);
-                if (parentCat != null) {
-                    request.setAttribute("parentCategory", parentCat);
-                }
+                if (parentCat != null) request.setAttribute("parentCategory", parentCat);
             }
         }
 
@@ -402,13 +522,15 @@ public class ProductServlet extends HttpServlet {
         java.io.PrintWriter out = response.getWriter();
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            Product p = productService.getProductById(id);
+            Product p = productService.getProductById(id); // includes colorSizes via single JOIN
             if (p == null) {
                 out.print("{\"error\":\"Product not found\"}");
                 return;
             }
-            List<ProductColorSize> colorSizes = productService.getColorSizesByProductId(id);
-            List<com.aisthea.fashion.model.ProductImage> images = productService.getImagesByProductId(id);
+
+            // If AJAX request from Admin Quick Stock Modal — return minimal JSON
+            List<ProductColorSize> colorSizes = p.getColorSizes();
+            List<com.aisthea.fashion.model.ProductImage> images = p.getImages();
 
             StringBuilder json = new StringBuilder();
             json.append("{");
@@ -416,21 +538,19 @@ public class ProductServlet extends HttpServlet {
             json.append("\"name\":").append(jsonStr(p.getName())).append(",");
             json.append("\"brand\":").append(jsonStr(p.getBrand())).append(",");
             json.append("\"price\":").append(p.getPrice() != null ? p.getPrice().toPlainString() : "0").append(",");
-            json.append("\"discount\":").append(p.getDiscount() != null ? p.getDiscount().toPlainString() : "0")
-                    .append(",");
+            json.append("\"discount\":").append(p.getDiscount() != null ? p.getDiscount().toPlainString() : "0").append(",");
             json.append("\"bestseller\":").append(p.isBestseller()).append(",");
             // images array
             json.append("\"images\":[");
             if (images != null) {
                 for (int i = 0; i < images.size(); i++) {
                     com.aisthea.fashion.model.ProductImage img = images.get(i);
-                    if (i > 0)
-                        json.append(",");
-                    json.append("{");
+                    if (i > 0) json.append(",");
                     String resolvedUrl = img.getImageUrl();
                     if (resolvedUrl != null && !resolvedUrl.startsWith("http") && !resolvedUrl.startsWith("/") && !resolvedUrl.startsWith("data:")) {
                         resolvedUrl = request.getContextPath() + "/uploads/" + resolvedUrl;
                     }
+                    json.append("{");
                     json.append("\"imageUrl\":").append(jsonStr(resolvedUrl)).append(",");
                     json.append("\"color\":").append(jsonStr(img.getColor())).append(",");
                     json.append("\"isPrimary\":").append(img.isPrimary());
@@ -443,8 +563,7 @@ public class ProductServlet extends HttpServlet {
             if (colorSizes != null) {
                 for (int i = 0; i < colorSizes.size(); i++) {
                     ProductColorSize cs = colorSizes.get(i);
-                    if (i > 0)
-                        json.append(",");
+                    if (i > 0) json.append(",");
                     json.append("{");
                     json.append("\"productColorSizeId\":").append(cs.getProductColorSizeId()).append(",");
                     json.append("\"color\":").append(jsonStr(cs.getColor())).append(",");
@@ -465,9 +584,32 @@ public class ProductServlet extends HttpServlet {
 
     /** Escape a Java String to a JSON string literal (with quotes). */
     private static String jsonStr(String s) {
-        if (s == null)
-            return "null";
+        if (s == null) return "null";
         return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "") + "\"";
+    }
+
+
+    /**
+     * Safely reads a text parameter from a multipart request.
+     * Uses getParameter first (works in most cases), then falls back
+     * to reading from the Part's InputStream for robustness.
+     */
+    private String getMultipartParam(HttpServletRequest request, String name) {
+        // Primary: standard getParameter (works even in multipart on Tomcat 10+)
+        String val = request.getParameter(name);
+        if (val != null && !val.isBlank()) return val.trim();
+        // Fallback: read from Part stream
+        try {
+            Part part = request.getPart(name);
+            if (part != null && part.getSize() > 0) {
+                try (java.util.Scanner sc = new java.util.Scanner(
+                        part.getInputStream(), java.nio.charset.StandardCharsets.UTF_8)) {
+                    String raw = sc.useDelimiter("\\A").hasNext() ? sc.next().trim() : "";
+                    if (!raw.isBlank()) return raw;
+                }
+            }
+        } catch (Exception ignored) { }
+        return null;
     }
 
     private void deleteProduct(HttpServletRequest request, HttpServletResponse response)
@@ -502,61 +644,53 @@ public class ProductServlet extends HttpServlet {
         product.setBestseller(isBestseller);
 
         // ── Category resolution ───────────────────────────────────────────────
-        String categoryIdParam = request.getParameter("categoryid");
-        // Fallback 1: Javascript-synced hidden input
-        if (categoryIdParam == null || categoryIdParam.isBlank()) {
-            categoryIdParam = request.getParameter("categoryid_backup");
-        }
-        // Fallback 2: if child category is empty, use parent category value
-        if (categoryIdParam == null || categoryIdParam.isBlank()) {
-            categoryIdParam = request.getParameter("parentCategory");
-        }
+        // Under @MultipartConfig, getParameter() should still work for non-file fields,
+        // but we add Part-based fallback for reliability.
+        String categoryIdParam = getMultipartParam(request, "categoryid");
+        String backupParam     = getMultipartParam(request, "categoryid_backup");
+        String parentParam     = getMultipartParam(request, "parentCategory");
+        String genderIdParam   = getMultipartParam(request, "genderid");
 
-        String genderIdParam    = request.getParameter("genderid");
-        String parentCategoryParam = request.getParameter("parentCategory");
+        // Resolution order: child select → JS backup hidden → parent fallback
+        String resolvedCategoryId = categoryIdParam;
+        if (resolvedCategoryId == null || resolvedCategoryId.isBlank()) resolvedCategoryId = backupParam;
+        if (resolvedCategoryId == null || resolvedCategoryId.isBlank()) resolvedCategoryId = parentParam;
 
-        logger.info("DEBUG Categories: categoryid=" + categoryIdParam
-                + ", backup=" + request.getParameter("categoryid_backup")
-                + ", gender=" + genderIdParam
-                + ", parent=" + parentCategoryParam);
+        logger.info("[Category] child=" + categoryIdParam + ", backup=" + backupParam
+                + ", parent=" + parentParam + ", gender=" + genderIdParam
+                + ", resolved=" + resolvedCategoryId);
 
-        if (categoryIdParam == null || categoryIdParam.isBlank()) {
-            throw new ServletException("Danh mục con không được rỗng. "
-                    + "Chi tiết: {child=" + categoryIdParam
-                    + ", backup=" + request.getParameter("categoryid_backup")
-                    + ", parent=" + parentCategoryParam
-                    + "}. Vui lòng chọn lại danh mục.");
+        if (resolvedCategoryId == null || resolvedCategoryId.isBlank()) {
+            throw new ServletException("Danh mục sản phẩm không được để trống."
+                    + " Chi tiết: {child=" + categoryIdParam
+                    + ", backup=" + backupParam
+                    + ", parent=" + parentParam + "}."
+                    + " Vui lòng chọn lại danh mục.");
         }
 
         int categoryId;
         try {
-            categoryId = Integer.parseInt(categoryIdParam.trim());
+            categoryId = Integer.parseInt(resolvedCategoryId.trim());
         } catch (NumberFormatException e) {
-            throw new ServletException("Lỗi: categoryid không phải số. Giá trị: "
-                    + categoryIdParam + " (parent=" + parentCategoryParam + ")");
+            throw new ServletException("Mã danh mục không hợp lệ: \"" + resolvedCategoryId + "\"");
         }
 
         product.setCategory(categoryService.getCategoryById(categoryId));
 
         // ── Color / Size / Stock variants ─────────────────────────────────────
         List<ProductColorSize> colorSizeList = new ArrayList<>();
-        String[] colors = request.getParameterValues("stock_color");
-        String[] sizes  = request.getParameterValues("stock_size");
-        String[] stocks = request.getParameterValues("stock_stock");
-
-        if (colors != null && sizes != null && stocks != null) {
-            int rowCount = Math.min(colors.length, Math.min(sizes.length, stocks.length));
-            for (int i = 0; i < rowCount; i++) {
-                String color    = colors[i];
-                String size     = sizes[i];
-                String stockStr = stocks[i];
-                if (color != null && !color.isBlank()
-                        && size  != null && !size.isBlank()
-                        && stockStr != null && !stockStr.isBlank()) {
+        String variantsCombined = getMultipartParam(request, "variants_combined");
+        
+        if (variantsCombined != null && !variantsCombined.isBlank()) {
+            String[] rows = variantsCombined.split(";");
+            for (String row : rows) {
+                if (row.isBlank()) continue;
+                String[] parts = row.split("\\|");
+                if (parts.length >= 3) {
                     ProductColorSize pcs = new ProductColorSize();
-                    pcs.setColor(color.trim().toUpperCase());
-                    pcs.setSize(size.trim().toUpperCase());
-                    try { pcs.setStock(Integer.parseInt(stockStr.trim())); }
+                    pcs.setColor(parts[0].trim().toUpperCase());
+                    pcs.setSize(parts[1].trim().toUpperCase());
+                    try { pcs.setStock(Integer.parseInt(parts[2].trim())); }
                     catch (NumberFormatException e) { pcs.setStock(0); }
                     pcs.setProduct(product);
                     colorSizeList.add(pcs);
@@ -566,39 +700,39 @@ public class ProductServlet extends HttpServlet {
         product.setColorSizes(colorSizeList);
 
         // ── Image processing ───────────────────────────────────────────────────
-        // Allowed upload extensions (whitelist against arbitrary file upload).
-        java.util.Set<String> ALLOWED_EXTS = new java.util.HashSet<>(
-                java.util.Arrays.asList(".jpg", ".jpeg", ".png", ".gif", ".webp"));
-
         List<ProductImage> imageList     = new ArrayList<>();
-        String[]  urls       = request.getParameterValues("image_url");
-        String[]  imgColors  = request.getParameterValues("image_color");
-        String[]  imgIndexes = request.getParameterValues("image_index");
-        String    primaryImageIndex = request.getParameter("image_isprimary");
+        String imagesCombined = getMultipartParam(request, "images_combined");
+        String primaryImageIndex = getMultipartParam(request, "image_isprimary");
 
-        if (urls != null && imgColors != null && imgIndexes != null) {
-            int imageRowCount = Math.min(urls.length, Math.min(imgColors.length, imgIndexes.length));
+        if (imagesCombined != null && !imagesCombined.isBlank()) {
+            String[] rows = imagesCombined.split(";");
+            for (String row : rows) {
+                if (row.isBlank()) continue;
+                String[] parts = row.split("\\|", 3); // max 3 splits to allow empty color
+                if (parts.length >= 3) {
+                    String url   = parts[0].trim();
+                    String color = parts[1].trim();
+                    String idx   = parts[2].trim();
 
-            for (int i = 0; i < imageRowCount; i++) {
-                String url   = urls[i];
-                String idx   = imgIndexes[i];
-                String color = (imgColors[i] != null && !imgColors[i].isBlank())
-                               ? imgColors[i].trim() : "";
+                    // Priority: device-upload overrides the URL field
+                    try {
+                        Part filePart = request.getPart("image_file_" + idx);
+                        if (filePart != null && filePart.getSize() > 0) {
+                            String uploaded = ImageUploadHelper.save(filePart, "product");
+                            if (uploaded != null) {
+                                url = uploaded;
+                            }
+                        }
+                    } catch (Exception ignored) { }
 
-                // Priority: device-upload overrides the URL field
-                Part filePart = request.getPart("image_file_" + idx);
-                String uploaded = ImageUploadHelper.save(filePart, "product");
-                if (uploaded != null) {
-                    url = uploaded;
-                }
-
-                if (url != null && !url.isBlank()) {
-                    ProductImage img = new ProductImage();
-                    img.setImageUrl(url.trim());
-                    img.setColor(color);
-                    img.setPrimary(idx != null && idx.equals(primaryImageIndex));
-                    img.setProduct(product);
-                    imageList.add(img);
+                    if (!url.isBlank()) {
+                        ProductImage img = new ProductImage();
+                        img.setImageUrl(url);
+                        img.setColor(color);
+                        img.setPrimary(idx.equals(primaryImageIndex));
+                        img.setProduct(product);
+                        imageList.add(img);
+                    }
                 }
             }
         }

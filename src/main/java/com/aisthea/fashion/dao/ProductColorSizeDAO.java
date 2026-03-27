@@ -81,16 +81,17 @@ public class ProductColorSizeDAO implements IProductColorSizeDAO {
 
     @Override
     public void updateStock(int productColorSizeId, int newStock) throws SQLException {
-        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(UPDATE_STOCK)) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(UPDATE_STOCK)) {
             ps.setInt(1, newStock);
             ps.setInt(2, productColorSizeId);
-            int rowsUpdated = ps.executeUpdate();
-            if (rowsUpdated > 0) {
-                logger.info("Updated successfully!");
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                throw new SQLException("No variant found with productColorSizeId=" + productColorSizeId);
             }
-        } catch (SQLException e) {
-            printSQLException(e);
+            logger.info("Stock updated: pcsId=" + productColorSizeId + " → " + newStock);
         }
+        // Let SQLException propagate — do NOT silent-catch here
     }
 
     @Override

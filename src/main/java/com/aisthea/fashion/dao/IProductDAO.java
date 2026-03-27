@@ -2,7 +2,6 @@ package com.aisthea.fashion.dao;
 
 import com.aisthea.fashion.model.Product;
 import java.math.BigDecimal;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -47,5 +46,15 @@ public interface IProductDAO {
     List<Product> getTopExpensiveProducts(int limit) throws SQLException;
 
     String getInventorySummary() throws SQLException;
+
+    // Phân trang & Quản lý Admin
+    List<Product> getAdminProducts(int page, int pageSize, String sortCol, String sortDir, String search) throws SQLException;
+    List<Product> getAdminProducts(int page, int pageSize, String sortCol, String sortDir, String search, Integer statusFilter, Integer genderId, String parentCategory, Integer subCategoryId) throws SQLException;
+    int countAdminProducts(String search) throws SQLException;
+    int countAdminProducts(String search, Integer statusFilter, Integer genderId, String parentCategory, Integer subCategoryId) throws SQLException;
+    boolean toggleProductStatus(int productId) throws SQLException;
+    
+    // Báo cáo Low Stock toàn hệ thống
+    List<Product> getLowStockProducts(int stockThreshold) throws SQLException;
 
 }

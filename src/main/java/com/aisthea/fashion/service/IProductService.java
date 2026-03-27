@@ -52,4 +52,10 @@ public interface IProductService {
     void updateProductImage(ProductImage img);
 
     void deleteImagesByProductId(int productId);
+
+    List<Product> getAdminProducts(int page, int pageSize, String sortCol, String sortDir, String search);
+
+    int countAdminProducts(String search);
+
+    boolean toggleProductStatus(int productId);
 }

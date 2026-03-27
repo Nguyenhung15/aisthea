@@ -59,6 +59,21 @@ public class DatabaseConfig {
             logger.info("   - Pool Size: {} - {}", config.getMinimumIdle(), config.getMaximumPoolSize());
             logger.info("   - Environment: {}", AppConfig.getEnvironment());
 
+            // Auto-migrate schema for new features: status column
+            try (Connection conn = dataSource.getConnection();
+                 java.sql.Statement stmt = conn.createStatement()) {
+                try {
+                    stmt.executeQuery("SELECT status FROM Products WHERE 1=0");
+                } catch (SQLException e) {
+                    if (e.getMessage() != null && (e.getMessage().toLowerCase().contains("invalid column name") || e.getMessage().toLowerCase().contains("unknown column"))) {
+                        stmt.executeUpdate("ALTER TABLE Products ADD status INT DEFAULT 1");
+                        logger.info("✅ Database Migration: Added 'status' column to Products table");
+                    }
+                }
+            } catch (Exception ex) {
+                logger.warn("⚠️ Cannot auto-migrate database schema: " + ex.getMessage());
+            }
+
         } catch (Exception e) {
             logger.error("❌ Failed to initialize database connection pool", e);
             throw new RuntimeException("Failed to initialize database connection pool", e);
