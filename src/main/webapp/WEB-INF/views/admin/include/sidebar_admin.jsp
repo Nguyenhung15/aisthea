@@ -79,28 +79,29 @@
 
         <style>
             .lux-sidebar__logo-container {
-                margin-top: 10px;
-                /* Đã đẩy lên 10px */
-                margin-left: 10px;
-                margin-bottom: var(--space-3xl);
+                margin-top: 0;
+                margin-left: 0;
+                margin-bottom: var(--space-lg);
+                display: flex;
+                justify-content: center;
             }
 
             .lux-sidebar__logo {
                 display: flex;
-                align-items: center;
-                /* Căn giữa tâm Logo và Chữ */
-                gap: 15px;
-                /* Khoảng cách giữa hình và chữ */
+                align-items: flex-end; /* Căn lề dưới cho đồng bộ */
+                justify-content: center;
+                gap: 12px;
                 text-decoration: none;
+                width: 100%;
             }
 
             .lux-sidebar__logo-img {
-                height: 60px;
-                /* Tăng kích thước Logo lên (điều chỉnh số này để to hơn) */
+                height: 52px; /* Thu nhỏ chút để không bị quá to so với chữ khi căn lề dưới */
                 width: auto;
                 object-fit: contain;
                 filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12));
                 transition: transform 0.3s ease;
+                margin-bottom: -3px; /* Tinh chỉnh nhỏ để sát vào chân chữ hơn */
             }
 
             .lux-sidebar__logo:hover .lux-sidebar__logo-img {
@@ -109,10 +110,11 @@
 
             .lux-sidebar__logo-text {
                 font-family: var(--font-serif);
-                font-size: 1.5rem;
+                font-size: 1.6rem;
                 font-weight: 700;
                 letter-spacing: 1px;
                 color: var(--color-primary);
+                line-height: 1; /* Cần line-height 1 để căn lề dưới chuẩn xác */
             }
         </style>
 
