@@ -1297,10 +1297,10 @@
                                         }
                                     }
 
-                                    // ── Helpful Button AJAX ───────────────────────────
+                                    // ── Helpful Button AJAX (toggle like/unlike) ──────────────
                                     window.handleHelpful = function (feedbackId, btn) {
-                                        if (btn.hasAttribute('disabled')) return;
-                                        btn.setAttribute('disabled', 'true');
+                                        if (btn.dataset.loading === 'true') return;
+                                        btn.dataset.loading = 'true';
 
                                         const formData = new URLSearchParams();
                                         formData.append('action', 'incrementHelpful');
@@ -1315,61 +1315,57 @@
                                             .then(data => {
                                                 if (data.success) {
                                                     const countSpan = btn.querySelector('.count');
-                                                    if (countSpan) {
-                                                        const currentCount = parseInt(countSpan.textContent);
-                                                        countSpan.textContent = currentCount + 1;
-                                                    }
-
-                                                    // Make the button look permanently "liked" and unclickable
-                                                    btn.style.color = '#f43f5e'; // rose-500
-                                                    btn.style.cursor = 'not-allowed';
-                                                    btn.classList.remove('hover:text-rose-500');
-
                                                     const icon = btn.querySelector('.material-symbols-outlined');
-                                                    if (icon) {
-                                                        icon.style.fontVariationSettings = "'FILL' 1";
-                                                        icon.classList.remove('group-hover/btn:scale-110');
+                                                    const nowLiked = data.liked;
 
-                                                        // Heart beat animation once
-                                                        icon.style.transform = 'scale(1.3)';
-                                                        setTimeout(() => icon.style.transform = 'scale(1)', 300);
+                                                    // Update count
+                                                    if (countSpan) {
+                                                        const current = parseInt(countSpan.textContent) || 0;
+                                                        countSpan.textContent = nowLiked ? current + 1 : Math.max(0, current - 1);
                                                     }
 
-                                                    // Remove the onclick event so it can't be clicked again
-                                                    btn.removeAttribute('onclick');
-
-                                                    // Save to LocalStorage for persistence
-                                                    const liked = JSON.parse(localStorage.getItem('likedFeedbacks') || '[]');
-                                                    if (!liked.includes(feedbackId)) {
-                                                        liked.push(feedbackId);
+                                                    // Update button visual state
+                                                    if (nowLiked) {
+                                                        btn.style.color = '#f43f5e';
+                                                        btn.dataset.liked = 'true';
+                                                        if (icon) {
+                                                            icon.style.fontVariationSettings = "'FILL' 1";
+                                                            // Heart beat animation
+                                                            icon.style.transform = 'scale(1.3)';
+                                                            setTimeout(() => icon.style.transform = 'scale(1)', 300);
+                                                        }
+                                                        // Sync localStorage
+                                                        const liked = JSON.parse(localStorage.getItem('likedFeedbacks') || '[]');
+                                                        if (!liked.includes(feedbackId)) { liked.push(feedbackId); }
+                                                        localStorage.setItem('likedFeedbacks', JSON.stringify(liked));
+                                                    } else {
+                                                        btn.style.color = '';
+                                                        btn.dataset.liked = 'false';
+                                                        if (icon) {
+                                                            icon.style.fontVariationSettings = "'FILL' 0";
+                                                        }
+                                                        // Remove from localStorage
+                                                        const liked = JSON.parse(localStorage.getItem('likedFeedbacks') || '[]');
+                                                        const idx = liked.indexOf(feedbackId);
+                                                        if (idx > -1) liked.splice(idx, 1);
                                                         localStorage.setItem('likedFeedbacks', JSON.stringify(liked));
                                                     }
-                                                } else {
-                                                    btn.removeAttribute('disabled');
                                                 }
                                             })
-                                            .catch(err => {
-                                                console.error('Error:', err);
-                                                btn.removeAttribute('disabled');
-                                            });
+                                            .catch(err => { console.error('Error:', err); })
+                                            .finally(() => { btn.dataset.loading = 'false'; });
                                     };
 
-                                    // Hydrate helpful buttons on load
+                                    // Hydrate helpful buttons on load (mark as liked if in localStorage)
                                     const likedFeedbacks = JSON.parse(localStorage.getItem('likedFeedbacks') || '[]');
                                     if (likedFeedbacks.length > 0) {
                                         document.querySelectorAll('.helpful-btn').forEach(btn => {
                                             const fbId = parseInt(btn.dataset.fbid);
                                             if (likedFeedbacks.includes(fbId)) {
-                                                btn.setAttribute('disabled', 'true');
+                                                btn.dataset.liked = 'true';
                                                 btn.style.color = '#f43f5e';
-                                                btn.style.cursor = 'not-allowed';
-                                                btn.classList.remove('hover:text-rose-500');
-                                                btn.removeAttribute('onclick');
                                                 const icon = btn.querySelector('.material-symbols-outlined');
-                                                if (icon) {
-                                                    icon.style.fontVariationSettings = "'FILL' 1";
-                                                    icon.classList.remove('group-hover/btn:scale-110');
-                                                }
+                                                if (icon) icon.style.fontVariationSettings = "'FILL' 1";
                                             }
                                         });
                                     }

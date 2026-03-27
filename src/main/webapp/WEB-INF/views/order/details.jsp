@@ -598,9 +598,8 @@
                     <div class="glass-card bg-white/95 rounded-2xl w-full max-w-md shadow-2xl animate-scale-in flex flex-col" style="max-height:90vh;">
                         <%-- Fixed header --%>
                         <div class="px-8 pt-8 pb-4 shrink-0">
-                            <h3 class="font-serif text-2xl font-semibold text-slate-800 mb-2">H\u1ee7y \u0110\u01a1n H\u00e0ng</h3>
-                            <p class="text-sm text-slate-500">Xin vui l\u00f2ng cho ch\u00fang t\u00f4i bi\u1ebft l\u00fd do b\u1ea1n mu\u1ed1n h\u1ee7y \u0111\u01a1n
-                                h\u00e0ng n\u00e0y.</p>
+                            <h3 class="font-serif text-2xl font-semibold text-slate-800 mb-2">Hủy Đơn Hàng</h3>
+                            <p class="text-sm text-slate-500">Xin vui lòng cho chúng tôi biết lý do bạn muốn hủy đơn hàng này.</p>
                         </div>
                         <%-- Scrollable body --%>
                         <div class="overflow-y-auto flex-1 px-8 pb-8">
@@ -704,7 +703,7 @@
 
                 <%-- ══════  ADDRESS CHANGE MODAL  ══════ --%>
                 <div id="addressModal" class="modal">
-                    <div class="glass-card bg-white/98 rounded-2xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden">
+                    <div class="bg-gradient-to-br from-sky-50 via-white to-blue-50 rounded-2xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden border border-sky-100">
 
                         <%-- Header --%>
                         <div class="bg-gradient-to-r from-[#024acf]/5 to-[#0288D1]/5 px-8 py-6 border-b border-sky-100 flex items-center justify-between">
@@ -753,31 +752,40 @@
                                     </div>
                                 </div>
 
-                                <%-- Province --%>
+                                <%-- Province custom dropdown --%>
                                 <div class="space-y-1">
                                     <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tỉnh / Thành phố <span class="text-red-400">*</span></label>
-                                    <div class="relative">
-                                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none">location_city</span>
-                                        <select id="au_province" name="newProvince"
-                                            class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white appearance-none transition-all"
-                                            onchange="auLoadWardsByProvince(this.value); clearAuErr('au_province','err-au_province')">
-                                            <option value="">-- Chọn Tỉnh/Thành Phố --</option>
-                                        </select>
+                                    <input type="hidden" id="au_province" name="newProvince">
+                                    <div class="relative" id="au_province_wrap">
+                                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none z-10">location_city</span>
+                                        <div id="au_province_btn"
+                                            class="w-full pl-9 pr-8 py-2.5 text-sm border border-slate-200 rounded-xl bg-white cursor-pointer flex items-center select-none transition-all"
+                                            onclick="auToggleDrop('province')">
+                                            <span id="au_province_label" class="text-slate-400">-- Chọn Tỉnh/Thành Phố --</span>
+                                        </div>
+                                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none">expand_more</span>
+                                        <div id="au_province_list"
+                                            class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto">
+                                        </div>
                                     </div>
                                     <p id="err-au_province" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                 </div>
 
-                                <%-- Ward --%>
+                                <%-- Ward custom dropdown --%>
                                 <div class="space-y-1">
                                     <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phường / Xã <span class="text-red-400">*</span></label>
-                                    <div class="relative">
-                                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none">holiday_village</span>
-                                        <select id="au_ward" name="newWard"
-                                            class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white appearance-none transition-all"
-                                            onchange="clearAuErr('au_ward','err-au_ward')"
-                                            disabled>
-                                            <option value="">-- Chọn Phường/Xã --</option>
-                                        </select>
+                                    <input type="hidden" id="au_ward" name="newWard">
+                                    <div class="relative" id="au_ward_wrap">
+                                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none z-10">holiday_village</span>
+                                        <div id="au_ward_btn"
+                                            class="w-full pl-9 pr-8 py-2.5 text-sm border border-slate-200 rounded-xl bg-white cursor-pointer flex items-center select-none transition-all opacity-50 pointer-events-none"
+                                            onclick="auToggleDrop('ward')">
+                                            <span id="au_ward_label" class="text-slate-400">-- Chọn Phường/Xã --</span>
+                                        </div>
+                                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none">expand_more</span>
+                                        <div id="au_ward_list"
+                                            class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto">
+                                        </div>
                                     </div>
                                     <p id="err-au_ward" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                 </div>
@@ -973,9 +981,8 @@
                     function openAddressModal() {
                         var am = document.getElementById("addressModal");
                         am.classList.add("active");
-                        // Load provinces on first open
-                        var pSel = document.getElementById("au_province");
-                        if (pSel && pSel.options.length <= 1) auLoadProvinces();
+                        // Preload provinces into custom dropdown list
+                        auLoadProvinces();
                     }
                     function closeAddressModal() {
                         document.getElementById("addressModal").classList.remove("active");
@@ -1113,59 +1120,109 @@
                         if (selected) handleReasonChange(selected);
                     }
 
-                    // ── Address Modal: Province / District / Ward API ────────────
-                    function auLoadProvinces() {
-                        const sel = document.getElementById('au_province');
-                        sel.innerHTML = '<option value="">Đang tải...</option>';
-                        fetch('https://provinces.open-api.vn/api/p/')
-                            .then(r => r.json())
-                            .then(data => {
-                                sel.innerHTML = '<option value="">-- Chọn Tỉnh/Thành --</option>';
-                                data.forEach(p => {
-                                    // value = tên tỉnh (để gửi lên server), data-code = mã số (để load ward)
-                                    sel.innerHTML += '<option value="' + p.name + '" data-code="' + p.code + '">' + p.name + '</option>';
-                                });
-                            })
-                            .catch(() => { sel.innerHTML = '<option value="">Lỗi tải dữ liệu</option>'; });
+                    // ── Address Modal: Custom Dropdown Logic ─────────────────────
+                    var _auProvinces = []; // cache
+
+                    function auToggleDrop(type) {
+                        var list = document.getElementById('au_' + type + '_list');
+                        var isHidden = list.classList.contains('hidden');
+                        // Close all dropdowns
+                        ['province','ward'].forEach(function(t) {
+                            document.getElementById('au_' + t + '_list').classList.add('hidden');
+                        });
+                        if (isHidden) list.classList.remove('hidden');
                     }
 
-                    // Load all wards in the selected province (skip district step)
-                    function auLoadWardsByProvince(provinceName) {
-                        var wardSel = document.getElementById('au_ward');
-                        wardSel.innerHTML = '<option value="">Đang tải...</option>';
-                        wardSel.disabled = true;
-                        if (!provinceName) {
-                            wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                            return;
+                    // Close dropdowns when clicking outside
+                    document.addEventListener('click', function(e) {
+                        if (!e.target.closest('#au_province_wrap') && !e.target.closest('#au_ward_wrap')) {
+                            ['province','ward'].forEach(function(t) {
+                                var l = document.getElementById('au_' + t + '_list');
+                                if (l) l.classList.add('hidden');
+                            });
                         }
-                        // Lấy code từ data-code của option được chọn
-                        var provSel = document.getElementById('au_province');
-                        var selectedOpt = provSel.options[provSel.selectedIndex];
-                        var provinceCode = selectedOpt ? selectedOpt.getAttribute('data-code') : null;
+                    });
+
+                    function auBuildProvList(data) {
+                        _auProvinces = data;
+                        var list = document.getElementById('au_province_list');
+                        list.innerHTML = '';
+                        data.forEach(function(p) {
+                            var item = document.createElement('div');
+                            item.className = 'px-4 py-2.5 text-sm cursor-pointer hover:bg-sky-50 text-slate-700';
+                            item.textContent = p.name;
+                            item.setAttribute('data-code', p.code);
+                            item.setAttribute('data-name', p.name);
+                            item.addEventListener('click', function() { auPickProvince(p.name, p.code); });
+                            list.appendChild(item);
+                        });
+                    }
+
+                    function auPickProvince(name, code) {
+                        document.getElementById('au_province').value = name;
+                        document.getElementById('au_province_label').textContent = name;
+                        document.getElementById('au_province_label').classList.remove('text-slate-400');
+                        document.getElementById('au_province_list').classList.add('hidden');
+                        clearAuErr('au_province','err-au_province');
+                        // Reset ward
+                        document.getElementById('au_ward').value = '';
+                        document.getElementById('au_ward_label').textContent = '-- Chọn Phường/Xã --';
+                        document.getElementById('au_ward_label').classList.add('text-slate-400');
+                        document.getElementById('au_ward_list').innerHTML = '';
+                        var wardBtn = document.getElementById('au_ward_btn');
+                        wardBtn.classList.add('opacity-50','pointer-events-none');
+                        auLoadWardsByProvince(name, code);
+                    }
+
+                    function auPickWard(name) {
+                        document.getElementById('au_ward').value = name;
+                        document.getElementById('au_ward_label').textContent = name;
+                        document.getElementById('au_ward_label').classList.remove('text-slate-400');
+                        document.getElementById('au_ward_list').classList.add('hidden');
+                        clearAuErr('au_ward','err-au_ward');
+                    }
+
+                    function auLoadProvinces() {
+                        var list = document.getElementById('au_province_list');
+                        list.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">Đang tải...</div>';
+                        if (_auProvinces.length > 0) { auBuildProvList(_auProvinces); return; }
+                        fetch('https://provinces.open-api.vn/api/p/')
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) { auBuildProvList(data); })
+                            .catch(function() { list.innerHTML = '<div class="px-4 py-2 text-sm text-red-400">Lỗi tải dữ liệu</div>'; });
+                    }
+
+                    function auLoadWardsByProvince(provinceName, provinceCode) {
+                        var wardBtn = document.getElementById('au_ward_btn');
+                        var wardList = document.getElementById('au_ward_list');
+                        wardList.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">Đang tải...</div>';
                         if (!provinceCode) {
-                            wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                            return;
+                            // Try to find code from cache
+                            var match = _auProvinces.find(function(p) { return p.name === provinceName; });
+                            provinceCode = match ? match.code : null;
                         }
+                        if (!provinceCode) { wardList.innerHTML = '<div class="px-4 py-2 text-sm text-red-400">Không tìm được tỉnh</div>'; return; }
                         fetch('https://provinces.open-api.vn/api/p/' + provinceCode + '?depth=3')
                             .then(function(r) { return r.json(); })
                             .then(function(data) {
-                                wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                                wardList.innerHTML = '';
                                 var wards = [];
                                 (data.districts || []).forEach(function(d) {
-                                    (d.wards || []).forEach(function(w) {
-                                        wards.push(w.name);
-                                    });
+                                    (d.wards || []).forEach(function(w) { wards.push(w.name); });
                                 });
                                 wards.sort();
                                 wards.forEach(function(name) {
-                                    wardSel.innerHTML += '<option value="' + name + '">' + name + '</option>';
+                                    var item = document.createElement('div');
+                                    item.className = 'px-4 py-2.5 text-sm cursor-pointer hover:bg-sky-50 text-slate-700';
+                                    item.textContent = name;
+                                    item.addEventListener('click', function() { auPickWard(name); });
+                                    wardList.appendChild(item);
                                 });
-                                wardSel.disabled = false;
+                                wardBtn.classList.remove('opacity-50','pointer-events-none');
                             })
-                            .catch(function() {
-                                wardSel.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
-                            });
+                            .catch(function() { wardList.innerHTML = '<div class="px-4 py-2 text-sm text-red-400">Lỗi tải dữ liệu</div>'; });
                     }
+
 
                     // ── Address form validation ─────────────────────────────────
                     // ── Address modal inline error helpers ────────────────────────

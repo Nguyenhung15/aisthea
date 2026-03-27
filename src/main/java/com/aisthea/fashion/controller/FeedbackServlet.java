@@ -193,7 +193,8 @@ public class FeedbackServlet extends HttpServlet {
     // ─── Handlers ─────────────────────────────────────────────────────────────
 
     /**
-     * AJAX — increments helpful count once per session per feedback.
+     * AJAX — toggles helpful count once per session per feedback.
+     * If already liked → unlike (decrement). If not liked → like (increment).
      */
     private void handleIncrementHelpful(HttpServletRequest request,
                                         HttpServletResponse response,
@@ -206,23 +207,30 @@ public class FeedbackServlet extends HttpServlet {
                     (Map<Integer, Boolean>) session.getAttribute("likedMap");
             if (likedMap == null) likedMap = new HashMap<>();
 
-            if (likedMap.containsKey(feedbackId)) {
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"success\":false,\"message\":\"Already liked\"}");
-                return;
+            boolean alreadyLiked = likedMap.containsKey(feedbackId);
+            boolean ok;
+            boolean nowLiked;
+
+            if (alreadyLiked) {
+                // Unlike: decrement count
+                com.aisthea.fashion.dao.FeedbackDAO dao = new com.aisthea.fashion.dao.FeedbackDAO();
+                ok = dao.decrementHelpfulCount(feedbackId);
+                if (ok) likedMap.remove(feedbackId);
+                nowLiked = false;
+            } else {
+                // Like: increment count
+                ok = feedbackService.incrementHelpfulCount(feedbackId);
+                if (ok) likedMap.put(feedbackId, true);
+                nowLiked = true;
             }
 
-            boolean ok = feedbackService.incrementHelpfulCount(feedbackId);
-            if (ok) {
-                likedMap.put(feedbackId, true);
-                session.setAttribute("likedMap", likedMap);
-            }
+            session.setAttribute("likedMap", likedMap);
 
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"success\":" + ok + "}");
+            response.getWriter().write("{\"success\":" + ok + ",\"liked\":" + nowLiked + "}");
 
         } catch (Exception e) {
-            logger.log(Level.WARNING, "incrementHelpful failed", e);
+            logger.log(Level.WARNING, "toggleHelpful failed", e);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
     }

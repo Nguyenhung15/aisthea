@@ -280,6 +280,15 @@ public class FeedbackDAO implements IFeedbackDAO {
         }
     }
 
+    public boolean decrementHelpfulCount(int feedbackId) throws SQLException {
+        String sql = "UPDATE feedback SET helpful_count = CASE WHEN helpful_count > 0 THEN helpful_count - 1 ELSE 0 END WHERE feedbackid = ?";
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, feedbackId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     /**
      * Returns [avgRating, reviewCount] for a given product (only Visible
      * feedbacks).
