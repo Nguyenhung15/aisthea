@@ -480,7 +480,7 @@ public class OrderServlet extends HttpServlet {
                     && bankAcc != null && !bankAcc.trim().isEmpty()
                     && bankHolder != null && !bankHolder.trim().isEmpty();
 
-            if (hasBankInfo) {
+            if (hasBankInfo && bankAcc != null && bankName != null && bankHolder != null) {
                 reason += " | Hoàn tiền: STK " + bankAcc.trim()
                         + " - " + bankName.trim()
                         + " - " + bankHolder.trim().toUpperCase();
@@ -498,6 +498,8 @@ public class OrderServlet extends HttpServlet {
                     ReturnRequestDAO rrDao = new ReturnRequestDAO();
                     // Chỉ tạo nếu chưa có return request cho đơn này
                     if (rrDao.getByOrderId(orderId) == null) {
+                    // Lấy bank info nếu có (đơn QR)
+                    if (bankName != null && bankAcc != null && bankHolder != null) {
                         ReturnRequest rr = new ReturnRequest();
                         rr.setOrderId(orderId);
                         rr.setUserId(user.getUserId());
@@ -510,6 +512,7 @@ public class OrderServlet extends HttpServlet {
                             rr.setRefundAmount(orderBeforeCancel.getTotalprice());
                         }
                         rrDao.insert(rr);
+                    }
 
                         // Gửi thông báo cho Admin/Staff
                         try {

@@ -353,87 +353,110 @@
                                                     </c:if>
                                                 </div>
 
-                                                <%-- Payment Method --%>
-                                                    <div class="flex justify-between">
-                                                        <span class="text-slate-500">Payment</span>
+                                                <%-- Payment Method & Shipping Info --%>
+                                                    <div class="flex justify-between mb-2">
+                                                        <span class="text-slate-500">Phương thức thanh toán</span>
                                                         <c:choose>
                                                             <c:when test="${order.paymentMethod eq 'QR'}">
-                                                                <span class="font-medium text-slate-900">QR / Online</span>
+                                                                <span class="font-medium text-slate-900 bg-sky-50 px-2 py-0.5 rounded-md text-xs border border-sky-100">QR / Online</span>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <span class="font-medium text-slate-900">COD / Tiền mặt</span>
+                                                                <span class="font-medium text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md text-xs border border-slate-200">COD / Tiền mặt</span>
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </div>
-                                                    <%-- Paid / Unpaid badge --%>
+                                                    
+                                                    <div class="flex justify-between mb-4">
+                                                        <span class="text-slate-500">Phương thức ship</span>
+                                                        <c:choose>
+                                                            <c:when test="${fn:startsWith(order.shippingCode, 'EXPRESS')}">
+                                                                <span class="font-medium text-amber-600">Giao hàng Hỏa tốc</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="font-medium text-slate-900">Giao hàng Tiêu chuẩn</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
+
+                                                    <div class="border-t border-slate-100 pt-4 mt-2 space-y-2">
+                                                        <c:set var="subTotal" value="0"/>
+                                                        <c:forEach var="item" items="${order.items}">
+                                                            <c:set var="subTotal" value="${subTotal + (item.price * item.quantity)}"/>
+                                                        </c:forEach>
+                                                        
                                                         <div class="flex justify-between">
-                                                            <span class="text-slate-500">Paid Status</span>
+                                                            <span class="text-slate-500">Tiền sản phẩm</span>
+                                                            <span class="font-medium text-slate-900">
+                                                                <fmt:formatNumber value="${subTotal}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                            </span>
+                                                        </div>
+                                                        <div class="flex justify-between">
+                                                            <span class="text-slate-500">Phí ship</span>
                                                             <c:choose>
-                                                                <c:when test="${order.status eq 'Completed' or (order.paymentMethod eq 'QR' and order.status ne 'Pending')}">
-                                                                    <span class="font-medium text-slate-900">Đã thanh toán</span>
-                                                                </c:when>
-                                                                <c:when test="${order.status eq 'Cancelled'}">
-                                                                    <span class="font-medium text-slate-900">Đã hủy</span>
+                                                                <c:when test="${order.shippingFee != null && order.shippingFee > 0}">
+                                                                    <span class="font-medium text-slate-900">
+                                                                        <fmt:formatNumber value="${order.shippingFee}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                                    </span>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <span class="font-medium text-slate-900">Chưa thanh toán</span>
+                                                                    <span class="font-semibold text-emerald-600 tracking-wider">0đ (Miễn phí)</span>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </div>
-                                                        <div class="flex justify-between">
-                                                            <span class="text-slate-500">Shipping</span>
-                                                            <span class="font-medium text-slate-900">Complimentary</span>
-                                                        </div>
-                                                        <c:if
-                                                            test="${order.tierDiscount != null && order.tierDiscount > 0}">
+                                                        
+                                                        <c:if test="${order.tierDiscount != null && order.tierDiscount > 0}">
                                                             <div class="flex justify-between">
                                                                 <span class="text-amber-600 flex items-center gap-1">
-                                                                    <span
-                                                                        class="material-symbols-outlined text-sm">star</span>
+                                                                    <span class="material-symbols-outlined text-sm">star</span>
                                                                     Ưu đãi ${order.tierName}
                                                                 </span>
                                                                 <span class="text-amber-600 font-semibold">-
-                                                                    <fmt:formatNumber value="${order.tierDiscount}"
-                                                                        type="currency" currencyCode="VND"
-                                                                        maxFractionDigits="0" />
+                                                                    <fmt:formatNumber value="${order.tierDiscount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                                 </span>
                                                             </div>
                                                         </c:if>
-                                                        <c:if
-                                                            test="${order.birthdayDiscount != null && order.birthdayDiscount > 0}">
+                                                        <c:if test="${order.birthdayDiscount != null && order.birthdayDiscount > 0}">
                                                             <div class="flex justify-between">
                                                                 <span class="text-pink-600 flex items-center gap-1">
-                                                                    <span
-                                                                        class="material-symbols-outlined text-sm">cake</span>
+                                                                    <span class="material-symbols-outlined text-sm">cake</span>
                                                                     Ưu đãi Sinh nhật
                                                                 </span>
                                                                 <span class="text-pink-600 font-semibold">-
-                                                                    <fmt:formatNumber value="${order.birthdayDiscount}"
-                                                                        type="currency" currencyCode="VND"
-                                                                        maxFractionDigits="0" />
+                                                                    <fmt:formatNumber value="${order.birthdayDiscount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                                 </span>
                                                             </div>
                                                         </c:if>
-                                                        <c:if
-                                                            test="${order.discountAmount != null && order.discountAmount > 0}">
+                                                        <c:if test="${order.discountAmount != null && order.discountAmount > 0}">
                                                             <div class="flex justify-between">
                                                                 <span class="text-slate-500">Giảm giá (Voucher)</span>
                                                                 <span class="text-red-500 font-semibold">-
-                                                                    <fmt:formatNumber value="${order.discountAmount}"
-                                                                        type="currency" currencyCode="VND"
-                                                                        maxFractionDigits="0" />
+                                                                    <fmt:formatNumber value="${order.discountAmount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                                 </span>
                                                             </div>
                                                         </c:if>
-                                                        <div
-                                                            class="pt-4 border-t border-sky-100 flex justify-between items-baseline">
+                                                    </div>
+                                                    
+                                                    <div class="pt-4 mt-2 border-t border-sky-100 flex flex-col gap-1">
+                                                        <div class="flex justify-between items-baseline">
                                                             <span class="text-lg font-bold text-slate-900">Total</span>
                                                             <span class="text-2xl font-bold text-accent-blue">
-                                                                <fmt:formatNumber value="${order.totalprice}"
-                                                                    type="currency" currencyCode="VND"
-                                                                    maxFractionDigits="0" />
+                                                                <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                             </span>
                                                         </div>
+                                                        <div class="flex justify-between items-baseline text-xs">
+                                                            <span class="text-slate-500 italic">Đã thanh toán (Paid)</span>
+                                                            <c:choose>
+                                                                <c:when test="${order.paymentMethod eq 'QR'}">
+                                                                    <span class="font-bold text-emerald-600">
+                                                                        <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                                    </span>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <span class="font-bold text-slate-500">0đ</span>
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </div>
+                                                    </div>
                                             </div>
 
                                             <div class="pt-6 border-t border-slate-100 space-y-4">

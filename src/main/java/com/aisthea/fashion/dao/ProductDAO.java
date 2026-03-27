@@ -329,7 +329,7 @@ public class ProductDAO implements IProductDAO {
 
         // -- CATEGORY filters --
         if (categoryId != null) {
-            // Show products in this category OR any child category whose parentid = this category's index
+            // Show products in this exact category OR any child category whose parentid = this category's index
             sql.append("""
                 AND (
                     p.categoryid = ?
@@ -343,18 +343,22 @@ public class ProductDAO implements IProductDAO {
             params.add(categoryId);
             params.add(categoryId);
         } else if (categoryIndex != null && !categoryIndex.isBlank()) {
-            // Parent category index filter (e.g. navigating to /men/ao_thun)
+            // Parent/Child category index filter string (e.g. navigating to /men/ao_thun)
             sql.append("""
-                AND c.genderid = ?
                 AND (c.INDEX_name = ? OR c.parentid = ?)
             """);
-            params.add(genderId != null ? genderId : 1);
             params.add(categoryIndex);
             params.add(categoryIndex);
-        } else if (genderId != null) {
-            // Gender-only filter
+        }
+
+        // -- GENDER filter (Independent of Category) --
+        if (genderId != null) {
             sql.append(" AND c.genderid = ? ");
             params.add(genderId);
+        } else if (categoryIndex != null && !categoryIndex.isBlank() && categoryId == null) {
+            // Lỡ mega-menu gọi nhầm không có gender thì auto lấy men
+            sql.append(" AND c.genderid = ? ");
+            params.add(1);
         }
 
         // -- KEYWORD search --

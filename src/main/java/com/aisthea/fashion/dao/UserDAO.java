@@ -191,14 +191,65 @@ public class UserDAO implements IUserDAO {
 
     @Override
     public boolean deleteUser(int id) throws SQLException {
+        Connection conn = null;
         boolean rowDeleted = false;
-        try (Connection conn = DBConnection.getConnection();
-                PreparedStatement ps = conn.prepareStatement(DELETE_USER_SQL)) {
-            ps.setInt(1, id);
-            rowDeleted = ps.executeUpdate() > 0;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Kiểm tra nếu user có Order thì KHÔNG ĐƯỢC XÓA (Tránh mất lịch sử kế toán)
+            String checkOrders = "SELECT COUNT(*) FROM orders WHERE userid = ?";
+            try (PreparedStatement psCheck = conn.prepareStatement(checkOrders)) {
+                psCheck.setInt(1, id);
+                try (ResultSet rs = psCheck.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        return false; 
+                    }
+                }
+            }
+
+            // 2. Xóa các dữ liệu rác/phụ thuộc an toàn
+            String[] cleanupQueries = {
+                "DELETE FROM cart_items WHERE cartid IN (SELECT cartid FROM cart WHERE userid = ?)",
+                "DELETE FROM cart WHERE userid = ?",
+                "DELETE FROM UserAddresses WHERE UserID = ?",
+                "DELETE FROM membership_point WHERE userid = ?",
+                "DELETE FROM Notifications WHERE userid = ?",
+                "DELETE FROM feedback WHERE userid = ?",
+                "DELETE FROM emailverifications WHERE userid = ?",
+                "DELETE FROM emaillogs WHERE userid = ?",
+                "DELETE FROM birthday_discount_usage WHERE userid = ?"
+            };
+
+            for (String q : cleanupQueries) {
+                try (PreparedStatement ps = conn.prepareStatement(q)) {
+                    ps.setInt(1, id);
+                    ps.executeUpdate();
+                } catch (Exception ignore) {
+                    /* Ignored schema variances */
+                }
+            }
+
+            // 3. Xóa User
+            try (PreparedStatement ps = conn.prepareStatement(DELETE_USER_SQL)) {
+                ps.setInt(1, id);
+                rowDeleted = ps.executeUpdate() > 0;
+            }
+
+            conn.commit();
         } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) {}
+            }
             e.printStackTrace();
             throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ex) {}
+            }
         }
         return rowDeleted;
     }

@@ -267,10 +267,6 @@
                                                                 maxFractionDigits="0" />
                                                         </span>
                                                     </div>
-                                                    <div class="flex justify-between text-sm">
-                                                        <span class="text-slate-500 font-medium">Shipping</span>
-                                                        <span class="text-emerald-600 font-semibold italic">Free</span>
-                                                    </div>
                                                     <div
                                                         class="pt-6 border-t border-sky-100 flex justify-between items-baseline">
                                                         <span class="text-xl font-bold text-slate-900">Total</span>

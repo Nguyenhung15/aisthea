@@ -192,26 +192,22 @@ public class FeedbackServlet extends HttpServlet {
 
     // ─── Handlers ─────────────────────────────────────────────────────────────
 
-    /**
-     * AJAX — toggles helpful count once per session per feedback.
-     * If already liked → unlike (decrement). If not liked → like (increment).
-     */
     private void handleIncrementHelpful(HttpServletRequest request,
                                         HttpServletResponse response,
                                         HttpSession session) throws IOException {
         try {
             int feedbackId = Integer.parseInt(request.getParameter("feedbackId"));
+            boolean isUnlikeRequest = "true".equals(request.getParameter("isUnlike"));
 
             @SuppressWarnings("unchecked")
             Map<Integer, Boolean> likedMap =
                     (Map<Integer, Boolean>) session.getAttribute("likedMap");
             if (likedMap == null) likedMap = new HashMap<>();
 
-            boolean alreadyLiked = likedMap.containsKey(feedbackId);
             boolean ok;
             boolean nowLiked;
 
-            if (alreadyLiked) {
+            if (isUnlikeRequest) {
                 // Unlike: decrement count
                 com.aisthea.fashion.dao.FeedbackDAO dao = new com.aisthea.fashion.dao.FeedbackDAO();
                 ok = dao.decrementHelpfulCount(feedbackId);

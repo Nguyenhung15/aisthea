@@ -170,6 +170,20 @@
                           </c:choose>
                         </p>
 
+                        <!-- Images -->
+                        <c:if test="${not empty fb.imageUrl}">
+                          <div class="mt-3 overflow-hidden rounded-xl border border-slate-100 inline-block group/img">
+                            <c:set var="fbImgUrl" value="${fb.imageUrl}" />
+                            <c:if test="${not fn:startsWith(fbImgUrl, 'http') and not fn:startsWith(fbImgUrl, '/')}">
+                                <c:set var="fbImgUrl" value="${pageContext.request.contextPath}/uploads/${fbImgUrl}" />
+                            </c:if>
+                            <img src="${fbImgUrl}" alt="Feedback image" 
+                                 class="max-w-[100px] h-20 object-cover hover:scale-105 transition-transform cursor-pointer"
+                                 onclick="window.open('${fbImgUrl}', '_blank')"
+                                 onerror="this.parentElement.style.display='none'"/>
+                          </div>
+                        </c:if>
+
                         <!-- Date -->
                         <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
                           <span class="material-symbols-outlined text-[13px]">schedule</span>
@@ -238,10 +252,29 @@
       <h2 class="font-display font-bold text-2xl text-slate-900 mb-1">Sửa đánh giá</h2>
       <p id="editProductName" class="text-sm text-slate-500 mb-6"></p>
 
-      <form id="editForm" method="POST" action="${pageContext.request.contextPath}/feedback">
+      <form id="editForm" method="POST" action="${pageContext.request.contextPath}/feedback" enctype="multipart/form-data">
         <input type="hidden" name="action" value="update" />
         <input type="hidden" name="feedbackId" id="editFeedbackId" />
         <input type="hidden" name="rating" id="editRatingValue" value="0" />
+        <input type="hidden" name="existingImageUrl" id="editExistingImageUrl" />
+
+        <!-- Image Preview -->
+        <div class="mb-5 flex justify-center">
+          <div class="relative group inline-block">
+            <img id="editImagePreview" src="" alt="Preview" class="w-24 h-24 object-cover rounded-xl border border-slate-200 hidden" />
+            <div id="editImagePlaceholder" class="w-24 h-24 bg-slate-100 rounded-xl flex items-center justify-center border border-dashed border-slate-300">
+               <span class="material-symbols-outlined text-slate-400">add_a_photo</span>
+            </div>
+            <button type="button" id="editRemoveBtn" onclick="clearEditImg()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hidden">
+              <span class="material-symbols-outlined text-[12px]">close</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-5">
+           <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Đổi ảnh (không bắt buộc)</label>
+           <input type="file" name="feedbackImage" id="editImageInput" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" onchange="previewEditImage(this)"/>
+        </div>
 
         <!-- Stars editor -->
         <div class="mb-5">
@@ -315,17 +348,64 @@
       const rating = parseInt(btn.getAttribute('data-fb-rating')) || 0;
       const comment = btn.getAttribute('data-fb-comment') || '';
       const product = btn.getAttribute('data-fb-product') || '';
-      openEditModal(id, rating, comment, product);
+      const imageUrl = btn.getAttribute('data-fb-image') || '';
+      openEditModal(id, rating, comment, product, imageUrl);
     }
 
-    function openEditModal(id, rating, comment, productName) {
+    function openEditModal(id, rating, comment, productName, imageUrl) {
       document.getElementById('editFeedbackId').value = id;
       document.getElementById('editComment').value = comment;
       document.getElementById('editProductName').textContent = productName || 'Sản phẩm #' + id;
+      document.getElementById('editExistingImageUrl').value = imageUrl || '';
+      
+      const preview = document.getElementById('editImagePreview');
+      const placeholder = document.getElementById('editImagePlaceholder');
+      const removeBtn = document.getElementById('editRemoveBtn');
+      document.getElementById('editImageInput').value = '';
+
+      if (imageUrl && imageUrl.trim() !== '') {
+          let finalUrl = imageUrl;
+          if (!finalUrl.startsWith('http') && !finalUrl.startsWith('/')) {
+              finalUrl = '${pageContext.request.contextPath}/uploads/' + finalUrl;
+          }
+          preview.src = finalUrl;
+          preview.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+          removeBtn.classList.remove('hidden');
+      } else {
+          preview.src = '';
+          preview.classList.add('hidden');
+          placeholder.classList.remove('hidden');
+          removeBtn.classList.add('hidden');
+      }
+
       setEditStars(rating);
       document.getElementById('editModal').classList.remove('hidden');
       document.body.style.overflow = 'hidden';
     }
+
+    function previewEditImage(input) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('editImagePreview').src = e.target.result;
+          document.getElementById('editImagePreview').classList.remove('hidden');
+          document.getElementById('editImagePlaceholder').classList.add('hidden');
+          document.getElementById('editRemoveBtn').classList.remove('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function clearEditImg() {
+      document.getElementById('editImageInput').value = '';
+      document.getElementById('editImagePreview').src = '';
+      document.getElementById('editImagePreview').classList.add('hidden');
+      document.getElementById('editImagePlaceholder').classList.remove('hidden');
+      document.getElementById('editRemoveBtn').classList.add('hidden');
+      document.getElementById('editExistingImageUrl').value = '';
+    }
+
     function closeEditModal() {
       document.getElementById('editModal').classList.add('hidden');
       document.body.style.overflow = '';

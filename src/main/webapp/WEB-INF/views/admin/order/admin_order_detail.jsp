@@ -427,41 +427,99 @@
                                             <div class="info-row">
                                                 <span class="info-row__label">Order Date</span>
                                                 <span class="info-row__value">
-                                                    <fmt:formatDate value="${order.createdat}"
-                                                        pattern="dd/MM/yyyy HH:mm" />
+                                                    <fmt:formatDate value="${order.createdat}" pattern="dd/MM/yyyy HH:mm" />
                                                 </span>
                                             </div>
                                             <div class="info-row">
-                                                <span class="info-row__label">Payment</span>
-                                                <span class="info-row__value">${order.paymentMethod}</span>
+                                                <span class="info-row__label">Payment Method</span>
+                                                <span class="info-row__value" style="font-weight:600;">${order.paymentMethod}</span>
                                             </div>
+                                            <div class="info-row">
+                                                <span class="info-row__label">Shipping Method</span>
+                                                <c:choose>
+                                                    <c:when test="${fn:startsWith(order.shippingCode, 'EXPRESS')}">
+                                                        <span class="info-row__value" style="color:var(--color-warning-text); font-weight:600;">Giao hàng Hỏa tốc</span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="info-row__value" style="font-weight:500;">Giao hàng Tiêu chuẩn</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+
+                                            <c:set var="subTotal" value="0"/>
+                                            <c:forEach var="item" items="${order.items}">
+                                                <c:set var="subTotal" value="${subTotal + (item.price * item.quantity)}"/>
+                                            </c:forEach>
                                             
                                             <div class="info-row">
                                                 <span class="info-row__label">Subtotal</span>
                                                 <span class="info-row__value">
-                                                    <fmt:formatNumber value="${order.totalprice + (order.discountAmount != null ? order.discountAmount : 0)}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                    <fmt:formatNumber value="${subTotal}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                 </span>
                                             </div>
+                                            
+                                            <div class="info-row">
+                                                <span class="info-row__label">Shipping Fee</span>
+                                                <c:choose>
+                                                    <c:when test="${order.shippingFee != null && order.shippingFee > 0}">
+                                                        <span class="info-row__value" style="font-weight:600;">
+                                                            <fmt:formatNumber value="${order.shippingFee}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                        </span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="info-row__value" style="color:var(--color-success-text); font-weight:600;">0đ (Miễn phí)</span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                            
+                                            <c:if test="${order.tierDiscount != null && order.tierDiscount > 0}">
+                                                <div class="info-row">
+                                                    <span class="info-row__label" style="color:#d97706;">Ưu đãi ${order.tierName}</span>
+                                                    <span class="info-row__value" style="color:#d97706; font-weight:600;">
+                                                        - <fmt:formatNumber value="${order.tierDiscount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                    </span>
+                                                </div>
+                                            </c:if>
+
+                                            <c:if test="${order.birthdayDiscount != null && order.birthdayDiscount > 0}">
+                                                <div class="info-row">
+                                                    <span class="info-row__label" style="color:#db2777;">Ưu đãi Sinh nhật</span>
+                                                    <span class="info-row__value" style="color:#db2777; font-weight:600;">
+                                                        - <fmt:formatNumber value="${order.birthdayDiscount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                    </span>
+                                                </div>
+                                            </c:if>
                                             
                                             <c:if test="${not empty order.voucher}">
                                                 <div class="info-row">
                                                     <span class="info-row__label">Voucher 
                                                         <span style="font-size:0.7rem; background:#e0f2fe; color:#0284c7; padding:2px 6px; border-radius:4px; margin-left:4px;">${order.voucher.code} <c:if test="${order.voucher.discountType eq 'PERCENT'}">(${order.voucher.discountValue}%)</c:if></span>
                                                     </span>
-                                                    <span class="info-row__value" style="color:#10b981;">
+                                                    <span class="info-row__value" style="color:#dc2626; font-weight:600;">
                                                         - <fmt:formatNumber value="${order.discountAmount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                     </span>
                                                 </div>
                                             </c:if>
 
-                                            <div class="info-row" style="border-bottom:none;">
-                                                <span class="info-row__label"
-                                                    style="font-size:0.92rem;color:var(--color-text-primary);">Total</span>
-                                                <span
-                                                    style="font-family:var(--font-serif);font-size:1.5rem;font-weight:700;color:var(--color-primary);">
-                                                    <fmt:formatNumber value="${order.totalprice}" type="currency"
-                                                        currencyCode="VND" maxFractionDigits="0" />
+                                            <div class="info-row" style="border-top:1.5px solid var(--color-border-light);">
+                                                <span class="info-row__label" style="font-size:0.92rem;color:var(--color-text-primary);">Total</span>
+                                                <span style="font-family:var(--font-serif);font-size:1.5rem;font-weight:700;color:var(--color-primary);">
+                                                    <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" />
                                                 </span>
+                                            </div>
+
+                                            <div class="info-row" style="border-bottom:none;">
+                                                <span class="info-row__label" style="font-style:italic; font-size: 0.8rem;">Đã thanh toán (Paid)</span>
+                                                <c:choose>
+                                                    <c:when test="${order.paymentMethod eq 'QR'}">
+                                                        <span class="info-row__value" style="color:#059669; font-weight:700;">
+                                                            <fmt:formatNumber value="${order.totalprice}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                        </span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="info-row__value" style="color:var(--color-text-muted); font-weight:700;">0đ</span>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </div>
 
                                             <c:if test="${order.status eq 'Cancelled' and not empty order.cancelReason}">

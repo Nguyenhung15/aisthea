@@ -630,7 +630,7 @@
                                                                                         class="flex items-center gap-2">
                                                                                         <button type="button"
                                                                                             onclick="openEditModal(${fb.feedbackid}, ${fb.rating}, '${fn:replace(fb.comment, "'", "&#39;")}'
-                                                                                            , '${pageContext.request.contextPath}'
+                                                                                            , '${pageContext.request.contextPath}', '${not empty fb.imageUrl ? fb.imageUrl : ''}'
                                                                                             )"
                                                                                             class="flex items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors group/btn">
                                                                                             <span
@@ -650,26 +650,17 @@
                                                                                         </button>
                                                                                     </div>
                                                                                 </c:when>
-                                                                                <c:when
-                                                                                    test="${not empty sessionScope.likedMap and sessionScope.likedMap[fb.feedbackid]}">
-                                                                                    <button type="button" disabled
-                                                                                        class="flex items-center gap-1.5 text-rose-500 transition-all duration-300 group/btn cursor-not-allowed">
-                                                                                        <span
-                                                                                            class="material-symbols-outlined text-[24px]"
-                                                                                            style="font-variation-settings: 'FILL' 1;">favorite</span>
-                                                                                        <span
-                                                                                            class="text-[12px] font-bold tracking-widest ml-1"><span
-                                                                                                class="count">${fb.helpfulCount}</span></span>
-                                                                                    </button>
-                                                                                </c:when>
                                                                                 <c:otherwise>
+                                                                                    <c:set var="isLikedSession" value="${not empty sessionScope.likedMap and sessionScope.likedMap[fb.feedbackid]}" />
                                                                                     <button type="button"
                                                                                         onclick="handleHelpful(${fb.feedbackid}, this)"
                                                                                         data-fbid="${fb.feedbackid}"
-                                                                                        class="helpful-btn flex items-center gap-1.5 text-slate-400 hover:text-rose-500 transition-all duration-300 group/btn">
+                                                                                        data-liked="${isLikedSession ? 'true' : 'false'}"
+                                                                                        class="helpful-btn flex items-center gap-1.5 text-slate-400 hover:text-rose-500 transition-all duration-300 group/btn"
+                                                                                        style="${isLikedSession ? 'color: #f43f5e;' : ''}">
                                                                                         <span
                                                                                             class="material-symbols-outlined text-[24px] group-hover/btn:scale-110 transition-transform"
-                                                                                            style="font-variation-settings: 'FILL' 0;">favorite</span>
+                                                                                            style="font-variation-settings: 'FILL' ${isLikedSession ? 1 : 0};">favorite</span>
                                                                                         <span
                                                                                             class="text-[12px] font-bold tracking-widest ml-1"><span
                                                                                                 class="count">${fb.helpfulCount}</span></span>
@@ -681,17 +672,12 @@
 
                                                                     <div class="flex flex-col items-start">
                                                                         <c:if test="${not empty fb.imageUrl}">
-                                                                            <c:set var="resolvedImageUrl"
-                                                                                value="${fb.imageUrl}" />
-                                                                            <c:if
-                                                                                test="${not fn:startsWith(resolvedImageUrl, 'http') and not fn:startsWith(resolvedImageUrl, '/')}">
-                                                                                <c:set var="resolvedImageUrl"
-                                                                                    value="${pageContext.request.contextPath}/uploads/${resolvedImageUrl}" />
+                                                                            <c:set var="resolvedImageUrl" value="${fb.imageUrl}" />
+                                                                            <c:if test="${not fn:startsWith(resolvedImageUrl, 'http') and not fn:startsWith(resolvedImageUrl, '/')}">
+                                                                                <c:set var="resolvedImageUrl" value="${pageContext.request.contextPath}/uploads/${resolvedImageUrl}" />
                                                                             </c:if>
-                                                                            <div
-                                                                                class="mt-2 overflow-hidden rounded border border-slate-100 inline-block group/img">
-                                                                                <img src="${resolvedImageUrl}"
-                                                                                    alt="User upload"
+                                                                            <div class="mt-2 overflow-hidden rounded border border-slate-100 inline-block group/img">
+                                                                                <img src="${resolvedImageUrl}" alt="User upload"
                                                                                     class="max-w-[90px] aspect-square object-cover transition-transform duration-700 group-hover/img:scale-105 cursor-pointer"
                                                                                     onclick="openImageZoomModal('${resolvedImageUrl}')"
                                                                                     onerror="this.parentElement.style.display='none'">
@@ -1302,9 +1288,12 @@
                                         if (btn.dataset.loading === 'true') return;
                                         btn.dataset.loading = 'true';
 
+                                        const isUnlikeReq = btn.dataset.liked === 'true';
+
                                         const formData = new URLSearchParams();
                                         formData.append('action', 'incrementHelpful');
                                         formData.append('feedbackId', feedbackId);
+                                        formData.append('isUnlike', isUnlikeReq);
 
                                         fetch('${pageContext.request.contextPath}/feedback', {
                                             method: 'POST',
@@ -1379,7 +1368,7 @@
                             <div id="editFbModal"
                                 class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm hidden"
                                 onclick="if(event.target===this)closeEditModal()">
-                                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8">
+                                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8 max-h-[90vh] overflow-y-auto">
                                     <div class="flex items-center justify-between mb-6">
                                         <h3 class="font-serif text-xl text-slate-900">Chỉnh sửa đánh giá</h3>
                                         <button onclick="closeEditModal()"
@@ -1388,10 +1377,12 @@
                                                 class="material-symbols-outlined text-[18px] text-slate-600">close</span>
                                         </button>
                                     </div>
-                                    <form id="editFbForm" method="POST">
+                                    <form id="editFbForm" method="POST" enctype="multipart/form-data">
                                         <input type="hidden" name="action" value="update">
                                         <input type="hidden" name="feedbackId" id="editFbId">
                                         <input type="hidden" name="redirectUrl" id="editRedirectUrl">
+                                        <input type="hidden" name="existingImageUrl" id="editExistingImageUrl">
+                                        
                                         <!-- Stars -->
                                         <div class="mb-5">
                                             <label
@@ -1409,6 +1400,21 @@
                                             </div>
                                             <input type="hidden" name="rating" id="editRatingVal" value="5">
                                         </div>
+                                        
+                                        <!-- Image Upload -->
+                                        <div class="mb-5">
+                                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hình ảnh đính kèm (Tuỳ chọn)</label>
+                                            <div class="relative w-full h-24 border-2 border-dashed border-slate-200 rounded-xl hover:border-accent-blue transition-colors flex items-center justify-center overflow-hidden cursor-pointer" id="editUploadArea">
+                                                <input type="file" name="feedbackImage" id="editImageInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewEditImage(this)">
+                                                <div class="pointer-events-none flex flex-col items-center justify-center gap-2" id="editUploadPlaceholder">
+                                                    <span class="material-symbols-outlined text-3xl text-slate-300">add_photo_alternate</span>
+                                                    <span class="text-xs font-medium text-slate-500" id="editFileName">Nhấn để tải ảnh lên</span>
+                                                </div>
+                                                <img id="editImagePreview" class="absolute inset-0 w-full h-full object-cover hidden" alt="Preview">
+                                            </div>
+                                            <button type="button" id="editRemoveImageBtn" class="mt-2 text-xs font-semibold text-red-500 hover:text-red-700 hidden" onclick="removeEditImage()">Xoá ảnh</button>
+                                        </div>
+
                                         <!-- Comment -->
                                         <div class="mb-6">
                                             <label
@@ -1418,6 +1424,7 @@
                                                 class="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-800 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-slate-900"
                                                 placeholder="Chia sẻ cảm nhận của bạn..."></textarea>
                                         </div>
+                                        
                                         <div class="flex gap-3">
                                             <button type="button" onclick="closeEditModal()"
                                                 class="flex-1 py-3 border border-slate-200 rounded-xl text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">Huỷ</button>
@@ -1568,7 +1575,7 @@
                                 // ─── Edit modal ───
                                 var _editSelectedStar = 5;
 
-                                function openEditModal(fbId, rating, comment, ctx) {
+                                function openEditModal(fbId, rating, comment, ctx, imageUrl) {
                                     document.getElementById('editFbId').value = fbId;
                                     document.getElementById('editComment').value = comment;
                                     document.getElementById('editRedirectUrl').value = _currentUrl;
@@ -1576,8 +1583,56 @@
                                     _editSelectedStar = rating;
                                     renderEditStars(rating);
                                     document.getElementById('editRatingVal').value = rating;
+                                    
+                                    // Handle existing image
+                                    document.getElementById('editExistingImageUrl').value = imageUrl || '';
+                                    document.getElementById('editImageInput').value = '';
+                                    
+                                    const preview = document.getElementById('editImagePreview');
+                                    const placeholder = document.getElementById('editUploadPlaceholder');
+                                    const removeBtn = document.getElementById('editRemoveImageBtn');
+                                    
+                                    if (imageUrl && imageUrl.trim() !== '') {
+                                        let finalUrl = imageUrl;
+                                        if (!finalUrl.startsWith('http') && !finalUrl.startsWith('/')) {
+                                            finalUrl = _ctxPath + '/uploads/' + finalUrl;
+                                        }
+                                        preview.src = finalUrl;
+                                        preview.classList.remove('hidden');
+                                        placeholder.classList.add('hidden');
+                                        removeBtn.classList.remove('hidden');
+                                    } else {
+                                        preview.src = '';
+                                        preview.classList.add('hidden');
+                                        placeholder.classList.remove('hidden');
+                                        removeBtn.classList.add('hidden');
+                                    }
+                                    
                                     document.getElementById('editFbModal').classList.remove('hidden');
                                     document.body.style.overflow = 'hidden';
+                                }
+
+                                function previewEditImage(input) {
+                                    if (input.files && input.files[0]) {
+                                        const reader = new FileReader();
+                                        reader.onload = function(e) {
+                                            const preview = document.getElementById('editImagePreview');
+                                            preview.src = e.target.result;
+                                            preview.classList.remove('hidden');
+                                            document.getElementById('editUploadPlaceholder').classList.add('hidden');
+                                            document.getElementById('editRemoveImageBtn').classList.remove('hidden');
+                                        }
+                                        reader.readAsDataURL(input.files[0]);
+                                    }
+                                }
+                                
+                                function removeEditImage() {
+                                    document.getElementById('editImageInput').value = '';
+                                    document.getElementById('editExistingImageUrl').value = '';
+                                    document.getElementById('editImagePreview').src = '';
+                                    document.getElementById('editImagePreview').classList.add('hidden');
+                                    document.getElementById('editUploadPlaceholder').classList.remove('hidden');
+                                    document.getElementById('editRemoveImageBtn').classList.add('hidden');
                                 }
 
                                 function closeEditModal() {

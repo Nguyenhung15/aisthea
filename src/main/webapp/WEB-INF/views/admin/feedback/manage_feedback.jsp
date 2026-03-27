@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+        <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
             <!DOCTYPE html>
             <html lang="en">
 
@@ -457,11 +458,17 @@
 
                                                         <!-- Image -->
                                                         <c:if test="${not empty f.imageUrl}">
-                                                            <a href="${f.imageUrl}" target="_blank">
-                                                                <img src="${f.imageUrl}" alt="Customer photo"
-                                                                    class="fb-image-thumb"
+                                                            <c:set var="fbImgUrl" value="${f.imageUrl}" />
+                                                            <c:if test="${not fn:startsWith(fbImgUrl, 'http') and not fn:startsWith(fbImgUrl, '/')}">
+                                                                <c:set var="fbImgUrl" value="${pageContext.request.contextPath}/uploads/${fbImgUrl}" />
+                                                            </c:if>
+                                                            <div class="fb-image-container" style="display:inline-block; margin-top:8px;">
+                                                                <img src="${fbImgUrl}" alt="Customer photo"
+                                                                    class="fb-image-thumb" 
+                                                                    style="cursor:zoom-in; max-width:80px; border-radius:4px;"
+                                                                    onclick="window.open('${fbImgUrl}', '_blank')"
                                                                     onerror="this.style.display='none'">
-                                                            </a>
+                                                            </div>
                                                         </c:if>
 
                                                         <!-- Helpful -->

@@ -118,7 +118,14 @@ public class UserServlet extends HttpServlet {
     private void deleteUser(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
-        userService.deleteUser(id);
+        boolean ok = userService.deleteUser(id);
+        HttpSession session = request.getSession();
+        if (ok) {
+            session.setAttribute("successMsg", "Xóa tài khoản thành công.");
+            session.setAttribute("actionName", "deleted");
+        } else {
+            session.setAttribute("errorMsg", "Không thể xóa: Tài khoản này đã có lịch sử giao dịch (đơn hàng). Vui lòng khóa tài khoản (Ban) thay vì xóa để đảm bảo toàn vẹn dữ liệu hệ thống.");
+        }
         response.sendRedirect("user?action=list");
     }
 
@@ -129,20 +136,51 @@ public class UserServlet extends HttpServlet {
         if (reason == null || reason.trim().isEmpty())
             reason = "Vi phạm điều khoản sử dụng.";
         boolean ok = userService.banUser(id, reason.trim());
-        response.sendRedirect("user?action=list&success=" + (ok ? "banned" : "error"));
+        
+        HttpSession session = request.getSession();
+        if (ok) {
+            session.setAttribute("successMsg", "Đã khóa tài khoản thành công.");
+            session.setAttribute("actionName", "banned");
+        } else {
+            session.setAttribute("errorMsg", "Khóa tài khoản thất bại.");
+        }
+        response.sendRedirect("user?action=list");
     }
 
     private void unbanUser(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         boolean ok = userService.unbanUser(id);
-        response.sendRedirect("user?action=list&success=" + (ok ? "unbanned" : "error"));
+        
+        HttpSession session = request.getSession();
+        if (ok) {
+            session.setAttribute("successMsg", "Đã mở khóa tài khoản thành công.");
+            session.setAttribute("actionName", "unbanned");
+        } else {
+            session.setAttribute("errorMsg", "Mở khóa tài khoản thất bại.");
+        }
+        response.sendRedirect("user?action=list");
     }
 
     private void toggleUserStatus(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
+        User u = userService.selectUser(id);
+        boolean wasBanned = (u != null) && u.isBanned();
+        
         boolean ok = userService.toggleUserStatus(id);
-        response.sendRedirect("user?action=list&success=" + (ok ? "toggled" : "error"));
+        HttpSession session = request.getSession();
+        if (ok) {
+            if (wasBanned) {
+                session.setAttribute("successMsg", "Đã mở khóa tài khoản.");
+                session.setAttribute("actionName", "unbanned");
+            } else {
+                session.setAttribute("successMsg", "Đã khóa tài khoản.");
+                session.setAttribute("actionName", "banned");
+            }
+        } else {
+            session.setAttribute("errorMsg", "Lỗi thao tác trạng thái tài khoản.");
+        }
+        response.sendRedirect("user?action=list");
     }
 }

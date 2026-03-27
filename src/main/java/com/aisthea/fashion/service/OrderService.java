@@ -110,7 +110,7 @@ public class OrderService implements IOrderService {
         }
 
         BigDecimal shippingFee = new ShippingService().calculateShippingFee(provinceId, totalWeight, shippingMethod);
-        String shippingCode = "ATA" + System.currentTimeMillis();
+        String shippingCode = shippingMethod + "-ATA" + System.currentTimeMillis();
 
         // ── 3. Tính tổng tiền sau giảm + phí ship ──────────────────────────────
         BigDecimal cartTotal = cart.getTotalPrice();

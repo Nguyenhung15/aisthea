@@ -297,7 +297,7 @@
                                                   class="pointer-events-none w-full flex flex-col items-center gap-2 ${not empty existFb && not empty existFb.imageUrl ? '' : 'hidden'}">
                                                   <div class="relative inline-block">
                                                     <img id="previewImg_${pid}"
-                                                      src="${not empty existFb && not empty existFb.imageUrl ? pageContext.request.contextPath.concat('/uploads/').concat(existFb.imageUrl) : ''}"
+                                                      src="${not empty existFb && not empty existFb.imageUrl ? (fn:startsWith(existFb.imageUrl, 'http') or fn:startsWith(existFb.imageUrl, '/') ? existFb.imageUrl : pageContext.request.contextPath.concat('/uploads/').concat(existFb.imageUrl)) : ''}"
                                                       alt="Preview"
                                                       class="max-h-36 max-w-full rounded-xl shadow-md object-contain border border-white">
                                                     <button type="button"

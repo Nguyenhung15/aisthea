@@ -1745,27 +1745,35 @@
 
                                 // ===== CATEGORY CHANGE =====
                                 function handleCategoryChange(radio) {
-                                const form = document.getElementById('filterForm');
+                                    const form = document.getElementById('filterForm');
 
-                                // ALWAYS remove categoryIndex and genderid hidden inputs when user picks
-                                // a category from the sidebar. The categoryId param is sufficient for the
-                                // servlet (Priority 3) and contains its own gender info via the DB.
-                                // Keeping the old categoryIndex would cause the servlet to use Priority 2
-                                // (categoryIndex+genderid) and ignore the new categoryId selection entirely.
-                                const genderInput = form.querySelector('input[name="genderid"]');
-                                const categoryIndexInput = form.querySelector('input[name="categoryIndex"]');
-                                if (genderInput) genderInput.remove();
-                                if (categoryIndexInput) categoryIndexInput.remove();
+                                    // Remove categoryIndex to avoid interference, keeping focus on categoryId
+                                    const categoryIndexInput = form.querySelector('input[name="categoryIndex"]');
+                                    if (categoryIndexInput) categoryIndexInput.remove();
 
-                                // Reset secondary filters for a clean navigation experience
-                                const priceInput = form.querySelector('input[name="maxPrice"]');
-                                const colorInput = form.querySelector('input[name="color"]');
-                                const sizeInput = form.querySelector('input[name="size"]');
-                                if (priceInput) priceInput.disabled = true;
-                                if (colorInput) colorInput.value = '';
-                                if (sizeInput) sizeInput.value = '';
+                                    // Update genderid based on the selected radio button's data-genderid attribute
+                                    // This strictly enforces the correct gender scope even for shared category IDs
+                                    const newGenderId = radio.getAttribute('data-genderid');
+                                    if (newGenderId) {
+                                        let genderInput = form.querySelector('input[name="genderid"]');
+                                        if (!genderInput) {
+                                            genderInput = document.createElement('input');
+                                            genderInput.type = 'hidden';
+                                            genderInput.name = 'genderid';
+                                            form.appendChild(genderInput);
+                                        }
+                                        genderInput.value = newGenderId;
+                                    }
 
-                                form.submit();
+                                    // Reset secondary filters for a clean navigation experience
+                                    const priceInput = form.querySelector('input[name="maxPrice"]');
+                                    const colorInput = form.querySelector('input[name="color"]');
+                                    const sizeInput = form.querySelector('input[name="size"]');
+                                    if (priceInput) priceInput.disabled = true;
+                                    if (colorInput) colorInput.value = '';
+                                    if (sizeInput) sizeInput.value = '';
+
+                                    form.submit();
                                 }
 
                                 // ===== COLOR FILTER =====
