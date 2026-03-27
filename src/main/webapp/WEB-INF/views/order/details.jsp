@@ -524,19 +524,10 @@
                                                                                 <div class="flex flex-wrap gap-2">
                                                                                     <c:forEach var="evUrl" items="${returnRequest.evidenceUrls.split(',')}">
                                                                                         <c:set var="evTrimmed" value="${evUrl.trim()}" />
-                                                                                        <c:choose>
-                                                                                            <c:when test="${evTrimmed.endsWith('.mp4') || evTrimmed.endsWith('.mov') || evTrimmed.endsWith('.webm')}">
-                                                                                                <video src="${pageContext.request.contextPath}/uploads/${evTrimmed}" controls
-                                                                                                    class="w-24 h-24 object-cover rounded-lg border border-slate-200"
-                                                                                                    style="max-width:96px;max-height:96px;"></video>
-                                                                                            </c:when>
-                                                                                            <c:otherwise>
-                                                                                                <img src="${pageContext.request.contextPath}/uploads/${evTrimmed}"
-                                                                                                    class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition-opacity cursor-pointer"
-                                                                                                    alt="Evidence"
-                                                                                                    onclick="openLightbox('${pageContext.request.contextPath}/uploads/${evTrimmed}', 'image')">
-                                                                                            </c:otherwise>
-                                                                                        </c:choose>
+                                                                                        <img src="${pageContext.request.contextPath}/uploads/${evTrimmed}"
+                                                                                            class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition-opacity cursor-pointer"
+                                                                                            alt="Evidence"
+                                                                                            onclick="openLightbox('${pageContext.request.contextPath}/uploads/${evTrimmed}', 'image')">
                                                                                     </c:forEach>
                                                                                 </div>
                                                                             </div>
@@ -827,19 +818,9 @@
                                                     <input type="file" name="evidenceImages" id="evidenceImages" accept="image/*" multiple class="hidden" onchange="handleImageSelection(this)">
                                                 </label>
                                             </div>
-
-                                            <%-- Video Upload Box --%>
-                                            <div id="videoUploadContainer" class="flex flex-wrap gap-3">
-                                                <label id="videoUploadLabel" class="w-24 h-24 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all group shrink-0">
-                                                    <span class="material-symbols-outlined text-2xl text-slate-400 group-hover:text-slate-600">videocam</span>
-                                                    <span class="text-[10px] text-slate-500 mt-1 text-center leading-tight">Thêm Video<br><span id="vidCount">(0/1)</span></span>
-                                                    <input type="file" name="evidenceVideos" id="evidenceVideos" accept="video/*" class="hidden" onchange="handleVideoSelection(this)">
-                                                </label>
-                                            </div>
                                         </div>
                                         <div class="flex gap-10 mt-2">
-                                            <span class="text-[10px] text-slate-400">Tối đa: 5MB</span>
-                                            <span class="text-[10px] text-slate-400">Tối đa: 100MB</span>
+                                            <span class="text-[10px] text-slate-400">Tối đa: 5MB mỗi ảnh (Tối đa 6 ảnh)</span>
                                         </div>
                                         <p id="err-evidence" class="text-red-500 text-xs mt-1.5 hidden"></p>
                                     </div>
@@ -934,7 +915,6 @@
                     }
 
                     let selectedImages = [];
-                    let selectedVideo = null;
 
                     // ── Toast notification (replaces alert()) ────────────────────
                     function showReturnToast(msg, type) {
@@ -1021,47 +1001,7 @@
                         renderImagePreviews();
                     }
 
-                    function handleVideoSelection(input) {
-                        const file = input.files[0];
-                        if (!file) return;
-                        clearFieldError('evidence');
-                        if (file.size > 100 * 1024 * 1024) {
-                            showReturnToast('Video vượt quá giới hạn 100MB.', 'error');
-                            input.value = ""; return;
-                        }
-                        selectedVideo = file;
-                        renderVideoPreview();
-                        input.value = "";
-                    }
 
-                    function renderVideoPreview() {
-                        const container = document.getElementById('videoUploadContainer');
-                        const vidCount = document.getElementById('vidCount');
-                        const label = document.getElementById('videoUploadLabel');
-
-                        container.querySelectorAll('.video-preview-item').forEach(el => el.remove());
-
-                        if (selectedVideo) {
-                            const div = document.createElement('div');
-                            div.className = 'video-preview-item w-24 h-24 border border-slate-200 rounded-lg relative overflow-hidden bg-black shrink-0 flex items-center justify-center';
-                            div.innerHTML = `
-                                <span class="material-symbols-outlined text-white/50 text-2xl">play_circle</span>
-                                <button type="button" onclick="removeVideo()" class="absolute top-0 right-0 bg-black/70 text-white w-5 h-5 flex items-center justify-center text-[10px] rounded-bl-lg hover:bg-black/90">&times;</button>
-                                <div class="absolute bottom-1 left-1 right-1 bg-black/40 text-[8px] text-white px-1 truncate rounded">${selectedVideo.name}</div>
-                            `;
-                            container.insertBefore(div, label);
-                            label.style.display = 'none';
-                            vidCount.textContent = '(1/1)';
-                        } else {
-                            label.style.display = 'flex';
-                            vidCount.textContent = '(0/1)';
-                        }
-                    }
-
-                    function removeVideo() {
-                        selectedVideo = null;
-                        renderVideoPreview();
-                    }
 
                     // Intercept form submit — full validation + fetch
                     document.getElementById('returnForm').onsubmit = function(e) {
@@ -1083,8 +1023,8 @@
                         }
 
                         // 3. Evidence
-                        if (selectedImages.length === 0 && !selectedVideo) {
-                            showFieldError('evidence', 'Vui lòng đăng tải ít nhất 1 hình ảnh hoặc video bằng chứng.');
+                        if (selectedImages.length === 0) {
+                            showFieldError('evidence', 'Vui lòng đăng tải ít nhất 1 hình ảnh bằng chứng.');
                             hasError = true;
                         }
 
@@ -1112,38 +1052,67 @@
 
                         const formData = new FormData(this);
                         formData.delete('evidenceImages');
-                        formData.delete('evidenceVideos');
                         
                         selectedImages.forEach(file => {
                             formData.append('evidenceImages', file);
                         });
-                        if (selectedVideo) {
-                            formData.append('evidenceVideos', selectedVideo);
-                        }
 
                         // Show loading state
                         var submitBtn = document.querySelector('button[form="returnForm"]');
+                        var origBtnText = 'GỬI YÊU CẦU HOÀN TRẢ';
                         if (submitBtn) {
                             submitBtn.disabled = true;
                             submitBtn.textContent = 'ĐANG GỬI...';
                         }
 
-                        fetch(this.action, { method: 'POST', body: formData })
-                        .then(r => {
-                            if (r.redirected) {
-                                window.location.href = r.url;
-                            } else if (r.ok) {
+                        // Use XMLHttpRequest for reliable large file upload with session cookies
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', this.action, true);
+                        xhr.withCredentials = true; // ensure session cookie is sent
+
+                        // Upload progress for large files
+                        xhr.upload.onprogress = function(e) {
+                            if (e.lengthComputable && submitBtn) {
+                                var pct = Math.round((e.loaded / e.total) * 100);
+                                submitBtn.textContent = 'ĐANG TẢI LÊN... ' + pct + '%';
+                            }
+                        };
+
+                        xhr.onload = function() {
+                            // Server responds with redirect (302) — XHR follows it automatically
+                            // The final response will be the redirected page (200 OK HTML)
+                            // Check the final URL for success/error indicators
+                            var finalUrl = xhr.responseURL || '';
+                            if (finalUrl.indexOf('returnSubmitted=true') !== -1) {
+                                window.location.href = finalUrl;
+                            } else if (finalUrl.indexOf('returnError=') !== -1) {
+                                // Extract and display the error
+                                window.location.href = finalUrl;
+                            } else if (xhr.status >= 200 && xhr.status < 400) {
+                                // Generic success — redirect to order view
                                 window.location.href = '${pageContext.request.contextPath}/order?action=view&orderid=${order.orderid}&returnSubmitted=true';
                             } else {
-                                showReturnToast('Đã xảy ra lỗi khi gửi yêu cầu.', 'error');
-                                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'GỬI YÊU CẦU HOÀN TRẢ'; }
+                                console.error('Return submit failed: HTTP ' + xhr.status);
+                                showReturnToast('Đã xảy ra lỗi khi gửi yêu cầu (HTTP ' + xhr.status + ').', 'error');
+                                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = origBtnText; }
                             }
-                        })
-                        .catch(err => {
-                            console.error(err);
+                        };
+
+                        xhr.onerror = function() {
+                            console.error('XHR network error');
                             showReturnToast('Đã xảy ra lỗi kết nối. Vui lòng thử lại.', 'error');
-                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'GỬI YÊU CẦU HOÀN TRẢ'; }
-                        });
+                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = origBtnText; }
+                        };
+
+                        xhr.ontimeout = function() {
+                            console.error('XHR timeout');
+                            showReturnToast('Yêu cầu quá thời gian. Video có thể quá lớn, hãy thử file nhỏ hơn.', 'error');
+                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = origBtnText; }
+                        };
+
+                        // 5 minutes timeout for large video uploads
+                        xhr.timeout = 300000;
+                        xhr.send(formData);
                     };
 
                     function updateFileLabel(input) {

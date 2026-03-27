@@ -77,6 +77,11 @@
     <servlet>
         <servlet-name>OrderServlet</servlet-name>
         <servlet-class>com.aisthea.fashion.controller.OrderServlet</servlet-class>
+        <multipart-config>
+            <file-size-threshold>2097152</file-size-threshold> <!-- 2MB -->
+            <max-file-size>131072000</max-file-size> <!-- 125MB -->
+            <max-request-size>209715200</max-request-size> <!-- 200MB -->
+        </multipart-config>
     </servlet>
     <servlet>
         <servlet-name>DashboardServlet</servlet-name>

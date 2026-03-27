@@ -55,7 +55,7 @@ public class Constants {
     public static final String GENDER_UNISEX = "Unisex";
 
     // ─── File Upload ─────────────────────────────────────────────────────────
-    public static final long     MAX_FILE_SIZE              = 10L * 1024 * 1024; // 10 MB
+    public static final long     MAX_FILE_SIZE              = 125L * 1024 * 1024; // 125 MB
     public static final String[] ALLOWED_IMAGE_EXTENSIONS  = { "jpg", "jpeg", "png", "gif", "webp" };
 
     /**
