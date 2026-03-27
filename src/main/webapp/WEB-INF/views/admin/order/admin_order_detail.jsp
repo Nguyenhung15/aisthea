@@ -295,6 +295,50 @@
                                                     style="max-width:280px;">${order.address}</span>
                                             </div>
                                         </div>
+
+                                        <!-- Payment History -->
+                                        <c:if test="${not empty payments}">
+                                            <div class="detail-card" style="margin-top:var(--space-xl);">
+                                                <h3 class="detail-card__title"><i class="fa-solid fa-credit-card"
+                                                        style="margin-right:8px;font-size:0.9rem;"></i>Payment History
+                                                </h3>
+                                                <c:forEach var="payment" items="${payments}">
+                                                    <div class="info-row" style="flex-wrap: wrap; gap: 8px;">
+                                                        <span class="info-row__label">
+                                                            ${payment.method} 
+                                                            <c:set var="payStatusBg" value="#f1f5f9"/>
+                                                            <c:set var="payStatusColor" value="#475569"/>
+                                                            <c:if test="${payment.status == 'Pending'}"><c:set var="payStatusBg" value="#fef3c7"/><c:set var="payStatusColor" value="#d97706"/></c:if>
+                                                            <c:if test="${payment.status == 'Paid' or payment.status == 'Success'}"><c:set var="payStatusBg" value="#d1fae5"/><c:set var="payStatusColor" value="#059669"/></c:if>
+                                                            <c:if test="${payment.status == 'Refunded'}"><c:set var="payStatusBg" value="#fee2e2"/><c:set var="payStatusColor" value="#dc2626"/></c:if>
+                                                            <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: ${payStatusBg}; color: ${payStatusColor}; font-weight: 700; margin-left: 6px; text-transform: uppercase;">${payment.status}</span>
+                                                            
+                                                            <c:if test="${payment.status == 'Pending' and (payment.method == 'COD' or payment.method == 'Thanh toán khi nhận hàng')}">
+                                                                <form action="${pageContext.request.contextPath}/order" method="POST" style="display:inline; margin-left:10px;">
+                                                                    <input type="hidden" name="action" value="adminMarkPaid">
+                                                                    <input type="hidden" name="orderId" value="${order.orderid}">
+                                                                    <button type="submit" onclick="return confirm('Xác nhận đã thu tiền COD?');" style="background:#10b981; color:white; border:none; border-radius:4px; padding:3px 8px; font-size:0.7rem; font-weight:600; cursor:pointer; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"><i class="fa-solid fa-check" style="margin-right: 4px;"></i>Mark Paid</button>
+                                                                </form>
+                                                            </c:if>
+                                                        </span>
+                                                        <span class="info-row__value" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                                            <c:if test="${payment.amount != order.totalprice && payment.amount > 0 && payment.status != 'Refunded'}">
+                                                                <span style="color: #dc2626; font-size: 0.7rem; background: #fef2f2; padding: 2px 6px; border-radius: 4px; border: 1px solid #fecaca; margin-bottom: 4px;">Warning: Mismatch Amount</span>
+                                                            </c:if>
+                                                            <strong style="color: ${payment.amount < 0 ? '#dc2626' : 'var(--color-primary)'}; font-size: 1rem;">
+                                                                <fmt:formatNumber value="${payment.amount}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                            </strong>
+                                                            <c:if test="${not empty payment.transactionCode}">
+                                                                <span style="font-size: 0.75rem; color: var(--color-text-muted);">Mã GD: ${payment.transactionCode}</span>
+                                                            </c:if>
+                                                            <c:if test="${not empty payment.paidAt}">
+                                                                <span style="font-size: 0.7rem; color: var(--color-text-muted);"><fmt:formatDate value="${payment.paidAt}" pattern="HH:mm dd/MM/yyyy" /></span>
+                                                            </c:if>
+                                                        </span>
+                                                    </div>
+                                                </c:forEach>
+                                            </div>
+                                        </c:if>
                                     </div>
 
                                     <%-- Return Request Panel (admin view) --%>

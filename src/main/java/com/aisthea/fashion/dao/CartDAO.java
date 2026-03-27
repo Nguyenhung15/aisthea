@@ -62,7 +62,7 @@ public class CartDAO {
             return cart;
         }
 
-        String sql = "SELECT ci.quantity, ci.productcolorsizeid, p.productid, p.name, pcs.stock as pstock, " +
+        String sql = "SELECT ci.quantity, ci.productcolorsizeid, p.productid, p.name, p.weight, pcs.stock as pstock, " +
                 "p.price - (p.price * ISNULL(p.discount, 0) / 100.0) AS actualPrice, " +
                 "pcs.color, pcs.size, " +
                 "(SELECT TOP 1 imageurl FROM product_image pi WHERE pi.productid = p.productid AND pi.color = pcs.color ORDER BY pi.isprimary DESC) AS colorImage, " +
@@ -87,6 +87,14 @@ public class CartDAO {
                     item.setSize(rs.getString("size"));
                     item.setPrice(rs.getBigDecimal("actualPrice"));
                     item.setQuantity(rs.getInt("quantity"));
+                    
+                    // handle weight column which was newly added, default to 0.5 if missing
+                    double w = 0.5;
+                    try { 
+                        w = rs.getDouble("weight"); 
+                        if (rs.wasNull() || w <= 0) w = 0.5;
+                    } catch (SQLException ignored) {}
+                    item.setWeight(w);
                     
                     String img = rs.getString("colorImage");
                     if (img == null || img.isBlank()) img = rs.getString("thumbnail");

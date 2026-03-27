@@ -22,6 +22,7 @@ public class Product {
     private double avgRating;   // average star rating (0.0 – 5.0)
     private int reviewCount;    // number of visible reviews
     private int status = 1;     // 1 = Active/Visible, 0 = Hidden
+    private double weight = 0.5;// default weight
 
     public Product() {
     }
@@ -136,6 +137,14 @@ public class Product {
 
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
     }
 
     public List<ProductColorSize> getColorSizes() {

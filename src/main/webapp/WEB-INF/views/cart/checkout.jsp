@@ -213,7 +213,11 @@
                                                                     class="address-option relative flex p-3.5 rounded-lg border-2 cursor-pointer transition-all ${addr.addressId == defaultAddr.addressId ? 'border-accent-blue bg-white/50' : 'border-slate-200 bg-white/20'}"
                                                                     data-addr-name="${addr.fullName}"
                                                                     data-addr-phone="${addr.phone}"
+                                                                    data-addr-phone="${addr.phone}"
                                                                     data-addr-address="${addr.detailedAddress}"
+                                                                    data-addr-provinceid="${addr.provinceId}"
+                                                                    data-addr-districtid="${addr.districtId}"
+                                                                    data-addr-wardcode="${addr.wardCode}"
                                                                     onclick="selectAddressFromLabel(this)">
                                                                     <div class="flex items-center gap-3 w-full">
                                                                         <input type="radio" name="addressSelection"
@@ -292,7 +296,7 @@
                                                         <p id="err-newPhone" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                                     </div>
                                                 </div>
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                                     <div class="space-y-1">
                                                         <label class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Tỉnh/Thành Phố</label>
                                                         <select id="newProvince" onchange="updateHiddenFieldsFromNew(); clearNewAddrErr('newProvince', 'err-newProvince')"
@@ -300,6 +304,15 @@
                                                             <option value="">Chọn Tỉnh/Thành Phố</option>
                                                         </select>
                                                         <p id="err-newProvince" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <label class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Quận/Huyện</label>
+                                                        <select id="newDistrict" disabled
+                                                            onchange="updateHiddenFieldsFromNew(); clearNewAddrErr('newDistrict', 'err-newDistrict')"
+                                                            class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm">
+                                                            <option value="">Chọn Quận/Huyện</option>
+                                                        </select>
+                                                        <p id="err-newDistrict" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                                     </div>
                                                     <div class="space-y-1">
                                                         <label class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Phường/Xã</label>
@@ -336,6 +349,13 @@
                                                 value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.phone}</c:when><c:otherwise>${sessionScope.user.phone}</c:otherwise></c:choose>">
                                             <input type="hidden" name="address" id="hiddenAddress"
                                                 value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.detailedAddress}</c:when><c:otherwise></c:otherwise></c:choose>">
+                                            <input type="hidden" name="provinceId" id="hiddenProvinceId"
+                                                value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.provinceId}</c:when><c:otherwise>0</c:otherwise></c:choose>">
+                                            <input type="hidden" name="districtId" id="hiddenDistrictId"
+                                                value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.districtId}</c:when><c:otherwise>0</c:otherwise></c:choose>">
+                                            <input type="hidden" name="wardCode" id="hiddenWardCode"
+                                                value="<c:choose><c:when test='${not empty defaultAddr}'>${defaultAddr.wardCode}</c:when><c:otherwise></c:otherwise></c:choose>">
+
 
                                             <script>
                                                 function toggleAddressDropdown() {
@@ -343,10 +363,13 @@
                                                     document.getElementById('addressChevron').classList.toggle('rotated');
                                                 }
 
-                                                function selectAddress(name, phone, address, element) {
+                                                function selectAddress(name, phone, address, provinceId, districtId, wardCode, element) {
                                                     document.getElementById('hiddenFullname').value = name;
                                                     document.getElementById('hiddenPhone').value = phone;
                                                     document.getElementById('hiddenAddress').value = address;
+                                                    document.getElementById('hiddenProvinceId').value = provinceId;
+                                                    document.getElementById('hiddenDistrictId').value = districtId;
+                                                    document.getElementById('hiddenWardCode').value = wardCode;
 
                                                     const formContainer = document.getElementById('newAddressForm');
                                                     formContainer.classList.add('hidden');
@@ -370,14 +393,21 @@
                                                     // Close dropdown
                                                     document.getElementById('addressDropdownList').classList.remove('addr-open');
                                                     document.getElementById('addressChevron').classList.remove('rotated');
+                                                    
+                                                    // Immediately trigger real-time shipping calculation
+                                                    if (typeof calculateShippingFeeByProvince === 'function') {
+                                                        calculateShippingFeeByProvince(provinceId);
+                                                    }
                                                 }
 
-                                                // Wrapper: đọc data attributes từ label rồi gọi selectAddress
                                                 function selectAddressFromLabel(labelEl) {
                                                     const name = labelEl.getAttribute('data-addr-name') || '';
                                                     const phone = labelEl.getAttribute('data-addr-phone') || '';
                                                     const address = labelEl.getAttribute('data-addr-address') || '';
-                                                    selectAddress(name, phone, address, labelEl);
+                                                    const provinceId = labelEl.getAttribute('data-addr-provinceid') || '0';
+                                                    const districtId = labelEl.getAttribute('data-addr-districtid') || '0';
+                                                    const wardCode = labelEl.getAttribute('data-addr-wardcode') || '';
+                                                    selectAddress(name, phone, address, provinceId, districtId, wardCode, labelEl);
                                                 }
 
                                                 function toggleNewAddressForm(element) {
@@ -406,7 +436,22 @@
                                                 async function fetchAllData() {
                                                     try {
                                                         const response = await fetch('https://provinces.open-api.vn/api/?depth=3');
-                                                        allProvincesData = await response.json();
+                                                        let data = await response.json();
+                                                        
+                                                        // Map GSO (Tổng cục Thống kê) to GHN (Giao Hàng Nhanh) internal codes for major cities
+                                                        const gsoToGhn = {
+                                                            1: 201,   // Hà Nội
+                                                            79: 202,  // Hồ Chí Minh
+                                                            48: 203   // Đà Nẵng
+                                                        };
+                                                        
+                                                        data.forEach(p => {
+                                                            if (gsoToGhn[p.code]) {
+                                                                p.code = gsoToGhn[p.code];
+                                                            }
+                                                        });
+                                                        
+                                                        allProvincesData = data;
                                                         populateProvinces();
                                                     } catch (error) {
                                                         console.error('Lỗi tải dữ liệu địa chỉ:', error);
@@ -427,21 +472,58 @@
                                                 }
 
                                                 document.getElementById('newProvince').addEventListener('change', function () {
+                                                    const districtSelect = document.getElementById('newDistrict');
+                                                    const wardSelect = document.getElementById('newWard');
+                                                    districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+                                                    wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                                                    districtSelect.disabled = true;
+                                                    wardSelect.disabled = true;
+                                                    
+                                                    if (!this.value) {
+                                                        if (typeof calculateShippingFeeByProvince === 'function') {
+                                                            calculateShippingFeeByProvince(0);
+                                                        }
+                                                        return;
+                                                    }
+                                                    const code = parseInt(this.options[this.selectedIndex].getAttribute('data-code'));
+                                                    if (typeof calculateShippingFeeByProvince === 'function') {
+                                                        calculateShippingFeeByProvince(code);
+                                                    }
+                                                    
+                                                    const province = allProvincesData.find(p => p.code === code);
+                                                    if (!province || !province.districts) return;
+                                                    
+                                                    province.districts.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+                                                    province.districts.forEach(d => {
+                                                        const opt = document.createElement('option');
+                                                        opt.value = d.name;
+                                                        opt.setAttribute('data-code', d.code);
+                                                        opt.textContent = d.name;
+                                                        districtSelect.appendChild(opt);
+                                                    });
+                                                    districtSelect.disabled = false;
+                                                    updateHiddenFieldsFromNew();
+                                                });
+
+                                                document.getElementById('newDistrict').addEventListener('change', function () {
                                                     const wardSelect = document.getElementById('newWard');
                                                     wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
                                                     wardSelect.disabled = true;
+                                                    
                                                     if (!this.value) return;
-                                                    const code = parseInt(this.options[this.selectedIndex].getAttribute('data-code'));
-                                                    const province = allProvincesData.find(p => p.code === code);
+                                                    const provinceCode = parseInt(document.getElementById('newProvince').options[document.getElementById('newProvince').selectedIndex].getAttribute('data-code'));
+                                                    const province = allProvincesData.find(p => p.code === provinceCode);
                                                     if (!province || !province.districts) return;
-                                                    const allWards = [];
-                                                    province.districts.forEach(d => {
-                                                        if (d.wards) d.wards.forEach(w => allWards.push(w));
-                                                    });
-                                                    allWards.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-                                                    allWards.forEach(w => {
+                                                    
+                                                    const districtCode = parseInt(this.options[this.selectedIndex].getAttribute('data-code'));
+                                                    const district = province.districts.find(d => d.code === districtCode);
+                                                    if (!district || !district.wards) return;
+                                                    
+                                                    district.wards.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+                                                    district.wards.forEach(w => {
                                                         const opt = document.createElement('option');
                                                         opt.value = w.name;
+                                                        opt.setAttribute('data-code', w.code);
                                                         opt.textContent = w.name;
                                                         wardSelect.appendChild(opt);
                                                     });
@@ -455,10 +537,25 @@
                                                         document.getElementById('hiddenPhone').value = document.getElementById('newPhone').value;
                                                         let street = document.getElementById('newDetailedAddress').value;
                                                         let ward = document.getElementById('newWard').value;
+                                                        let district = document.getElementById('newDistrict').value;
                                                         let province = document.getElementById('newProvince').value;
+                                                        
                                                         let customAddress = street;
-                                                        if (ward && ward.trim() !== '') customAddress += ", " + ward;
-                                                        if (province && province.trim() !== '') customAddress += ", " + province;
+                                                        if (ward && ward.trim() !== '') {
+                                                            customAddress += ", " + ward;
+                                                            const selectedWardOption = document.getElementById('newWard').options[document.getElementById('newWard').selectedIndex];
+                                                            if (selectedWardOption) document.getElementById('hiddenWardCode').value = selectedWardOption.getAttribute('data-code') || '';
+                                                        }
+                                                        if (district && district.trim() !== '') {
+                                                            customAddress += ", " + district;
+                                                            const selectedDistOption = document.getElementById('newDistrict').options[document.getElementById('newDistrict').selectedIndex];
+                                                            if (selectedDistOption) document.getElementById('hiddenDistrictId').value = selectedDistOption.getAttribute('data-code') || '0';
+                                                        }
+                                                        if (province && province.trim() !== '') {
+                                                            customAddress += ", " + province;
+                                                            const selectedProvOption = document.getElementById('newProvince').options[document.getElementById('newProvince').selectedIndex];
+                                                            if (selectedProvOption) document.getElementById('hiddenProvinceId').value = selectedProvOption.getAttribute('data-code') || '0';
+                                                        }
                                                         document.getElementById('hiddenAddress').value = customAddress;
                                                     }
                                                 }
@@ -474,11 +571,17 @@
                                                             const addrName = label.getAttribute('data-addr-name') || '';
                                                             const addrPhone = label.getAttribute('data-addr-phone') || '';
                                                             const addrAddress = label.getAttribute('data-addr-address') || '';
+                                                            const addrProvinceId = label.getAttribute('data-addr-provinceid') || '0';
+                                                            const addrDistrictId = label.getAttribute('data-addr-districtid') || '0';
+                                                            const addrWardCode = label.getAttribute('data-addr-wardcode') || '';
 
                                                             if (addrName || addrAddress) {
                                                                 document.getElementById('hiddenFullname').value = addrName;
                                                                 document.getElementById('hiddenPhone').value = addrPhone;
                                                                 document.getElementById('hiddenAddress').value = addrAddress;
+                                                                document.getElementById('hiddenProvinceId').value = addrProvinceId;
+                                                                document.getElementById('hiddenDistrictId').value = addrDistrictId;
+                                                                document.getElementById('hiddenWardCode').value = addrWardCode;
 
                                                                 // Cập nhật lại preview card cho chắc
                                                                 document.getElementById('previewName').innerHTML =
@@ -494,45 +597,52 @@
                                     </section>
                                     <!-- Shipping Method Section -->
                                     <section>
-                                        <h2 class="font-serif mb-6 text-slate-800 tracking-wide font-semibold text-3xl">
-                                            Shipping Method</h2>
-                                        <div class="glass-card rounded-xl overflow-hidden border border-sky-100">
-                                            <div class="divide-y divide-sky-100">
-                                                <label
-                                                    class="flex items-center justify-between p-6 hover:bg-white/40 cursor-pointer">
-                                                    <div class="flex items-center gap-4">
-                                                        <input checked=""
-                                                            class="text-accent-blue focus:ring-accent-blue"
-                                                            name="shipping" type="radio" value="Express Courier" />
-                                                        <div>
-                                                            <p class="font-medium">Express Courier</p>
-                                                            <p class="text-xs text-slate-500 italic">2-3 Business Days •
-                                                                Carbon Neutral</p>
-                                                        </div>
+                                        <h2 class="font-serif mb-6 text-slate-800 tracking-wide font-semibold text-3xl">Shipping Method</h2>
+                                        <div class="glass-card rounded-xl p-6 bg-white/40 space-y-4" id="shippingOptionsContainer">
+                                            <!-- Standard -->
+                                            <label class="relative flex items-center justify-between p-5 rounded-xl border-2 border-accent-blue bg-white/80 cursor-pointer group transition-all" id="label-shipping-standard">
+                                                <input type="radio" name="shippingMethod" value="STANDARD" class="sr-only" checked onchange="updateShippingTotalUI()">
+                                                <div class="flex items-center gap-4">
+                                                    <span class="material-symbols-outlined text-accent-blue group-hover:scale-110 transition-transform text-3xl flex-shrink-0">local_shipping</span>
+                                                    <div>
+                                                        <p class="font-medium text-lg text-slate-800">Giao hàng tiêu chuẩn</p>
+                                                        <p class="text-sm text-slate-500 italic mt-1">3-5 ngày làm việc</p>
                                                     </div>
-                                                    <span class="font-medium">Free</span>
-                                                </label>
-                                                <label
-                                                    class="flex items-center justify-between p-6 hover:bg-white/40 cursor-pointer">
-                                                    <div class="flex items-center gap-4">
-                                                        <input class="text-accent-blue focus:ring-accent-blue"
-                                                            name="shipping" type="radio" value="Standard Delivery" />
-                                                        <div>
-                                                            <p class="font-medium">Standard Delivery</p>
-                                                            <p class="text-xs text-slate-500 italic">5-7 Business Days
-                                                            </p>
-                                                        </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="font-bold text-lg text-accent-blue" id="standardFeeDisplay">
+                                                        <c:choose>
+                                                            <c:when test="${initStandardFee > 0}">
+                                                                <fmt:formatNumber value="${initStandardFee}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                            </c:when>
+                                                            <c:otherwise>---</c:otherwise>
+                                                        </c:choose>
+                                                    </p>
+                                                </div>
+                                            </label>
+
+                                            <!-- Express -->
+                                            <label class="relative flex items-center justify-between p-5 rounded-xl border border-slate-200 bg-white/40 hover:bg-white/60 cursor-pointer group transition-all" id="label-shipping-express">
+                                                <input type="radio" name="shippingMethod" value="EXPRESS" class="sr-only" onchange="updateShippingTotalUI()">
+                                                <div class="flex items-center gap-4">
+                                                    <span class="material-symbols-outlined text-slate-400 group-hover:text-amber-500 group-hover:scale-110 transition-transform text-3xl flex-shrink-0">rocket_launch</span>
+                                                    <div>
+                                                        <p class="font-medium text-lg text-slate-800">Giao hàng hỏa tốc</p>
+                                                        <p class="text-sm text-slate-500 italic mt-1">1-2 ngày làm việc</p>
                                                     </div>
-                                                    <span class="font-medium text-emerald-600">Complimentary</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="mt-4 flex items-center gap-2 px-4">
-                                            <span
-                                                class="material-symbols-outlined text-slate-400 text-sm">calendar_today</span>
-                                            <p class="text-sm text-slate-600">Estimated Delivery: <span
-                                                    class="font-medium text-slate-900">Thursday, March 5th, 2026</span>
-                                            </p>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="font-bold text-lg text-slate-700" id="expressFeeDisplay">
+                                                        <c:choose>
+                                                            <c:when test="${initExpressFee > 0}">
+                                                                <fmt:formatNumber value="${initExpressFee}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                            </c:when>
+                                                            <c:otherwise>---</c:otherwise>
+                                                        </c:choose>
+                                                    </p>
+                                                </div>
+                                            </label>
+                                            <p class="text-xs text-sky-600 font-semibold mt-2">* Phí vận chuyển tự động tính dựa trên khu vực giao hàng</p>
                                         </div>
                                     </section>
                                     <!-- Payment Methods Section -->
@@ -703,8 +813,15 @@
                                                 </span>
                                             </div>
                                             <div class="flex justify-between text-sm">
-                                                <span class="text-slate-500">Shipping (Express)</span>
-                                                <span class="text-slate-900">Free</span>
+                                                <span class="text-slate-500">Phí Vận Chuyển</span>
+                                                <span class="text-slate-900 font-medium" id="shippingFeeDisplay">
+                                                    <c:choose>
+                                                        <c:when test="${initStandardFee > 0}">
+                                                            <fmt:formatNumber value="${initStandardFee}" type="currency" currencyCode="VND" maxFractionDigits="0" />
+                                                        </c:when>
+                                                        <c:otherwise>---</c:otherwise>
+                                                    </c:choose>
+                                                </span>
                                             </div>
                                             <%-- Tier membership discount row --%>
                                                 <c:if test="${not empty tierDiscountAmount and tierDiscountAmount > 0}">
@@ -786,21 +903,18 @@
                                                             </div>
                                                         </c:if>
 
-                                                        <c:set var="calcTotal"
-                                                            value="${sessionScope.checkoutCart.totalPrice}" />
-                                                        <c:if
-                                                            test="${not empty tierDiscountAmount and tierDiscountAmount > 0}">
-                                                            <c:set var="calcTotal"
-                                                                value="${calcTotal - tierDiscountAmount}" />
+                                                        <c:set var="calcTotal" value="${sessionScope.checkoutCart.totalPrice}" />
+                                                        <c:if test="${not empty tierDiscountAmount and tierDiscountAmount > 0}">
+                                                            <c:set var="calcTotal" value="${calcTotal - tierDiscountAmount}" />
                                                         </c:if>
-                                                        <c:if
-                                                            test="${not empty birthdayDiscountAmount and birthdayDiscountAmount > 0}">
-                                                            <c:set var="calcTotal"
-                                                                value="${calcTotal - birthdayDiscountAmount}" />
+                                                        <c:if test="${not empty birthdayDiscountAmount and birthdayDiscountAmount > 0}">
+                                                            <c:set var="calcTotal" value="${calcTotal - birthdayDiscountAmount}" />
                                                         </c:if>
                                                         <c:if test="${not empty sessionScope.appliedDiscount}">
-                                                            <c:set var="calcTotal"
-                                                                value="${calcTotal - sessionScope.appliedDiscount}" />
+                                                            <c:set var="calcTotal" value="${calcTotal - sessionScope.appliedDiscount}" />
+                                                        </c:if>
+                                                        <c:if test="${not empty initStandardFee and initStandardFee > 0}">
+                                                            <c:set var="calcTotal" value="${calcTotal + initStandardFee}" />
                                                         </c:if>
                                                         <c:if test="${calcTotal < 0}">
                                                             <c:set var="calcTotal" value="0" />
@@ -1126,7 +1240,7 @@
                             if (discountDisplay) discountDisplay.textContent = '-' + formatVND(discountAmt);
                             if (discountRow) discountRow.classList.remove('hidden');
 
-                            const newTotal = Math.max(0, cartTotal - tierDiscountAmt - birthdayDiscountAmt - discountAmt);
+                            const newTotal = Math.max(0, cartTotal - tierDiscountAmt - birthdayDiscountAmt - discountAmt + currentShippingFee);
                             if (totalDisplay) totalDisplay.textContent = formatVND(newTotal);
                             if (appliedBox) {
                                 appliedBox.classList.remove('hidden');
@@ -1134,6 +1248,90 @@
                                 if (appliedText) appliedText.textContent = 'Giảm ' + formatVND(discountAmt);
                             }
                         }
+
+                        // ── Shipping State: seed from server-computed values ──────────
+                        // These are already printed in the HTML; we seed JS vars to match
+                        // so updateGrandTotal() and toggling methods work correctly.
+                        let cachedStandardFee = '${initStandardFee}' === '' ? 0 : Number('${initStandardFee}');
+                        let cachedExpressFee  = '${initExpressFee}' === '' ? 0 : Number('${initExpressFee}');
+                        let currentShippingFee = cachedStandardFee; // STANDARD is default selected
+
+                        function updateShippingTotalUI() {
+                            const selectedMethod = document.querySelector('input[name="shippingMethod"]:checked');
+                            const val = selectedMethod ? selectedMethod.value : 'STANDARD';
+
+                            const stdLabel = document.getElementById('label-shipping-standard');
+                            const expLabel = document.getElementById('label-shipping-express');
+                            const stdDisplay = document.getElementById('standardFeeDisplay');
+                            const expDisplay = document.getElementById('expressFeeDisplay');
+
+                            if (stdLabel && expLabel) {
+                                const activeClass   = 'relative flex items-center justify-between p-5 rounded-xl border-2 border-accent-blue bg-white/80 cursor-pointer group transition-all';
+                                const inactiveClass = 'relative flex items-center justify-between p-5 rounded-xl border border-slate-200 bg-white/40 hover:bg-white/60 cursor-pointer group transition-all';
+                                stdLabel.className = val === 'STANDARD' ? activeClass : inactiveClass;
+                                expLabel.className = val === 'EXPRESS'  ? activeClass : inactiveClass;
+                            }
+
+                            if (stdDisplay && expDisplay) {
+                                stdDisplay.className = val === 'STANDARD' ? 'font-bold text-lg text-accent-blue' : 'font-bold text-lg text-slate-700';
+                                expDisplay.className = val === 'EXPRESS'  ? 'font-bold text-lg text-accent-blue' : 'font-bold text-lg text-slate-700';
+                            }
+
+                            const stdIcon = stdLabel?.querySelector('.material-symbols-outlined');
+                            const expIcon = expLabel?.querySelector('.material-symbols-outlined');
+                            if (stdIcon) stdIcon.className = val === 'STANDARD' ? 'material-symbols-outlined text-accent-blue group-hover:scale-110 transition-transform text-3xl flex-shrink-0' : 'material-symbols-outlined text-slate-400 group-hover:text-accent-blue group-hover:scale-110 transition-transform text-3xl flex-shrink-0';
+                            if (expIcon) expIcon.className = val === 'EXPRESS'  ? 'material-symbols-outlined text-amber-500 group-hover:scale-110 transition-transform text-3xl flex-shrink-0' : 'material-symbols-outlined text-slate-400 group-hover:text-amber-500 group-hover:scale-110 transition-transform text-3xl flex-shrink-0';
+
+                            currentShippingFee = val === 'STANDARD' ? cachedStandardFee : cachedExpressFee;
+                            const mainDisplay = document.getElementById('shippingFeeDisplay');
+                            if (mainDisplay) mainDisplay.textContent = formatVND(currentShippingFee);
+
+                            updateGrandTotal();
+                        }
+
+                        function updateGrandTotal() {
+                            const totalDisplay = document.getElementById('totalDisplay');
+                            const discountInput = document.getElementById('discountAmountInput');
+                            const currentDiscount = discountInput ? (parseFloat(discountInput.value) || 0) : 0;
+                            const newTotal = Math.max(0, cartTotal - tierDiscountAmt - birthdayDiscountAmt - currentDiscount + currentShippingFee);
+                            if (totalDisplay) totalDisplay.textContent = formatVND(newTotal);
+                        }
+
+                        // Only fired when user actively picks a DIFFERENT address
+                        async function calculateShippingFeeByProvince(provinceId) {
+                            if (!provinceId || provinceId == 0) {
+                                cachedStandardFee = 0; cachedExpressFee = 0;
+                                ['shippingFeeDisplay','standardFeeDisplay','expressFeeDisplay'].forEach(id => {
+                                    const el = document.getElementById(id);
+                                    if (el) el.textContent = '---';
+                                });
+                                currentShippingFee = 0;
+                                updateGrandTotal();
+                                return;
+                            }
+                            ['shippingFeeDisplay','standardFeeDisplay','expressFeeDisplay'].forEach(id => {
+                                const el = document.getElementById(id);
+                                if (el) el.textContent = '...';
+                            });
+                            try {
+                                const res = await fetch('${pageContext.request.contextPath}/cart?action=calculateShipping&provinceId=' + provinceId);
+                                const data = await res.json();
+                                if (data.success) {
+                                    cachedStandardFee = data.standardFee;
+                                    cachedExpressFee  = data.expressFee;
+                                    document.getElementById('standardFeeDisplay').textContent = formatVND(cachedStandardFee);
+                                    document.getElementById('expressFeeDisplay').textContent  = formatVND(cachedExpressFee);
+                                    updateShippingTotalUI();
+                                }
+                            } catch (e) {
+                                console.error('Lỗi tính phí ship:', e);
+                            }
+                        }
+
+                        document.addEventListener('DOMContentLoaded', () => {
+                            // Grand total already correct from server render; just sync JS state
+                            updateGrandTotal();
+                        });
 
                         function removeVoucher() {
                             fetch('${pageContext.request.contextPath}/voucher?action=remove', { method: 'POST' })

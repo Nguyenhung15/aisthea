@@ -10,8 +10,8 @@ public class OrderDAO implements IOrderDAO {
 
     private static final Logger logger = Logger.getLogger(OrderDAO.class.getName());
 
-    private static final String INSERT_ORDER = "INSERT INTO orders (userid, totalprice, status, fullname, email, phone, address, payment_method, voucherid, discountamount, gift_message, tier_discount, tier_name, birthday_discount) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String INSERT_ORDER = "INSERT INTO orders (userid, totalprice, status, fullname, email, phone, address, payment_method, voucherid, discountamount, gift_message, tier_discount, tier_name, birthday_discount, shipping_fee, shipping_code, district_id, ward_code) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SELECT_ORDERS_BY_USERID = "SELECT * FROM orders WHERE userid = ? ORDER BY createdat DESC";
     private static final String SELECT_ORDER_BY_ID = "SELECT * FROM orders WHERE orderid = ? AND userid = ?";
     private static final String UPDATE_ORDER_STATUS = "UPDATE orders SET status = ?, updatedat = GETDATE(), "
@@ -56,6 +56,16 @@ public class OrderDAO implements IOrderDAO {
             psOrder.setString(13, order.getTierName());
             psOrder.setBigDecimal(14,
                     order.getBirthdayDiscount() != null ? order.getBirthdayDiscount() : java.math.BigDecimal.ZERO);
+            psOrder.setBigDecimal(15,
+                    order.getShippingFee() != null ? order.getShippingFee() : java.math.BigDecimal.ZERO);
+            psOrder.setString(16, order.getShippingCode());
+            
+            if (order.getDistrictId() != null) {
+                psOrder.setInt(17, order.getDistrictId());
+            } else {
+                psOrder.setNull(17, java.sql.Types.INTEGER);
+            }
+            psOrder.setString(18, order.getWardCode());
 
             psOrder.executeUpdate();
 
@@ -169,6 +179,17 @@ public class OrderDAO implements IOrderDAO {
             // New columns
             order.setCancelReason(rs.getString("cancel_reason"));
             order.setRefundStatus(rs.getString("refund_status"));
+            
+            try {
+                order.setShippingFee(rs.getBigDecimal("shipping_fee"));
+                order.setShippingCode(rs.getString("shipping_code"));
+                int distId = rs.getInt("district_id");
+                order.setDistrictId(rs.wasNull() ? null : distId);
+                order.setWardCode(rs.getString("ward_code"));
+            } catch (SQLException ignored) {
+                // Ignore if migration for shipping columns hasn't run yet
+            }
+            
             order.setConfirmedAt(rs.getTimestamp("confirmed_at"));
             order.setShippedAt(rs.getTimestamp("shipped_at"));
             order.setCompletedAt(rs.getTimestamp("completed_at"));

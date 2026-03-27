@@ -36,7 +36,6 @@ public class AddressServlet extends HttpServlet {
 
         List<UserAddress> addresses = addressDAO.getByUserId(user.getUserId());
         request.setAttribute("addresses", addresses);
-
         request.getRequestDispatcher("/WEB-INF/views/user/address.jsp").forward(request, response);
     }
 
@@ -60,18 +59,10 @@ public class AddressServlet extends HttpServlet {
 
         try {
             switch (action) {
-                case "add":
-                    handleAdd(request, user);
-                    break;
-                case "update":
-                    handleUpdate(request, user);
-                    break;
-                case "delete":
-                    handleDelete(request, user);
-                    break;
-                case "setDefault":
-                    handleSetDefault(request, user);
-                    break;
+                case "add":      handleAdd(request, user);       break;
+                case "update":   handleUpdate(request, user);    break;
+                case "delete":   handleDelete(request, user);    break;
+                case "setDefault": handleSetDefault(request, user); break;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -81,68 +72,71 @@ public class AddressServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/address");
     }
 
-    private void handleAdd(HttpServletRequest request, User user) throws Exception {
-        String fullName = request.getParameter("fullName");
-        String phone = request.getParameter("phone");
-        String street = request.getParameter("street");
-        String ward = request.getParameter("ward");
-        String province = request.getParameter("province");
-        boolean isDefault = request.getParameter("isDefault") != null;
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
+    /** Parse and validate common address fields from the request. */
+    private UserAddress buildAddressFromRequest(HttpServletRequest request, int userId, int addressId)
+            throws Exception {
+
+        String fullName = request.getParameter("fullName");
+        String phone    = request.getParameter("phone");
+
+        // Validate phone
         if (phone == null || !phone.matches("^(84|0[3|5|7|8|9])+([0-9]{8})$")) {
             throw new Exception("Số điện thoại không hợp lệ. Vui lòng nhập 10 số (VD: 0912345678).");
         }
 
+        // Street/detail is required and must contain both letters + numbers
+        String street = request.getParameter("street");
         if (street == null || !street.matches("(?s).*\\d.*") || !street.matches("(?s).*\\p{L}.*")) {
-            throw new Exception("Vui lòng nhập phần địa chỉ cụ thể có cả chữ và số (VD: Số 12 Đường Lê Lợi, Lô B...).");
+            throw new Exception("Vui lòng nhập địa chỉ cụ thể có cả chữ và số (VD: Số 12 Đường Lê Lợi).");
         }
 
-        String detailedAddress = street;
-        if (ward != null && !ward.trim().isEmpty())
-            detailedAddress += ", " + ward;
-        if (province != null && !province.trim().isEmpty())
-            detailedAddress += ", " + province;
+        boolean isDefault = request.getParameter("isDefault") != null;
 
-        UserAddress address = new UserAddress(0, user.getUserId(), fullName, phone, detailedAddress, isDefault, null,
-                null);
+        // Geographic IDs & names
+        int    provinceId   = parseIntSafe(request.getParameter("provinceId"), 201);
+        String provinceName = trimOrNull(request.getParameter("provinceName"));
+        int    districtId   = parseIntSafe(request.getParameter("districtId"), 0);
+        String districtName = trimOrNull(request.getParameter("districtName"));
+        String wardCode     = trimOrNull(request.getParameter("wardCode"));
+        String wardName     = trimOrNull(request.getParameter("wardName"));
 
-        if (isDefault) {
+        String fullDetailedAddress = street.trim();
+        if (wardName != null && !wardName.isEmpty()) fullDetailedAddress += ", " + wardName;
+        if (districtName != null && !districtName.isEmpty()) fullDetailedAddress += ", " + districtName;
+        if (provinceName != null && !provinceName.isEmpty()) fullDetailedAddress += ", " + provinceName;
+
+        UserAddress addr = new UserAddress();
+        addr.setAddressId(addressId);
+        addr.setUserId(userId);
+        addr.setFullName(fullName);
+        addr.setPhone(phone);
+        addr.setDetailedAddress(fullDetailedAddress);
+        addr.setDefault(isDefault);
+        addr.setProvinceId(provinceId);
+        addr.setProvinceName(provinceName);
+        addr.setDistrictId(districtId);
+        addr.setDistrictName(districtName);
+        addr.setWardCode(wardCode);
+        addr.setWardName(wardName);
+        return addr;
+    }
+
+    private void handleAdd(HttpServletRequest request, User user) throws Exception {
+        UserAddress address = buildAddressFromRequest(request, user.getUserId(), 0);
+        if (address.isDefault()) {
             addressDAO.clearDefault(user.getUserId());
         }
-
         addressDAO.insert(address);
     }
 
     private void handleUpdate(HttpServletRequest request, User user) throws Exception {
         int addressId = Integer.parseInt(request.getParameter("addressId"));
-        String fullName = request.getParameter("fullName");
-        String phone = request.getParameter("phone");
-        String street = request.getParameter("street");
-        String ward = request.getParameter("ward");
-        String province = request.getParameter("province");
-        boolean isDefault = request.getParameter("isDefault") != null;
-
-        if (phone == null || !phone.matches("^(84|0[3|5|7|8|9])+([0-9]{8})$")) {
-            throw new Exception("Số điện thoại không hợp lệ. Vui lòng nhập 10 số (VD: 0912345678).");
-        }
-
-        if (street == null || !street.matches("(?s).*\\d.*") || !street.matches("(?s).*\\p{L}.*")) {
-            throw new Exception("Vui lòng nhập phần địa chỉ cụ thể có cả chữ và số (VD: Số 12 Đường Lê Lợi, Lô B...).");
-        }
-
-        String detailedAddress = street;
-        if (ward != null && !ward.trim().isEmpty())
-            detailedAddress += ", " + ward;
-        if (province != null && !province.trim().isEmpty())
-            detailedAddress += ", " + province;
-
-        UserAddress address = new UserAddress(addressId, user.getUserId(), fullName, phone, detailedAddress, isDefault,
-                null, null);
-
-        if (isDefault) {
+        UserAddress address = buildAddressFromRequest(request, user.getUserId(), addressId);
+        if (address.isDefault()) {
             addressDAO.clearDefault(user.getUserId());
         }
-
         addressDAO.update(address);
     }
 
@@ -154,5 +148,14 @@ public class AddressServlet extends HttpServlet {
     private void handleSetDefault(HttpServletRequest request, User user) throws Exception {
         int addressId = Integer.parseInt(request.getParameter("addressId"));
         addressDAO.setAsDefault(addressId, user.getUserId());
+    }
+
+    private static int parseIntSafe(String s, int defaultVal) {
+        if (s == null || s.isBlank()) return defaultVal;
+        try { return Integer.parseInt(s.trim()); } catch (NumberFormatException e) { return defaultVal; }
+    }
+
+    private static String trimOrNull(String s) {
+        return (s == null || s.isBlank()) ? null : s.trim();
     }
 }

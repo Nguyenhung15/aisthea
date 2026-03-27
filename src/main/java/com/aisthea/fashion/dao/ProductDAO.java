@@ -15,14 +15,12 @@ public class ProductDAO implements IProductDAO {
 
     private static final Logger logger = Logger.getLogger(ProductDAO.class.getName());
     private static final String INSERT_SQL = """
-                INSERT INTO Products (name, description, price, categoryid, brand, discount, is_bestseller, createdat, updatedat)
-                VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())
+                INSERT INTO Products (name, description, price, categoryid, brand, discount, is_bestseller, createdat, updatedat, weight)
+                VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE(), ?)
             """;
-    private static final String SELECT_BY_ID = "SELECT * FROM Products WHERE productid = ?";
-    private static final String SELECT_ALL = "SELECT * FROM Products WHERE status = 1";
     private static final String SELECT_ALL_OPTIMIZED = """
             SELECT
-                p.productid, p.name, p.description, p.price, p.brand, p.discount, p.is_bestseller,
+                p.productid, p.name, p.description, p.price, p.brand, p.discount, p.is_bestseller, p.weight,
                 p.createdat, p.updatedat, p.categoryid,
                 c.name AS category_name, c.type AS category_type,
                 c.genderid AS category_genderid, c.parentid AS category_parentid,
@@ -41,7 +39,7 @@ public class ProductDAO implements IProductDAO {
             """;
     private static final String UPDATE_SQL = """
                 UPDATE Products
-                SET name = ?, description = ?, price = ?, categoryid = ?, brand = ?, discount = ?, is_bestseller = ?, updatedat = GETDATE()
+                SET name = ?, description = ?, price = ?, categoryid = ?, brand = ?, discount = ?, is_bestseller = ?, updatedat = GETDATE(), weight = ?
                 WHERE productid = ?
             """;
     private static final String DELETE_SQL = "DELETE FROM Products WHERE productid = ?";
@@ -70,6 +68,7 @@ public class ProductDAO implements IProductDAO {
                 ps.setString(5, product.getBrand());
                 ps.setBigDecimal(6, product.getDiscount());
                 ps.setBoolean(7, product.isBestseller());
+                ps.setDouble(8, product.getWeight() > 0 ? product.getWeight() : 0.5); // Default weight
 
                 int rows = ps.executeUpdate();
                 if (rows > 0) {
@@ -147,7 +146,7 @@ public class ProductDAO implements IProductDAO {
         String sql =
             "SELECT " +
             "  p.productid, p.name, p.description, p.price, p.brand, p.discount, " +
-            "  p.is_bestseller, p.createdat, p.updatedat, p.status, " +
+            "  p.is_bestseller, p.weight, p.createdat, p.updatedat, p.status, " +
             "  c.categoryid, c.name AS category_name, c.type AS category_type, " +
             "  c.genderid AS category_genderid, c.parentid AS category_parentid, c.INDEX_name AS category_index, " +
             "  pcs.productcolorsizeid, pcs.color AS pcs_color, pcs.size AS pcs_size, pcs.stock, " +
@@ -180,6 +179,7 @@ public class ProductDAO implements IProductDAO {
                         product.setBrand(rs.getString("brand"));
                         product.setDiscount(rs.getBigDecimal("discount"));
                         product.setBestseller(rs.getBoolean("is_bestseller"));
+                        product.setWeight(rs.getDouble("weight"));
                         product.setCreatedAt(rs.getTimestamp("createdat"));
                         product.setUpdatedAt(rs.getTimestamp("updatedat"));
                         product.setStatus(rs.getInt("status"));
@@ -250,6 +250,7 @@ public class ProductDAO implements IProductDAO {
                     p.setBrand(rs.getString("brand"));
                     p.setDiscount(rs.getBigDecimal("discount"));
                     p.setBestseller(rs.getBoolean("is_bestseller"));
+                    p.setWeight(rs.getDouble("weight"));
                     p.setCreatedAt(rs.getTimestamp("createdat"));
                     p.setUpdatedAt(rs.getTimestamp("updatedat"));
                     p.setTotalStock(rs.getInt("total_stock"));
@@ -307,7 +308,7 @@ public class ProductDAO implements IProductDAO {
 
         StringBuilder sql = new StringBuilder("""
             SELECT
-                p.productid, p.name, p.description, p.price, p.brand, p.discount, p.is_bestseller,
+                p.productid, p.name, p.description, p.price, p.brand, p.discount, p.is_bestseller, p.weight,
                 p.createdat, p.updatedat, p.categoryid,
                 c.name AS category_name, c.type AS category_type,
                 c.genderid AS category_genderid, c.parentid AS category_parentid,
@@ -447,6 +448,7 @@ public class ProductDAO implements IProductDAO {
                         product.setBrand(rs.getString("brand"));
                         product.setDiscount(rs.getBigDecimal("discount"));
                         product.setBestseller(rs.getBoolean("is_bestseller"));
+                        product.setWeight(rs.getDouble("weight"));
                         product.setCreatedAt(rs.getTimestamp("createdat"));
                         product.setUpdatedAt(rs.getTimestamp("updatedat"));
                         product.setTotalStock(rs.getInt("total_stock"));
@@ -512,7 +514,8 @@ public class ProductDAO implements IProductDAO {
                 ps.setString(5, product.getBrand());
                 ps.setBigDecimal(6, product.getDiscount());
                 ps.setBoolean(7, product.isBestseller());
-                ps.setInt(8, product.getProductId());
+                ps.setDouble(8, product.getWeight());
+                ps.setInt(9, product.getProductId());
 
                 int rows = ps.executeUpdate();
                 if (rows == 0) {
@@ -843,13 +846,13 @@ public class ProductDAO implements IProductDAO {
 
         String sql =
             "SELECT pp.productid, pp.name, pp.price, pp.description, pp.discount, " +
-            "       pp.is_bestseller, pp.createdat, pp.updatedat, pp.categoryid, pp.brand, pp.status, " +
+            "       pp.is_bestseller, pp.weight, pp.createdat, pp.updatedat, pp.categoryid, pp.brand, pp.status, " +
             "       c2.name AS category_name, c2.type AS category_type, c2.genderid AS category_genderid, " +
             "       c2.parentid AS category_parentid, c2.INDEX_name AS category_index, " +
             "       img.imageid, img.imageurl, img.color AS image_color, img.isprimary " +
             "FROM ( " +
             "    SELECT p.productid, p.name, p.price, p.description, p.discount, " +
-            "           p.is_bestseller, p.createdat, p.updatedat, p.categoryid, p.brand, p.status " +
+            "           p.is_bestseller, p.weight, p.createdat, p.updatedat, p.categoryid, p.brand, p.status " +
             "    FROM Products p " +
             "    LEFT JOIN Categories c ON p.categoryid = c.categoryid " +
             where.toString() +
@@ -890,6 +893,7 @@ public class ProductDAO implements IProductDAO {
                         p.setBrand(rs.getString("brand"));
                         p.setDiscount(rs.getBigDecimal("discount"));
                         p.setBestseller(rs.getBoolean("is_bestseller"));
+                        p.setWeight(rs.getDouble("weight"));
                         p.setCreatedAt(rs.getTimestamp("createdat"));
                         p.setUpdatedAt(rs.getTimestamp("updatedat"));
                         p.setStatus(rs.getInt("status"));

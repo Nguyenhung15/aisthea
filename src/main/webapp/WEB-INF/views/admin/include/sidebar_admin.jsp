@@ -48,11 +48,6 @@
                     <i class="fa-solid fa-box"></i>
                     <span>Orders</span>
                 </a>
-                <a href="${pageContext.request.contextPath}/order?action=listReturns" class="lux-sidebar__link"
-                    data-path="/order?action=listReturns">
-                    <i class="fa-solid fa-rotate-left"></i>
-                    <span>Return Requests</span>
-                </a>
                 <a href="${pageContext.request.contextPath}/user?action=list" class="lux-sidebar__link"
                     data-path="/user">
                     <i class="fa-solid fa-users"></i>

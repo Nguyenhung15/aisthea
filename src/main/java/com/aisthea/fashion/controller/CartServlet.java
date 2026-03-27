@@ -103,6 +103,26 @@ public class CartServlet extends HttpServlet {
         String jspPath = "/WEB-INF/views/cart/cart.jsp";
 
         try {
+            if ("calculateShipping".equals(action)) {
+                int provinceId = Integer.parseInt(request.getParameter("provinceId"));
+                Cart checkoutCart = (Cart) session.getAttribute("checkoutCart");
+                if (checkoutCart == null) checkoutCart = cart; // fallback
+                
+                double totalWeight = 0.0;
+                for (CartItem item : checkoutCart.getItems()) {
+                    totalWeight += item.getWeight() * item.getQuantity();
+                }
+                
+                com.aisthea.fashion.service.ShippingService shippingService = new com.aisthea.fashion.service.ShippingService();
+                java.math.BigDecimal standardFee = shippingService.calculateShippingFee(provinceId, totalWeight, "STANDARD");
+                java.math.BigDecimal expressFee = shippingService.calculateShippingFee(provinceId, totalWeight, "EXPRESS");
+                
+                response.setContentType("application/json;charset=UTF-8");
+                PrintWriter out = response.getWriter();
+                out.print("{\"success\":true,\"standardFee\":" + standardFee + ",\"expressFee\":" + expressFee + "}");
+                out.flush();
+                return;
+            }
             if ("remove".equals(action)) {
                 int pcsId = Integer.parseInt(request.getParameter("id"));
                 cart.removeItem(pcsId);
@@ -111,7 +131,7 @@ public class CartServlet extends HttpServlet {
                 return;
             }
         } catch (NumberFormatException e) {
-            logger.warning("Invalid ID format for remove action: " + e.getMessage());
+            logger.warning("Invalid ID format for action " + action + ": " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/cart");
             return;
         }
@@ -188,6 +208,32 @@ public class CartServlet extends HttpServlet {
                         + " | Discount=" + tierDiscountPercent + "%"
                         + " | Amount=" + tierDiscountAmount
                         + " | BD Used=" + alreadyUsedBirthdayDiscount);
+            }
+            // ────────────────────────────────────────────────────────────
+
+            // ── Pre-calculate Shipping Fees using default address ────────
+            com.aisthea.fashion.model.UserAddress defaultAddr = null;
+            for (com.aisthea.fashion.model.UserAddress a : addrs) {
+                if (a.isDefault()) { defaultAddr = a; break; }
+            }
+            if (defaultAddr == null && !addrs.isEmpty()) {
+                defaultAddr = addrs.get(0);
+            }
+            request.setAttribute("defaultAddr", defaultAddr);
+
+            if (defaultAddr != null && defaultAddr.getProvinceId() > 0) {
+                double totalWeight = 0.0;
+                for (com.aisthea.fashion.model.CartItem item : checkoutCart.getItems()) {
+                    totalWeight += item.getWeight() * item.getQuantity();
+                }
+                com.aisthea.fashion.service.ShippingService shippingService = new com.aisthea.fashion.service.ShippingService();
+                request.setAttribute("initStandardFee", shippingService.calculateShippingFee(defaultAddr.getProvinceId(), totalWeight, "STANDARD"));
+                request.setAttribute("initExpressFee",  shippingService.calculateShippingFee(defaultAddr.getProvinceId(), totalWeight, "EXPRESS"));
+                request.setAttribute("initProvinceId",  defaultAddr.getProvinceId());
+            } else {
+                request.setAttribute("initStandardFee", java.math.BigDecimal.ZERO);
+                request.setAttribute("initExpressFee",  java.math.BigDecimal.ZERO);
+                request.setAttribute("initProvinceId",  0);
             }
             // ────────────────────────────────────────────────────────────
 
@@ -385,6 +431,7 @@ public class CartServlet extends HttpServlet {
         item.setSize(variant.getSize());
         item.setQuantity(quantity);
         item.setProductImageUrl(imageUrl);
+        item.setWeight(product.getWeight() > 0 ? product.getWeight() : 0.5);
 
         cart.addItem(item);
         return true;

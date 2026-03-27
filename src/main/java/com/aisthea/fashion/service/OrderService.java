@@ -7,6 +7,7 @@ import com.aisthea.fashion.dao.OrderItemDAO;
 import com.aisthea.fashion.dao.ReturnRequestDAO;
 import com.aisthea.fashion.dao.UserDAO;
 import com.aisthea.fashion.dao.VoucherDAO;
+import com.aisthea.fashion.dao.PaymentDAO;
 import com.aisthea.fashion.model.*;
 import com.aisthea.fashion.dao.DBConnection;
 import jakarta.servlet.http.HttpServletRequest;
@@ -74,12 +75,50 @@ public class OrderService implements IOrderService {
         // ── 2b. Tính Birthday Discount (server validate) ────
         BigDecimal birthdayDiscountAmount = TierService.calculateBirthdayDiscount(user, cart.getTotalPrice());
 
-        // ── 3. Tính tổng tiền sau giảm ───────────────────────────────────
+        // ── 2c. Tính Shipping Fee ────────────────────────────────────────
+        int provinceId = 0;
+        Integer districtId = null;
+        String wardCode = null;
+
+        String provinceIdStr = request.getParameter("provinceId");
+        if (provinceIdStr != null && !provinceIdStr.trim().isEmpty()) {
+            try {
+                provinceId = Integer.parseInt(provinceIdStr);
+            } catch (Exception ignored) {}
+        }
+        
+        String districtIdStr = request.getParameter("districtId");
+        if (districtIdStr != null && !districtIdStr.trim().isEmpty()) {
+            try {
+                districtId = Integer.parseInt(districtIdStr);
+            } catch (Exception ignored) {}
+        }
+        
+        String reqWardCode = request.getParameter("wardCode");
+        if (reqWardCode != null && !reqWardCode.trim().isEmpty()) {
+            wardCode = reqWardCode.trim();
+        }
+
+        double totalWeight = 0.0;
+        for (CartItem item : cart.getItems()) {
+            totalWeight += item.getWeight() * item.getQuantity();
+        }
+
+        String shippingMethod = request.getParameter("shippingMethod");
+        if (shippingMethod == null || shippingMethod.isEmpty()) {
+            shippingMethod = "STANDARD";
+        }
+
+        BigDecimal shippingFee = new ShippingService().calculateShippingFee(provinceId, totalWeight, shippingMethod);
+        String shippingCode = "ATA" + System.currentTimeMillis();
+
+        // ── 3. Tính tổng tiền sau giảm + phí ship ──────────────────────────────
         BigDecimal cartTotal = cart.getTotalPrice();
         BigDecimal finalTotal = cartTotal
                 .subtract(tierDiscountAmount)
                 .subtract(birthdayDiscountAmount)
-                .subtract(discountAmount);
+                .subtract(discountAmount)
+                .add(shippingFee);
         if (finalTotal.compareTo(BigDecimal.ZERO) < 0)
             finalTotal = BigDecimal.ZERO;
 
@@ -91,6 +130,8 @@ public class OrderService implements IOrderService {
         newOrder.setTierDiscount(tierDiscountAmount.setScale(0, java.math.RoundingMode.HALF_UP));
         newOrder.setTierName(tierName);
         newOrder.setBirthdayDiscount(birthdayDiscountAmount.setScale(0, java.math.RoundingMode.HALF_UP));
+        newOrder.setShippingFee(shippingFee);
+        newOrder.setShippingCode(shippingCode);
         if (voucherId != null)
             newOrder.setVoucherId(voucherId);
         newOrder.setStatus("Pending");
@@ -99,6 +140,8 @@ public class OrderService implements IOrderService {
         newOrder.setPhone(request.getParameter("phone"));
         newOrder.setAddress(request.getParameter("address"));
         newOrder.setPaymentMethod(request.getParameter("paymentMethod"));
+        newOrder.setDistrictId(districtId);
+        newOrder.setWardCode(wardCode);
 
         Connection conn = null;
         try {
@@ -148,6 +191,15 @@ public class OrderService implements IOrderService {
                 voucherDAO.incrementUsedCount(voucherId, conn);
                 logger.info("Voucher ID=" + voucherId + " used_count incremented for order #" + newOrderId);
             }
+
+            // ── 6. Lưu vào bảng payments ──────────────────────────────────
+            PaymentDAO paymentDAO = new PaymentDAO();
+            Payment payment = new Payment();
+            payment.setOrderId(newOrderId);
+            payment.setMethod(newOrder.getPaymentMethod());
+            payment.setAmount(newOrder.getTotalprice());
+            payment.setStatus("Pending");
+            paymentDAO.insertPayment(payment, conn);
 
             conn.commit();
 
@@ -232,27 +284,8 @@ public class OrderService implements IOrderService {
     @Override
     public boolean updateOrderStatus(int orderId, String newStatus) {
         try {
-            Order orderBefore = orderDAO.getAdminOrderById(orderId);
 
-            // Check if status requires points (Completed only)
-            boolean isPayingStatus = "Completed".equalsIgnoreCase(newStatus);
-
-            if (isPayingStatus) {
-                // Only add points if transitioning from a non-paying status to avoid
-                // duplication
-                if (orderBefore != null && !"Completed".equalsIgnoreCase(orderBefore.getStatus())) {
-                    int pointsEarned = orderBefore.getTotalprice()
-                            .divide(new BigDecimal("10000"), 0, java.math.RoundingMode.DOWN)
-                            .intValue();
-                    if (pointsEarned > 0) {
-                        UserDAO userDAO = new UserDAO();
-                        userDAO.updateMembershipPoints(orderBefore.getUserid(), pointsEarned,
-                                "Points from " + newStatus + " Order #" + orderId);
-                        logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + orderBefore.getUserid()
-                                + " từ đơn hàng #" + orderId + " (Status: " + newStatus + ")");
-                    }
-                }
-            }
+            // (Point adding logic has been moved to confirmPayment)
 
             boolean updated = orderDAO.updateOrderStatus(orderId, newStatus);
             if (updated) {
@@ -294,6 +327,47 @@ public class OrderService implements IOrderService {
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public boolean confirmPayment(int orderId, String transactionCode) {
+        try {
+            PaymentDAO paymentDAO = new PaymentDAO();
+            java.util.List<Payment> payments = paymentDAO.getByOrderId(orderId);
+            if (payments.isEmpty()) return false;
+            Payment latest = payments.get(0);
+            if ("Paid".equalsIgnoreCase(latest.getStatus()) || "Success".equalsIgnoreCase(latest.getStatus())) {
+                return true; // Already paid
+            }
+
+            boolean updated = paymentDAO.confirmPaymentByOrderId(orderId, transactionCode);
+            if (updated) {
+                Order order = orderDAO.getAdminOrderById(orderId);
+                // Update Order Status if Pending
+                if (order != null && "Pending".equalsIgnoreCase(order.getStatus())) {
+                     updateOrderStatus(orderId, "Processing"); // Note this sends notification inside updateOrderStatus
+                }
+                
+                // Add points
+                if (order != null) {
+                    int pointsEarned = order.getTotalprice()
+                            .divide(new java.math.BigDecimal("10000"), 0, java.math.RoundingMode.DOWN)
+                            .intValue();
+                    if (pointsEarned > 0) {
+                        UserDAO userDAO = new UserDAO();
+                        userDAO.updateMembershipPoints(order.getUserid(), pointsEarned,
+                                "Points from Paid Order #" + orderId);
+                        logger.info("Đã cộng " + pointsEarned + " điểm cho user ID: " + order.getUserid()
+                                + " từ đơn hàng #" + orderId + " (Payment: Paid)");
+                    }
+                }
+                return true;
+            }
+            return false;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Lỗi khi confirmPayment", e);
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -530,6 +604,17 @@ public class OrderService implements IOrderService {
                 logger.warning("Could not restore birthday discount for order #" + rr.getOrderId() + ": " + e.getMessage());
             }
             orderDAO.updateOrderStatus(rr.getOrderId(), "ReturnApproved");
+            
+            // Insert Refund record into payments
+            PaymentDAO paymentDAO = new PaymentDAO();
+            Payment refund = new Payment();
+            refund.setOrderId(rr.getOrderId());
+            refund.setMethod("Refund");
+            refund.setAmount(rr.getRefundAmount().negate());
+            refund.setStatus("Refunded");
+            refund.setPaidAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            paymentDAO.insertPayment(refund);
+            
             notificationService.sendNotification(rr.getUserId(),
                     "Yêu cầu hoàn trả được chấp nhận",
                     "Yêu cầu hoàn trả đơn hàng #" + rr.getOrderId() + " đã được chấp nhận. Tiền sẽ hoàn về tài khoản trong 3-5 ngày làm việc.",

@@ -12,86 +12,71 @@ public class UserAddress {
     private Date createdAt;
     private Date updatedAt;
 
-    public UserAddress() {
-    }
+    // Geographic fields — matched to DB columns added via migration
+    private int    provinceId;   // e.g. 201 = Da Nang
+    private String provinceName;
+    private int    districtId;
+    private String districtName;
+    private String wardCode;
+    private String wardName;
 
-    public UserAddress(int addressId, int userId, String fullName, String phone, String detailedAddress,
-            boolean isDefault, Date createdAt, Date updatedAt) {
-        this.addressId = addressId;
-        this.userId = userId;
-        this.fullName = fullName;
-        this.phone = phone;
-        this.detailedAddress = detailedAddress;
-        this.isDefault = isDefault;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
+    public UserAddress() {}
 
-    public int getAddressId() {
-        return addressId;
-    }
+    // ── Core getters / setters ──────────────────────────────────────────────
 
-    public void setAddressId(int addressId) {
-        this.addressId = addressId;
-    }
+    public int getAddressId() { return addressId; }
+    public void setAddressId(int addressId) { this.addressId = addressId; }
 
-    public int getUserId() {
-        return userId;
-    }
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public String getFullName() {
-        return fullName;
-    }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
+    public String getDetailedAddress() { return detailedAddress; }
+    public void setDetailedAddress(String detailedAddress) { this.detailedAddress = detailedAddress; }
 
-    public String getPhone() {
-        return phone;
-    }
+    public boolean isDefault() { return isDefault; }
+    public boolean getIsDefault() { return isDefault; }
+    public void setDefault(boolean isDefault) { this.isDefault = isDefault; }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 
-    public String getDetailedAddress() {
-        return detailedAddress;
-    }
+    public Date getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setDetailedAddress(String detailedAddress) {
-        this.detailedAddress = detailedAddress;
-    }
+    // ── Geographic getters / setters ────────────────────────────────────────
 
-    public boolean isDefault() {
-        return isDefault;
-    }
+    public int getProvinceId() { return provinceId; }
+    public void setProvinceId(int provinceId) { this.provinceId = provinceId; }
 
-    public boolean getIsDefault() {
-        return isDefault;
-    }
+    public String getProvinceName() { return provinceName; }
+    public void setProvinceName(String provinceName) { this.provinceName = provinceName; }
 
-    public void setDefault(boolean isDefault) {
-        this.isDefault = isDefault;
-    }
+    public int getDistrictId() { return districtId; }
+    public void setDistrictId(int districtId) { this.districtId = districtId; }
 
-    public Date getCreatedAt() {
-        return createdAt;
-    }
+    public String getDistrictName() { return districtName; }
+    public void setDistrictName(String districtName) { this.districtName = districtName; }
 
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
+    public String getWardCode() { return wardCode; }
+    public void setWardCode(String wardCode) { this.wardCode = wardCode; }
 
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
+    public String getWardName() { return wardName; }
+    public void setWardName(String wardName) { this.wardName = wardName; }
 
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
+    /** Convenience: build a human-readable full address string. */
+    public String getFullAddress() {
+        StringBuilder sb = new StringBuilder();
+        if (detailedAddress != null && !detailedAddress.isBlank()) sb.append(detailedAddress);
+        if (wardName     != null && !wardName.isBlank())     sb.append(", ").append(wardName);
+        if (districtName != null && !districtName.isBlank()) sb.append(", ").append(districtName);
+        if (provinceName != null && !provinceName.isBlank()) sb.append(", ").append(provinceName);
+        return sb.toString();
     }
 }
+

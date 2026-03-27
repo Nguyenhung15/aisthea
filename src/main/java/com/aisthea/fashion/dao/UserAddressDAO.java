@@ -46,7 +46,9 @@ public class UserAddressDAO {
     }
 
     public void insert(UserAddress address) throws SQLException {
-        String sql = "INSERT INTO UserAddresses (UserID, FullName, Phone, DetailedAddress, IsDefault, CreatedAt, UpdatedAt) VALUES (?, ?, ?, ?, ?, GETDATE(), GETDATE())";
+        String sql = "INSERT INTO UserAddresses (UserID, FullName, Phone, DetailedAddress, IsDefault, CreatedAt, UpdatedAt, " +
+                     "ProvinceID, ProvinceName, DistrictID, DistrictName, WardCode, WardName) " +
+                     "VALUES (?, ?, ?, ?, ?, GETDATE(), GETDATE(), ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, address.getUserId());
@@ -54,20 +56,38 @@ public class UserAddressDAO {
             ps.setString(3, address.getPhone());
             ps.setString(4, address.getDetailedAddress());
             ps.setBoolean(5, address.isDefault());
+            
+            ps.setInt(6, address.getProvinceId() != 0 ? address.getProvinceId() : 201); // Default to Da Nang if 0
+            if (address.getProvinceName() != null) ps.setString(7, address.getProvinceName()); else ps.setNull(7, java.sql.Types.NVARCHAR);
+            if (address.getDistrictId() != 0) ps.setInt(8, address.getDistrictId()); else ps.setNull(8, java.sql.Types.INTEGER);
+            if (address.getDistrictName() != null) ps.setString(9, address.getDistrictName()); else ps.setNull(9, java.sql.Types.NVARCHAR);
+            if (address.getWardCode() != null) ps.setString(10, address.getWardCode()); else ps.setNull(10, java.sql.Types.VARCHAR);
+            if (address.getWardName() != null) ps.setString(11, address.getWardName()); else ps.setNull(11, java.sql.Types.NVARCHAR);
+            
             ps.executeUpdate();
         }
     }
 
     public void update(UserAddress address) throws SQLException {
-        String sql = "UPDATE UserAddresses SET FullName = ?, Phone = ?, DetailedAddress = ?, IsDefault = ?, UpdatedAt = GETDATE() WHERE AddressID = ? AND UserID = ?";
+        String sql = "UPDATE UserAddresses SET FullName = ?, Phone = ?, DetailedAddress = ?, IsDefault = ?, UpdatedAt = GETDATE(), " +
+                     "ProvinceID = ?, ProvinceName = ?, DistrictID = ?, DistrictName = ?, WardCode = ?, WardName = ? " +
+                     "WHERE AddressID = ? AND UserID = ?";
         try (Connection conn = DBConnection.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, address.getFullName());
             ps.setString(2, address.getPhone());
             ps.setString(3, address.getDetailedAddress());
             ps.setBoolean(4, address.isDefault());
-            ps.setInt(5, address.getAddressId());
-            ps.setInt(6, address.getUserId());
+            
+            ps.setInt(5, address.getProvinceId() != 0 ? address.getProvinceId() : 201);
+            if (address.getProvinceName() != null) ps.setString(6, address.getProvinceName()); else ps.setNull(6, java.sql.Types.NVARCHAR);
+            if (address.getDistrictId() != 0) ps.setInt(7, address.getDistrictId()); else ps.setNull(7, java.sql.Types.INTEGER);
+            if (address.getDistrictName() != null) ps.setString(8, address.getDistrictName()); else ps.setNull(8, java.sql.Types.NVARCHAR);
+            if (address.getWardCode() != null) ps.setString(9, address.getWardCode()); else ps.setNull(9, java.sql.Types.VARCHAR);
+            if (address.getWardName() != null) ps.setString(10, address.getWardName()); else ps.setNull(10, java.sql.Types.NVARCHAR);
+            
+            ps.setInt(11, address.getAddressId());
+            ps.setInt(12, address.getUserId());
             ps.executeUpdate();
         }
     }
@@ -118,16 +138,28 @@ public class UserAddressDAO {
         }
     }
 
-    private UserAddress extractFromResultSet(ResultSet rs) throws SQLException {
+    private UserAddress extractFromResultSet(ResultSet rs) {
         UserAddress address = new UserAddress();
-        address.setAddressId(rs.getInt("AddressID"));
-        address.setUserId(rs.getInt("UserID"));
-        address.setFullName(rs.getString("FullName"));
-        address.setPhone(rs.getString("Phone"));
-        address.setDetailedAddress(rs.getString("DetailedAddress"));
-        address.setDefault(rs.getBoolean("IsDefault"));
-        address.setCreatedAt(rs.getTimestamp("CreatedAt"));
-        address.setUpdatedAt(rs.getTimestamp("UpdatedAt"));
+        try {
+            address.setAddressId(rs.getInt("AddressID"));
+            address.setUserId(rs.getInt("UserID"));
+            address.setFullName(rs.getString("FullName"));
+            address.setPhone(rs.getString("Phone"));
+            address.setDetailedAddress(rs.getString("DetailedAddress"));
+            address.setDefault(rs.getBoolean("IsDefault"));
+            address.setCreatedAt(rs.getTimestamp("CreatedAt"));
+            address.setUpdatedAt(rs.getTimestamp("UpdatedAt"));
+            
+            // New geographic fields (might throw if columns don't exist yet, we catch to ensure backwards compatibility)
+            address.setProvinceId(rs.getInt("ProvinceID"));
+            address.setProvinceName(rs.getString("ProvinceName"));
+            address.setDistrictId(rs.getInt("DistrictID"));
+            address.setDistrictName(rs.getString("DistrictName"));
+            address.setWardCode(rs.getString("WardCode"));
+            address.setWardName(rs.getString("WardName"));
+        } catch (SQLException ignore) {
+            // Geographic columns might not exist if migration hasn't run yet
+        }
         return address;
     }
 }

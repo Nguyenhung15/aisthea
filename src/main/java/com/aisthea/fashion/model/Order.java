@@ -28,9 +28,14 @@ public class Order {
 
     private String cancelReason;
     private String refundStatus;
+    private BigDecimal shippingFee;
+    private String shippingCode;
     private Date confirmedAt;
     private Date shippedAt;
     private Date completedAt;
+
+    private Integer districtId;
+    private String wardCode;
 
     private List<OrderItem> items;
 
@@ -227,5 +232,37 @@ public class Order {
 
     public void setCompletedAt(Date completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public BigDecimal getShippingFee() {
+        return shippingFee;
+    }
+
+    public void setShippingFee(BigDecimal shippingFee) {
+        this.shippingFee = shippingFee;
+    }
+
+    public String getShippingCode() {
+        return shippingCode;
+    }
+
+    public void setShippingCode(String shippingCode) {
+        this.shippingCode = shippingCode;
+    }
+
+    public Integer getDistrictId() {
+        return districtId;
+    }
+
+    public void setDistrictId(Integer districtId) {
+        this.districtId = districtId;
+    }
+
+    public String getWardCode() {
+        return wardCode;
+    }
+
+    public void setWardCode(String wardCode) {
+        this.wardCode = wardCode;
     }
 }

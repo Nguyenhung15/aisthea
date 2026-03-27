@@ -80,7 +80,7 @@ public class OrderServlet extends HttpServlet {
                     handleAdminViewDetail(request, response, user);
                     break;
                 case "listReturns":
-                    handleAdminListReturns(request, response, user);
+                    handleAdminListOrders(request, response, user);
                     break;
                 case "adminDelete":
                     handleAdminDelete(request, response, user);
@@ -133,6 +133,9 @@ public class OrderServlet extends HttpServlet {
                     break;
                 case "adminMarkRefunded":
                     handleAdminMarkRefunded(request, response, user);
+                    break;
+                case "adminMarkPaid":
+                    handleAdminMarkPaid(request, response, user);
                     break;
                 case "submitReturn":
                     handleSubmitReturn(request, response, user);
@@ -219,8 +222,11 @@ public class OrderServlet extends HttpServlet {
             if ("success".equalsIgnoreCase(paymentStatus)) {
                 Order orderBeforeUpdate = orderService.getOrderDetails(orderId, user.getUserId());
                 if (orderBeforeUpdate != null && "Pending".equalsIgnoreCase(orderBeforeUpdate.getStatus())) {
-                    logger.info("Payment success detected for order " + orderId + ". Updating status to Processing.");
-                    orderService.updateOrderStatus(orderId, "Processing");
+                    logger.info("Payment success detected for order " + orderId + ". Confirming payment.");
+                    String transactionCode = request.getParameter("id");
+                    if (transactionCode == null) transactionCode = "PAYOS-" + orderId;
+                    orderService.confirmPayment(orderId, transactionCode);
+                    
                     // Refresh order data and send confirmation email
                     order = orderService.getOrderDetails(orderId, user.getUserId()); // Assign to declared 'order'
                     if (order != null) {
@@ -333,6 +339,20 @@ public class OrderServlet extends HttpServlet {
                     newAddr.setFullName(request.getParameter("fullname"));
                     newAddr.setPhone(request.getParameter("phone"));
                     newAddr.setDetailedAddress(request.getParameter("address"));
+                    
+                    String pId = request.getParameter("provinceId");
+                    if (pId != null && !pId.trim().isEmpty()) {
+                        try { newAddr.setProvinceId(Integer.parseInt(pId)); } catch (Exception ignored) {}
+                    }
+                    String dId = request.getParameter("districtId");
+                    if (dId != null && !dId.trim().isEmpty()) {
+                        try { newAddr.setDistrictId(Integer.parseInt(dId)); } catch (Exception ignored) {}
+                    }
+                    String wCode = request.getParameter("wardCode");
+                    if (wCode != null && !wCode.trim().isEmpty()) {
+                        newAddr.setWardCode(wCode.trim());
+                    }
+                    
                     newAddr.setDefault(false);
                     com.aisthea.fashion.dao.UserAddressDAO addrDao = new com.aisthea.fashion.dao.UserAddressDAO();
                     addrDao.insert(newAddr);
@@ -589,13 +609,24 @@ public class OrderServlet extends HttpServlet {
             return;
         }
 
+        // Load orders
         String orderId = request.getParameter("orderId");
         String status = request.getParameter("status");
         String customerName = request.getParameter("customerName");
         String date = request.getParameter("date");
-
         List<Order> filteredOrders = orderService.getFilteredOrders(orderId, status, customerName, date);
         request.setAttribute("orderList", filteredOrders);
+
+        // Load return requests (always loaded for the unified tab UI)
+        try {
+            ReturnRequestDAO rrDao = new ReturnRequestDAO();
+            List<ReturnRequest> returnRequests = rrDao.getAllWithCustomerInfo();
+            request.setAttribute("returnRequests", returnRequests);
+        } catch (Exception e) {
+            logger.warning("Error loading return requests: " + e.getMessage());
+            request.setAttribute("returnRequests", new java.util.ArrayList<>());
+        }
+
         request.getRequestDispatcher("/WEB-INF/views/admin/order/manage_orders.jsp").forward(request, response);
     }
 
@@ -616,8 +647,14 @@ public class OrderServlet extends HttpServlet {
                 try {
                     ReturnRequest rr = new ReturnRequestDAO().getByOrderId(orderId);
                     request.setAttribute("returnRequest", rr);
-                } catch (Exception ignored) {
-                    /* table may not exist yet */ }
+                } catch (Exception ignored) { /* table may not exist yet */ }
+
+                // Load payment history
+                try {
+                    java.util.List<com.aisthea.fashion.model.Payment> payments = new com.aisthea.fashion.dao.PaymentDAO().getByOrderId(orderId);
+                    request.setAttribute("payments", payments);
+                } catch (Exception ignored) {}
+
                 request.getRequestDispatcher("/WEB-INF/views/admin/order/admin_order_detail.jsp").forward(request,
                         response);
             } else {
@@ -645,23 +682,7 @@ public class OrderServlet extends HttpServlet {
         }
     }
 
-    private void handleAdminListReturns(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
-        if (!isAdmin(user)) {
-            response.sendRedirect(request.getContextPath() + "/order?action=history");
-            return;
-        }
-
-        try {
-            ReturnRequestDAO rrDao = new ReturnRequestDAO();
-            List<ReturnRequest> returnRequests = rrDao.getAllWithCustomerInfo();
-            request.setAttribute("returnRequests", returnRequests);
-        } catch (Exception e) {
-            logger.warning("Error loading return requests: " + e.getMessage());
-            request.setAttribute("returnRequests", new java.util.ArrayList<>());
-        }
-        request.getRequestDispatcher("/WEB-INF/views/admin/order/manage_returns.jsp").forward(request, response);
-    }
+    // handleAdminListReturns removed — merged into handleAdminListOrders for the unified tab UI
 
     private void handleAdminUpdateStatus(HttpServletRequest request, HttpServletResponse response, User user)
             throws IOException {
@@ -698,6 +719,31 @@ public class OrderServlet extends HttpServlet {
                     ? "/order?action=adminViewDetail&id=" + orderId + "&update=error"
                     : "/order?action=list&error=true";
             response.sendRedirect(request.getContextPath() + redirectUrl);
+        }
+    }
+
+    private void handleAdminMarkPaid(HttpServletRequest request, HttpServletResponse response, User user)
+            throws IOException {
+        if (!isAdmin(user)) {
+            response.sendRedirect(request.getContextPath() + "/order?action=history");
+            return;
+        }
+
+        int orderId = -1;
+        try {
+            orderId = Integer.parseInt(request.getParameter("orderId"));
+            boolean updated = orderService.confirmPayment(orderId, "COD-" + System.currentTimeMillis());
+            if (updated) {
+                response.sendRedirect(
+                        request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
+            } else {
+                response.sendRedirect(
+                        request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&error=paidFailed");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(
+                    request.getContextPath() + "/order?action=adminViewDetail&id=" + orderId + "&error=paidFailed");
         }
     }
 
@@ -808,7 +854,7 @@ public class OrderServlet extends HttpServlet {
             String from = request.getParameter("from");
             if ("list".equals(from)) {
                 response.sendRedirect(request.getContextPath()
-                        + "/order?action=listReturns&update=success");
+                        + "/order?action=list&update=success");
             } else {
                 response.sendRedirect(request.getContextPath()
                         + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
@@ -818,7 +864,7 @@ public class OrderServlet extends HttpServlet {
             String from = request.getParameter("from");
             if ("list".equals(from)) {
                 response.sendRedirect(request.getContextPath()
-                        + "/order?action=listReturns&update=error");
+                        + "/order?action=list&update=error");
             } else {
                 response.sendRedirect(request.getContextPath()
                         + "/order?action=adminViewDetail&id=" + orderId + "&update=error");

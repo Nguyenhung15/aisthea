@@ -481,6 +481,12 @@
                                            value="<c:out value='${not empty product.discount ? product.discount : param.discount}' />"
                                            class="ep-input" placeholder="0">
                                 </div>
+                                <div class="ep-field">
+                                    <label class="ep-label">Weight (kg)</label>
+                                    <input type="number" name="weight" step="0.1" min="0.1"
+                                           value="<c:out value='${not empty product.weight ? product.weight : 0.5}' />"
+                                           class="ep-input" placeholder="0.5" required>
+                                </div>
                             </div>
                         </div>
                     </div>

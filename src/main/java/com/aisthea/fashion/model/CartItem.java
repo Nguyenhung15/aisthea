@@ -13,6 +13,7 @@ public class CartItem {
     private String size;
     private BigDecimal price;
     private int quantity;
+    private double weight;
 
     private boolean available = true;
     private int stock = -1;
@@ -29,6 +30,7 @@ public class CartItem {
         this.size = oldItem.size;
         this.price = oldItem.price;
         this.quantity = oldItem.quantity;
+        this.weight = oldItem.weight;
         this.available = oldItem.available;
         this.stock = oldItem.stock;
     }
@@ -118,5 +120,13 @@ public class CartItem {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
     }
 }

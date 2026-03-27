@@ -260,6 +260,13 @@
                             class="space-y-4">
                             <input type="hidden" name="action" id="formAction" value="add">
                             <input type="hidden" name="addressId" id="modalAddressId" value="0">
+                            
+                            <input type="hidden" name="provinceId" id="modalProvinceId" value="0">
+                            <input type="hidden" name="districtId" id="modalDistrictId" value="0">
+                            <input type="hidden" name="wardCode" id="modalWardCode" value="">
+                            <input type="hidden" name="provinceName" id="modalProvinceName" value="">
+                            <input type="hidden" name="districtName" id="modalDistrictName" value="">
+                            <input type="hidden" name="wardName" id="modalWardName" value="">
 
                             <div class="space-y-1">
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Họ &
@@ -276,19 +283,23 @@
                                 <div id="phoneError" class="text-red-500 text-xs font-semibold mt-1 hidden"></div>
                             </div>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div class="space-y-1">
-                                    <label
-                                        class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Tỉnh/Thành
-                                        Phố</label>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Tỉnh/TP</label>
                                     <select name="province" id="modalProvince" required
                                         class="w-full bg-slate-50 border-slate-200 rounded-lg focus:ring-primary focus:border-primary px-4 py-3 text-sm">
                                         <option value="">Chọn Tỉnh/Thành Phố</option>
                                     </select>
                                 </div>
                                 <div class="space-y-1">
-                                    <label
-                                        class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Phường/Xã</label>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Quận/Huyện</label>
+                                    <select name="district" id="modalDistrict" required disabled
+                                        class="w-full bg-slate-50 border-slate-200 rounded-lg focus:ring-primary focus:border-primary px-4 py-3 text-sm">
+                                        <option value="">Chọn Quận/Huyện</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest">Phường/Xã</label>
                                     <select name="ward" id="modalWard" required disabled
                                         class="w-full bg-slate-50 border-slate-200 rounded-lg focus:ring-primary focus:border-primary px-4 py-3 text-sm">
                                         <option value="">Chọn Phường/Xã</option>
@@ -384,29 +395,75 @@
                     }
 
                     document.getElementById('modalProvince').addEventListener('change', function () {
+                        const districtSelect = document.getElementById('modalDistrict');
                         const wardSelect = document.getElementById('modalWard');
+                        districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
                         wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                        districtSelect.disabled = true;
                         wardSelect.disabled = true;
-
+                        document.getElementById('modalProvinceId').value = "0";
+                        document.getElementById('modalProvinceName').value = "";
+                        
                         if (!this.value) return;
-
-                        const code = parseInt(this.options[this.selectedIndex].getAttribute('data-code'));
+                        
+                        const selectedOption = this.options[this.selectedIndex];
+                        const code = parseInt(selectedOption.getAttribute('data-code'));
+                        document.getElementById('modalProvinceId').value = code;
+                        document.getElementById('modalProvinceName').value = selectedOption.value;
+                        
                         const province = allProvincesData.find(p => p.code === code);
                         if (!province || !province.districts) return;
 
-                        const allWards = [];
+                        province.districts.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
                         province.districts.forEach(d => {
-                            if (d.wards) d.wards.forEach(w => allWards.push(w));
+                            const opt = document.createElement('option');
+                            opt.value = d.name;
+                            opt.setAttribute('data-code', d.code);
+                            opt.textContent = d.name;
+                            districtSelect.appendChild(opt);
                         });
-                        allWards.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+                        districtSelect.disabled = false;
+                    });
 
-                        allWards.forEach(w => {
+                    document.getElementById('modalDistrict').addEventListener('change', function () {
+                        const wardSelect = document.getElementById('modalWard');
+                        wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                        wardSelect.disabled = true;
+                        document.getElementById('modalDistrictId').value = "0";
+                        document.getElementById('modalDistrictName').value = "";
+                        
+                        if (!this.value) return;
+                        
+                        const selectedOption = this.options[this.selectedIndex];
+                        const districtCode = parseInt(selectedOption.getAttribute('data-code'));
+                        document.getElementById('modalDistrictId').value = districtCode;
+                        document.getElementById('modalDistrictName').value = selectedOption.value;
+
+                        const provinceCode = parseInt(document.getElementById('modalProvince').options[document.getElementById('modalProvince').selectedIndex].getAttribute('data-code'));
+                        const province = allProvincesData.find(p => p.code === provinceCode);
+                        if (!province || !province.districts) return;
+
+                        const district = province.districts.find(d => d.code === districtCode);
+                        if (!district || !district.wards) return;
+
+                        district.wards.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+                        district.wards.forEach(w => {
                             const opt = document.createElement('option');
                             opt.value = w.name;
+                            opt.setAttribute('data-code', w.code);
                             opt.textContent = w.name;
                             wardSelect.appendChild(opt);
                         });
                         wardSelect.disabled = false;
+                    });
+                    
+                    document.getElementById('modalWard').addEventListener('change', function () {
+                        document.getElementById('modalWardCode').value = "";
+                        document.getElementById('modalWardName').value = "";
+                        if (!this.value) return;
+                        const selectedOption = this.options[this.selectedIndex];
+                        document.getElementById('modalWardCode').value = selectedOption.getAttribute('data-code');
+                        document.getElementById('modalWardName').value = selectedOption.value;
                     });
 
                     async function openModal(modeOrElement) {
@@ -432,15 +489,28 @@
                             const fullAddress = el.getAttribute('data-address');
                             if (fullAddress) {
                                 const parts = fullAddress.split(',').map(s => s.trim());
-                                if (parts.length >= 3) {
-                                    document.getElementById('modalStreet').value = parts.slice(0, parts.length - 2).join(', ');
+                                // Default logic if it matches "Street, Ward, District, Province"
+                                if (parts.length >= 4) {
+                                    document.getElementById('modalStreet').value = parts.slice(0, parts.length - 3).join(', ');
                                     const province = parts[parts.length - 1];
-                                    const ward = parts[parts.length - 2];
+                                    const district = parts[parts.length - 2];
+                                    const ward = parts[parts.length - 3];
 
                                     const provSelect = document.getElementById('modalProvince');
                                     provSelect.value = province;
                                     provSelect.dispatchEvent(new Event('change'));
-                                    document.getElementById('modalWard').value = ward;
+                                    
+                                    setTimeout(() => {
+                                        const distSelect = document.getElementById('modalDistrict');
+                                        distSelect.value = district;
+                                        distSelect.dispatchEvent(new Event('change'));
+                                        
+                                        setTimeout(() => {
+                                            const wardSelect = document.getElementById('modalWard');
+                                            wardSelect.value = ward;
+                                            wardSelect.dispatchEvent(new Event('change'));
+                                        }, 50);
+                                    }, 50);
                                 } else {
                                     document.getElementById('modalStreet').value = fullAddress;
                                 }

@@ -643,6 +643,11 @@ public class ProductServlet extends HttpServlet {
         product.setBrand(request.getParameter("brand"));
         product.setPrice(parseBigDecimal(request.getParameter("price")));
         product.setDiscount(parseBigDecimal(request.getParameter("discount")));
+        try {
+            product.setWeight(Double.parseDouble(request.getParameter("weight")));
+        } catch (Exception e) {
+            product.setWeight(0.5); // Default
+        }
 
         // Bestseller: form sends hidden "bestseller=false" + optional checkbox "bestseller=true".
         // getParameterValues gives both; the last value wins for a checkbox trick,

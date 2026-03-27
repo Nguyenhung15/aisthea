@@ -20,6 +20,8 @@ public interface IOrderService {
 
     boolean updateOrderStatus(int orderId, String newStatus);
 
+    boolean confirmPayment(int orderId, String transactionCode);
+
     Order getAdminOrderDetails(int orderId);
 
     boolean deleteOrder(int orderId);
