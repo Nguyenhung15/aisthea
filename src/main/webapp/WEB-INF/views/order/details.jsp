@@ -558,11 +558,26 @@
                                                                     </div>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <button onclick="document.getElementById('returnModal').classList.add('active')"
-                                                                        class="w-full bg-white border border-slate-200 text-red-500 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-50 hover:border-red-200 transition-all flex items-center justify-center gap-2">
-                                                                        <span class="material-symbols-outlined text-sm">undo</span>
-                                                                        Yêu Cầu Hoàn Trả
-                                                                    </button>
+                                                                    <jsp:useBean id="nowDate" class="java.util.Date" />
+                                                                    <c:set var="daysDiff" value="${(nowDate.time - order.completedAt.time) / (1000 * 60 * 60 * 24)}" />
+                                                                    
+                                                                    <c:choose>
+                                                                        <c:when test="${order.completedAt != null && daysDiff <= 7}">
+                                                                            <button onclick="document.getElementById('returnModal').classList.add('active')"
+                                                                                class="w-full bg-white border border-slate-200 text-red-500 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-50 hover:border-red-200 transition-all flex items-center justify-center gap-2">
+                                                                                <span class="material-symbols-outlined text-sm">undo</span>
+                                                                                Yêu Cầu Hoàn Trả
+                                                                            </button>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <button disabled
+                                                                                class="w-full bg-slate-50 border border-slate-200 text-slate-400 py-4 rounded-lg text-[10px] uppercase tracking-[0.2em] font-bold cursor-not-allowed flex items-center justify-center gap-2"
+                                                                                title="Đã quá 7 ngày kể từ khi hoàn thành đơn. Không thẻ yêu cầu hoàn trả.">
+                                                                                <span class="material-symbols-outlined text-sm">block</span>
+                                                                                Hết hạn trả hàng
+                                                                            </button>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </c:if>
