@@ -36,11 +36,7 @@ import java.util.logging.Logger;
 import com.aisthea.fashion.util.Constants;
 
 @WebServlet(name = "OrderServlet", urlPatterns = { "/order" })
-@MultipartConfig(
-    fileSizeThreshold = 1024 * 1024 * 2,  // 2 MB
-    maxFileSize = 1024 * 1024 * 125,     // 125 MB (increased from 105MB)
-    maxRequestSize = 1024 * 1024 * 200    // 200 MB (increased from 150MB)
-)
+@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 50)
 public class OrderServlet extends HttpServlet {
 
     private IOrderService orderService;
@@ -614,24 +610,7 @@ public class OrderServlet extends HttpServlet {
             throws IOException, ServletException {
         int orderId = -1;
         try {
-            // For multipart requests, we'll extract these after ensuring parts are parsed or using getParts
-            String orderIdStr = request.getParameter("orderid");
-            if (orderIdStr == null || orderIdStr.isEmpty()) {
-                // Fallback: try to get from parts
-                jakarta.servlet.http.Part orderIdPart = request.getPart("orderid");
-                if (orderIdPart != null) {
-                    try (java.util.Scanner s = new java.util.Scanner(orderIdPart.getInputStream())) {
-                        orderIdStr = s.hasNext() ? s.next() : null;
-                    }
-                }
-            }
-
-            if (orderIdStr == null || orderIdStr.isEmpty()) {
-                throw new Exception("Cần có Mã đơn hàng để xử lý yêu cầu hoàn đơn.");
-            }
-            orderId = Integer.parseInt(orderIdStr);
-            logger.info("Handling return request for Order ID: " + orderId);
-
+            orderId = Integer.parseInt(request.getParameter("orderid"));
             ReturnRequest rr = new ReturnRequest();
             rr.setOrderId(orderId);
             rr.setUserId(user.getUserId());
@@ -641,15 +620,13 @@ public class OrderServlet extends HttpServlet {
             rr.setBankAccountName(request.getParameter("bankAccountName"));
             rr.setBankAccountNumber(request.getParameter("bankAccountNumber"));
 
-            // Save uploaded evidence files (images)
+            // Save uploaded evidence files (images only)
             StringBuilder evidencePaths = new StringBuilder();
             java.util.Collection<jakarta.servlet.http.Part> parts = request.getParts();
             if (parts != null) {
-                logger.info("Return request parts received: " + parts.size());
                 for (jakarta.servlet.http.Part part : parts) {
-                    String name = part.getName();
-                    if ("evidenceImages".equals(name) && part.getSize() > 0) {
-                        logger.info("Processing part: " + name + " (size: " + part.getSize() + " bytes, type: " + part.getContentType() + ")");
+                    if ("evidenceFiles".equals(part.getName()) && part.getSize() > 0) {
+                        // Use save() which only allows image extensions
                         String savedPath = com.aisthea.fashion.util.ImageUploadHelper.save(part, "returns");
                         if (savedPath != null) {
                             if (evidencePaths.length() > 0) evidencePaths.append(",");
@@ -657,8 +634,6 @@ public class OrderServlet extends HttpServlet {
                         }
                     }
                 }
-            } else {
-                logger.warning("No multipart parts found in the request.");
             }
             rr.setEvidenceUrls(evidencePaths.length() > 0 ? evidencePaths.toString() : null);
 
@@ -667,10 +642,8 @@ public class OrderServlet extends HttpServlet {
                     + "/order?action=view&orderid=" + orderId + "&returnSubmitted=true");
         } catch (Exception e) {
             logger.warning("handleSubmitReturn error: " + e.getMessage());
-            e.printStackTrace();
             try {
-                String errMsg = e.getMessage() != null ? e.getMessage() : "Lỗi không xác định khi xử lý yêu cầu hoàn trả.";
-                String encodedMsg = java.net.URLEncoder.encode(errMsg, "UTF-8");
+                String encodedMsg = java.net.URLEncoder.encode(e.getMessage(), "UTF-8");
                 response.sendRedirect(request.getContextPath()
                         + "/order?action=view&orderid=" + orderId + "&returnError=" + encodedMsg);
             } catch (Exception ex) {

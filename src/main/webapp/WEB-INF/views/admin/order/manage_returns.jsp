@@ -717,27 +717,16 @@
                     evidenceStr.split(',').forEach(function(url) {
                         url = url.trim();
                         if (!url) return;
-                        var ext = url.substring(url.lastIndexOf('.')).toLowerCase();
-                        if (ext === '.mp4' || ext === '.mov' || ext === '.webm') {
-                            var vid = document.createElement('video');
-                            vid.src = ctxPath + '/uploads/' + url;
-                            vid.style.cssText = 'width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;cursor:pointer;';
-                            (function(videoSrc) {
-                                vid.onclick = function() { openLightbox(videoSrc, 'video'); };
-                            })(ctxPath + '/uploads/' + url);
-                            evContainer.appendChild(vid);
-                        } else {
-                            var img = document.createElement('img');
-                            img.src = ctxPath + '/uploads/' + url;
-                            img.alt = 'Evidence';
-                            img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;cursor:pointer;transition:opacity 0.2s;';
-                            img.onmouseover = function() { this.style.opacity='0.7'; };
-                            img.onmouseout = function() { this.style.opacity='1'; };
-                            (function(imgSrc) {
-                                img.onclick = function() { openLightbox(imgSrc, 'image'); };
-                            })(ctxPath + '/uploads/' + url);
-                            evContainer.appendChild(img);
-                        }
+                        var img = document.createElement('img');
+                        img.src = ctxPath + '/uploads/' + url;
+                        img.alt = 'Evidence';
+                        img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;cursor:pointer;transition:opacity 0.2s;';
+                        img.onmouseover = function() { this.style.opacity='0.7'; };
+                        img.onmouseout = function() { this.style.opacity='1'; };
+                        (function(imgSrc) {
+                            img.onclick = function() { openLightbox(imgSrc); };
+                        })(ctxPath + '/uploads/' + url);
+                        evContainer.appendChild(img);
                     });
                 } else {
                     evWrap.style.display = 'none';
@@ -846,24 +835,19 @@
             <div id="evidenceLightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;cursor:zoom-out;">
                 <button onclick="closeLightbox()" style="position:absolute;top:20px;right:24px;background:rgba(255,255,255,0.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">&times;</button>
                 <img id="lightboxImg" src="" alt="Evidence" style="display:none;max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);object-fit:contain;" onclick="event.stopPropagation()">
-                <video id="lightboxVid" src="" controls style="display:none;max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);" onclick="event.stopPropagation()"></video>
             </div>
             <script>
-                function openLightbox(src, type) {
+                function openLightbox(src) {
                     var lb = document.getElementById('evidenceLightbox');
                     var img = document.getElementById('lightboxImg');
-                    var vid = document.getElementById('lightboxVid');
-                    img.style.display = 'none'; vid.style.display = 'none';
-                    if (type === 'video') { vid.src = src; vid.style.display = 'block'; }
-                    else { img.src = src; img.style.display = 'block'; }
+                    img.src = src;
+                    img.style.display = 'block';
                     lb.style.display = 'flex';
                     document.body.style.overflow = 'hidden';
                 }
                 function closeLightbox() {
                     var lb = document.getElementById('evidenceLightbox');
-                    var vid = document.getElementById('lightboxVid');
                     lb.style.display = 'none';
-                    vid.pause(); vid.src = '';
                     document.body.style.overflow = '';
                 }
                 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
