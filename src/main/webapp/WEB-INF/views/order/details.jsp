@@ -20,10 +20,6 @@
                     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
                     rel="stylesheet" />
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-                <style>
-                    @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(-12px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
-                    @keyframes toastOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(-12px); } }
-                </style>
 
                 <script id="tailwind-config">
                     tailwind.config = {
@@ -524,10 +520,19 @@
                                                                                 <div class="flex flex-wrap gap-2">
                                                                                     <c:forEach var="evUrl" items="${returnRequest.evidenceUrls.split(',')}">
                                                                                         <c:set var="evTrimmed" value="${evUrl.trim()}" />
-                                                                                        <img src="${pageContext.request.contextPath}/uploads/${evTrimmed}"
-                                                                                            class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition-opacity cursor-pointer"
-                                                                                            alt="Evidence"
-                                                                                            onclick="openLightbox('${pageContext.request.contextPath}/uploads/${evTrimmed}', 'image')">
+                                                                                        <c:choose>
+                                                                                            <c:when test="${evTrimmed.endsWith('.mp4') || evTrimmed.endsWith('.mov') || evTrimmed.endsWith('.webm')}">
+                                                                                                <video src="${pageContext.request.contextPath}/uploads/${evTrimmed}" controls
+                                                                                                    class="w-24 h-24 object-cover rounded-lg border border-slate-200"
+                                                                                                    style="max-width:96px;max-height:96px;"></video>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <img src="${pageContext.request.contextPath}/uploads/${evTrimmed}"
+                                                                                                    class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition-opacity cursor-pointer"
+                                                                                                    alt="Evidence"
+                                                                                                    onclick="openLightbox('${pageContext.request.contextPath}/uploads/${evTrimmed}', 'image')">
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
                                                                                     </c:forEach>
                                                                                 </div>
                                                                             </div>
@@ -537,11 +542,13 @@
                                                                                 <fmt:formatDate value="${returnRequest.createdAt}" pattern="HH:mm dd/MM/yyyy" />
                                                                             </p>
                                                                             <c:if test="${returnRequest.status == 'Pending'}">
-                                                                                <form action="${pageContext.request.contextPath}/order" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy yêu cầu hoàn đơn?')">
+                                                                                <form action="${pageContext.request.contextPath}/order" method="post">
                                                                                     <input type="hidden" name="action" value="cancelReturn">
                                                                                     <input type="hidden" name="returnId" value="${returnRequest.returnId}">
                                                                                     <input type="hidden" name="orderId" value="${order.orderid}">
-                                                                                    <button type="submit" class="text-red-500 hover:text-red-700 font-bold uppercase text-[10px] tracking-wider flex items-center gap-1 transition-colors">
+                                                                                    <button type="button"
+                                                                                        onclick="showConfirmModal('Bạn có chắc chắn muốn hủy yêu cầu hoàn đơn?', this.form)"
+                                                                                        class="text-red-500 hover:text-red-700 font-bold uppercase text-[10px] tracking-wider flex items-center gap-1 transition-colors">
                                                                                         <span class="material-icons-outlined text-xs">close</span>
                                                                                         Hủy Yêu Cầu
                                                                                     </button>
@@ -774,7 +781,7 @@
                                     <%-- Reason --%>
                                     <div>
                                         <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2.5">Lý do hoàn trả <span class="text-red-400">*</span></p>
-                                        <div class="space-y-2" id="reasonTypeGroup">
+                                        <div class="space-y-2">
                                             <c:forEach var="reason" items="${[
                                                 'Hàng lỗi / hư hỏng',
                                                 'Giao sai sản phẩm / sai màu / sai size',
@@ -783,46 +790,40 @@
                                                 'Tôi đổi ý / không còn cần nữa'
                                             ]}">
                                                 <label class="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-100 hover:border-slate-300 cursor-pointer transition-all shadow-sm">
-                                                    <input type="radio" name="reasonType" value="${reason}" class="w-4 h-4 text-slate-800 border-slate-300 focus:ring-slate-800" onchange="clearFieldError('reasonType')">
+                                                    <input type="radio" name="reasonType" value="${reason}" required class="w-4 h-4 text-slate-800 border-slate-300 focus:ring-slate-800">
                                                     <span class="text-sm font-medium text-slate-700">${reason}</span>
                                                 </label>
                                             </c:forEach>
                                         </div>
-                                        <p id="err-reasonType" class="text-red-500 text-xs mt-1.5 hidden"></p>
                                     </div>
 
                                     <%-- Detail --%>
                                     <div>
                                         <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2.5">Mô tả chi tiết <span class="text-red-400">*</span></p>
-                                        <div class="relative bg-white rounded-xl border border-slate-100 shadow-sm p-3 hover:border-slate-300 transition-colors" id="reasonDetailWrap">
-                                            <textarea name="reasonDetail" id="reasonDetailInput" rows="2"
+                                        <div class="relative bg-white rounded-xl border border-slate-100 shadow-sm p-3 hover:border-slate-300 transition-colors">
+                                            <textarea name="reasonDetail" rows="2"
                                                 class="w-full bg-transparent border-0 focus:ring-0 text-sm p-0 outline-none resize-none"
-                                                placeholder="Mô tả tình trạng hàng hóa..." oninput="clearFieldError('reasonDetail')"></textarea>
+                                                placeholder="Mô tả tình trạng hàng hóa..." required></textarea>
                                         </div>
-                                        <p id="err-reasonDetail" class="text-red-500 text-xs mt-1.5 hidden"></p>
                                     </div>
 
-                                    <%-- Evidence Media Upload (Shopee Style) --%>
+                                    <%-- Evidence: File Upload (Images Only) --%>
                                     <div>
-                                        <div class="mb-2">
-                                            <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400">Đăng tải hình ảnh hoặc video <span class="text-red-400">*</span></p>
+                                        <p class="text-[11px] uppercase tracking-widest font-extrabold text-[#94a3b8] mb-3">HÌNH ẢNH BẰNG CHỨNG <span class="text-red-400">*</span></p>
+                                        <div class="flex flex-wrap gap-2.5" id="returnImagePreviewContainer">
+                                            <%-- Upload Placeholder --%>
+                                            <label id="returnUploadTrigger" class="w-20 h-20 border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all rounded-sm group relative">
+                                                <span class="material-symbols-outlined text-slate-300 group-hover:text-slate-500 text-[32px] transition-colors">photo_camera</span>
+                                                <div class="flex items-center gap-1.5 mt-0.5">
+                                                    <div class="w-[1px] h-3.5 bg-slate-200 group-hover:bg-slate-300"></div>
+                                                    <span class="text-slate-300 group-hover:text-slate-500 text-[13px] font-medium tracking-tight" id="returnImageCounter">0/5</span>
+                                                </div>
+                                                <input type="file" id="returnFileInput" name="evidenceFiles" accept="image/*" multiple required
+                                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                    onchange="handleReturnFileSelect(this)">
+                                            </label>
                                         </div>
-                                        <p class="text-xs text-slate-500 mb-3">1. Thấy rõ sản phẩm nhận được không phải sản phẩm người mua đã đặt</p>
-                                        
-                                        <div class="flex flex-wrap gap-3">
-                                            <%-- Image Upload Box --%>
-                                            <div id="imageUploadContainer" class="flex flex-wrap gap-3">
-                                                <label class="w-24 h-24 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all group shrink-0">
-                                                    <span class="material-symbols-outlined text-2xl text-slate-400 group-hover:text-slate-600">photo_camera</span>
-                                                    <span class="text-[10px] text-slate-500 mt-1 text-center leading-tight">Thêm Hình ảnh<br><span id="imgCount">(0/6)</span></span>
-                                                    <input type="file" name="evidenceImages" id="evidenceImages" accept="image/*" multiple class="hidden" onchange="handleImageSelection(this)">
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="flex gap-10 mt-2">
-                                            <span class="text-[10px] text-slate-400">Tối đa: 5MB mỗi ảnh (Tối đa 6 ảnh)</span>
-                                        </div>
-                                        <p id="err-evidence" class="text-red-500 text-xs mt-1.5 hidden"></p>
+                                        <p id="returnUploadHint" class="text-[10px] text-slate-400 mt-2 italic">Tối đa 5 hình ảnh (định dạng JPG, PNG, WEBP)</p>
                                     </div>
 
                                     <%-- Bank Info --%>
@@ -914,209 +915,67 @@
                         document.getElementById("addressModal").classList.remove("active");
                     }
 
-                    let selectedImages = [];
+                    let returnFiles = [];
+                    const MAX_RETURN_IMAGES = 5;
 
-                    // ── Toast notification (replaces alert()) ────────────────────
-                    function showReturnToast(msg, type) {
-                        var existing = document.getElementById('returnToast');
-                        if (existing) existing.remove();
-
-                        var colors = type === 'error'
-                            ? 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;'
-                            : 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;';
-                        var icon = type === 'error' ? 'error' : 'check_circle';
-
-                        var toast = document.createElement('div');
-                        toast.id = 'returnToast';
-                        toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:99999;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 4px 24px rgba(0,0,0,0.12);animation:toastIn 0.3s ease;max-width:90vw;' + colors;
-                        toast.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px;">' + icon + '</span>' + msg;
-                        document.body.appendChild(toast);
-
-                        setTimeout(function() {
-                            toast.style.animation = 'toastOut 0.3s ease forwards';
-                            setTimeout(function() { toast.remove(); }, 300);
-                        }, 3500);
-                    }
-
-                    // ── Inline field error helpers ────────────────────────────────
-                    function showFieldError(fieldId, msg) {
-                        var el = document.getElementById('err-' + fieldId);
-                        if (el) { el.textContent = msg; el.classList.remove('hidden'); }
-                    }
-                    function clearFieldError(fieldId) {
-                        var el = document.getElementById('err-' + fieldId);
-                        if (el) { el.textContent = ''; el.classList.add('hidden'); }
-                    }
-                    function clearAllErrors() {
-                        document.querySelectorAll('[id^="err-"]').forEach(function(el) {
-                            el.textContent = ''; el.classList.add('hidden');
-                        });
-                    }
-
-                    function handleImageSelection(input) {
+                    function handleReturnFileSelect(input) {
                         const files = Array.from(input.files);
-                        clearFieldError('evidence');
-                        if (selectedImages.length + files.length > 6) {
-                            showReturnToast('Bạn chỉ có thể chọn tối đa 6 hình ảnh.', 'error');
-                            input.value = ""; return;
+                        
+                        if (returnFiles.length + files.length > MAX_RETURN_IMAGES) {
+                            alert('Tối đa ' + MAX_RETURN_IMAGES + ' hình ảnh cho mỗi yêu cầu.');
+                            const remaining = MAX_RETURN_IMAGES - returnFiles.length;
+                            files.splice(remaining);
                         }
                         
                         files.forEach(file => {
-                            if (file.size > 5 * 1024 * 1024) {
-                                showReturnToast('File ' + file.name + ' vượt quá giới hạn 5MB.', 'error');
-                                return;
+                            if (file.type.startsWith('image/')) {
+                                returnFiles.push(file);
                             }
-                            selectedImages.push(file);
-                            renderImagePreviews();
                         });
-                        input.value = "";
+                        
+                        updateReturnPreviews();
+                        syncReturnInput();
                     }
 
-                    function renderImagePreviews() {
-                        const container = document.getElementById('imageUploadContainer');
-                        const imgCount = document.getElementById('imgCount');
+                    function updateReturnPreviews() {
+                        const container = document.getElementById('returnImagePreviewContainer');
+                        const counter = document.getElementById('returnImageCounter');
+                        const uploadLabel = document.getElementById('returnUploadTrigger');
                         
-                        container.querySelectorAll('.preview-item').forEach(el => el.remove());
+                        container.querySelectorAll('.return-preview-item').forEach(el => el.remove());
                         
-                        const label = container.querySelector('label');
-                        selectedImages.forEach((file, index) => {
-                            const reader = new FileReader();
-                            const div = document.createElement('div');
-                            div.className = 'preview-item w-24 h-24 border border-slate-200 rounded-lg relative overflow-hidden shrink-0';
-                            div.innerHTML = `
-                                <img src="" class="w-full h-full object-cover">
-                                <button type="button" onclick="removeImage(${index})" class="absolute top-0 right-0 bg-black/50 text-white w-5 h-5 flex items-center justify-center text-[10px] rounded-bl-lg hover:bg-black/70">&times;</button>
-                            `;
-                            reader.onload = (e) => div.querySelector('img').src = e.target.result;
-                            reader.readAsDataURL(file);
-                            container.insertBefore(div, label);
+                        returnFiles.forEach((file, index) => {
+                            const url = URL.createObjectURL(file);
+                            const item = document.createElement('div');
+                            item.className = 'return-preview-item w-20 h-20 relative bg-slate-50 border border-slate-100 rounded-sm overflow-hidden';
+                            item.innerHTML = 
+                                '<img src="' + url + '" class="w-full h-full object-cover">' +
+                                '<div onclick="removeReturnImage(' + index + ')" class="absolute top-0 right-0 w-7 h-7 bg-[#2D242C] flex items-center justify-center cursor-pointer hover:bg-black transition-colors">' +
+                                    '<span class="material-symbols-outlined text-white text-[16px]">close</span>' +
+                                '</div>';
+                            container.insertBefore(item, uploadLabel);
                         });
-
-                        imgCount.textContent = `(${selectedImages.length}/6)`;
-                        label.style.display = selectedImages.length >= 6 ? 'none' : 'flex';
+                        
+                        counter.textContent = returnFiles.length + '/' + MAX_RETURN_IMAGES;
+                        if (returnFiles.length >= MAX_RETURN_IMAGES) {
+                            uploadLabel.classList.add('hidden');
+                        } else {
+                            uploadLabel.classList.remove('hidden');
+                        }
                     }
 
-                    function removeImage(index) {
-                        selectedImages.splice(index, 1);
-                        renderImagePreviews();
+                    function removeReturnImage(index) {
+                        returnFiles.splice(index, 1);
+                        updateReturnPreviews();
+                        syncReturnInput();
                     }
 
-
-
-                    // Intercept form submit — full validation + fetch
-                    document.getElementById('returnForm').onsubmit = function(e) {
-                        e.preventDefault();
-                        clearAllErrors();
-                        var hasError = false;
-
-                        // 1. Reason
-                        if (!document.querySelector('input[name="reasonType"]:checked')) {
-                            showFieldError('reasonType', 'Vui lòng chọn lý do hoàn trả.');
-                            hasError = true;
-                        }
-
-                        // 2. Detail
-                        var detail = document.getElementById('reasonDetailInput');
-                        if (!detail || !detail.value.trim()) {
-                            showFieldError('reasonDetail', 'Vui lòng mô tả chi tiết tình trạng hàng hóa.');
-                            hasError = true;
-                        }
-
-                        // 3. Evidence
-                        if (selectedImages.length === 0) {
-                            showFieldError('evidence', 'Vui lòng đăng tải ít nhất 1 hình ảnh bằng chứng.');
-                            hasError = true;
-                        }
-
-                        // 4. Bank
-                        var bankName = document.getElementById('bankNameHidden');
-                        var bankAccName = document.querySelector('input[name="bankAccountName"]');
-                        var bankAccNum = document.querySelector('input[name="bankAccountNumber"]');
-                        if (!bankName || !bankName.value) {
-                            showReturnToast('Vui lòng chọn ngân hàng.', 'error');
-                            hasError = true;
-                        }
-                        if (bankAccName && !bankAccName.value.trim()) {
-                            showReturnToast('Vui lòng nhập tên chủ thẻ.', 'error');
-                            hasError = true;
-                        }
-                        if (bankAccNum && !bankAccNum.value.trim()) {
-                            showReturnToast('Vui lòng nhập số tài khoản.', 'error');
-                            hasError = true;
-                        }
-
-                        if (hasError) {
-                            showReturnToast('Vui lòng điền đầy đủ thông tin bắt buộc.', 'error');
-                            return false;
-                        }
-
-                        const formData = new FormData(this);
-                        formData.delete('evidenceImages');
-                        
-                        selectedImages.forEach(file => {
-                            formData.append('evidenceImages', file);
-                        });
-
-                        // Show loading state
-                        var submitBtn = document.querySelector('button[form="returnForm"]');
-                        var origBtnText = 'GỬI YÊU CẦU HOÀN TRẢ';
-                        if (submitBtn) {
-                            submitBtn.disabled = true;
-                            submitBtn.textContent = 'ĐANG GỬI...';
-                        }
-
-                        // Use XMLHttpRequest for reliable large file upload with session cookies
-                        var xhr = new XMLHttpRequest();
-                        xhr.open('POST', this.action, true);
-                        xhr.withCredentials = true; // ensure session cookie is sent
-
-                        // Upload progress for large files
-                        xhr.upload.onprogress = function(e) {
-                            if (e.lengthComputable && submitBtn) {
-                                var pct = Math.round((e.loaded / e.total) * 100);
-                                submitBtn.textContent = 'ĐANG TẢI LÊN... ' + pct + '%';
-                            }
-                        };
-
-                        xhr.onload = function() {
-                            // Server responds with redirect (302) — XHR follows it automatically
-                            // The final response will be the redirected page (200 OK HTML)
-                            // Check the final URL for success/error indicators
-                            var finalUrl = xhr.responseURL || '';
-                            if (finalUrl.indexOf('returnSubmitted=true') !== -1) {
-                                window.location.href = finalUrl;
-                            } else if (finalUrl.indexOf('returnError=') !== -1) {
-                                // Extract and display the error
-                                window.location.href = finalUrl;
-                            } else if (xhr.status >= 200 && xhr.status < 400) {
-                                // Generic success — redirect to order view
-                                window.location.href = '${pageContext.request.contextPath}/order?action=view&orderid=${order.orderid}&returnSubmitted=true';
-                            } else {
-                                console.error('Return submit failed: HTTP ' + xhr.status);
-                                showReturnToast('Đã xảy ra lỗi khi gửi yêu cầu (HTTP ' + xhr.status + ').', 'error');
-                                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = origBtnText; }
-                            }
-                        };
-
-                        xhr.onerror = function() {
-                            console.error('XHR network error');
-                            showReturnToast('Đã xảy ra lỗi kết nối. Vui lòng thử lại.', 'error');
-                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = origBtnText; }
-                        };
-
-                        xhr.ontimeout = function() {
-                            console.error('XHR timeout');
-                            showReturnToast('Yêu cầu quá thời gian. Video có thể quá lớn, hãy thử file nhỏ hơn.', 'error');
-                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = origBtnText; }
-                        };
-
-                        // 5 minutes timeout for large video uploads
-                        xhr.timeout = 300000;
-                        xhr.send(formData);
-                    };
-
-                    function updateFileLabel(input) {
-                        // Obsolete with new UI
+                    function syncReturnInput() {
+                        const input = document.getElementById('returnFileInput');
+                        const dataTransfer = new DataTransfer();
+                        returnFiles.forEach(file => dataTransfer.items.add(file));
+                        input.files = dataTransfer.files;
+                        input.required = returnFiles.length === 0;
                     }
 
                     function handleReasonChange(radio) {
@@ -1365,7 +1224,58 @@
                         document.body.style.overflow = '';
                     }
                     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
+
+                    // ── Confirm Modal Logic ──────────────────────────────────────
+                    let pendingConfirmForm = null;
+
+                    function showConfirmModal(msg, form) {
+                        const modal = document.getElementById('confirmModal');
+                        const msgEl = document.getElementById('confirmModalMsg');
+                        if (modal && msgEl) {
+                            msgEl.textContent = msg;
+                            pendingConfirmForm = form;
+                            modal.classList.add('active');
+                            document.body.style.overflow = 'hidden';
+                        }
+                    }
+
+                    function closeConfirmModal() {
+                        const modal = document.getElementById('confirmModal');
+                        if (modal) {
+                            modal.classList.remove('active');
+                            pendingConfirmForm = null;
+                            document.body.style.overflow = '';
+                        }
+                    }
+
+                    function handleConfirmSuccess() {
+                        if (pendingConfirmForm) {
+                            pendingConfirmForm.submit();
+                        }
+                        closeConfirmModal();
+                    }
                 </script>
+
+                <%-- ══════ CONFIRM MODAL OVERLAY ══════ --%>
+                <div id="confirmModal" class="modal" style="z-index: 99999;">
+                    <div class="bg-white rounded-2xl w-full max-w-[340px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.2)] animate-scale-in flex flex-col items-center text-center">
+                        <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-5">
+                            <span class="material-symbols-outlined text-3xl">help</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Xác nhận</h3>
+                        <p id="confirmModalMsg" class="text-sm text-slate-500 mb-8 leading-relaxed">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+                        <div class="flex gap-3 w-full">
+                            <button type="button" onclick="closeConfirmModal()" 
+                                class="flex-1 py-3.5 rounded-xl border border-slate-100 text-[11px] uppercase tracking-widest font-bold text-slate-400 hover:bg-slate-50 transition-colors">
+                                Quay lại
+                            </button>
+                            <button type="button" onclick="handleConfirmSuccess()" 
+                                class="flex-1 py-3.5 rounded-xl bg-red-500 text-white text-[11px] uppercase tracking-widest font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-100">
+                                Xác nhận
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </body>
 
             </html>
