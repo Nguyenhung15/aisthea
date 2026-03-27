@@ -13,13 +13,15 @@
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
             <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-dashboard.css?v=2">
             <style>
-                .chat-admin-grid { display: grid; grid-template-columns: 380px 1fr; gap: 24px; height: calc(100vh - 160px); min-height: 500px; }
+                /* Prevent page scroll, only allow inner chat scrolling */
+                body.luxury-admin { overflow: hidden; }
+                .chat-admin-grid { display: grid; grid-template-columns: 380px 1fr; gap: 24px; height: calc(100vh - 110px); min-height: 500px; }
                 @media (max-width: 900px) {
                     .chat-admin-grid { grid-template-columns: 1fr; }
                     .chat-detail-panel { display: none; }
                     .chat-detail-panel.active { display: flex; }
                 }
-                .convo-list-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); display: flex; flex-direction: column; overflow: hidden; }
+                .convo-list-card { background: #ffffff; border: 1px solid var(--color-border); border-radius: var(--radius-xl); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
                 .convo-list-header { padding: 20px 24px; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; justify-content: space-between; }
                 .convo-list-header h3 { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; color: var(--color-text-primary); margin: 0; }
                 .convo-count-badge { background: var(--color-primary); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-full); }
@@ -33,7 +35,7 @@
                 .convo-list-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
                 .convo-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius-lg); cursor: pointer; transition: background 0.15s; border: 1px solid transparent; }
                 .convo-item:hover { background: var(--color-bg); }
-                .convo-item.active { background: rgba(2,74,207,0.06); border-color: rgba(2,74,207,0.15); }
+                .convo-item.active { background: rgba(178, 150, 125, 0.08); border-color: rgba(178, 150, 125, 0.3); }
                 .convo-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--color-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; overflow: hidden; }
                 .convo-avatar img { width: 100%; height: 100%; object-fit: cover; }
                 .convo-info { flex: 1; min-width: 0; }
@@ -49,20 +51,25 @@
                 .convo-type-badge.ai { background: #dbeafe; color: #2563eb; }
                 .convo-type-badge.staff { background: #fef3c7; color: #d97706; }
 
-                .chat-detail-panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); display: flex; flex-direction: column; overflow: hidden; }
+                .chat-detail-panel { background: #ffffff; border: 1px solid var(--color-border); border-radius: var(--radius-xl); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
                 .chat-detail-header { padding: 18px 24px; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 14px; }
                 .chat-detail-header h3 { font-family: var(--font-serif); font-size: 1rem; font-weight: 700; color: var(--color-text-primary); margin: 0; }
                 .chat-detail-header p { font-size: 0.72rem; color: var(--color-text-tertiary); margin: 2px 0 0; }
-                .chat-detail-messages { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; background: #f8fafc; }
+                .chat-detail-messages { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; background: #F8FAFC; }
                 .chat-detail-messages::-webkit-scrollbar { width: 4px; }
                 .chat-detail-messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-                .admin-msg { max-width: 75%; padding: 10px 16px; border-radius: 16px; font-size: 0.82rem; line-height: 1.5; }
-                .admin-msg--customer { align-self: flex-end; background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; border-bottom-right-radius: 4px; }
-                .admin-msg--ai { align-self: flex-start; background: #fff; color: #334155; border: 1px solid #e2e8f0; border-bottom-left-radius: 4px; }
-                .admin-msg--staff { align-self: flex-start; background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border-bottom-left-radius: 4px; }
-                .admin-msg__label { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; opacity: 0.7; }
-                .admin-msg__time { font-size: 0.6rem; color: #94a3b8; margin-top: 4px; }
-                .admin-msg--customer .admin-msg__time, .admin-msg--staff .admin-msg__time { color: rgba(255,255,255,0.5); text-align: right; }
+                .admin-msg { max-width: 75%; padding: 12px 18px; border-radius: 12px; font-size: 0.85rem; line-height: 1.5; font-family: var(--font-sans); }
+                .admin-msg--customer { align-self: flex-start; background: #ffffff; color: var(--color-text-primary); border: 1px solid rgba(0,0,0,0.03); border-bottom-left-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+                .admin-msg--ai { align-self: flex-end; background: #ffffff; color: var(--color-text-primary); border: 1px solid rgba(0,0,0,0.03); border-bottom-right-radius: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+                .admin-msg--staff { align-self: flex-end; background: linear-gradient(135deg, #C5A880, #A68A64); color: #ffffff; border-bottom-right-radius: 2px; box-shadow: 0 4px 12px rgba(166, 138, 100, 0.2); }
+                .admin-msg__label { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+                .admin-msg--customer .admin-msg__label { color: var(--color-text-tertiary); }
+                .admin-msg--ai .admin-msg__label { color: #B2967D; }
+                .admin-msg--staff .admin-msg__label { color: rgba(255,255,255,0.9); }
+                .admin-msg__time { font-size: 0.65rem; margin-top: 6px; }
+                .admin-msg--customer .admin-msg__time { color: var(--color-text-tertiary); }
+                .admin-msg--ai .admin-msg__time { color: #a1a1aa; text-align: right; }
+                .admin-msg--staff .admin-msg__time { color: rgba(255,255,255,0.7); text-align: right; }
                 .chat-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--color-text-tertiary); gap: 12px; }
                 .chat-empty-state i { font-size: 3rem; opacity: 0.3; }
                 .chat-empty-state p { font-size: 0.85rem; }
@@ -132,13 +139,6 @@
 
             <main class="lux-main">
                 <div class="lux-content">
-                    <!-- Page Header -->
-                    <header class="lux-page-header">
-                        <div class="lux-page-header__text">
-                            <h1 class="lux-page-header__title">AI Chat History</h1>
-                            <p class="lux-page-header__subtitle">AISTHÉA — Customer Conversations</p>
-                        </div>
-                    </header>
 
                     <div class="chat-admin-grid">
                         <!-- LEFT: Conversation List -->
@@ -206,6 +206,7 @@
                 var currentFilter = 'ALL';
                 var activeConvoId = null;
                 var activeConvoStatus = null;
+                var activeConvoName = 'Khách hàng';
                 var lastAdminMsgId = 0;
                 var pollTimer = null;
                 var knownStaffConvos = new Set();
@@ -354,6 +355,7 @@
                 function loadChat(convoId, name, chatType, status) {
                     activeConvoId = convoId;
                     activeConvoStatus = status;
+                    activeConvoName = name || 'Khách hàng';
                     lastAdminMsgId = 0;
                     seenMessageIds.clear(); // Clear for new chat
                     chatEmptyState.style.display = 'none';
@@ -465,9 +467,9 @@
                     var html = '';
                     msgs.forEach(function(m) {
                         var senderType = (m.sender||'').toUpperCase();
-                        var cls = 'admin-msg--ai', label = '🤖 AI';
-                        if (senderType === 'CUSTOMER') { cls = 'admin-msg--customer'; label = '👤 Customer'; }
-                        else if (senderType === 'STAFF') { cls = 'admin-msg--staff'; label = '🧑‍💼 Staff'; }
+                        var cls = 'admin-msg--ai', label = '<i class="fa-solid fa-sparkles"></i> AISTHÉA';
+                        if (senderType === 'CUSTOMER') { cls = 'admin-msg--customer'; label = '<i class="fa-regular fa-user"></i> ' + escapeHtml(activeConvoName); }
+                        else if (senderType === 'STAFF') { cls = 'admin-msg--staff'; label = '<i class="fa-solid fa-headset"></i> CSKH'; }
 
                         var text = formatChatText(m.text, senderType);
                         var timeStr = m.time ? formatTime(m.time) : '';
@@ -505,7 +507,7 @@
                             // Add message immediately to UI
                             var div = document.createElement('div');
                             div.className = 'admin-msg admin-msg--staff';
-                            div.innerHTML = '<div class="admin-msg__label">🧑‍💼 Staff</div>' + escapeHtml(text)
+                            div.innerHTML = '<div class="admin-msg__label"><i class="fa-solid fa-headset"></i> CSKH</div>' + escapeHtml(text)
                                 + '<div class="admin-msg__time">Just now</div>';
                              chatDetailMessages.appendChild(div);
                              chatDetailMessages.scrollTop = chatDetailMessages.scrollHeight;
@@ -539,8 +541,8 @@
                                  // Only add messages NOT from staff (avoid duplicates of own msgs)
                                  if (m.sender !== 'STAFF') {
                                     var senderType = (m.sender||'').toUpperCase();
-                                    var cls = 'admin-msg--ai', label = '🤖 AI';
-                                    if (senderType === 'CUSTOMER') { cls = 'admin-msg--customer'; label = '👤 Customer'; }
+                                    var cls = 'admin-msg--ai', label = '<i class="fa-solid fa-sparkles"></i> AISTHÉA';
+                                    if (senderType === 'CUSTOMER') { cls = 'admin-msg--customer'; label = '<i class="fa-regular fa-user"></i> ' + escapeHtml(activeConvoName); }
                                     
                                     var text = formatChatText(m.text, senderType);
                                     var div = document.createElement('div');

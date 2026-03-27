@@ -14,21 +14,22 @@
                         width: 64px;
                         height: 64px;
                         border-radius: 50%;
-                        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-                        color: #fff;
+                        background: linear-gradient(135deg, #FAF9F6 0%, #F3F1ED 100%);
+                        color: #1e293b;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         cursor: pointer;
-                        box-shadow: 0 8px 32px rgba(15, 23, 42, 0.35), 0 2px 8px rgba(0, 0, 0, 0.15);
+                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
                         transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
                         overflow: hidden;
                         padding: 0;
+                        border: 1px solid rgba(0,0,0,0.05);
                     }
 
                     .aisthea-chat-bubble:hover {
                         transform: scale(1.1);
-                        box-shadow: 0 12px 40px rgba(15, 23, 42, 0.5);
+                        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
                     }
 
                     .aisthea-chat-bubble::after {
@@ -37,7 +38,7 @@
                         width: 100%;
                         height: 100%;
                         border-radius: 50%;
-                        background: rgba(15, 23, 42, 0.3);
+                        background: rgba(161, 143, 113, 0.1);
                         animation: aisthea-pulse 2.5s ease-in-out infinite;
                     }
 
@@ -64,7 +65,7 @@
                         max-height: 580px;
                         background: #fff;
                         border-radius: 20px;
-                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
                         display: flex;
                         flex-direction: column;
                         overflow: hidden;
@@ -81,26 +82,29 @@
                     }
 
                     .aisthea-chat-header {
-                        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-                        color: #fff;
+                        background: linear-gradient(135deg, #FAF9F6 0%, #F3F1ED 100%);
+                        color: #1e293b;
                         padding: 18px 20px;
                         display: flex;
                         align-items: center;
                         gap: 12px;
                         flex-shrink: 0;
+                        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
                     }
 
                     .aisthea-chat-header__avatar {
                         width: 42px;
                         height: 42px;
                         border-radius: 50%;
-                        background: rgba(255, 255, 255, 0.95);
+                        background: #fff;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         overflow: hidden;
                         padding: 4px;
                         flex-shrink: 0;
+                        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                        border: 1px solid rgba(0,0,0,0.02);
                     }
 
                     .aisthea-chat-header__info h4 {
@@ -109,19 +113,20 @@
                         font-weight: 700;
                         font-family: 'Playfair Display', serif;
                         letter-spacing: 0.5px;
+                        color: #1a1a1a;
                     }
 
                     .aisthea-chat-header__info p {
                         margin: 2px 0 0;
                         font-size: 0.72rem;
-                        opacity: 0.85;
+                        color: #8b8b8b;
                     }
 
                     .aisthea-chat-header__close {
                         margin-left: auto;
-                        background: rgba(255, 255, 255, 0.15);
+                        background: rgba(0, 0, 0, 0.03);
                         border: none;
-                        color: #fff;
+                        color: #666;
                         font-size: 1rem;
                         width: 32px;
                         height: 32px;
@@ -134,7 +139,7 @@
                     }
 
                     .aisthea-chat-header__close:hover {
-                        background: rgba(255, 255, 255, 0.3);
+                        background: rgba(0, 0, 0, 0.08);
                     }
 
                     /* Mode indicator */
@@ -149,12 +154,13 @@
                     }
 
                     .aisthea-chat-mode.ai {
-                        background: #dbeafe;
-                        color: #2563eb;
+                        background: #fdfcf7;
+                        color: #8b7355;
+                        border-bottom: 1px solid rgba(0,0,0,0.03);
                     }
 
                     .aisthea-chat-mode.staff {
-                        background: #fef3c7;
+                        background: #fff9eb;
                         color: #d97706;
                     }
 
@@ -167,7 +173,7 @@
                         gap: 12px;
                         min-height: 250px;
                         max-height: 320px;
-                        background: #f8fafc;
+                        background: #F8FAFC; /* Light slate grey for 3D contrast */
                     }
 
                     .aisthea-chat-messages::-webkit-scrollbar {
@@ -181,54 +187,57 @@
 
                     .aisthea-msg {
                         max-width: 82%;
-                        padding: 10px 14px;
-                        border-radius: 16px;
+                        padding: 12px 16px;
+                        border-radius: 12px;
                         font-size: 0.85rem;
                         line-height: 1.5;
                         animation: aisthea-fadeIn 0.3s ease;
+                        font-family: var(--font-sans, 'Inter', sans-serif);
                     }
 
                     @keyframes aisthea-fadeIn {
-                        from {
-                            opacity: 0;
-                            transform: translateY(8px);
-                        }
-
-                        to {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
+                        from { opacity: 0; transform: translateY(8px); }
+                        to { opacity: 1; transform: translateY(0); }
                     }
 
                     .aisthea-msg--user {
                         align-self: flex-end;
-                        background: linear-gradient(135deg, #0f172a, #1e293b);
-                        color: #fff;
-                        border-bottom-right-radius: 4px;
+                        background: #1e293b;
+                        color: #ffffff;
+                        border-bottom-right-radius: 2px;
+                        box-shadow: 0 4px 12px rgba(30, 41, 59, 0.15);
                     }
 
                     .aisthea-msg--ai {
                         align-self: flex-start;
-                        background: #fff;
-                        color: #334155;
-                        border: 1px solid #e2e8f0;
-                        border-bottom-left-radius: 4px;
+                        background: #ffffff;
+                        color: #1e293b;
+                        border: 1px solid rgba(0,0,0,0.03);
+                        border-bottom-left-radius: 2px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
                     }
 
                     .aisthea-msg--staff {
                         align-self: flex-start;
-                        background: linear-gradient(135deg, #f59e0b, #d97706);
-                        color: #fff;
-                        border-bottom-left-radius: 4px;
+                        background: linear-gradient(135deg, #C5A880, #A68A64);
+                        color: #ffffff;
+                        border-bottom-left-radius: 2px;
+                        box-shadow: 0 4px 12px rgba(166, 138, 100, 0.2);
                     }
 
                     .aisthea-msg__label {
-                        font-size: 0.6rem;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        font-size: 0.65rem;
                         font-weight: 700;
                         text-transform: uppercase;
                         letter-spacing: 0.5px;
-                        margin-bottom: 2px;
-                        opacity: 0.7;
+                        margin-bottom: 5px;
+                        opacity: 0.9;
+                    }
+                    .aisthea-msg--staff .aisthea-msg__label {
+                        color: rgba(255,255,255,0.8);
                     }
 
                     .aisthea-chat-product-card {
@@ -467,6 +476,18 @@
                         }
                     }
 
+                    /* Closed/Paused state — gray bubble */
+                    .aisthea-chat-bubble--closed {
+                        background: linear-gradient(135deg, #d1d5db 0%, #b8bcc4 100%) !important;
+                        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06) !important;
+                    }
+                    .aisthea-chat-bubble--closed::after {
+                        background: rgba(156, 163, 175, 0.15) !important;
+                    }
+                    .aisthea-chat-bubble--closed:hover {
+                        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1) !important;
+                    }
+
                     /* Custom Modal Styles */
                     .aisthea-modal-overlay {
                         position: fixed;
@@ -594,7 +615,7 @@
                 <!-- Chat Bubble -->
                 <div class="aisthea-chat-bubble" id="aistheaChatBubble" title="Chat with AISTHÉA">
                     <img src="${pageContext.request.contextPath}/assets/images/ata-logo.png" alt="AISTHÉA"
-                        style="width:44px;height:44px;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1));">
+                        style="width: 75%; height: 75%; object-fit: contain; position: relative; z-index: 1; transform: translateY(-8px);">
                 </div>
 
                 <!-- Chat Window -->
@@ -618,17 +639,17 @@
                     </div>
 
                     <!-- Mode indicator -->
-                    <div class="aisthea-chat-mode ai" id="aistheaChatMode">🤖 Đang chat với AI Assistant</div>
+                    <div class="aisthea-chat-mode ai" id="aistheaChatMode"><i class="fa-solid fa-sparkles"></i> Đang chat với AISTHÉA</div>
 
                     <div class="aisthea-chat-messages" id="aistheaChatMessages"></div>
 
                     <!-- Action buttons -->
                     <div class="aisthea-chat-actions" id="aistheaChatActions">
                         <button class="aisthea-action-btn aisthea-action-btn--handoff" id="aistheaHandoffBtn">
-                            🧑‍💼 Gặp nhân viên
+                            <i class="fa-solid fa-headset"></i> Gặp nhân viên CSKH
                         </button>
                         <button class="aisthea-action-btn" id="aistheaCloseConvoBtn">
-                            ✕ Kết thúc chat
+                            💤 Tạm dừng chat
                         </button>
                     </div>
 
@@ -675,10 +696,21 @@
                         var chatHistory = [];
                         var currentConvoId = 0;
                         var currentChatType = 'AI';
+                        var currentStatus = 'OPEN'; // OPEN or CLOSED
                         var lastMessageId = 0;
                         var seenMessageIds = new Set(); // For deduplication
                         var pollTimer = null;
                         var ctxPath = '${pageContext.request.contextPath}';
+
+                        // Update bubble visual state (green vs gray)
+                        function updateBubbleState(status) {
+                            currentStatus = status;
+                            if (status === 'CLOSED') {
+                                bubble.classList.add('aisthea-chat-bubble--closed');
+                            } else {
+                                bubble.classList.remove('aisthea-chat-bubble--closed');
+                            }
+                        }
 
                         // Toggle chat
                         function toggleChat() {
@@ -689,6 +721,8 @@
                                 bubble.style.opacity = '0';
                                 setTimeout(function () { input.focus(); }, 350);
                                 if (!historyLoaded) { loadHistory(); historyLoaded = true; }
+                                // When user opens chat, bubble turns green (active)
+                                updateBubbleState('OPEN');
                                 startPolling();
                             } else {
                                 chatWin.classList.remove('open');
@@ -705,12 +739,12 @@
                             currentChatType = chatType;
                             if (chatType === 'STAFF') {
                                 modeBar.className = 'aisthea-chat-mode staff';
-                                modeBar.innerHTML = '🧑‍💼 Đang chat với nhân viên hỗ trợ';
+                                modeBar.innerHTML = '<i class="fa-solid fa-headset"></i> Đang chat với nhân viên hỗ trợ';
                                 headerSt.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f59e0b;margin-right:4px;"></span>Staff Mode';
                                 handoffBtn.style.display = 'none';
                             } else {
                                 modeBar.className = 'aisthea-chat-mode ai';
-                                modeBar.innerHTML = '🤖 Đang chat với AI Assistant';
+                                modeBar.innerHTML = '<i class="fa-solid fa-sparkles"></i> Đang chat với AISTHÉA';
                                 headerSt.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:4px;"></span>Online — AI Mode';
                                 handoffBtn.style.display = '';
                             }
@@ -723,6 +757,8 @@
                                 .then(function (data) {
                                     currentConvoId = data.convoId || 0;
                                     updateModeUI(data.chatType || 'AI');
+                                    // Track conversation status for bubble color
+                                    if (data.status) updateBubbleState(data.status);
                                     if (data.messages && data.messages.length > 0) {
                                         data.messages.forEach(function (m) {
                                             addMessage(m.text, m.sender || (m.role === 'user' ? 'CUSTOMER' : 'AI'), false);
@@ -748,7 +784,7 @@
                             div.className = 'aisthea-msg ' + cls;
 
                             var labelHtml = '';
-                            if (sender === 'STAFF') labelHtml = '<div class="aisthea-msg__label">🧑‍💼 Nhân viên</div>';
+                            if (sender === 'STAFF') labelHtml = '<div class="aisthea-msg__label"><i class="fa-solid fa-headset"></i> Nhận viên CSKH</div>';
 
                             if (sender !== 'CUSTOMER') {
                                 try {
@@ -955,9 +991,9 @@
                             });
                         });
 
-                        // Close conversation
+                        // Close (pause) conversation — Messenger-style
                         closeConvoBtn.addEventListener('click', function () {
-                            showAistheaConfirm('Kết thúc hội thoại', 'Bạn muốn kết thúc cuộc trò chuyện này?', function () {
+                            showAistheaConfirm('Tạm dừng chat', 'Bạn muốn tạm dừng cuộc trò chuyện?', function () {
                                 fetch(ctxPath + '/chat?action=close', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
@@ -966,13 +1002,14 @@
                                     .then(function (res) { return res.json(); })
                                     .then(function (data) {
                                         if (data.success) {
-                                            historyLoaded = false;
-                                            currentConvoId = 0;
-                                            lastMessageId = 0;
-                                            chatHistory = [];
-                                            msgArea.innerHTML = '';
-                                            updateModeUI('AI');
-                                            addMessage('Cuộc trò chuyện đã kết thúc. Mở chat lại để bắt đầu cuộc hội thoại mới! 🙏', 'AI', true);
+                                            // Messenger-style: just change visual state, keep history
+                                            updateBubbleState('CLOSED');
+                                            stopPolling();
+                                            // Close the chat window
+                                            isOpen = false;
+                                            chatWin.classList.remove('open');
+                                            bubble.style.transform = 'scale(1)';
+                                            bubble.style.opacity = '1';
                                         }
                                     });
                             });

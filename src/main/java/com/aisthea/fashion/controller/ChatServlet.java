@@ -106,6 +106,7 @@ public class ChatServlet extends HttpServlet {
                     }
                     int convoId = chatMessageDAO.findOrCreateConversation(user.getUserId());
                     String chatType = chatMessageDAO.getChatType(convoId);
+                    String convoStatus = chatMessageDAO.getConversationStatus(convoId);
                     List<ChatMessage> messages = chatMessageDAO.getRecentMessages(user.getUserId());
                     List<Map<String, Object>> result = new ArrayList<>();
                     for (ChatMessage m : messages) {
@@ -120,7 +121,8 @@ public class ChatServlet extends HttpServlet {
                     out.print(gson.toJson(safeMap(
                             "messages", result,
                             "convoId", convoId,
-                            "chatType", chatType)));
+                            "chatType", chatType,
+                            "status", convoStatus)));
                     break;
                 }
                 case "status": {
@@ -494,7 +496,8 @@ public class ChatServlet extends HttpServlet {
     }
 
     /**
-     * Close a conversation.
+     * Close (pause) a conversation — Messenger-style: just mark as CLOSED, no goodbye message.
+     * The same conversation will be reopened when the customer chats again.
      */
     private void handleClose(HttpServletRequest request, HttpServletResponse response, PrintWriter out)
             throws IOException {
@@ -516,10 +519,8 @@ public class ChatServlet extends HttpServlet {
             }
 
             boolean success = chatMessageDAO.closeConversation(convoId);
-            if (success) {
-                chatMessageDAO.saveMessage(convoId, "AI", "Cuộc trò chuyện đã kết thúc. Cảm ơn bạn đã liên hệ! 🙏");
-            }
-            out.print(gson.toJson(safeMap("success", success)));
+            // Messenger-style: no goodbye message — conversation will be reused
+            out.print(gson.toJson(safeMap("success", success, "status", "CLOSED")));
         } catch (Throwable t) {
             handleGenericError(t, response, out);
         }

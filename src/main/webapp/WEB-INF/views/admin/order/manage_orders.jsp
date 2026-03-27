@@ -55,6 +55,16 @@
                         color: #dc2626;
                     }
 
+                    /* Clean white rows like Customer Directory */
+                    .order-row {
+                        background: #fff;
+                        border-bottom: 1px solid var(--color-border-light);
+                        transition: background 0.15s ease;
+                    }
+                    .order-row:hover {
+                        background: var(--color-bg) !important;
+                    }
+
                     /* ── Filter Bar ── */
                     .order-filter-bar {
                         display: flex;
@@ -294,20 +304,29 @@
                                                     data-customer="${order.fullname}"
                                                     data-status="${order.status}"
                                                     data-refundstatus="${order.refundStatus}"
-                                                    data-date="<fmt:formatDate value='${order.createdat}' pattern='yyyy-MM-dd'/>"
-                                                    style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
-                                                    onmouseover="this.style.background='var(--color-bg)'"
-                                                    onmouseout="this.style.background='transparent'">
+                                                    data-date="<fmt:formatDate value='${order.createdat}' pattern='yyyy-MM-dd'/>">
+                                                    <td style="padding:16px 20px;font-size:0.85rem;color:var(--color-text-muted);">
+                                                        #${order.orderid}</td>
                                                     <td style="padding:16px 20px;">
-                                                        <span style="font-weight:700;font-size:0.88rem;color:var(--color-primary);">#${order.orderid}</span>
+                                                        <div style="display:flex;align-items:center;gap:12px;">
+                                                            <div
+                                                                style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.8rem;flex-shrink:0;">
+                                                                ${order.fullname.substring(0,1)}
+                                                            </div>
+                                                            <div>
+                                                                <div
+                                                                    style="font-weight:600;font-size:0.88rem;color:var(--color-text-primary);">
+                                                                    ${order.fullname}</div>
+                                                                <div
+                                                                    style="font-size:0.78rem;color:var(--color-text-muted);">
+                                                                    ${order.phone}</div>
+                                                            </div>
+                                                        </div>
                                                     </td>
                                                     <td style="padding:16px 20px;">
-                                                        <div style="font-weight:600;font-size:0.88rem;color:var(--color-text-primary);">${order.fullname}</div>
-                                                        <div style="font-size:0.78rem;color:var(--color-text-muted);margin-top:2px;">${order.phone}</div>
-                                                        <div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:1px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${order.address}</div>
-                                                    </td>
-                                                    <td style="padding:16px 20px;font-size:0.85rem;color:var(--color-text-secondary);">
-                                                        <fmt:formatDate value="${order.createdat}" pattern="dd/MM/yyyy" />
+                                                        <div style="font-size:0.85rem;color:var(--color-text-secondary);">
+                                                            <fmt:formatDate value="${order.createdat}" pattern="dd/MM/yyyy" />
+                                                        </div>
                                                         <div style="font-size:0.75rem;color:var(--color-text-muted);">
                                                             <fmt:formatDate value="${order.createdat}" pattern="HH:mm" />
                                                         </div>
@@ -318,29 +337,63 @@
                                                         </span>
                                                     </td>
                                                     <td style="padding:16px 20px;text-align:center;">
-                                                        <span class="status-badge status-${order.status}">${order.status}</span>
+                                                        <c:choose>
+                                                            <c:when test="${order.status == 'Completed'}">
+                                                                <span class="lux-badge lux-badge--success" style="gap:6px;">
+                                                                    <span style="width:6px;height:6px;border-radius:50%;background:var(--color-success);"></span>
+                                                                    Completed
+                                                                </span>
+                                                            </c:when>
+                                                            <c:when test="${order.status == 'Pending'}">
+                                                                <span class="lux-badge lux-badge--warning" style="gap:6px;background:#fef3c7;color:#d97706;">
+                                                                    <span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;"></span>
+                                                                    Pending
+                                                                </span>
+                                                            </c:when>
+                                                            <c:when test="${order.status == 'Processing'}">
+                                                                <span class="lux-badge" style="gap:6px;background:#dbeafe;color:#2563eb;">
+                                                                    <span style="width:6px;height:6px;border-radius:50%;background:#3b82f6;"></span>
+                                                                    Processing
+                                                                </span>
+                                                            </c:when>
+                                                            <c:when test="${order.status == 'Shipped'}">
+                                                                <span class="lux-badge" style="gap:6px;background:#e0e7ff;color:#4f46e5;">
+                                                                    <span style="width:6px;height:6px;border-radius:50%;background:#6366f1;"></span>
+                                                                    Shipped
+                                                                </span>
+                                                            </c:when>
+                                                            <c:when test="${order.status == 'Cancelled'}">
+                                                                <span class="lux-badge lux-badge--danger" style="gap:6px;">
+                                                                    <span style="width:6px;height:6px;border-radius:50%;background:#dc2626;"></span>
+                                                                    Cancelled
+                                                                </span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="lux-badge lux-badge--neutral" style="gap:6px;">
+                                                                    <span style="width:6px;height:6px;border-radius:50%;background:var(--color-text-muted);"></span>
+                                                                    ${order.status}
+                                                                </span>
+                                                            </c:otherwise>
+                                                        </c:choose>
                                                         <c:if test="${order.status eq 'Cancelled' and not empty order.refundStatus}">
                                                             <br>
-                                                            <span style="display:inline-block; margin-top:6px; font-size:0.65rem; font-weight:700; text-transform:uppercase; background:${order.refundStatus == 'Pending' ? '#fee2e2' : '#d1fae5'}; color:${order.refundStatus == 'Pending' ? '#b91c1c' : '#065f46'}; padding:3px 8px; border-radius:12px;">
-                                                                REFUND: ${order.refundStatus}
+                                                            <span style="display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:0.65rem;font-weight:700;text-transform:uppercase;background:${order.refundStatus == 'Pending' ? '#fee2e2' : '#d1fae5'};color:${order.refundStatus == 'Pending' ? '#b91c1c' : '#065f46'};padding:3px 8px;border-radius:12px;">
+                                                                <span style="width:5px;height:5px;border-radius:50%;background:${order.refundStatus == 'Pending' ? '#ef4444' : '#10b981'};"></span>
+                                                                Refund: ${order.refundStatus}
                                                             </span>
                                                         </c:if>
                                                     </td>
                                                     <td style="padding:16px 20px;text-align:right;">
                                                         <div style="display:flex;gap:8px;justify-content:flex-end;">
                                                             <a href="${pageContext.request.contextPath}/order?action=adminViewDetail&id=${order.orderid}"
-                                                                style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-text-secondary);transition:all 0.2s ease;font-size:0.82rem;"
-                                                                onmouseover="this.style.background='var(--color-primary)';this.style.color='#fff';"
-                                                                onmouseout="this.style.background='var(--color-bg)';this.style.color='var(--color-text-secondary)';"
+                                                                style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-text-secondary);transition:all 0.2s ease;"
                                                                 title="View Details">
                                                                 <i class="fa-solid fa-eye"></i>
                                                             </a>
                                                             <c:if test="${order.status == 'Cancelled' || order.status == 'Completed'}">
                                                                 <a href="${pageContext.request.contextPath}/order?action=adminDelete&id=${order.orderid}"
                                                                     onclick="return confirm('Are you sure you want to permanently delete order #${order.orderid}?')"
-                                                                    style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-text-secondary);transition:all 0.2s ease;font-size:0.82rem;"
-                                                                    onmouseover="this.style.background='#fef2f2';this.style.color='#dc2626';"
-                                                                    onmouseout="this.style.background='var(--color-bg)';this.style.color='var(--color-text-secondary)';"
+                                                                    style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);background:var(--color-bg);color:var(--color-text-secondary);transition:all 0.2s ease;"
                                                                     title="Delete">
                                                                     <i class="fa-solid fa-trash-can"></i>
                                                                 </a>

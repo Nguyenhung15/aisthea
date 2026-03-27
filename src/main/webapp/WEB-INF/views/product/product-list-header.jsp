@@ -370,6 +370,19 @@
 
                     var cachedProducts = null; // cache fetched products
 
+                    // Tiền tố chỉ loại quần áo — nếu có từ phía sau thì bỏ đi để tìm chính xác hơn
+                    // Ví dụ: "áo khoác" → tìm "khoác" | "quần jeans" → tìm "jeans"
+                    var VN_CLOTHING_PREFIXES = ['áo', 'quần', 'váy', 'đầm', 'đồ', 'bộ', 'set'];
+
+                    function stripClothingPrefix(kw) {
+                        var words = kw.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+                        if (words.length > 1 && VN_CLOTHING_PREFIXES.indexOf(words[0]) !== -1) {
+                            // Bỏ từ đầu (tiền tố) và chỉ tìm theo phần còn lại
+                            return words.slice(1);
+                        }
+                        return words;
+                    }
+
                     window.doAjaxSearch = function () {
                         var queryInput = document.getElementById('search-input');
                         var query = queryInput ? queryInput.value.trim() : '';
@@ -383,7 +396,7 @@
                         // Hide popular, show loading
                         if (popularDiv) popularDiv.style.display = 'none';
 
-                        // If we already cached all products, filter immediately
+                        // Nếu đã có cache, lọc ngay (không cần fetch lại)
                         if (cachedProducts) {
                             displayFilteredResults(cachedProducts, keyword, resultsDiv);
                             return;
@@ -393,7 +406,7 @@
                         if (loadingDiv) loadingDiv.style.display = 'flex';
                         resultsDiv.innerHTML = '';
 
-                        // Fetch all pages
+                        // Fetch toàn bộ sản phẩm rồi lọc client-side
                         fetchAllProducts(1, [], function (allProducts) {
                             cachedProducts = allProducts;
                             if (loadingDiv) loadingDiv.style.display = 'none';
@@ -456,13 +469,17 @@
                     }
 
                     function displayFilteredResults(allProducts, keyword, container) {
-                        var searchWords = keyword.split(/\s+/).filter(function (w) { return w.length > 0; });
+                        // Bỏ tiền tố loại quần áo nếu có từ phía sau
+                        // VD: "áo khoác" → searchWords = ["khoác"]
+                        //     "quần jeans" → searchWords = ["jeans"]
+                        //     "áo" (chỉ 1 từ) → searchWords = ["áo"]
+                        var searchWords = stripClothingPrefix(keyword);
 
                         var matches = allProducts.filter(function (p) {
-                            var productText = p.searchText.toLowerCase();
-                            // Match if any word in the search query is found in the product text
-                            return searchWords.some(function (word) {
-                                return productText.indexOf(word) !== -1;
+                            var nameText = p.name.toLowerCase();
+                            // Tất cả các từ còn lại phải xuất hiện trong tên sản phẩm
+                            return searchWords.every(function (word) {
+                                return nameText.indexOf(word) !== -1;
                             });
                         });
 
@@ -641,3 +658,4 @@
                             .catch(function(){});
                     })();
                 </script>
+                <jsp:include page="/WEB-INF/views/common/chatbox-widget.jsp" />

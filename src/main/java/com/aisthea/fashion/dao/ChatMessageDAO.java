@@ -36,26 +36,36 @@ public class ChatMessageDAO {
     }
 
     /**
-     * Find an existing OPEN conversation for a customer (AI or STAFF), or create a new AI one.
+     * Find the SINGLE conversation for a customer (OPEN or CLOSED), or create a new one.
+     * Messenger-style: each customer always has exactly ONE conversation thread.
+     * If the existing conversation is CLOSED, it will be reopened and reset to AI mode.
      */
     public int findOrCreateConversation(int customerId) {
-        // Find any OPEN conversation (AI or STAFF)
-        String findSql = "SELECT TOP 1 conversationid FROM conversations "
-                + "WHERE customerid = ? AND status = 'OPEN' "
+        // Find ANY conversation for this customer (most recent first)
+        String findSql = "SELECT TOP 1 conversationid, status FROM conversations "
+                + "WHERE customerid = ? "
                 + "ORDER BY updatedat DESC";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(findSql)) {
             ps.setInt(1, customerId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt("conversationid");
+                    int convoId = rs.getInt("conversationid");
+                    String status = rs.getString("status");
+                    // If conversation is CLOSED, reopen it and reset to AI mode
+                    if ("CLOSED".equalsIgnoreCase(status)) {
+                        reopenConversation(convoId);
+                        resetToAI(convoId);
+                        System.out.println("[ChatMessageDAO] Reopened existing conversation " + convoId + " for customer " + customerId);
+                    }
+                    return convoId;
                 }
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "[ChatMessageDAO] findConversation error", e);
         }
 
-        // Create new AI conversation
+        // No conversation exists at all — create new AI conversation
         String insertSql = "INSERT INTO conversations (customerid, chattype, status) "
                 + "VALUES (?, 'AI', 'OPEN')";
         try (Connection conn = DBConnection.getConnection();
@@ -71,6 +81,21 @@ public class ChatMessageDAO {
             logger.log(Level.SEVERE, "[ChatMessageDAO] createConversation error", e);
         }
         return -1;
+    }
+
+    /**
+     * Reset a conversation back to AI mode (used when reopening a closed conversation).
+     */
+    public boolean resetToAI(int conversationId) {
+        String sql = "UPDATE conversations SET chattype = 'AI', staffid = NULL, updatedat = GETDATE() WHERE conversationid = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, conversationId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "[ChatMessageDAO] resetToAI error", e);
+            return false;
+        }
     }
 
     public boolean handoffToStaff(int conversationId, Integer userId) {
@@ -277,16 +302,21 @@ public class ChatMessageDAO {
     // ═══════════════════════════════════════════════════
 
     /**
-     * Admin: Get all conversations with customer info, message count, and last message.
+     * Admin: Get the LATEST conversation per customer (Messenger-style: 1 row per customer).
      */
     public List<Conversation> getAllConversations() {
-        String sql = "SELECT c.conversationid, c.customerid, c.chattype, c.status, "
+        String sql = "WITH ranked AS ("
+                + "  SELECT *, ROW_NUMBER() OVER (PARTITION BY customerid ORDER BY updatedat DESC) AS rn "
+                + "  FROM conversations"
+                + ") "
+                + "SELECT c.conversationid, c.customerid, c.chattype, c.status, "
                 + "c.createdat, c.updatedat, c.staffid, "
                 + "u.fullname, u.username, u.avatar, "
                 + "(SELECT COUNT(*) FROM messages WHERE conversationid = c.conversationid) as msg_count, "
                 + "(SELECT TOP 1 content FROM messages WHERE conversationid = c.conversationid ORDER BY createdat DESC) as last_message "
-                + "FROM conversations c "
+                + "FROM ranked c "
                 + "JOIN users u ON c.customerid = u.userid "
+                + "WHERE c.rn = 1 "
                 + "ORDER BY c.updatedat DESC";
         List<Conversation> list = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();

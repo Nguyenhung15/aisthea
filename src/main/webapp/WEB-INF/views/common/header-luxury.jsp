@@ -397,6 +397,16 @@
 
                             var cachedProducts = null;
 
+                            // Tiền tố loại quần áo — bỏ đi khi có từ phía sau
+                            var VN_CLOTHING_PREFIXES = ['áo', 'quần', 'váy', 'đầm', 'đồ', 'bộ', 'set'];
+                            function stripClothingPrefix(kw) {
+                                var words = kw.trim().split(/\s+/).filter(function(w) { return w.length > 0; });
+                                if (words.length > 1 && VN_CLOTHING_PREFIXES.indexOf(words[0]) !== -1) {
+                                    return words.slice(1);
+                                }
+                                return words;
+                            }
+
                             window.doAjaxSearch = function () {
                                 var queryInput = document.getElementById('search-input');
                                 var query = queryInput ? queryInput.value.trim() : '';
@@ -407,10 +417,8 @@
                                 var popularDiv = document.getElementById('popular-searches');
                                 if (popularDiv) popularDiv.style.display = 'none';
 
-                                if (cachedProducts) {
-                                    displayFilteredResults(cachedProducts, keyword, resultsDiv);
-                                    return;
-                                }
+                                // Luôn reset cache để tránh dùng kết quả cũ
+                                cachedProducts = null;
 
                                 if (loadingDiv) loadingDiv.style.display = 'flex';
                                 resultsDiv.innerHTML = '';
@@ -467,13 +475,14 @@
                             }
 
                             function displayFilteredResults(allProducts, keyword, container) {
-                                var searchWords = keyword.split(/\s+/).filter(function (w) { return w.length > 0; });
+                                // Bỏ tiền tố "áo/quần/váy..." nếu có từ phía sau
+                                var searchWords = stripClothingPrefix(keyword);
 
                                 var matches = allProducts.filter(function (p) {
-                                    var productText = p.searchText.toLowerCase();
-                                    // Match if any word in the search query is found in the product text
-                                    return searchWords.some(function (word) {
-                                        return productText.indexOf(word) !== -1;
+                                    var nameText = p.name.toLowerCase();
+                                    // Tất cả các từ còn lại phải có trong tên sản phẩm
+                                    return searchWords.every(function (word) {
+                                        return nameText.indexOf(word) !== -1;
                                     });
                                 });
                                 if (matches.length === 0) {

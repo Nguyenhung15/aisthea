@@ -296,10 +296,24 @@ public class ProductDAO implements IProductDAO {
         }
 
         // -- KEYWORD search --
+        // Bỏ tiền tố loại quần áo nếu có từ phía sau
+        // VD: "áo khoác" → tìm "khoác" | "quần jeans" → tìm "jeans" | "áo" (1 từ) → tìm "áo"
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (p.name LIKE ? OR p.brand LIKE ? OR p.description LIKE ? OR c.name LIKE ?) ");
-            String kw = "%" + keyword.trim() + "%";
-            params.add(kw); params.add(kw); params.add(kw); params.add(kw);
+            String effectiveKeyword = keyword.trim();
+            String[] CLOTHING_PREFIXES = {"áo", "quần", "váy", "đầm", "đồ", "bộ", "set"};
+            String[] parts = effectiveKeyword.toLowerCase().split("\\s+");
+            if (parts.length > 1) {
+                for (String prefix : CLOTHING_PREFIXES) {
+                    if (parts[0].equals(prefix)) {
+                        // Bỏ từ đầu, chỉ giữ phần còn lại
+                        effectiveKeyword = effectiveKeyword.substring(parts[0].length()).trim();
+                        break;
+                    }
+                }
+            }
+            sql.append(" AND (p.name LIKE ? OR c.name LIKE ?) ");
+            String kw = "%" + effectiveKeyword + "%";
+            params.add(kw); params.add(kw);
         }
 
         // -- PRICE range --

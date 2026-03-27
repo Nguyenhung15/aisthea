@@ -151,11 +151,11 @@
                 border-bottom: 1px solid var(--color-border-light);
             }
             .notif-item:hover { background: var(--color-bg); }
-            .notif-ava { width: 32px; height: 32px; border-radius: 50%; background: #f59e0b; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem; flex-shrink:0;}
-            .notif-content { flex: 1; min-width: 0; }
-            .notif-name { display: block; font-weight: 700; color: var(--color-text-primary); font-size: 0.78rem; margin-bottom: 2px; }
+            .notif-ava { width: 32px; height: 32px; min-width: 32px; min-height: 32px; border-radius: 50%; background: #f59e0b; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem; flex-shrink:0; }
+            .notif-content { flex: 1; min-width: 0; overflow: hidden; }
+            .notif-name { display: block; font-weight: 700; color: var(--color-text-primary); font-size: 0.78rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .notif-text { display: block; font-size: 0.7rem; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .notif-time { font-size: 0.6rem; color: var(--color-primary); font-weight: 600; margin-left: auto; }
+            .notif-time { font-size: 0.6rem; color: var(--color-primary); font-weight: 600; flex-shrink: 0; white-space: nowrap; }
 
             /* Toast Notification */
             .lux-toast {
@@ -357,6 +357,20 @@
                     if (notifDropdown) notifDropdown.classList.remove('show');
                 });
 
+                // Dismissed notifications (persists across page navigations)
+                function getDismissedIds() {
+                    try {
+                        return JSON.parse(localStorage.getItem('aisthea_dismissed_notifs') || '[]');
+                    } catch(e) { return []; }
+                }
+                function dismissNotif(convoId) {
+                    var ids = getDismissedIds();
+                    if (ids.indexOf(String(convoId)) === -1) {
+                        ids.push(String(convoId));
+                        localStorage.setItem('aisthea_dismissed_notifs', JSON.stringify(ids));
+                    }
+                }
+
                 // Polling for chat notifications
                 function pollChatNotifs() {
                     const url = ctx + (ctx.endsWith('/') ? '' : '/') + 'chat?action=conversations&t=' + Date.now();
@@ -364,32 +378,33 @@
                     .then(r => r.json())
                     .then(data => {
                         const convos = data.conversations || [];
-                        console.log('[AdminNotif] Poll Success. Convos:', convos.length, 'OnlineAdmins:', data.onlineCount);
-                        const types = convos.map(c => String(c.chatType || '').trim().toUpperCase() + '/' + String(c.status || '').trim().toUpperCase());
-                        console.log('[Poll] Raw Data (Type/Stat):', types);
+                        const dismissedIds = getDismissedIds();
 
                         const staffConvos = convos.filter(c => {
                             const type = String(c.chatType || '').trim().toUpperCase();
                             const stat = String(c.status || '').trim().toUpperCase();
+                            // Exclude dismissed notifications
+                            if (dismissedIds.indexOf(String(c.convoId)) !== -1) return false;
                             return type === 'STAFF' && stat === 'OPEN';
                         });
 
-                        console.log('[Poll] Staff Requests (Filtered):', staffConvos.length);
+                        // Clean up dismissed IDs for conversations that are no longer STAFF/OPEN
+                        const activeStaffIds = convos
+                            .filter(c => String(c.chatType||'').trim().toUpperCase() === 'STAFF' && String(c.status||'').trim().toUpperCase() === 'OPEN')
+                            .map(c => String(c.convoId));
+                        var cleanedIds = dismissedIds.filter(id => activeStaffIds.indexOf(id) !== -1);
+                        localStorage.setItem('aisthea_dismissed_notifs', JSON.stringify(cleanedIds));
 
                         if (staffConvos.length > 0) {
                             notifBadge.style.display = 'block';
                             notifPulseCount.textContent = staffConvos.length;
                             notifPulseCount.style.display = 'inline-block';
-                            
-                            // Make badge blink if it's extremely urgent
                             notifBadge.style.animation = 'pulseNotif 1s infinite';
 
                             let html = '';
                             staffConvos.forEach((c, idx) => {
                                 const sid = String(c.convoId);
-                                // Show toast ONLY if it's the first time we see this ID since page load
                                 if (!knownHandoffIds.has(sid)) {
-                                    console.log('[Poll] NEW handoff request:', sid);
                                     if (isInitialized) {
                                         showToast('Yêu cầu hỗ trợ', (c.fullname || c.username || 'Khách hàng') + ' cần giúp đỡ', c.convoId);
                                         try {
@@ -404,16 +419,14 @@
                                     const name = c.fullname || c.username || 'Khách hàng';
                                     const initials = name.charAt(0).toUpperCase();
                                     const msg = (c.lastMessage || 'Cần hỗ trợ gấp...').substring(0, 50);
-                                    html += `
-                                        <a href="${ctx}/chat?action=manage&convoId=${c.convoId}" class="notif-item">
-                                            <div class="notif-ava">${initials}</div>
-                                            <div class="notif-content">
-                                                <span class="notif-name">${name}</span>
-                                                <span class="notif-text">${msg}</span>
-                                            </div>
-                                            <span class="notif-time">Mới</span>
-                                        </a>
-                                    `;
+                                    html += '<a href="' + ctx + '/chat?action=manage&convoId=' + c.convoId + '" class="notif-item" onclick="dismissNotif(' + c.convoId + ')">'
+                                        + '<div class="notif-ava">' + initials + '</div>'
+                                        + '<div class="notif-content">'
+                                        + '<span class="notif-name">' + name + '</span>'
+                                        + '<span class="notif-text">' + msg + '</span>'
+                                        + '</div>'
+                                        + '<span class="notif-time">Mới</span>'
+                                        + '</a>';
                                 }
                             });
                             notifList.innerHTML = html;
@@ -431,7 +444,10 @@
                     });
                 }
 
+                // Make dismissNotif available globally for onclick
+                window.dismissNotif = dismissNotif;
+
                 pollChatNotifs();
-                setInterval(pollChatNotifs, 5000); // 5 seconds instead of 10
+                setInterval(pollChatNotifs, 5000);
             })();
         </script>
