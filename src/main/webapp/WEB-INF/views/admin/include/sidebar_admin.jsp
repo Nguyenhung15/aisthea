@@ -39,9 +39,14 @@
 
                 <span class="lux-sidebar__section-label">Relations</span>
                 <a href="${pageContext.request.contextPath}/order?action=list" class="lux-sidebar__link"
-                    data-path="/order">
+                    data-path="/order?action=list">
                     <i class="fa-solid fa-box"></i>
                     <span>Orders</span>
+                </a>
+                <a href="${pageContext.request.contextPath}/order?action=listReturns" class="lux-sidebar__link"
+                    data-path="/order?action=listReturns">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Return Requests</span>
                 </a>
                 <a href="${pageContext.request.contextPath}/user?action=list" class="lux-sidebar__link"
                     data-path="/user">
@@ -113,11 +118,17 @@
 
         <script>
             (function () {
+                const fullUrl = window.location.pathname + window.location.search;
                 const path = window.location.pathname;
                 const links = document.querySelectorAll('.lux-sidebar__link');
                 links.forEach(link => {
                     const dataPath = link.getAttribute('data-path');
-                    if (path.includes(dataPath)) {
+                    if (dataPath && dataPath.includes('?')) {
+                        // Match full path + query string
+                        if (fullUrl.includes(dataPath)) {
+                            link.classList.add('active');
+                        }
+                    } else if (dataPath && path.includes(dataPath)) {
                         link.classList.add('active');
                     }
                 });

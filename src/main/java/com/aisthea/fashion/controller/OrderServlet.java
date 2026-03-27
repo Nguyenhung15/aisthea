@@ -36,7 +36,11 @@ import java.util.logging.Logger;
 import com.aisthea.fashion.util.Constants;
 
 @WebServlet(name = "OrderServlet", urlPatterns = { "/order" })
-@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 10, maxRequestSize = 1024 * 1024 * 50)
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024 * 2, 
+    maxFileSize = 1024 * 1024 * 105, 
+    maxRequestSize = 1024 * 1024 * 150
+)
 public class OrderServlet extends HttpServlet {
 
     private IOrderService orderService;
@@ -78,6 +82,9 @@ public class OrderServlet extends HttpServlet {
                     break;
                 case "adminViewDetail":
                     handleAdminViewDetail(request, response, user);
+                    break;
+                case "listReturns":
+                    handleAdminListReturns(request, response, user);
                     break;
                 case "adminDelete":
                     handleAdminDelete(request, response, user);
@@ -525,6 +532,24 @@ public class OrderServlet extends HttpServlet {
         }
     }
 
+    private void handleAdminListReturns(HttpServletRequest request, HttpServletResponse response, User user)
+            throws ServletException, IOException {
+        if (!isAdmin(user)) {
+            response.sendRedirect(request.getContextPath() + "/order?action=history");
+            return;
+        }
+
+        try {
+            ReturnRequestDAO rrDao = new ReturnRequestDAO();
+            List<ReturnRequest> returnRequests = rrDao.getAllWithCustomerInfo();
+            request.setAttribute("returnRequests", returnRequests);
+        } catch (Exception e) {
+            logger.warning("Error loading return requests: " + e.getMessage());
+            request.setAttribute("returnRequests", new java.util.ArrayList<>());
+        }
+        request.getRequestDispatcher("/WEB-INF/views/admin/order/manage_returns.jsp").forward(request, response);
+    }
+
     private void handleAdminUpdateStatus(HttpServletRequest request, HttpServletResponse response, User user)
             throws IOException {
         if (!isAdmin(user)) {
@@ -586,7 +611,7 @@ public class OrderServlet extends HttpServlet {
     // ─── Return Request Handlers ──────────────────────────────────────────────
 
     private void handleSubmitReturn(HttpServletRequest request, HttpServletResponse response, User user)
-            throws IOException {
+            throws IOException, ServletException {
         int orderId = -1;
         try {
             orderId = Integer.parseInt(request.getParameter("orderid"));
@@ -595,10 +620,24 @@ public class OrderServlet extends HttpServlet {
             rr.setUserId(user.getUserId());
             rr.setReasonType(request.getParameter("reasonType"));
             rr.setReasonDetail(request.getParameter("reasonDetail"));
-            rr.setEvidenceUrls(request.getParameter("evidenceUrls"));
             rr.setBankName(request.getParameter("bankName"));
             rr.setBankAccountName(request.getParameter("bankAccountName"));
             rr.setBankAccountNumber(request.getParameter("bankAccountNumber"));
+
+            // Save uploaded evidence files (images/videos)
+            StringBuilder evidencePaths = new StringBuilder();
+            for (jakarta.servlet.http.Part part : request.getParts()) {
+                String name = part.getName();
+                if (("evidenceImages".equals(name) || "evidenceVideos".equals(name)) && part.getSize() > 0) {
+                    String savedPath = com.aisthea.fashion.util.ImageUploadHelper.saveMedia(part, "returns");
+                    if (savedPath != null) {
+                        if (evidencePaths.length() > 0) evidencePaths.append(",");
+                        evidencePaths.append(savedPath);
+                    }
+                }
+            }
+            rr.setEvidenceUrls(evidencePaths.length() > 0 ? evidencePaths.toString() : null);
+
             orderService.submitReturnRequest(rr);
             response.sendRedirect(request.getContextPath()
                     + "/order?action=view&orderid=" + orderId + "&returnSubmitted=true");
@@ -628,12 +667,25 @@ public class OrderServlet extends HttpServlet {
             String newStatus = request.getParameter("newStatus");
             String adminNote = request.getParameter("adminNote");
             orderService.processReturnRequest(returnId, newStatus, adminNote);
-            response.sendRedirect(request.getContextPath()
-                    + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
+
+            String from = request.getParameter("from");
+            if ("list".equals(from)) {
+                response.sendRedirect(request.getContextPath()
+                        + "/order?action=listReturns&update=success");
+            } else {
+                response.sendRedirect(request.getContextPath()
+                        + "/order?action=adminViewDetail&id=" + orderId + "&update=success");
+            }
         } catch (Exception e) {
             logger.warning("handleProcessReturn error: " + e.getMessage());
-            response.sendRedirect(request.getContextPath()
-                    + "/order?action=adminViewDetail&id=" + orderId + "&update=error");
+            String from = request.getParameter("from");
+            if ("list".equals(from)) {
+                response.sendRedirect(request.getContextPath()
+                        + "/order?action=listReturns&update=error");
+            } else {
+                response.sendRedirect(request.getContextPath()
+                        + "/order?action=adminViewDetail&id=" + orderId + "&update=error");
+            }
         }
     }
 

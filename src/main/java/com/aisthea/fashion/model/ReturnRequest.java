@@ -29,6 +29,10 @@ public class ReturnRequest {
     private Date createdAt;
     private Date updatedAt;
 
+    // Transient fields for admin list display (populated via JOIN)
+    private String customerName;
+    private String customerEmail;
+
     public ReturnRequest() {}
 
     public int getReturnId() { return returnId; }
@@ -72,4 +76,10 @@ public class ReturnRequest {
 
     public Date getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Date updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
+
+    public String getCustomerEmail() { return customerEmail; }
+    public void setCustomerEmail(String customerEmail) { this.customerEmail = customerEmail; }
 }

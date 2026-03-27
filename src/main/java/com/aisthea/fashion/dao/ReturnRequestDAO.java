@@ -103,6 +103,29 @@ public class ReturnRequestDAO {
         }
     }
 
+    /**
+     * Get all return requests with customer info (admin list view).
+     * JOINs with users table to get the customer's name and email.
+     */
+    public List<ReturnRequest> getAllWithCustomerInfo() throws SQLException {
+        String sql = "SELECT rr.*, u.fullname, u.email AS customer_email " +
+                     "FROM return_requests rr " +
+                     "JOIN Users u ON rr.user_id = u.userid " +
+                     "ORDER BY rr.created_at DESC";
+        List<ReturnRequest> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                ReturnRequest rr = mapRow(rs);
+                rr.setCustomerName(rs.getString("fullname"));
+                rr.setCustomerEmail(rs.getString("customer_email"));
+                list.add(rr);
+            }
+        }
+        return list;
+    }
+
     private ReturnRequest mapRow(ResultSet rs) throws SQLException {
         ReturnRequest rr = new ReturnRequest();
         rr.setReturnId(rs.getInt("return_id"));

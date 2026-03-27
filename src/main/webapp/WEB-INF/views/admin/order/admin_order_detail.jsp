@@ -325,9 +325,27 @@
                                                 </div>
                                             </c:if>
                                             <c:if test="${not empty returnRequest.evidenceUrls}">
-                                                <div class="info-row">
+                                                <div class="info-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
                                                     <span class="info-row__label">Bằng chứng</span>
-                                                    <a href="${returnRequest.evidenceUrls}" target="_blank" class="info-row__value" style="color:#0288D1;text-decoration:underline;">Xem link</a>
+                                                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                                                        <c:forEach var="evUrl" items="${returnRequest.evidenceUrls.split(',')}">
+                                                            <c:set var="evTrimmed" value="${evUrl.trim()}" />
+                                                            <c:choose>
+                                                                <c:when test="${evTrimmed.endsWith('.mp4') || evTrimmed.endsWith('.mov') || evTrimmed.endsWith('.webm')}">
+                                                                    <video src="${pageContext.request.contextPath}/uploads/${evTrimmed}"
+                                                                        style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--color-border-light);cursor:pointer;"
+                                                                        onclick="openLightbox('${pageContext.request.contextPath}/uploads/${evTrimmed}', 'video')"></video>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <img src="${pageContext.request.contextPath}/uploads/${evTrimmed}"
+                                                                        style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--color-border-light);cursor:pointer;transition:opacity 0.2s;"
+                                                                        onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'"
+                                                                        alt="Evidence"
+                                                                        onclick="openLightbox('${pageContext.request.contextPath}/uploads/${evTrimmed}', 'image')">
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </c:forEach>
+                                                    </div>
                                                 </div>
                                             </c:if>
                                             <c:if test="${not empty returnRequest.bankName}">
@@ -518,6 +536,33 @@
                                 modal.style.display = 'flex';
                             }
                         </script>
+
+            <%-- ══════ LIGHTBOX OVERLAY ══════ --%>
+            <div id="evidenceLightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;cursor:zoom-out;">
+                <button onclick="closeLightbox()" style="position:absolute;top:20px;right:24px;background:rgba(255,255,255,0.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">&times;</button>
+                <img id="lightboxImg" src="" alt="Evidence" style="display:none;max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);object-fit:contain;" onclick="event.stopPropagation()">
+                <video id="lightboxVid" src="" controls style="display:none;max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);" onclick="event.stopPropagation()"></video>
+            </div>
+            <script>
+                function openLightbox(src, type) {
+                    var lb = document.getElementById('evidenceLightbox');
+                    var img = document.getElementById('lightboxImg');
+                    var vid = document.getElementById('lightboxVid');
+                    img.style.display = 'none'; vid.style.display = 'none';
+                    if (type === 'video') { vid.src = src; vid.style.display = 'block'; }
+                    else { img.src = src; img.style.display = 'block'; }
+                    lb.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                }
+                function closeLightbox() {
+                    var lb = document.getElementById('evidenceLightbox');
+                    var vid = document.getElementById('lightboxVid');
+                    lb.style.display = 'none';
+                    vid.pause(); vid.src = '';
+                    document.body.style.overflow = '';
+                }
+                document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
+            </script>
             </body>
 
             </html>

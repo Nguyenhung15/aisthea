@@ -20,6 +20,10 @@
                     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
                     rel="stylesheet" />
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                <style>
+                    @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(-12px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+                    @keyframes toastOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(-12px); } }
+                </style>
 
                 <script id="tailwind-config">
                     tailwind.config = {
@@ -507,8 +511,35 @@
                                                                             <span class="return-status-${returnRequest.status} font-bold uppercase text-[10px] tracking-wider px-2 py-1 rounded-full">${returnRequest.status}</span>
                                                                         </div>
                                                                         <p class="text-slate-600">Lý do: <span class="font-semibold">${returnRequest.reasonType}</span></p>
+                                                                        <c:if test="${not empty returnRequest.reasonDetail}">
+                                                                            <p class="text-slate-500">${returnRequest.reasonDetail}</p>
+                                                                        </c:if>
                                                                         <c:if test="${not empty returnRequest.adminNote}">
                                                                             <p class="text-slate-500 italic">Phản hồi: ${returnRequest.adminNote}</p>
+                                                                        </c:if>
+                                                                        <%-- Evidence media display --%>
+                                                                        <c:if test="${not empty returnRequest.evidenceUrls}">
+                                                                            <div class="mt-2">
+                                                                                <span class="font-bold uppercase tracking-wider text-[10px] text-slate-400 block mb-1.5">Bằng chứng đính kèm</span>
+                                                                                <div class="flex flex-wrap gap-2">
+                                                                                    <c:forEach var="evUrl" items="${returnRequest.evidenceUrls.split(',')}">
+                                                                                        <c:set var="evTrimmed" value="${evUrl.trim()}" />
+                                                                                        <c:choose>
+                                                                                            <c:when test="${evTrimmed.endsWith('.mp4') || evTrimmed.endsWith('.mov') || evTrimmed.endsWith('.webm')}">
+                                                                                                <video src="${pageContext.request.contextPath}/uploads/${evTrimmed}" controls
+                                                                                                    class="w-24 h-24 object-cover rounded-lg border border-slate-200"
+                                                                                                    style="max-width:96px;max-height:96px;"></video>
+                                                                                            </c:when>
+                                                                                            <c:otherwise>
+                                                                                                <img src="${pageContext.request.contextPath}/uploads/${evTrimmed}"
+                                                                                                    class="w-16 h-16 object-cover rounded-lg border border-slate-200 hover:opacity-80 transition-opacity cursor-pointer"
+                                                                                                    alt="Evidence"
+                                                                                                    onclick="openLightbox('${pageContext.request.contextPath}/uploads/${evTrimmed}', 'image')">
+                                                                                            </c:otherwise>
+                                                                                        </c:choose>
+                                                                                    </c:forEach>
+                                                                                </div>
+                                                                            </div>
                                                                         </c:if>
                                                                         <div class="flex items-center justify-between gap-4 mt-2">
                                                                             <p class="text-slate-400">
@@ -752,7 +783,7 @@
                                     <%-- Reason --%>
                                     <div>
                                         <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2.5">Lý do hoàn trả <span class="text-red-400">*</span></p>
-                                        <div class="space-y-2">
+                                        <div class="space-y-2" id="reasonTypeGroup">
                                             <c:forEach var="reason" items="${[
                                                 'Hàng lỗi / hư hỏng',
                                                 'Giao sai sản phẩm / sai màu / sai size',
@@ -761,34 +792,56 @@
                                                 'Tôi đổi ý / không còn cần nữa'
                                             ]}">
                                                 <label class="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-100 hover:border-slate-300 cursor-pointer transition-all shadow-sm">
-                                                    <input type="radio" name="reasonType" value="${reason}" required class="w-4 h-4 text-slate-800 border-slate-300 focus:ring-slate-800">
+                                                    <input type="radio" name="reasonType" value="${reason}" class="w-4 h-4 text-slate-800 border-slate-300 focus:ring-slate-800" onchange="clearFieldError('reasonType')">
                                                     <span class="text-sm font-medium text-slate-700">${reason}</span>
                                                 </label>
                                             </c:forEach>
                                         </div>
+                                        <p id="err-reasonType" class="text-red-500 text-xs mt-1.5 hidden"></p>
                                     </div>
 
                                     <%-- Detail --%>
                                     <div>
                                         <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2.5">Mô tả chi tiết <span class="text-red-400">*</span></p>
-                                        <div class="relative bg-white rounded-xl border border-slate-100 shadow-sm p-3 hover:border-slate-300 transition-colors">
-                                            <textarea name="reasonDetail" rows="2"
+                                        <div class="relative bg-white rounded-xl border border-slate-100 shadow-sm p-3 hover:border-slate-300 transition-colors" id="reasonDetailWrap">
+                                            <textarea name="reasonDetail" id="reasonDetailInput" rows="2"
                                                 class="w-full bg-transparent border-0 focus:ring-0 text-sm p-0 outline-none resize-none"
-                                                placeholder="Mô tả tình trạng hàng hóa..." required></textarea>
+                                                placeholder="Mô tả tình trạng hàng hóa..." oninput="clearFieldError('reasonDetail')"></textarea>
                                         </div>
+                                        <p id="err-reasonDetail" class="text-red-500 text-xs mt-1.5 hidden"></p>
                                     </div>
 
-                                    <%-- Evidence: File Upload --%>
+                                    <%-- Evidence Media Upload (Shopee Style) --%>
                                     <div>
-                                        <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mb-2.5">Hình ảnh / Video bằng chứng <span class="text-red-400">*</span></p>
-                                        <label class="relative bg-white rounded-xl border-2 border-dashed border-slate-200 p-5 hover:border-slate-400 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5 group">
-                                            <span class="material-symbols-outlined text-3xl text-slate-300 group-hover:text-slate-500 transition-colors">cloud_upload</span>
-                                            <span class="text-sm font-medium text-slate-500 group-hover:text-slate-700 transition-colors text-center px-2" id="evidenceFileName">Chọn ảnh / video từ máy</span>
-                                            <span class="text-[10px] text-slate-400">JPG, PNG, MP4 (tối đa 10MB)</span>
-                                            <input type="file" name="evidenceFiles" accept="image/*,video/*" multiple required
-                                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                onchange="updateFileLabel(this)">
-                                        </label>
+                                        <div class="mb-2">
+                                            <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400">Đăng tải hình ảnh hoặc video <span class="text-red-400">*</span></p>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mb-3">1. Thấy rõ sản phẩm nhận được không phải sản phẩm người mua đã đặt</p>
+                                        
+                                        <div class="flex flex-wrap gap-3">
+                                            <%-- Image Upload Box --%>
+                                            <div id="imageUploadContainer" class="flex flex-wrap gap-3">
+                                                <label class="w-24 h-24 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all group shrink-0">
+                                                    <span class="material-symbols-outlined text-2xl text-slate-400 group-hover:text-slate-600">photo_camera</span>
+                                                    <span class="text-[10px] text-slate-500 mt-1 text-center leading-tight">Thêm Hình ảnh<br><span id="imgCount">(0/6)</span></span>
+                                                    <input type="file" name="evidenceImages" id="evidenceImages" accept="image/*" multiple class="hidden" onchange="handleImageSelection(this)">
+                                                </label>
+                                            </div>
+
+                                            <%-- Video Upload Box --%>
+                                            <div id="videoUploadContainer" class="flex flex-wrap gap-3">
+                                                <label id="videoUploadLabel" class="w-24 h-24 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-all group shrink-0">
+                                                    <span class="material-symbols-outlined text-2xl text-slate-400 group-hover:text-slate-600">videocam</span>
+                                                    <span class="text-[10px] text-slate-500 mt-1 text-center leading-tight">Thêm Video<br><span id="vidCount">(0/1)</span></span>
+                                                    <input type="file" name="evidenceVideos" id="evidenceVideos" accept="video/*" class="hidden" onchange="handleVideoSelection(this)">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="flex gap-10 mt-2">
+                                            <span class="text-[10px] text-slate-400">Tối đa: 5MB</span>
+                                            <span class="text-[10px] text-slate-400">Tối đa: 100MB</span>
+                                        </div>
+                                        <p id="err-evidence" class="text-red-500 text-xs mt-1.5 hidden"></p>
                                     </div>
 
                                     <%-- Bank Info --%>
@@ -880,16 +933,221 @@
                         document.getElementById("addressModal").classList.remove("active");
                     }
 
-                    function updateFileLabel(input) {
-                        const label = document.getElementById('evidenceFileName');
-                        if (input.files.length > 0) {
-                            const names = Array.from(input.files).map(f => f.name);
-                            label.textContent = names.length + ' file đã chọn: ' + names.join(', ');
-                            label.classList.add('text-slate-800');
-                        } else {
-                            label.textContent = 'Chọn ảnh hoặc video từ máy';
-                            label.classList.remove('text-slate-800');
+                    let selectedImages = [];
+                    let selectedVideo = null;
+
+                    // ── Toast notification (replaces alert()) ────────────────────
+                    function showReturnToast(msg, type) {
+                        var existing = document.getElementById('returnToast');
+                        if (existing) existing.remove();
+
+                        var colors = type === 'error'
+                            ? 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;'
+                            : 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;';
+                        var icon = type === 'error' ? 'error' : 'check_circle';
+
+                        var toast = document.createElement('div');
+                        toast.id = 'returnToast';
+                        toast.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:99999;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:0 4px 24px rgba(0,0,0,0.12);animation:toastIn 0.3s ease;max-width:90vw;' + colors;
+                        toast.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px;">' + icon + '</span>' + msg;
+                        document.body.appendChild(toast);
+
+                        setTimeout(function() {
+                            toast.style.animation = 'toastOut 0.3s ease forwards';
+                            setTimeout(function() { toast.remove(); }, 300);
+                        }, 3500);
+                    }
+
+                    // ── Inline field error helpers ────────────────────────────────
+                    function showFieldError(fieldId, msg) {
+                        var el = document.getElementById('err-' + fieldId);
+                        if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+                    }
+                    function clearFieldError(fieldId) {
+                        var el = document.getElementById('err-' + fieldId);
+                        if (el) { el.textContent = ''; el.classList.add('hidden'); }
+                    }
+                    function clearAllErrors() {
+                        document.querySelectorAll('[id^="err-"]').forEach(function(el) {
+                            el.textContent = ''; el.classList.add('hidden');
+                        });
+                    }
+
+                    function handleImageSelection(input) {
+                        const files = Array.from(input.files);
+                        clearFieldError('evidence');
+                        if (selectedImages.length + files.length > 6) {
+                            showReturnToast('Bạn chỉ có thể chọn tối đa 6 hình ảnh.', 'error');
+                            input.value = ""; return;
                         }
+                        
+                        files.forEach(file => {
+                            if (file.size > 5 * 1024 * 1024) {
+                                showReturnToast('File ' + file.name + ' vượt quá giới hạn 5MB.', 'error');
+                                return;
+                            }
+                            selectedImages.push(file);
+                            renderImagePreviews();
+                        });
+                        input.value = "";
+                    }
+
+                    function renderImagePreviews() {
+                        const container = document.getElementById('imageUploadContainer');
+                        const imgCount = document.getElementById('imgCount');
+                        
+                        container.querySelectorAll('.preview-item').forEach(el => el.remove());
+                        
+                        const label = container.querySelector('label');
+                        selectedImages.forEach((file, index) => {
+                            const reader = new FileReader();
+                            const div = document.createElement('div');
+                            div.className = 'preview-item w-24 h-24 border border-slate-200 rounded-lg relative overflow-hidden shrink-0';
+                            div.innerHTML = `
+                                <img src="" class="w-full h-full object-cover">
+                                <button type="button" onclick="removeImage(${index})" class="absolute top-0 right-0 bg-black/50 text-white w-5 h-5 flex items-center justify-center text-[10px] rounded-bl-lg hover:bg-black/70">&times;</button>
+                            `;
+                            reader.onload = (e) => div.querySelector('img').src = e.target.result;
+                            reader.readAsDataURL(file);
+                            container.insertBefore(div, label);
+                        });
+
+                        imgCount.textContent = `(${selectedImages.length}/6)`;
+                        label.style.display = selectedImages.length >= 6 ? 'none' : 'flex';
+                    }
+
+                    function removeImage(index) {
+                        selectedImages.splice(index, 1);
+                        renderImagePreviews();
+                    }
+
+                    function handleVideoSelection(input) {
+                        const file = input.files[0];
+                        if (!file) return;
+                        clearFieldError('evidence');
+                        if (file.size > 100 * 1024 * 1024) {
+                            showReturnToast('Video vượt quá giới hạn 100MB.', 'error');
+                            input.value = ""; return;
+                        }
+                        selectedVideo = file;
+                        renderVideoPreview();
+                        input.value = "";
+                    }
+
+                    function renderVideoPreview() {
+                        const container = document.getElementById('videoUploadContainer');
+                        const vidCount = document.getElementById('vidCount');
+                        const label = document.getElementById('videoUploadLabel');
+
+                        container.querySelectorAll('.video-preview-item').forEach(el => el.remove());
+
+                        if (selectedVideo) {
+                            const div = document.createElement('div');
+                            div.className = 'video-preview-item w-24 h-24 border border-slate-200 rounded-lg relative overflow-hidden bg-black shrink-0 flex items-center justify-center';
+                            div.innerHTML = `
+                                <span class="material-symbols-outlined text-white/50 text-2xl">play_circle</span>
+                                <button type="button" onclick="removeVideo()" class="absolute top-0 right-0 bg-black/70 text-white w-5 h-5 flex items-center justify-center text-[10px] rounded-bl-lg hover:bg-black/90">&times;</button>
+                                <div class="absolute bottom-1 left-1 right-1 bg-black/40 text-[8px] text-white px-1 truncate rounded">${selectedVideo.name}</div>
+                            `;
+                            container.insertBefore(div, label);
+                            label.style.display = 'none';
+                            vidCount.textContent = '(1/1)';
+                        } else {
+                            label.style.display = 'flex';
+                            vidCount.textContent = '(0/1)';
+                        }
+                    }
+
+                    function removeVideo() {
+                        selectedVideo = null;
+                        renderVideoPreview();
+                    }
+
+                    // Intercept form submit — full validation + fetch
+                    document.getElementById('returnForm').onsubmit = function(e) {
+                        e.preventDefault();
+                        clearAllErrors();
+                        var hasError = false;
+
+                        // 1. Reason
+                        if (!document.querySelector('input[name="reasonType"]:checked')) {
+                            showFieldError('reasonType', 'Vui lòng chọn lý do hoàn trả.');
+                            hasError = true;
+                        }
+
+                        // 2. Detail
+                        var detail = document.getElementById('reasonDetailInput');
+                        if (!detail || !detail.value.trim()) {
+                            showFieldError('reasonDetail', 'Vui lòng mô tả chi tiết tình trạng hàng hóa.');
+                            hasError = true;
+                        }
+
+                        // 3. Evidence
+                        if (selectedImages.length === 0 && !selectedVideo) {
+                            showFieldError('evidence', 'Vui lòng đăng tải ít nhất 1 hình ảnh hoặc video bằng chứng.');
+                            hasError = true;
+                        }
+
+                        // 4. Bank
+                        var bankName = document.getElementById('bankNameHidden');
+                        var bankAccName = document.querySelector('input[name="bankAccountName"]');
+                        var bankAccNum = document.querySelector('input[name="bankAccountNumber"]');
+                        if (!bankName || !bankName.value) {
+                            showReturnToast('Vui lòng chọn ngân hàng.', 'error');
+                            hasError = true;
+                        }
+                        if (bankAccName && !bankAccName.value.trim()) {
+                            showReturnToast('Vui lòng nhập tên chủ thẻ.', 'error');
+                            hasError = true;
+                        }
+                        if (bankAccNum && !bankAccNum.value.trim()) {
+                            showReturnToast('Vui lòng nhập số tài khoản.', 'error');
+                            hasError = true;
+                        }
+
+                        if (hasError) {
+                            showReturnToast('Vui lòng điền đầy đủ thông tin bắt buộc.', 'error');
+                            return false;
+                        }
+
+                        const formData = new FormData(this);
+                        formData.delete('evidenceImages');
+                        formData.delete('evidenceVideos');
+                        
+                        selectedImages.forEach(file => {
+                            formData.append('evidenceImages', file);
+                        });
+                        if (selectedVideo) {
+                            formData.append('evidenceVideos', selectedVideo);
+                        }
+
+                        // Show loading state
+                        var submitBtn = document.querySelector('button[form="returnForm"]');
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.textContent = 'ĐANG GỬI...';
+                        }
+
+                        fetch(this.action, { method: 'POST', body: formData })
+                        .then(r => {
+                            if (r.redirected) {
+                                window.location.href = r.url;
+                            } else if (r.ok) {
+                                window.location.href = '${pageContext.request.contextPath}/order?action=view&orderid=${order.orderid}&returnSubmitted=true';
+                            } else {
+                                showReturnToast('Đã xảy ra lỗi khi gửi yêu cầu.', 'error');
+                                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'GỬI YÊU CẦU HOÀN TRẢ'; }
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            showReturnToast('Đã xảy ra lỗi kết nối. Vui lòng thử lại.', 'error');
+                            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'GỬI YÊU CẦU HOÀN TRẢ'; }
+                        });
+                    };
+
+                    function updateFileLabel(input) {
+                        // Obsolete with new UI
                     }
 
                     function handleReasonChange(radio) {
@@ -1111,6 +1369,33 @@
                             window.location.href = "${pageContext.request.contextPath}/order?action=history";
                         };
                     }
+                </script>
+
+                <%-- ══════ LIGHTBOX OVERLAY ══════ --%>
+                <div id="evidenceLightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;cursor:zoom-out;">
+                    <button onclick="closeLightbox()" style="position:absolute;top:20px;right:24px;background:rgba(255,255,255,0.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">&times;</button>
+                    <img id="lightboxImg" src="" alt="Evidence" style="display:none;max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);object-fit:contain;" onclick="event.stopPropagation()">
+                    <video id="lightboxVid" src="" controls style="display:none;max-width:90vw;max-height:85vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);" onclick="event.stopPropagation()"></video>
+                </div>
+                <script>
+                    function openLightbox(src, type) {
+                        var lb = document.getElementById('evidenceLightbox');
+                        var img = document.getElementById('lightboxImg');
+                        var vid = document.getElementById('lightboxVid');
+                        img.style.display = 'none'; vid.style.display = 'none';
+                        if (type === 'video') { vid.src = src; vid.style.display = 'block'; }
+                        else { img.src = src; img.style.display = 'block'; }
+                        lb.style.display = 'flex';
+                        document.body.style.overflow = 'hidden';
+                    }
+                    function closeLightbox() {
+                        var lb = document.getElementById('evidenceLightbox');
+                        var vid = document.getElementById('lightboxVid');
+                        lb.style.display = 'none';
+                        vid.pause(); vid.src = '';
+                        document.body.style.overflow = '';
+                    }
+                    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
                 </script>
             </body>
 
