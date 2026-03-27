@@ -51,7 +51,7 @@ public class AnalyticsServlet extends HttpServlet {
             LinkedHashMap<String, Integer> orderStatusData;
             int totalCustomersInPeriod;
             
-            if (filterType != null && filterValue != null) {
+            if (filterType != null && filterValue != null && !filterValue.trim().isEmpty()) {
                 totalRevenue = analyticsDAO.getFilteredRevenue(filterType, filterValue);
                 totalOrders = analyticsDAO.getFilteredOrderCount(filterType, filterValue);
                 completedOrders = analyticsDAO.getFilteredCompletedOrderCount(filterType, filterValue);
@@ -82,15 +82,15 @@ public class AnalyticsServlet extends HttpServlet {
             LinkedHashMap<String, Integer> orderBreakdown;
             String chartSubtitle = "Monthly revenue over the last 12 months";
             
-            if ("YEAR".equalsIgnoreCase(filterType)) {
+            if ("YEAR".equalsIgnoreCase(filterType) && filterValue != null && !filterValue.trim().isEmpty()) {
                 revenueBreakdown = analyticsDAO.getRevenueBreakdown("YEAR", filterValue);
                 orderBreakdown = analyticsDAO.getOrderBreakdown("YEAR", filterValue);
                 chartSubtitle = "Monthly breakdown for year " + filterValue;
-            } else if ("MONTH".equalsIgnoreCase(filterType)) {
+            } else if ("MONTH".equalsIgnoreCase(filterType) && filterValue != null && !filterValue.trim().isEmpty()) {
                 revenueBreakdown = analyticsDAO.getRevenueBreakdown("MONTH", filterValue);
                 orderBreakdown = analyticsDAO.getOrderBreakdown("MONTH", filterValue);
                 chartSubtitle = "Daily breakdown for " + filterValue;
-            } else if ("DAY".equalsIgnoreCase(filterType)) {
+            } else if ("DAY".equalsIgnoreCase(filterType) && filterValue != null && !filterValue.trim().isEmpty()) {
                 revenueBreakdown = analyticsDAO.getRevenueBreakdown("DAY", filterValue);
                 orderBreakdown = analyticsDAO.getOrderBreakdown("DAY", filterValue);
                 chartSubtitle = "Hourly breakdown for " + filterValue;

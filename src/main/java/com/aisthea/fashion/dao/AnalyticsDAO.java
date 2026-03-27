@@ -71,7 +71,7 @@ public class AnalyticsDAO {
 
     public LinkedHashMap<String, BigDecimal> getRevenueByMonth(int months) {
         LinkedHashMap<String, BigDecimal> result = new LinkedHashMap<>();
-        String sql = "SELECT * FROM (SELECT TOP (?) FORMAT(createdat, 'yyyy-MM') as m, SUM(totalprice) as r FROM orders WHERE status = 'Completed' GROUP BY FORMAT(createdat, 'yyyy-MM') ORDER BY m DESC) AS t ORDER BY m ASC";
+        String sql = "SELECT * FROM (SELECT TOP (?) LEFT(CONVERT(VARCHAR, createdat, 120), 7) as m, SUM(totalprice) as r FROM orders WHERE status = 'Completed' GROUP BY LEFT(CONVERT(VARCHAR, createdat, 120), 7) ORDER BY m DESC) AS t ORDER BY m ASC";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, months);
@@ -227,7 +227,7 @@ public class AnalyticsDAO {
         if ("YEAR".equalsIgnoreCase(type)) {
             sql = "SELECT SUM(totalprice) FROM orders WHERE status = 'Completed' AND YEAR(createdat) = ?";
         } else if ("MONTH".equalsIgnoreCase(type)) {
-            sql = "SELECT SUM(totalprice) FROM orders WHERE status = 'Completed' AND FORMAT(createdat, 'yyyy-MM') = ?";
+            sql = "SELECT SUM(totalprice) FROM orders WHERE status = 'Completed' AND YEAR(createdat) = ? AND MONTH(createdat) = ?";
         } else if ("DAY".equalsIgnoreCase(type)) {
             sql = "SELECT SUM(totalprice) FROM orders WHERE status = 'Completed' AND CAST(createdat AS DATE) = ?";
         } else {
@@ -236,8 +236,15 @@ public class AnalyticsDAO {
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            if ("YEAR".equalsIgnoreCase(type)) ps.setInt(1, Integer.parseInt(value));
-            else ps.setString(1, value);
+            if ("YEAR".equalsIgnoreCase(type)) {
+                ps.setInt(1, Integer.parseInt(value));
+            } else if ("MONTH".equalsIgnoreCase(type)) {
+                String[] parts = value.split("-");
+                ps.setInt(1, Integer.parseInt(parts[0]));
+                ps.setInt(2, Integer.parseInt(parts[1]));
+            } else if ("DAY".equalsIgnoreCase(type)) {
+                ps.setDate(1, java.sql.Date.valueOf(value));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     BigDecimal b = rs.getBigDecimal(1);
@@ -255,7 +262,7 @@ public class AnalyticsDAO {
         if ("YEAR".equalsIgnoreCase(type)) {
             sql = "SELECT COUNT(*) FROM orders WHERE YEAR(createdat) = ?";
         } else if ("MONTH".equalsIgnoreCase(type)) {
-            sql = "SELECT COUNT(*) FROM orders WHERE FORMAT(createdat, 'yyyy-MM') = ?";
+            sql = "SELECT COUNT(*) FROM orders WHERE YEAR(createdat) = ? AND MONTH(createdat) = ?";
         } else if ("DAY".equalsIgnoreCase(type)) {
             sql = "SELECT COUNT(*) FROM orders WHERE CAST(createdat AS DATE) = ?";
         } else {
@@ -264,8 +271,15 @@ public class AnalyticsDAO {
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            if ("YEAR".equalsIgnoreCase(type)) ps.setInt(1, Integer.parseInt(value));
-            else ps.setString(1, value);
+            if ("YEAR".equalsIgnoreCase(type)) {
+                ps.setInt(1, Integer.parseInt(value));
+            } else if ("MONTH".equalsIgnoreCase(type)) {
+                String[] parts = value.split("-");
+                ps.setInt(1, Integer.parseInt(parts[0]));
+                ps.setInt(2, Integer.parseInt(parts[1]));
+            } else if ("DAY".equalsIgnoreCase(type)) {
+                ps.setDate(1, java.sql.Date.valueOf(value));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
@@ -280,7 +294,7 @@ public class AnalyticsDAO {
         if ("YEAR".equalsIgnoreCase(type)) {
             sql = "SELECT COUNT(*) FROM orders WHERE status = 'Completed' AND YEAR(createdat) = ?";
         } else if ("MONTH".equalsIgnoreCase(type)) {
-            sql = "SELECT COUNT(*) FROM orders WHERE status = 'Completed' AND FORMAT(createdat, 'yyyy-MM') = ?";
+            sql = "SELECT COUNT(*) FROM orders WHERE status = 'Completed' AND YEAR(createdat) = ? AND MONTH(createdat) = ?";
         } else if ("DAY".equalsIgnoreCase(type)) {
             sql = "SELECT COUNT(*) FROM orders WHERE status = 'Completed' AND CAST(createdat AS DATE) = ?";
         } else {
@@ -289,8 +303,15 @@ public class AnalyticsDAO {
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            if ("YEAR".equalsIgnoreCase(type)) ps.setInt(1, Integer.parseInt(value));
-            else ps.setString(1, value);
+            if ("YEAR".equalsIgnoreCase(type)) {
+                ps.setInt(1, Integer.parseInt(value));
+            } else if ("MONTH".equalsIgnoreCase(type)) {
+                String[] parts = value.split("-");
+                ps.setInt(1, Integer.parseInt(parts[0]));
+                ps.setInt(2, Integer.parseInt(parts[1]));
+            } else if ("DAY".equalsIgnoreCase(type)) {
+                ps.setDate(1, java.sql.Date.valueOf(value));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
@@ -304,9 +325,9 @@ public class AnalyticsDAO {
         LinkedHashMap<String, BigDecimal> result = new LinkedHashMap<>();
         String sql = "";
         if ("YEAR".equalsIgnoreCase(type)) {
-            sql = "SELECT FORMAT(createdat, 'yyyy-MM') as m, SUM(totalprice) as r FROM orders WHERE status = 'Completed' AND YEAR(createdat) = ? GROUP BY FORMAT(createdat, 'yyyy-MM') ORDER BY m ASC";
+            sql = "SELECT LEFT(CONVERT(VARCHAR, createdat, 120), 7) as m, SUM(totalprice) as r FROM orders WHERE status = 'Completed' AND YEAR(createdat) = ? GROUP BY LEFT(CONVERT(VARCHAR, createdat, 120), 7) ORDER BY m ASC";
         } else if ("MONTH".equalsIgnoreCase(type)) {
-            sql = "SELECT CAST(createdat AS DATE) as d, SUM(totalprice) as r FROM orders WHERE status = 'Completed' AND FORMAT(createdat, 'yyyy-MM') = ? GROUP BY CAST(createdat AS DATE) ORDER BY d ASC";
+            sql = "SELECT CAST(createdat AS DATE) as d, SUM(totalprice) as r FROM orders WHERE status = 'Completed' AND YEAR(createdat) = ? AND MONTH(createdat) = ? GROUP BY CAST(createdat AS DATE) ORDER BY d ASC";
         } else if ("DAY".equalsIgnoreCase(type)) {
             sql = "SELECT DATEPART(HOUR, createdat) as h, SUM(totalprice) as r FROM orders WHERE status = 'Completed' AND CAST(createdat AS DATE) = ? GROUP BY DATEPART(HOUR, createdat) ORDER BY h ASC";
         }
@@ -314,8 +335,15 @@ public class AnalyticsDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             if (sql.isEmpty()) return result;
-            if ("YEAR".equalsIgnoreCase(type)) ps.setInt(1, Integer.parseInt(value));
-            else ps.setString(1, value);
+            if ("YEAR".equalsIgnoreCase(type)) {
+                ps.setInt(1, Integer.parseInt(value));
+            } else if ("MONTH".equalsIgnoreCase(type)) {
+                String[] parts = value.split("-");
+                ps.setInt(1, Integer.parseInt(parts[0]));
+                ps.setInt(2, Integer.parseInt(parts[1]));
+            } else if ("DAY".equalsIgnoreCase(type)) {
+                ps.setDate(1, java.sql.Date.valueOf(value));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String label;
@@ -335,9 +363,9 @@ public class AnalyticsDAO {
         LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
         String sql = "";
         if ("YEAR".equalsIgnoreCase(type)) {
-            sql = "SELECT FORMAT(createdat, 'yyyy-MM') as m, COUNT(*) as c FROM orders WHERE YEAR(createdat) = ? GROUP BY FORMAT(createdat, 'yyyy-MM') ORDER BY m ASC";
+            sql = "SELECT LEFT(CONVERT(VARCHAR, createdat, 120), 7) as m, COUNT(*) as c FROM orders WHERE YEAR(createdat) = ? GROUP BY LEFT(CONVERT(VARCHAR, createdat, 120), 7) ORDER BY m ASC";
         } else if ("MONTH".equalsIgnoreCase(type)) {
-            sql = "SELECT CAST(createdat AS DATE) as d, COUNT(*) as c FROM orders WHERE FORMAT(createdat, 'yyyy-MM') = ? GROUP BY CAST(createdat AS DATE) ORDER BY d ASC";
+            sql = "SELECT CAST(createdat AS DATE) as d, COUNT(*) as c FROM orders WHERE YEAR(createdat) = ? AND MONTH(createdat) = ? GROUP BY CAST(createdat AS DATE) ORDER BY d ASC";
         } else if ("DAY".equalsIgnoreCase(type)) {
             sql = "SELECT DATEPART(HOUR, createdat) as h, COUNT(*) as c FROM orders WHERE CAST(createdat AS DATE) = ? GROUP BY DATEPART(HOUR, createdat) ORDER BY h ASC";
         }
@@ -345,8 +373,15 @@ public class AnalyticsDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             if (sql.isEmpty()) return result;
-            if ("YEAR".equalsIgnoreCase(type)) ps.setInt(1, Integer.parseInt(value));
-            else ps.setString(1, value);
+            if ("YEAR".equalsIgnoreCase(type)) {
+                ps.setInt(1, Integer.parseInt(value));
+            } else if ("MONTH".equalsIgnoreCase(type)) {
+                String[] parts = value.split("-");
+                ps.setInt(1, Integer.parseInt(parts[0]));
+                ps.setInt(2, Integer.parseInt(parts[1]));
+            } else if ("DAY".equalsIgnoreCase(type)) {
+                ps.setDate(1, java.sql.Date.valueOf(value));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String label;
@@ -368,7 +403,7 @@ public class AnalyticsDAO {
         if ("YEAR".equalsIgnoreCase(type)) {
             sql = "SELECT status, COUNT(*) as c FROM orders WHERE YEAR(createdat) = ? GROUP BY status";
         } else if ("MONTH".equalsIgnoreCase(type)) {
-            sql = "SELECT status, COUNT(*) as c FROM orders WHERE FORMAT(createdat, 'yyyy-MM') = ? GROUP BY status";
+            sql = "SELECT status, COUNT(*) as c FROM orders WHERE YEAR(createdat) = ? AND MONTH(createdat) = ? GROUP BY status";
         } else if ("DAY".equalsIgnoreCase(type)) {
             sql = "SELECT status, COUNT(*) as c FROM orders WHERE CAST(createdat AS DATE) = ? GROUP BY status";
         } else {
@@ -377,8 +412,15 @@ public class AnalyticsDAO {
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            if ("YEAR".equalsIgnoreCase(type)) ps.setInt(1, Integer.parseInt(value));
-            else ps.setString(1, value);
+            if ("YEAR".equalsIgnoreCase(type)) {
+                ps.setInt(1, Integer.parseInt(value));
+            } else if ("MONTH".equalsIgnoreCase(type)) {
+                String[] parts = value.split("-");
+                ps.setInt(1, Integer.parseInt(parts[0]));
+                ps.setInt(2, Integer.parseInt(parts[1]));
+            } else if ("DAY".equalsIgnoreCase(type)) {
+                ps.setDate(1, java.sql.Date.valueOf(value));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) result.put(rs.getString("status"), rs.getInt("c"));
             }
@@ -392,7 +434,7 @@ public class AnalyticsDAO {
         List<Map<String, Object>> list = new ArrayList<>();
         String filterClause = "";
         if ("YEAR".equalsIgnoreCase(type)) filterClause = "AND YEAR(o.createdat) = ?";
-        else if ("MONTH".equalsIgnoreCase(type)) filterClause = "AND FORMAT(o.createdat, 'yyyy-MM') = ?";
+        else if ("MONTH".equalsIgnoreCase(type)) filterClause = "AND YEAR(o.createdat) = ? AND MONTH(o.createdat) = ?";
         else if ("DAY".equalsIgnoreCase(type)) filterClause = "AND CAST(o.createdat AS DATE) = ?";
 
         String sql = "SELECT TOP (?) COALESCE(p.name, oi.product_name) as display_name, "
@@ -409,8 +451,15 @@ public class AnalyticsDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, top);
             if (!filterClause.isEmpty()) {
-                if ("YEAR".equalsIgnoreCase(type)) ps.setInt(2, Integer.parseInt(value));
-                else ps.setString(2, value);
+                if ("YEAR".equalsIgnoreCase(type)) {
+                    ps.setInt(2, Integer.parseInt(value));
+                } else if ("MONTH".equalsIgnoreCase(type)) {
+                    String[] parts = value.split("-");
+                    ps.setInt(2, Integer.parseInt(parts[0]));
+                    ps.setInt(3, Integer.parseInt(parts[1]));
+                } else if ("DAY".equalsIgnoreCase(type)) {
+                    ps.setDate(2, java.sql.Date.valueOf(value));
+                }
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -431,7 +480,7 @@ public class AnalyticsDAO {
         List<Map<String, Object>> list = new ArrayList<>();
         String filterClause = "";
         if ("YEAR".equalsIgnoreCase(type)) filterClause = "AND YEAR(o.createdat) = ?";
-        else if ("MONTH".equalsIgnoreCase(type)) filterClause = "AND FORMAT(o.createdat, 'yyyy-MM') = ?";
+        else if ("MONTH".equalsIgnoreCase(type)) filterClause = "AND YEAR(o.createdat) = ? AND MONTH(o.createdat) = ?";
         else if ("DAY".equalsIgnoreCase(type)) filterClause = "AND CAST(o.createdat AS DATE) = ?";
 
         String sql = "SELECT TOP (?) u.fullname, u.email, COUNT(o.orderid) as o_cnt, SUM(o.totalprice) as t_spent "
@@ -443,8 +492,15 @@ public class AnalyticsDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, top);
             if (!filterClause.isEmpty()) {
-                if ("YEAR".equalsIgnoreCase(type)) ps.setInt(2, Integer.parseInt(value));
-                else ps.setString(2, value);
+                if ("YEAR".equalsIgnoreCase(type)) {
+                    ps.setInt(2, Integer.parseInt(value));
+                } else if ("MONTH".equalsIgnoreCase(type)) {
+                    String[] parts = value.split("-");
+                    ps.setInt(2, Integer.parseInt(parts[0]));
+                    ps.setInt(3, Integer.parseInt(parts[1]));
+                } else if ("DAY".equalsIgnoreCase(type)) {
+                    ps.setDate(2, java.sql.Date.valueOf(value));
+                }
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -467,7 +523,7 @@ public class AnalyticsDAO {
         if ("YEAR".equalsIgnoreCase(type)) {
             sql = "SELECT COUNT(*) FROM users WHERE role = 'USER' AND YEAR(createdat) = ?";
         } else if ("MONTH".equalsIgnoreCase(type)) {
-            sql = "SELECT COUNT(*) FROM users WHERE role = 'USER' AND FORMAT(createdat, 'yyyy-MM') = ?";
+            sql = "SELECT COUNT(*) FROM users WHERE role = 'USER' AND YEAR(createdat) = ? AND MONTH(createdat) = ?";
         } else if ("DAY".equalsIgnoreCase(type)) {
             sql = "SELECT COUNT(*) FROM users WHERE role = 'USER' AND CAST(createdat AS DATE) = ?";
         } else {
@@ -476,8 +532,15 @@ public class AnalyticsDAO {
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            if ("YEAR".equalsIgnoreCase(type)) ps.setInt(1, Integer.parseInt(value));
-            else ps.setString(1, value);
+            if ("YEAR".equalsIgnoreCase(type)) {
+                ps.setInt(1, Integer.parseInt(value));
+            } else if ("MONTH".equalsIgnoreCase(type)) {
+                String[] parts = value.split("-");
+                ps.setInt(1, Integer.parseInt(parts[0]));
+                ps.setInt(2, Integer.parseInt(parts[1]));
+            } else if ("DAY".equalsIgnoreCase(type)) {
+                ps.setDate(1, java.sql.Date.valueOf(value));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }

@@ -550,20 +550,21 @@
                                                 <input type="hidden" name="type" id="filterTypeInput" value="${filterType}">
                                                 
                                                 <div id="picker-YEAR" class="picker-group ${filterType == 'YEAR' ? '' : 'hidden'}">
-                                                    <select name="value" onchange="this.form.submit()">
+                                                    <select name="value" onchange="this.form.submit()" ${filterType == 'YEAR' ? '' : 'disabled'}>
                                                         <option value="">Select Year</option>
                                                         <c:forEach var="y" begin="2023" end="2026">
-                                                            <option value="${y}" ${filterValue == y ? 'selected' : ''}>${y}</option>
+                                                            <c:set var="yStr" value="${y}" />
+                                                            <option value="${y}" ${filterType == 'YEAR' and filterValue == yStr ? 'selected' : ''}>${y}</option>
                                                         </c:forEach>
                                                     </select>
                                                 </div>
                                                 
                                                 <div id="picker-MONTH" class="picker-group ${filterType == 'MONTH' ? '' : 'hidden'}">
-                                                    <input type="month" name="value" value="${filterValue}" onchange="this.form.submit()">
+                                                    <input type="month" name="value" value="${filterValue}" onchange="this.form.submit()" ${filterType == 'MONTH' ? '' : 'disabled'}>
                                                 </div>
                                                 
                                                 <div id="picker-DAY" class="picker-group ${filterType == 'DAY' ? '' : 'hidden'}">
-                                                    <input type="date" name="value" value="${filterValue}" onchange="this.form.submit()">
+                                                    <input type="date" name="value" value="${filterValue}" onchange="this.form.submit()" ${filterType == 'DAY' ? '' : 'disabled'}>
                                                 </div>
                                                 
                                                 <c:if test="${not empty filterType}">
@@ -613,7 +614,7 @@
                                             <c:choose>
                                                 <c:when test="${not empty filterType and filterType != 'YEAR'}">
                                                     <i class="fa-solid ${revenueGrowth >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i> 
-                                                    ${Math.abs(revenueGrowth)}% vs last period
+                                                    ${revenueGrowth < 0 ? -revenueGrowth : revenueGrowth}% vs last period
                                                 </c:when>
                                                 <c:otherwise>
                                                     <i class="fa-solid fa-chart-simple"></i> Completed Orders only
@@ -884,8 +885,15 @@
                                 document.getElementById('picker-YEAR').classList.add('hidden');
                                 document.getElementById('picker-MONTH').classList.add('hidden');
                                 document.getElementById('picker-DAY').classList.add('hidden');
-                                // Show selected picker
+
+                                // Disable all inputs inside pickers
+                                document.querySelector('#picker-YEAR select').disabled = true;
+                                document.querySelector('#picker-MONTH input').disabled = true;
+                                document.querySelector('#picker-DAY input').disabled = true;
+
+                                // Show selected picker & enable its input
                                 document.getElementById('picker-' + type).classList.remove('hidden');
+                                document.querySelector('#picker-' + type + ' input, #picker-' + type + ' select').disabled = false;
                                 
                                 // Highlight active button
                                 document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
