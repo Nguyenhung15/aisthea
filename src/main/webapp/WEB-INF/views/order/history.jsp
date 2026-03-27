@@ -261,7 +261,7 @@
                                                 <c:forEach var="order" items="${orderList}">
                                                     <c:set var="rr" value="${returnRequestsMap[order.orderid]}" />
                                                     <div data-status="${order.status}" data-return="${not empty rr ? 'true' : 'false'}"
-                                                        class="order-card bg-white/60 border border-white rounded-2xl p-6 shadow-glass-sm hover:shadow-glass transition-all duration-300">
+                                                        class="order-card bg-white/60 border border-white rounded-2xl p-6 shadow-glass-sm hover:shadow-glass transition-all duration-300 select-none">
                                                         <div
                                                             class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 pb-4 border-b border-slate-100">
                                                             <div class="flex flex-col">

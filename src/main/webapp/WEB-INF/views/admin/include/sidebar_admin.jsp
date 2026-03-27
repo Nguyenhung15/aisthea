@@ -123,6 +123,13 @@
             }
         </style>
 
+        <style>
+            .lux-sidebar__link,
+            .lux-sidebar__section-label {
+                user-select: none;
+            }
+        </style>
+
         <script>
             (function () {
                 const fullUrl = window.location.pathname + window.location.search;
@@ -130,12 +137,20 @@
                 const links = document.querySelectorAll('.lux-sidebar__link');
                 links.forEach(link => {
                     const dataPath = link.getAttribute('data-path');
-                    if (dataPath && dataPath.includes('?')) {
-                        // Match full path + query string
-                        if (fullUrl.includes(dataPath)) {
-                            link.classList.add('active');
-                        }
-                    } else if (dataPath && path.includes(dataPath)) {
+                    if (!dataPath) return;
+                    if (dataPath.includes('?')) {
+                        // Exact match for paths with query string
+                        // e.g. "/order?action=list" must NOT match "/order?action=listReturns"
+                        const [dpPath, dpQuery] = dataPath.split('?');
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const dpParams = new URLSearchParams(dpQuery);
+                        const pathMatches = path.includes(dpPath);
+                        let queryMatches = true;
+                        dpParams.forEach((val, key) => {
+                            if (urlParams.get(key) !== val) queryMatches = false;
+                        });
+                        if (pathMatches && queryMatches) link.classList.add('active');
+                    } else if (path.includes(dataPath)) {
                         link.classList.add('active');
                     }
                 });

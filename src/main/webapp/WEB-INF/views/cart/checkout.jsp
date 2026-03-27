@@ -276,52 +276,48 @@
                                                 <p class="text-sm font-semibold text-slate-800">New Address Details</p>
                                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div class="space-y-1">
-                                                        <label
-                                                            class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Full
-                                                            Name</label>
+                                                        <label class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Full Name</label>
                                                         <input id="newFullName"
                                                             class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
                                                             type="text" placeholder="John Doe"
-                                                            oninput="updateHiddenFieldsFromNew()" />
+                                                            oninput="updateHiddenFieldsFromNew(); clearNewAddrErr('newFullName', 'err-newFullName')" />
+                                                        <p id="err-newFullName" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                                     </div>
                                                     <div class="space-y-1">
-                                                        <label
-                                                            class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Phone
-                                                            Number</label>
+                                                        <label class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Phone Number</label>
                                                         <input id="newPhone"
                                                             class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
                                                             type="tel" placeholder="0912345678"
-                                                            oninput="updateHiddenFieldsFromNew()" />
+                                                            oninput="updateHiddenFieldsFromNew(); clearNewAddrErr('newPhone', 'err-newPhone')" />
+                                                        <p id="err-newPhone" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                                     </div>
                                                 </div>
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     <div class="space-y-1">
-                                                        <label
-                                                            class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Tỉnh/Thành
-                                                            Phố</label>
-                                                        <select id="newProvince" onchange="updateHiddenFieldsFromNew()"
+                                                        <label class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Tỉnh/Thành Phố</label>
+                                                        <select id="newProvince" onchange="updateHiddenFieldsFromNew(); clearNewAddrErr('newProvince', 'err-newProvince')"
                                                             class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm">
                                                             <option value="">Chọn Tỉnh/Thành Phố</option>
                                                         </select>
+                                                        <p id="err-newProvince" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                                     </div>
                                                     <div class="space-y-1">
-                                                        <label
-                                                            class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Phường/Xã</label>
+                                                        <label class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Phường/Xã</label>
                                                         <select id="newWard" disabled
-                                                            onchange="updateHiddenFieldsFromNew()"
+                                                            onchange="updateHiddenFieldsFromNew(); clearNewAddrErr('newWard', 'err-newWard')"
                                                             class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm">
                                                             <option value="">Chọn Phường/Xã</option>
                                                         </select>
+                                                        <p id="err-newWard" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                                     </div>
                                                 </div>
                                                 <div class="space-y-1">
-                                                    <label
-                                                        class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Số
-                                                        Nhà, Tên Đường</label>
-                                                    <input id="newDetailedAddress" oninput="updateHiddenFieldsFromNew()"
+                                                    <label class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold ml-1">Số Nhà, Tên Đường</label>
+                                                    <input id="newDetailedAddress" oninput="updateHiddenFieldsFromNew(); clearNewAddrErr('newDetailedAddress', 'err-newDetailedAddress')"
                                                         class="w-full bg-white border-slate-200 rounded-lg focus:ring-accent-blue focus:border-accent-blue text-sm placeholder:text-slate-400"
                                                         type="text"
                                                         placeholder="VD: Số 12 Đường Lê Lợi, Lô B Tòa nhà..." />
+                                                    <p id="err-newDetailedAddress" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                                 </div>
                                                 <div class="flex items-center gap-2 mt-2">
                                                     <input
@@ -1228,12 +1224,45 @@
                                 // ── 2. Validate nếu chọn "Thêm địa chỉ mới" mà chưa điền đủ ──
                                 const newAddrRadio = document.getElementById('newAddressRadio');
                                 if (newAddrRadio && newAddrRadio.checked) {
-                                    const newName = document.getElementById('newFullName').value.trim();
-                                    const newPhone = document.getElementById('newPhone').value.trim();
-                                    const newDetail = document.getElementById('newDetailedAddress').value.trim();
-                                    if (!newName || !newPhone || !newDetail) {
+                                    const phoneRx     = /^0[0-9]{9}$/;
+                                    const newNameEl   = document.getElementById('newFullName');
+                                    const newPhoneEl  = document.getElementById('newPhone');
+                                    const newDetailEl = document.getElementById('newDetailedAddress');
+                                    let hasErr = false;
+
+                                    // Helper: hiện lỗi ngay dưới field
+                                    function setNewErr(el, errId, msg) {
+                                        el.classList.add('!border-red-400');
+                                        const errEl = document.getElementById(errId);
+                                        if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+                                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        if (!hasErr) { el.focus(); hasErr = true; }
+                                    }
+
+                                    // Reset tất cả error trước
+                                    ['newFullName','newPhone','newDetailedAddress'].forEach(function(id) {
+                                        var el = document.getElementById(id);
+                                        var er = document.getElementById('err-' + id);
+                                        if (el) el.classList.remove('!border-red-400');
+                                        if (er) { er.textContent = ''; er.classList.add('hidden'); }
+                                    });
+
+                                    if (!newNameEl.value.trim()) {
+                                        setNewErr(newNameEl, 'err-newFullName', 'Vui lòng nhập họ tên người nhận.');
+                                    }
+                                    if (!newPhoneEl.value.trim()) {
+                                        setNewErr(newPhoneEl, 'err-newPhone', 'Vui lòng nhập số điện thoại.');
+                                    } else if (!phoneRx.test(newPhoneEl.value.trim())) {
+                                        setNewErr(newPhoneEl, 'err-newPhone', 'Số điện thoại phải đúng 10 chữ số, bắt đầu bằng số 0.');
+                                    }
+                                    if (!newDetailEl.value.trim()) {
+                                        setNewErr(newDetailEl, 'err-newDetailedAddress', 'Vui lòng nhập Số Nhà, Tên Đường.');
+                                    } else if (!/\d/.test(newDetailEl.value) || !/[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/.test(newDetailEl.value)) {
+                                        setNewErr(newDetailEl, 'err-newDetailedAddress', 'Địa chỉ phải bao gồm cả số nhà lẫn tên đường. VD: "12 Đường Lê Lợi".');
+                                    }
+
+                                    if (hasErr) {
                                         e.preventDefault();
-                                        showCustomAlert('Vui lòng điền đầy đủ thông tin địa chỉ mới (Họ tên, Số điện thoại, Số nhà/Đường).');
                                         return;
                                     }
                                 }
@@ -1309,6 +1338,13 @@
                     </div>
 
                     <script>
+                        function clearNewAddrErr(elId, errId) {
+                            var el = document.getElementById(elId);
+                            var er = document.getElementById(errId);
+                            if (el) el.classList.remove('!border-red-400');
+                            if (er) { er.textContent = ''; er.classList.add('hidden'); }
+                        }
+
                         function showCustomAlert(msg) {
                             document.getElementById('customAlertText').textContent = msg;
                             const modal = document.getElementById('customAlertModal');

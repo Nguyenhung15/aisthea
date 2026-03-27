@@ -528,7 +528,7 @@
                                                     data-bank="${rr.bankName}"
                                                     data-bankname="${rr.bankAccountName}"
                                                     data-banknum="${rr.bankAccountNumber}"
-                                                    style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;"
+                                                    style="border-bottom:1px solid var(--color-border-light);transition:background 0.15s ease;user-select:none;"
                                                     onmouseover="this.style.background='var(--color-bg)'"
                                                     onmouseout="this.style.background='transparent'">
                                                     <td style="padding:16px 20px;">
@@ -536,10 +536,7 @@
                                                             style="font-weight:700;font-size:0.82rem;color:var(--color-text-muted);">#${rr.returnId}</span>
                                                     </td>
                                                     <td style="padding:16px 20px;">
-                                                        <a href="${pageContext.request.contextPath}/order?action=adminViewDetail&id=${rr.orderId}"
-                                                            style="font-weight:700;font-size:0.88rem;color:var(--color-primary);text-decoration:none;transition:opacity 0.2s;"
-                                                            onmouseover="this.style.opacity='0.7'"
-                                                            onmouseout="this.style.opacity='1'">#${rr.orderId}</a>
+                                                        <span style="font-weight:700;font-size:0.88rem;color:var(--color-primary);">#${rr.orderId}</span>
                                                     </td>
                                                     <td style="padding:16px 20px;">
                                                         <div

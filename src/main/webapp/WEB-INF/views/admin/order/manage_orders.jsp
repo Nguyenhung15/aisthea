@@ -60,6 +60,7 @@
                         background: #fff;
                         border-bottom: 1px solid var(--color-border-light);
                         transition: background 0.15s ease;
+                        user-select: none;
                     }
                     .order-row:hover {
                         background: var(--color-bg) !important;

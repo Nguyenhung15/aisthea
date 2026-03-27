@@ -595,10 +595,15 @@
                 </main>
 
                 <div id="cancelModal" class="modal">
-                    <div class="glass-card bg-white/95 rounded-2xl w-full max-w-md p-8 shadow-2xl animate-scale-in">
-                        <h3 class="font-serif text-2xl font-semibold text-slate-800 mb-2">Hủy Đơn Hàng</h3>
-                        <p class="text-sm text-slate-500 mb-6">Xin vui lòng cho chúng tôi biết lý do bạn muốn hủy đơn
-                            hàng này.</p>
+                    <div class="glass-card bg-white/95 rounded-2xl w-full max-w-md shadow-2xl animate-scale-in flex flex-col" style="max-height:90vh;">
+                        <%-- Fixed header --%>
+                        <div class="px-8 pt-8 pb-4 shrink-0">
+                            <h3 class="font-serif text-2xl font-semibold text-slate-800 mb-2">H\u1ee7y \u0110\u01a1n H\u00e0ng</h3>
+                            <p class="text-sm text-slate-500">Xin vui l\u00f2ng cho ch\u00fang t\u00f4i bi\u1ebft l\u00fd do b\u1ea1n mu\u1ed1n h\u1ee7y \u0111\u01a1n
+                                h\u00e0ng n\u00e0y.</p>
+                        </div>
+                        <%-- Scrollable body --%>
+                        <div class="overflow-y-auto flex-1 px-8 pb-8">
 
                         <c:if test="${order.status == 'Processing' and order.paymentMethod == 'QR'}">
                             <div class="bg-amber-50 text-amber-800 text-xs p-3 rounded-lg border border-amber-200 mb-6">
@@ -649,6 +654,41 @@
                                     placeholder="Vui lòng cung cấp thêm chi tiết..."></textarea>
                             </div>
 
+                            <%-- ── Bank info section (QR only) ── --%>
+                            <c:if test="${order.paymentMethod == 'QR'}">
+                                <div class="mt-5 pt-5 border-t border-slate-100 space-y-3">
+                                    <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Thông tin hoàn tiền <span class="text-red-400">*</span></p>
+                                    <p class="text-xs text-slate-500 -mt-1">Vui lòng cung cấp tài khoản ngân hàng để chúng tôi hoàn tiền về đúng tài khoản của bạn.</p>
+
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Ngân hàng</label>
+                                        <input type="text" id="cancelBankName" name="cancelBankName"
+                                            class="w-full border border-slate-200 rounded-xl text-sm px-4 py-2.5 focus:ring-accent-blue focus:border-accent-blue outline-none bg-white transition-all"
+                                            placeholder="VD: Vietcombank, Techcombank..."
+                                            oninput="clearCancelBankErr('cancelBankName','err-cancelBankName')">
+                                        <p id="err-cancelBankName" class="hidden text-xs text-red-500 ml-1"></p>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Số tài khoản</label>
+                                        <input type="text" id="cancelBankAccount" name="cancelBankAccount"
+                                            class="w-full border border-slate-200 rounded-xl text-sm px-4 py-2.5 focus:ring-accent-blue focus:border-accent-blue outline-none bg-white transition-all"
+                                            placeholder="VD: 0123456789"
+                                            oninput="clearCancelBankErr('cancelBankAccount','err-cancelBankAccount')">
+                                        <p id="err-cancelBankAccount" class="hidden text-xs text-red-500 ml-1"></p>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <label class="text-[10px] uppercase tracking-widest text-slate-400 font-semibold">Tên chủ tài khoản</label>
+                                        <input type="text" id="cancelBankHolder" name="cancelBankHolder"
+                                            class="w-full border border-slate-200 rounded-xl text-sm px-4 py-2.5 focus:ring-accent-blue focus:border-accent-blue outline-none bg-white transition-all"
+                                            placeholder="VD: NGUYEN VAN A"
+                                            oninput="clearCancelBankErr('cancelBankHolder','err-cancelBankHolder')">
+                                        <p id="err-cancelBankHolder" class="hidden text-xs text-red-500 ml-1"></p>
+                                    </div>
+                                </div>
+                            </c:if>
+
                             <div class="flex gap-3 mt-8">
                                 <button type="button" onclick="closeCancelModal()"
                                     class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 rounded-lg">Quay
@@ -658,6 +698,7 @@
                                     Nhận Hủy</button>
                             </div>
                         </form>
+                        </div><%-- end scrollable body --%>
                     </div>
                 </div>
 
@@ -679,69 +720,79 @@
 
                         <%-- Body --%>
                         <div class="px-8 py-6 max-h-[70vh] overflow-y-auto">
-                            <p class="text-sm text-slate-500 mb-6">Điền địa chỉ mới bên dưới. Đơn hàng sẽ được chuyển về trạng thái <strong class="text-slate-700">Chờ xác nhận</strong> sau khi lưu.</p>
+                            <p class="text-sm text-slate-500 mb-4">Điền địa chỉ mới bên dưới. Đơn hàng sẽ được chuyển về trạng thái <strong class="text-slate-700">Chờ xác nhận</strong> sau khi lưu.</p>
 
+                            <%-- Inline error banner --%>
                             <form id="addressUpdateForm" action="${pageContext.request.contextPath}/order" method="post" class="space-y-4">
                                 <input type="hidden" name="action" value="updateAddress">
                                 <input type="hidden" name="orderid" value="${order.orderid}">
 
                                 <%-- Recipient --%>
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div class="space-y-1.5">
+                                    <div class="space-y-1">
                                         <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tên người nhận <span class="text-red-400">*</span></label>
                                         <div class="relative">
                                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px]">person</span>
                                             <input type="text" id="au_fullname" name="newFullname"
                                                 class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white transition-all"
-                                                placeholder="Nguyễn Văn A" value="${order.fullname}">
+                                                placeholder="Nguyễn Văn A" value="${order.fullname}"
+                                                oninput="clearAuErr('au_fullname','err-au_fullname')">
                                         </div>
+                                        <p id="err-au_fullname" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                     </div>
-                                    <div class="space-y-1.5">
+                                    <div class="space-y-1">
                                         <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Số điện thoại <span class="text-red-400">*</span></label>
                                         <div class="relative">
                                             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px]">phone</span>
                                             <input type="tel" id="au_phone" name="newPhone"
                                                 class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white transition-all"
-                                                placeholder="0912 345 678" value="${order.phone}">
+                                                placeholder="0912 345 678" value="${order.phone}"
+                                                oninput="clearAuErr('au_phone','err-au_phone')">
                                         </div>
+                                        <p id="err-au_phone" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                     </div>
                                 </div>
 
-                                 <%-- Province --%>
-                                <div class="space-y-1.5">
+                                <%-- Province --%>
+                                <div class="space-y-1">
                                     <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tỉnh / Thành phố <span class="text-red-400">*</span></label>
                                     <div class="relative">
                                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none">location_city</span>
                                         <select id="au_province" name="newProvince"
                                             class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white appearance-none transition-all"
-                                            onchange="auLoadWardsByProvince(this.value)">
+                                            onchange="auLoadWardsByProvince(this.value); clearAuErr('au_province','err-au_province')">
                                             <option value="">-- Chọn Tỉnh/Thành Phố --</option>
                                         </select>
                                     </div>
+                                    <p id="err-au_province" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                 </div>
 
                                 <%-- Ward --%>
-                                <div class="space-y-1.5">
+                                <div class="space-y-1">
                                     <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phường / Xã <span class="text-red-400">*</span></label>
                                     <div class="relative">
                                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none">holiday_village</span>
                                         <select id="au_ward" name="newWard"
                                             class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white appearance-none transition-all"
+                                            onchange="clearAuErr('au_ward','err-au_ward')"
                                             disabled>
                                             <option value="">-- Chọn Phường/Xã --</option>
                                         </select>
                                     </div>
+                                    <p id="err-au_ward" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                 </div>
 
                                 <%-- Detail address --%>
-                                <div class="space-y-1.5">
-                                    <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Địa chỉ cụ thể <span class="text-red-400">*</span></label>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Số Nhà, Tên Đường <span class="text-red-400">*</span></label>
                                     <div class="relative">
                                         <span class="material-symbols-outlined absolute left-3 top-3 text-slate-300 text-[18px]">home</span>
                                         <input type="text" id="au_detail" name="newAddressDetail"
                                             class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white transition-all"
-                                            placeholder="Số nhà, tên đường, tòa nhà...">
+                                            placeholder="Số nhà, tên đường, tòa nhà..."
+                                            oninput="clearAuErr('au_detail','err-au_detail')">
                                     </div>
+                                    <p id="err-au_detail" class="hidden text-xs text-red-500 mt-0.5 ml-1"></p>
                                 </div>
 
                                 <%-- Info note --%>
@@ -933,6 +984,62 @@
                     let returnFiles = [];
                     const MAX_RETURN_IMAGES = 5;
 
+                    // \u2500\u2500 Cancel form: bank info validation (QR only) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+                    function clearCancelBankErr(elId, errId) {
+                        var el = document.getElementById(elId);
+                        var er = document.getElementById(errId);
+                        if (el) el.classList.remove('!border-red-400');
+                        if (er) { er.textContent = ''; er.classList.add('hidden'); }
+                    }
+                    function setCancelBankErr(elId, errId, msg) {
+                        var el = document.getElementById(elId);
+                        var er = document.getElementById(errId);
+                        if (el) el.classList.add('!border-red-400');
+                        if (er) { er.textContent = msg; er.classList.remove('hidden'); }
+                    }
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var cForm = document.getElementById('cancelForm');
+                        if (!cForm) return;
+                        cForm.addEventListener('submit', function(e) {
+                            var bankNameEl    = document.getElementById('cancelBankName');
+                            var bankAccEl     = document.getElementById('cancelBankAccount');
+                            var bankHolderEl  = document.getElementById('cancelBankHolder');
+
+                            // Ch\u1ec9 validate n\u1ebfu l\u00e0 \u0111\u01a1n QR (c\u00e1c input t\u1ed3n t\u1ea1i)
+                            if (!bankNameEl) return;
+
+                            var hasErr = false;
+                            ['cancelBankName','cancelBankAccount','cancelBankHolder'].forEach(function(id) {
+                                clearCancelBankErr(id, 'err-' + id);
+                            });
+
+                            if (!bankNameEl.value.trim()) {
+                                setCancelBankErr('cancelBankName', 'err-cancelBankName', 'Vui l\u00f2ng nh\u1eadp t\u00ean ng\u00e2n h\u00e0ng.');
+                                hasErr = true;
+                            }
+                            if (!bankAccEl.value.trim()) {
+                                setCancelBankErr('cancelBankAccount', 'err-cancelBankAccount', 'Vui l\u00f2ng nh\u1eadp s\u1ed1 t\u00e0i kho\u1ea3n.');
+                                hasErr = true;
+                            } else if (!/^\d{6,20}$/.test(bankAccEl.value.trim())) {
+                                setCancelBankErr('cancelBankAccount', 'err-cancelBankAccount', 'S\u1ed1 t\u00e0i kho\u1ea3n ph\u1ea3i t\u1eeb 6-20 ch\u1eef s\u1ed1.');
+                                hasErr = true;
+                            }
+                            if (!bankHolderEl.value.trim()) {
+                                setCancelBankErr('cancelBankHolder', 'err-cancelBankHolder', 'Vui l\u00f2ng nh\u1eadp t\u00ean ch\u1ee7 t\u00e0i kho\u1ea3n.');
+                                hasErr = true;
+                            }
+
+                            if (hasErr) {
+                                e.preventDefault();
+                                var firstErr = cForm.querySelector('.!border-red-400');
+                                if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        });
+                    });
+
+
+
                     function handleReturnFileSelect(input) {
                         const files = Array.from(input.files);
                         
@@ -1015,17 +1122,26 @@
                             .then(data => {
                                 sel.innerHTML = '<option value="">-- Chọn Tỉnh/Thành --</option>';
                                 data.forEach(p => {
-                                    sel.innerHTML += '<option value="' + p.code + '">' + p.name + '</option>';
+                                    // value = tên tỉnh (để gửi lên server), data-code = mã số (để load ward)
+                                    sel.innerHTML += '<option value="' + p.name + '" data-code="' + p.code + '">' + p.name + '</option>';
                                 });
                             })
                             .catch(() => { sel.innerHTML = '<option value="">Lỗi tải dữ liệu</option>'; });
                     }
 
                     // Load all wards in the selected province (skip district step)
-                    function auLoadWardsByProvince(provinceCode) {
+                    function auLoadWardsByProvince(provinceName) {
                         var wardSel = document.getElementById('au_ward');
                         wardSel.innerHTML = '<option value="">Đang tải...</option>';
                         wardSel.disabled = true;
+                        if (!provinceName) {
+                            wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                            return;
+                        }
+                        // Lấy code từ data-code của option được chọn
+                        var provSel = document.getElementById('au_province');
+                        var selectedOpt = provSel.options[provSel.selectedIndex];
+                        var provinceCode = selectedOpt ? selectedOpt.getAttribute('data-code') : null;
                         if (!provinceCode) {
                             wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
                             return;
@@ -1052,26 +1168,69 @@
                     }
 
                     // ── Address form validation ─────────────────────────────────
+                    // ── Address modal inline error helpers ────────────────────────
+                    function setAuErr(elId, errId, msg) {
+                        var el = document.getElementById(elId);
+                        var er = document.getElementById(errId);
+                        if (el) el.classList.add('!border-red-400');
+                        if (er) { er.textContent = msg; er.classList.remove('hidden'); }
+                    }
+                    function clearAuErr(elId, errId) {
+                        var el = document.getElementById(elId);
+                        var er = document.getElementById(errId);
+                        if (el) el.classList.remove('!border-red-400');
+                        if (er) { er.textContent = ''; er.classList.add('hidden'); }
+                    }
+
                     document.addEventListener('DOMContentLoaded', function() {
                         var addrForm = document.getElementById('addressUpdateForm');
                         if (addrForm) {
                             addrForm.addEventListener('submit', function(e) {
+                                // Reset tất cả lỗi
+                                ['au_fullname','au_phone','au_province','au_ward','au_detail'].forEach(function(id) {
+                                    clearAuErr(id, 'err-' + id);
+                                });
+
                                 var fullname = document.getElementById('au_fullname').value.trim();
                                 var phone    = document.getElementById('au_phone').value.trim();
                                 var province = document.getElementById('au_province').value;
                                 var ward     = document.getElementById('au_ward').value;
                                 var detail   = document.getElementById('au_detail').value.trim();
-                                // Accepts all Vietnamese 10-digit numbers: 03x 05x 07x 08x 09x
-                                var phoneRx  = /^0[35789][0-9]{8}$/;
-                                if (!fullname || !phone || !province || !ward || !detail) {
-                                    e.preventDefault();
-                                    alert('Vui lòng điền đầy đủ thông tin địa chỉ giao hàng mới.');
-                                    return;
+                                var phoneRx  = /^0[0-9]{9}$/;
+                                var hasErr   = false;
+
+                                if (!fullname) {
+                                    setAuErr('au_fullname', 'err-au_fullname', 'Vui lòng nhập tên người nhận.');
+                                    hasErr = true;
                                 }
-                                if (!phoneRx.test(phone)) {
+                                if (!phone) {
+                                    setAuErr('au_phone', 'err-au_phone', 'Vui lòng nhập số điện thoại.');
+                                    hasErr = true;
+                                } else if (!phoneRx.test(phone)) {
+                                    setAuErr('au_phone', 'err-au_phone', 'Số điện thoại phải đúng 10 chữ số, bắt đầu bằng số 0.');
+                                    hasErr = true;
+                                }
+                                if (!province) {
+                                    setAuErr('au_province', 'err-au_province', 'Vui lòng chọn Tỉnh / Thành phố.');
+                                    hasErr = true;
+                                }
+                                if (!ward) {
+                                    setAuErr('au_ward', 'err-au_ward', 'Vui lòng chọn Phường / Xã.');
+                                    hasErr = true;
+                                }
+                                if (!detail) {
+                                    setAuErr('au_detail', 'err-au_detail', 'Vui lòng nhập Số Nhà, Tên Đường.');
+                                    hasErr = true;
+                                } else if (!/\d/.test(detail) || !/[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF]/.test(detail)) {
+                                    setAuErr('au_detail', 'err-au_detail', 'Địa chỉ phải bao gồm cả số nhà lẫn tên đường. VD: "12 Đường Lê Lợi".');
+                                    hasErr = true;
+                                }
+
+                                if (hasErr) {
                                     e.preventDefault();
-                                    alert('Số điện thoại không hợp lệ (phải là số Việt Nam 10 chữ số).');
-                                    document.getElementById('au_phone').focus();
+                                    // Scroll đến field lỗi đầu tiên
+                                    var firstErr = addrForm.querySelector('.!border-red-400');
+                                    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                 }
                             });
                         }

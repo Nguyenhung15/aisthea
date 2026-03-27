@@ -451,7 +451,76 @@ public class OrderServlet extends HttpServlet {
             } else if (reason == null || reason.trim().isEmpty()) {
                 reason = "Không có lý do";
             }
+
+            // Lấy bank info nếu có (đơn QR)
+            String bankName   = request.getParameter("cancelBankName");
+            String bankAcc    = request.getParameter("cancelBankAccount");
+            String bankHolder = request.getParameter("cancelBankHolder");
+            boolean hasBankInfo = bankName != null && !bankName.trim().isEmpty()
+                    && bankAcc != null && !bankAcc.trim().isEmpty()
+                    && bankHolder != null && !bankHolder.trim().isEmpty();
+
+            if (hasBankInfo) {
+                reason += " | Hoàn tiền: STK " + bankAcc.trim()
+                        + " - " + bankName.trim()
+                        + " - " + bankHolder.trim().toUpperCase();
+            }
+
+            // Lấy thông tin đơn trước khi hủy (để lấy totalprice)
+            Order orderBeforeCancel = hasBankInfo
+                    ? orderService.getOrderDetails(orderId, user.getUserId()) : null;
+
             orderService.cancelOrder(orderId, user.getUserId(), reason);
+
+            // Nếu có bank info → tự động tạo ReturnRequest để admin xử lý hoàn tiền
+            if (hasBankInfo) {
+                try {
+                    ReturnRequestDAO rrDao = new ReturnRequestDAO();
+                    // Chỉ tạo nếu chưa có return request cho đơn này
+                    if (rrDao.getByOrderId(orderId) == null) {
+                        ReturnRequest rr = new ReturnRequest();
+                        rr.setOrderId(orderId);
+                        rr.setUserId(user.getUserId());
+                        rr.setReasonType("Hoàn tiền sau hủy đơn");
+                        rr.setReasonDetail(reason);
+                        rr.setBankName(bankName.trim());
+                        rr.setBankAccountNumber(bankAcc.trim());
+                        rr.setBankAccountName(bankHolder.trim().toUpperCase());
+                        if (orderBeforeCancel != null && orderBeforeCancel.getTotalprice() != null) {
+                            rr.setRefundAmount(orderBeforeCancel.getTotalprice());
+                        }
+                        rrDao.insert(rr);
+
+                        // Gửi thông báo cho Admin/Staff
+                        try {
+                            com.aisthea.fashion.dao.NotificationDAO notifDao = new com.aisthea.fashion.dao.NotificationDAO();
+                            try (java.sql.Connection conn = com.aisthea.fashion.dao.DBConnection.getConnection();
+                                 java.sql.PreparedStatement ps = conn.prepareStatement(
+                                         "SELECT userid FROM Users WHERE UPPER(role) IN ('ADMIN','STAFF')");
+                                 java.sql.ResultSet rs = ps.executeQuery()) {
+                                while (rs.next()) {
+                                    com.aisthea.fashion.model.Notification n = new com.aisthea.fashion.model.Notification();
+                                    n.setUserId(rs.getInt("userid"));
+                                    n.setTitle("Yêu cầu hoàn tiền #" + orderId);
+                                    n.setContent("Khách hàng " + user.getFullname()
+                                            + " đã hủy đơn QR #" + orderId
+                                            + " và yêu cầu hoàn tiền về STK " + bankAcc.trim()
+                                            + " - " + bankName.trim() + ".");
+                                    n.setType("RETURN");
+                                    n.setTargetId(orderId);
+                                    n.setRead(false);
+                                    notifDao.addNotification(n);
+                                }
+                            }
+                        } catch (Exception ne) {
+                            logger.warning("Lỗi gửi thông báo hoàn tiền: " + ne.getMessage());
+                        }
+                    }
+                } catch (Exception re) {
+                    logger.warning("Không thể tạo return request tự động: " + re.getMessage());
+                }
+            }
+
             response.sendRedirect(request.getContextPath() + "/order?action=view&id=" + orderId + "&cancel=success");
         } catch (Exception e) {
             e.printStackTrace();
