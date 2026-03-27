@@ -1053,6 +1053,17 @@ public class ProductDAO implements IProductDAO {
         }
     }
 
+    @Override
+    public boolean updateProductPrice(int productId, java.math.BigDecimal newPrice) throws SQLException {
+        String sql = "UPDATE Products SET price = ? WHERE productid = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBigDecimal(1, newPrice);
+            ps.setInt(2, productId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     /**
      * Normalize image URL for comparison: strips context-path prefixes
      * like "/AistheaFashion/uploads/" so that DB-stored filenames match

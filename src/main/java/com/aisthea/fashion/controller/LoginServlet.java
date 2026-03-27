@@ -76,16 +76,22 @@ public class LoginServlet extends HttpServlet {
                     session.setAttribute("cart", merged);
                 }
 
-                // Redirect to returnUrl if set (e.g. user was redirected from checkout)
+                // Redirect logic
                 String returnUrl = (String) session.getAttribute("returnUrl");
                 if (returnUrl == null || returnUrl.isEmpty()) {
                     returnUrl = request.getParameter("returnUrl");
                 }
+
                 if (returnUrl != null && !returnUrl.isEmpty()) {
                     session.removeAttribute("returnUrl");
                     response.sendRedirect(returnUrl);
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/home");
+                    // Role-based default redirect
+                    if ("Admin".equalsIgnoreCase(user.getRole())) {
+                        response.sendRedirect(request.getContextPath() + "/dashboard");
+                    } else {
+                        response.sendRedirect(request.getContextPath() + "/home");
+                    }
                 }
             } else {
                 request.setAttribute("error", result.getMessage());

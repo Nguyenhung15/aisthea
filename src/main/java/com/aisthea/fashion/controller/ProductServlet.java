@@ -159,6 +159,19 @@ public class ProductServlet extends HttpServlet {
                     }
                     return;
 
+                case "quick_price":
+                    response.setContentType("application/json;charset=UTF-8");
+                    try {
+                        int pid = Integer.parseInt(request.getParameter("id"));
+                        java.math.BigDecimal newPrice = new java.math.BigDecimal(request.getParameter("price"));
+                        if (newPrice.compareTo(java.math.BigDecimal.ZERO) < 0) throw new Exception("Giá không được âm.");
+                        boolean success = productService.updateProductPrice(pid, newPrice);
+                        response.getWriter().write("{\"success\":" + success + "}");
+                    } catch (Exception ex) {
+                        response.getWriter().write("{\"success\":false,\"message\":\"" + ex.getMessage().replace("\"", "\\\"") + "\"}");
+                    }
+                    return;
+
                 default:
                     response.sendRedirect(request.getContextPath() + "/product?action=manage");
                     break;

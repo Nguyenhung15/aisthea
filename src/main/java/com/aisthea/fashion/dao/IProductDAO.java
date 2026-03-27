@@ -54,6 +54,9 @@ public interface IProductDAO {
     int countAdminProducts(String search, Integer statusFilter, Integer genderId, String parentCategory, Integer subCategoryId) throws SQLException;
     boolean toggleProductStatus(int productId) throws SQLException;
     
+    // Quick Update
+    boolean updateProductPrice(int productId, BigDecimal newPrice) throws SQLException;
+    
     // Báo cáo Low Stock toàn hệ thống
     List<Product> getLowStockProducts(int stockThreshold) throws SQLException;
 

@@ -215,4 +215,14 @@ public class ProductService implements IProductService {
             return false;
         }
     }
+
+    @Override
+    public boolean updateProductPrice(int productId, java.math.BigDecimal newPrice) {
+        try {
+            return productDAO.updateProductPrice(productId, newPrice);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error updating product price", e);
+            return false;
+        }
+    }
 }

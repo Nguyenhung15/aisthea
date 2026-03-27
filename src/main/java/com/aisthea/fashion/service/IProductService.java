@@ -58,4 +58,6 @@ public interface IProductService {
     int countAdminProducts(String search);
 
     boolean toggleProductStatus(int productId);
+
+    boolean updateProductPrice(int productId, java.math.BigDecimal newPrice);
 }

@@ -22,10 +22,20 @@
         .mp-modal h3 { margin:0 0 4px;font-family:var(--font-serif);font-size:1.1rem;color:var(--color-primary); }
         .mp-modal .sub { margin:0 0 20px;font-size:.8rem;color:#9ca3af; }
 
-        /* ══ Toolbar: 1 hàng ══ */
+        /* ══ Container Overrides (Window Scroll Mode) ══ */
+        .lux-main { min-height: 100vh; display: block; overflow: visible; }
+        .lux-content { display: block; overflow: visible; padding-bottom: 40px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .lux-page-header { margin-bottom: 20px !important; }
+        .ls-card { margin-bottom: 20px !important; }
+        .pm-card { background:#fff; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.06); overflow:visible; }
+
+        /* ══ Toolbar (Sticky Masked) ══ */
         .pm-toolbar {
             display:flex;flex-wrap:wrap;gap:10px;align-items:center;
-            padding:16px 24px;border-bottom:1px solid #f1f5f9;background:#fff;
+            padding:16px 24px;background:#fff;
+            border-bottom: 1px solid #f1f5f9;
+            border-radius: 16px 16px 0 0;
+            position: sticky; top: 72px; z-index: 100;
         }
         .pm-toolbar .left  { display:flex;align-items:center;gap:10px;flex:1;min-width:320px; }
         .pm-toolbar .right { display:flex;align-items:center;gap:8px;flex-shrink:0; }
@@ -35,15 +45,15 @@
         .pm-search-wrap { position:relative;display:flex;align-items:center; }
         .pm-search-wrap i { position:absolute;left:12px;color:#9ca3af;font-size:.8rem;pointer-events:none; }
         .pm-search { padding:8px 14px 8px 34px;border:1px solid #e2e8f0;border-radius:8px;
-                     font-size:.82rem;outline:none;background:#f8fafc;transition:.2s;width:220px; }
-        .pm-search:focus { border-color:var(--color-primary);background:#fff;box-shadow:0 0 0 3px rgba(26,35,50,.07); }
+                     font-size:.82rem;outline:none;background:#f8fafc;transition:.2s;width:200px; }
+        .pm-search:focus { border-color:var(--color-primary);background:#fff;box-shadow:0 0 0 3px rgba(26,35,50,.07);width:260px; }
 
         .pm-select { padding:8px 32px 8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:.82rem;
                      outline:none;cursor:pointer;appearance:none;background:#f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") no-repeat right 10px center;
-                     transition:.2s; }
+                     transition:.2s; max-width: 150px; }
         .pm-select:hover { border-color:var(--color-primary); }
 
-        .pm-btn { display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;
+        .pm-btn { display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;
                   font-size:.82rem;font-weight:600;cursor:pointer;transition:.18s; }
         .pm-btn.primary { background:var(--color-primary);color:#fff; }
         .pm-btn.primary:hover { background:#2d3748; }
@@ -54,17 +64,28 @@
         .pm-btn.success { background:#d1fae5;color:#059669; }
         .pm-btn.success:hover { background:#a7f3d0; }
 
+        /* Price Edit */
+        .price-wrap { display:inline-flex; align-items:center; gap:6px; position:relative; group; cursor: pointer; }
+        .price-edit-btn { opacity:0; color:#9ca3af; font-size:.75rem; transition:.2s; }
+        .price-wrap:hover .price-edit-btn { opacity:1; color:var(--color-primary); }
+        .price-input { width:100px; padding:4px 8px; border:1px solid var(--color-primary); border-radius:4px; font-size:.85rem; outline:none; text-align:right; font-weight:700; }
+
         /* Sort arrow badge */
         .sort-th { cursor:pointer;user-select:none; }
         .sort-th:hover { color:var(--color-primary); }
 
         /* ══ Table ══ */
-        .pm-table { width:100%;border-collapse:collapse; }
-        .pm-table thead tr { background:#f8fafc; }
-        .pm-table th { padding:11px 16px;font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.7px; }
-        .pm-table tbody tr { border-bottom:1px solid #f1f5f9;transition:background .12s; }
+        .pm-table-container { background: #fff; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
+        .pm-table { width:100%; border-collapse:collapse; min-width: 900px; }
+        .pm-table thead th { 
+            position: sticky; top: 140px; z-index: 10; background:#f8fafc; 
+            box-shadow: inset 0 -1px 0 #e2e8f0; 
+            padding:11px 16px; font-size:.68rem; font-weight:700; color:#9ca3af; 
+            text-transform:uppercase; letter-spacing:.7px; 
+        }
+        .pm-table tbody tr { border-bottom:1px solid #f1f5f9; transition:background .12s; }
         .pm-table tbody tr:hover { background:#fafafa; }
-        .pm-table td { padding:11px 16px;vertical-align:middle; }
+        .pm-table td { padding:11px 16px; vertical-align:middle; }
 
         /* ══ Thumbnail ══ */
         .pm-thumb { width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;cursor:zoom-in;transition:.2s; }
@@ -96,8 +117,11 @@
         .ai.d:hover { background:#fef2f2;color:#dc2626; }
 
         /* ══ Bulk bar ══ */
-        .bulk-bar { display:none;padding:10px 24px;background:#eff6ff;border-bottom:1px solid #bfdbfe;align-items:center;gap:10px;flex-wrap:wrap; }
-        .bulk-bar.show { display:flex; }
+        .bulk-bar { display:none;justify-content:space-between;width:100%;align-items:center;flex-wrap:wrap; }
+        .bulk-bar.show { display:flex; animation:fadeIn .2s; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
+        .bulk-bar .left { display:flex; align-items:center; gap:8px; }
+        .bulk-bar .right { display:flex; align-items:center; gap:8px; }
 
         /* ══ Quick Stock modal ══ */
         .qs-row { display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6; }
@@ -237,91 +261,95 @@
     <%-- ══════════════════════════════════════════
          PRODUCT TABLE CARD
     ══════════════════════════════════════════ --%>
-    <div style="background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden;">
+    <div class="pm-card">
 
         <%-- ── Toolbar: 1 hàng với search + meta + filters + sort ── --%>
-        <div class="pm-toolbar" style="flex-wrap: wrap; row-gap: 12px;">
-            <div class="left" style="flex-wrap: wrap; gap: 8px;">
-                <%-- Search --%>
-                <div class="pm-search-wrap">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="pmSearch" class="pm-search" placeholder="Search product..."
-                           value="${fn:escapeXml(param.searchName)}"
-                           onkeydown="if(event.key==='Enter') doSearch()">
+        <div class="pm-toolbar" style="flex-wrap: wrap; row-gap: 12px; min-height: 69px;">
+            <div id="defaultToolbar" style="display:flex; flex-wrap:wrap; width:100%; justify-content:space-between; row-gap:12px;">
+                <div class="left" style="flex-wrap: wrap; gap: 8px;">
+                    <%-- Search --%>
+                    <div class="pm-search-wrap" title="Live search as you type">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="pmSearch" class="pm-search" placeholder="Search product..."
+                               value="${fn:escapeXml(param.searchName)}"
+                               oninput="liveSearch(this.value)"
+                               onkeydown="if(event.key==='Enter') doSearch()">
+                    </div>
+
+                    <%-- Category Filters Inline --%>
+                    <select id="genderFilter" class="pm-select" onchange="submitFilters('gender')">
+                        <option value="">Any Gender</option>
+                        <option value="1" ${param.genderId == '1' ? 'selected' : ''}>Men</option>
+                        <option value="2" ${param.genderId == '2' ? 'selected' : ''}>Women</option>
+<!--                        <option value="3" ${param.genderId == '3' ? 'selected' : ''}>Unisex</option>-->
+                    </select>
+                    
+                    <select id="parentCatFilter" class="pm-select" onchange="submitFilters('parent')">
+                        <option value="">Any Parent</option>
+                    </select>
+                    
+                    <select id="subCatFilter" class="pm-select" onchange="submitFilters('sub')">
+                        <option value="">Any Sub</option>
+                    </select>
+
+                    <%-- Status filter --%>
+                    <select id="statusFilter" class="pm-select" onchange="submitFilters('status')">
+                        <option value="" ${empty param.statusFilter ? 'selected' : ''}>Any Status</option>
+                        <option value="1" ${param.statusFilter == '1' ? 'selected' : ''}>Active</option>
+                        <option value="0" ${param.statusFilter == '0' ? 'selected' : ''}>Hidden</option>
+                    </select>
+                    
+                    <c:if test="${not empty param.searchName or not empty param.genderId or not empty param.parentCategory or not empty param.subCategoryId or not empty param.statusFilter}">
+                        <button class="pm-btn ghost" onclick="clearAllFilters()" style="width:36px; height:36px; padding:0;" title="Clear all filters">
+                            <i class="fa-solid fa-rotate-left" style="font-size:.9rem; color:#64748b;"></i>
+                        </button>
+                    </c:if>
                 </div>
-                <button class="pm-btn primary" onclick="doSearch()" style="padding:8px 14px;">
-                    <i class="fa-solid fa-search"></i>
-                </button>
 
-                <%-- Category Filters Inline --%>
-                <select id="genderFilter" class="pm-select" onchange="submitFilters('gender')" style="min-width:110px;">
-                    <option value="">Any Gender</option>
-                    <option value="1" ${param.genderId == '1' ? 'selected' : ''}>Men</option>
-                    <option value="2" ${param.genderId == '2' ? 'selected' : ''}>Women</option>
-                    <option value="3" ${param.genderId == '3' ? 'selected' : ''}>Unisex</option>
-                </select>
-                
-                <select id="parentCatFilter" class="pm-select" onchange="submitFilters('parent')" style="min-width:140px;">
-                    <option value="">Any Parent Category</option>
-                </select>
-                
-                <select id="subCatFilter" class="pm-select" onchange="submitFilters('sub')" style="min-width:140px;">
-                    <option value="">Any Sub Category</option>
-                </select>
+                <div class="right">
+                    <%-- Meta info --%>
+                    <span class="pm-meta">
+                        Showing <strong>${fn:length(productList)}</strong> / <strong>${totalRecords}</strong>
+                        &nbsp;•&nbsp; Page <strong>${currentPage}</strong>/<strong>${totalPages}</strong>
+                    </span>
 
-                <%-- Status filter --%>
-                <select id="statusFilter" class="pm-select" onchange="submitFilters('status')" style="min-width:110px;">
-                    <option value="" ${empty param.statusFilter ? 'selected' : ''}>All Status</option>
-                    <option value="1" ${param.statusFilter == '1' ? 'selected' : ''}>Active</option>
-                    <option value="0" ${param.statusFilter == '0' ? 'selected' : ''}>Hidden</option>
-                </select>
-                
-                <c:if test="${not empty param.searchName or not empty param.genderId or not empty param.parentCategory or not empty param.subCategoryId or not empty param.statusFilter}">
-                    <button class="pm-btn ghost" onclick="clearAllFilters()" style="padding:8px 12px; margin-left:4px; color:#ef4444;" title="Reset all filters">
-                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    <%-- Page size --%>
+                    <select class="pm-select" id="pageSzSel" onchange="changePageSize(this.value)" title="Items per page">
+                        <option value="10" ${pageSize == 10 ? 'selected' : ''}>10/page</option>
+                        <option value="15" ${pageSize == 15 || empty pageSize ? 'selected' : ''}>15/page</option>
+                        <option value="25" ${pageSize == 25 ? 'selected' : ''}>25/page</option>
+                        <option value="50" ${pageSize == 50 ? 'selected' : ''}>50/page</option>
+                    </select>
+                </div>
+            </div>
+
+            <%-- ── Bulk Action Bar (Replaces default toolbar content) ── --%>
+            <div id="bulkBar" class="bulk-bar" style="flex-shrink:0;">
+                <div class="left">
+                    <span style="font-size:.84rem;font-weight:600;color:#1d4ed8;"><span id="selCount">0</span> selected</span>
+                </div>
+                <div class="right">
+                    <button class="pm-btn ghost" onclick="bulkAction('activate')" style="padding:6px 12px;font-size:.78rem;">
+                        <i class="fa-solid fa-eye"></i> Activate
                     </button>
-                </c:if>
-            </div>
-
-            <div class="right">
-                <%-- Meta info --%>
-                <span class="pm-meta">
-                    Showing <strong>${fn:length(productList)}</strong> / <strong>${totalRecords}</strong>
-                    &nbsp;•&nbsp; Page <strong>${currentPage}</strong>/<strong>${totalPages}</strong>
-                </span>
-
-                <%-- Page size --%>
-                <select class="pm-select" id="pageSzSel" onchange="changePageSize(this.value)" title="Items per page">
-                    <option value="10" ${pageSize == 10 ? 'selected' : ''}>10/page</option>
-                    <option value="15" ${pageSize == 15 || empty pageSize ? 'selected' : ''}>15/page</option>
-                    <option value="25" ${pageSize == 25 ? 'selected' : ''}>25/page</option>
-                    <option value="50" ${pageSize == 50 ? 'selected' : ''}>50/page</option>
-                </select>
+                    <button class="pm-btn ghost" onclick="bulkAction('deactivate')" style="padding:6px 12px;font-size:.78rem;">
+                        <i class="fa-regular fa-eye-slash"></i> Deactivate
+                    </button>
+                    <button class="pm-btn danger" onclick="bulkAction('delete')" style="padding:6px 12px;font-size:.78rem;">
+                        <i class="fa-solid fa-trash-can"></i> Delete
+                    </button>
+                    <button class="pm-btn ghost" onclick="clearSelection()" style="padding:6px 10px;" title="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <%-- ── Bulk Action Bar ── --%>
-        <div id="bulkBar" class="bulk-bar">
-            <i class="fa-solid fa-check-square" style="color:#3b82f6;"></i>
-            <span style="font-size:.84rem;font-weight:600;color:#1d4ed8;"><span id="selCount">0</span> selected</span>
-            <div style="width:1px;height:20px;background:#bfdbfe;margin:0 4px;"></div>
-            <button class="pm-btn ghost" onclick="bulkAction('activate')" style="padding:6px 12px;font-size:.78rem;">
-                <i class="fa-solid fa-eye"></i> Activate
-            </button>
-            <button class="pm-btn ghost" onclick="bulkAction('deactivate')" style="padding:6px 12px;font-size:.78rem;">
-                <i class="fa-regular fa-eye-slash"></i> Deactivate
-            </button>
-            <button class="pm-btn danger" onclick="bulkAction('delete')" style="padding:6px 12px;font-size:.78rem;">
-                <i class="fa-solid fa-trash-can"></i> Delete Selected
-            </button>
-            <button class="pm-btn ghost" onclick="clearSelection()" style="margin-left:auto;padding:6px 10px;">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
 
         <%-- ── Table ── --%>
-        <table class="pm-table" id="prodTable">
-            <thead>
+        <div class="pm-table-container">
+            <table class="pm-table" id="prodTable">
+                <thead>
                 <tr>
                     <th style="width:40px;text-align:center;">
                         <input type="checkbox" id="chkAll" onchange="toggleAll(this)" style="width:15px;height:15px;cursor:pointer;">
@@ -388,9 +416,12 @@
                         </td>
 
                         <td style="text-align:right;white-space:nowrap;">
-                            <span style="font-weight:700;font-size:.9rem;color:var(--color-primary);">
-                                <fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND" maxFractionDigits="0"/>
-                            </span>
+                            <div class="price-wrap" id="pw-${p.productId}" onclick="startEditPrice(${p.productId}, ${p.price})">
+                                <span class="price-val" style="font-weight:700;font-size:.9rem;color:var(--color-primary);">
+                                    <fmt:formatNumber value="${p.price}" type="currency" currencyCode="VND" maxFractionDigits="0"/>
+                                </span>
+                                <i class="fa-solid fa-pencil price-edit-btn"></i>
+                            </div>
                         </td>
 
                         <td style="text-align:center;">
@@ -446,11 +477,12 @@
                     </tr>
                 </c:if>
             </tbody>
-        </table>
+            </table>
+        </div>
 
         <%-- ── Pagination ── --%>
         <c:if test="${totalPages > 1}">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-top:1px solid #f1f5f9;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-top:1px solid #f1f5f9;flex-shrink:0;">
                 <span style="font-size:.78rem;color:#9ca3af;">
                     Page ${currentPage} of ${totalPages} &nbsp;(${totalRecords} total products)
                 </span>
@@ -610,6 +642,14 @@ function showLightbox(url) {
 }
 
 /* ── Search & Filter ── */
+let _lsTimeout;
+function liveSearch(v) {
+    clearTimeout(_lsTimeout);
+    _lsTimeout = setTimeout(() => {
+        doSearch();
+    }, 600);
+}
+
 function doSearch() {
     submitFilters('search');
 }
@@ -632,6 +672,65 @@ function sortBy(col) {
     url.searchParams.set('sort', col);
     url.searchParams.set('dir', d);
     window.location.href = url.toString();
+}
+
+/* ── Quick Price Edit ── */
+function startEditPrice(pid, oldVal) {
+    const wrap = document.getElementById('pw-' + pid);
+    if (wrap.dataset.editing === 'true') return;
+    wrap.dataset.editing = 'true';
+    
+    const currentDisplay = wrap.innerHTML;
+    wrap.innerHTML = `<input type="number" class="price-input" id="pi-${pid}" value="${oldVal}" step="1000" min="0">`;
+    const input = document.getElementById('pi-' + pid);
+    input.focus();
+    input.select();
+
+    const save = () => {
+        const newVal = input.value;
+        if (newVal === String(oldVal)) {
+            wrap.dataset.editing = 'false';
+            wrap.innerHTML = currentDisplay;
+            return;
+        }
+        
+        input.disabled = true;
+        fetch(CTX + '/product', {
+            method:'POST',
+            headers:{'Content-Type':'application/x-www-form-urlencoded'},
+            body:`action=quick_price&id=${pid}&price=${newVal}`
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                toast('Price updated successfully');
+                // Format currency locally for immediate feedback
+                const formatted = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(newVal).replace('₫', 'đ');
+                wrap.dataset.editing = 'false';
+                wrap.innerHTML = `<span class="price-val" style="font-weight:700;font-size:.9rem;color:var(--color-primary);">${formatted}</span><i class="fa-solid fa-pencil price-edit-btn"></i>`;
+                // Update onclick with new val
+                wrap.setAttribute('onclick', `startEditPrice(${pid}, ${newVal})`);
+            } else {
+                toast(res.message || 'Update failed', 'err');
+                wrap.dataset.editing = 'false';
+                wrap.innerHTML = currentDisplay;
+            }
+        })
+        .catch(() => {
+            toast('Network error', 'err');
+            wrap.dataset.editing = 'false';
+            wrap.innerHTML = currentDisplay;
+        });
+    };
+
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter') save();
+        if (e.key === 'Escape') {
+            wrap.dataset.editing = 'false';
+            wrap.innerHTML = currentDisplay;
+        }
+    };
+    input.onblur = save;
 }
 
 /* ── Delete ── */
@@ -671,7 +770,12 @@ function toggleAll(src) {
 function updateSelCount() {
     const n = document.querySelectorAll('.row-chk:checked').length;
     document.getElementById('selCount').textContent = n;
-    document.getElementById('bulkBar').className = 'bulk-bar' + (n > 0 ? ' show' : '');
+    
+    const bb = document.getElementById('bulkBar');
+    const tb = document.getElementById('defaultToolbar');
+    bb.className = 'bulk-bar' + (n > 0 ? ' show' : '');
+    tb.style.display = (n > 0 ? 'none' : 'flex');
+    
     if (!n) document.getElementById('chkAll').checked = false;
 }
 function clearSelection() {
