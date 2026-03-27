@@ -143,7 +143,19 @@
                                     </div>
                                 </c:if>
 
-                        <%-- Return submitted success alert --%>
+                        <%-- Address-update success alert --%>
+                        <c:if test="${param.addrUpdated == 'true'}">
+                            <div class="glass-card border-emerald-100 bg-emerald-50 rounded-xl p-6 mb-6 flex items-center gap-4 shadow-lg shadow-emerald-100/50">
+                                <div class="bg-emerald-500 text-white rounded-full p-2">
+                                    <span class="material-symbols-outlined text-lg">check</span>
+                                </div>
+                                <div class="flex-grow">
+                                    <h3 class="font-bold text-emerald-900">Địa chỉ giao hàng đã được cập nhật!</h3>
+                                    <p class="text-sm text-emerald-700/80">Đơn hàng đã được chuyển về trạng thái <strong>Chờ xác nhận</strong> để xử lý lại.</p>
+                                </div>
+                            </div>
+                        </c:if>
+
                         <c:if test="${param.returnSubmitted == 'true'}">
                             <div class="glass-card border-emerald-100 bg-emerald-50 rounded-xl p-6 mb-6 flex items-center gap-4 shadow-lg shadow-emerald-100/50">
                                 <div class="bg-emerald-500 text-white rounded-full p-2">
@@ -557,21 +569,33 @@
                             <input type="hidden" name="action" value="cancel">
                             <input type="hidden" name="orderid" value="${order.orderid}">
 
-                            <div class="space-y-3">
+                            <div class="space-y-2">
                                 <c:forEach var="reason"
                                     items="${['Thay đổi địa chỉ giao hàng', 'Phí vận chuyển cao', 'Thời gian giao hàng quá lâu', 'Tìm thấy giá rẻ hơn ở nơi khác', 'Hủy để đặt lại đơn hàng khác', 'Other']}">
-                                    <label
-                                        class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-accent-blue/30 hover:bg-sky-50/50 cursor-pointer transition-all">
-                                        <input type="radio" name="reason" value="${reason}" required
-                                            onchange="toggleOtherReason()"
-                                            class="text-accent-blue focus:ring-accent-blue">
-                                        <span class="text-sm text-slate-600">
-                                            <c:choose>
-                                                <c:when test="${reason eq 'Other'}">Lý do khác...</c:when>
-                                                <c:otherwise>${reason}</c:otherwise>
-                                            </c:choose>
-                                        </span>
-                                    </label>
+                                    <c:choose>
+                                        <c:when test="${reason eq 'Thay đổi địa chỉ giao hàng'}">
+                                            <%-- Special: opens address modal instead of cancelling --%>
+                                            <button type="button" onclick="closeCancelModal(); openAddressModal();"
+                                                class="w-full flex items-center gap-3 p-3.5 rounded-xl border border-sky-200 bg-sky-50/60 hover:bg-sky-100 hover:border-accent-blue/60 text-left cursor-pointer transition-all group">
+                                                <span class="material-symbols-outlined text-accent-blue text-[20px]">edit_location_alt</span>
+                                                <span class="text-sm font-medium text-accent-blue">Thay đổi địa chỉ giao hàng</span>
+                                                <span class="ml-auto material-symbols-outlined text-xs text-accent-blue opacity-60 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+                                            </button>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-accent-blue/30 hover:bg-sky-50/50 cursor-pointer transition-all">
+                                                <input type="radio" name="reason" value="${reason}" required
+                                                    onchange="handleReasonChange(this)"
+                                                    class="text-accent-blue focus:ring-accent-blue">
+                                                <span class="text-sm text-slate-600">
+                                                    <c:choose>
+                                                        <c:when test="${reason eq 'Other'}">Lý do khác...</c:when>
+                                                        <c:otherwise>${reason}</c:otherwise>
+                                                    </c:choose>
+                                                </span>
+                                            </label>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </c:forEach>
                             </div>
 
@@ -585,13 +609,118 @@
                                 <button type="button" onclick="closeCancelModal()"
                                     class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 rounded-lg">Quay
                                     lại</button>
-                                <button type="submit"
+                                <button type="submit" id="cancelSubmitBtn"
                                     class="flex-1 bg-red-500 text-white py-3 rounded-lg text-[10px] uppercase font-bold tracking-widest hover:bg-red-600 shadow-lg shadow-red-200 transition-all">Xác
                                     Nhận Hủy</button>
                             </div>
                         </form>
                     </div>
                 </div>
+
+                <%-- ══════  ADDRESS CHANGE MODAL  ══════ --%>
+                <div id="addressModal" class="modal">
+                    <div class="glass-card bg-white/98 rounded-2xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden">
+
+                        <%-- Header --%>
+                        <div class="bg-gradient-to-r from-[#024acf]/5 to-[#0288D1]/5 px-8 py-6 border-b border-sky-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-accent-blue mb-1">Đơn hàng #${order.orderid}</p>
+                                <h3 class="font-serif text-2xl font-semibold text-slate-800">Cập nhật địa chỉ</h3>
+                            </div>
+                            <button type="button" onclick="closeAddressModal()"
+                                class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
+                                <span class="material-symbols-outlined text-lg">close</span>
+                            </button>
+                        </div>
+
+                        <%-- Body --%>
+                        <div class="px-8 py-6 max-h-[70vh] overflow-y-auto">
+                            <p class="text-sm text-slate-500 mb-6">Điền địa chỉ mới bên dưới. Đơn hàng sẽ được chuyển về trạng thái <strong class="text-slate-700">Chờ xác nhận</strong> sau khi lưu.</p>
+
+                            <form id="addressUpdateForm" action="${pageContext.request.contextPath}/order" method="post" class="space-y-4">
+                                <input type="hidden" name="action" value="updateAddress">
+                                <input type="hidden" name="orderid" value="${order.orderid}">
+
+                                <%-- Recipient --%>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tên người nhận <span class="text-red-400">*</span></label>
+                                        <div class="relative">
+                                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px]">person</span>
+                                            <input type="text" id="au_fullname" name="newFullname"
+                                                class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white transition-all"
+                                                placeholder="Nguyễn Văn A" value="${order.fullname}">
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Số điện thoại <span class="text-red-400">*</span></label>
+                                        <div class="relative">
+                                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px]">phone</span>
+                                            <input type="tel" id="au_phone" name="newPhone"
+                                                class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white transition-all"
+                                                placeholder="0912 345 678" value="${order.phone}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                 <%-- Province --%>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tỉnh / Thành phố <span class="text-red-400">*</span></label>
+                                    <div class="relative">
+                                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none">location_city</span>
+                                        <select id="au_province" name="newProvince"
+                                            class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white appearance-none transition-all"
+                                            onchange="auLoadWardsByProvince(this.value)">
+                                            <option value="">-- Chọn Tỉnh/Thành Phố --</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <%-- Ward --%>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phường / Xã <span class="text-red-400">*</span></label>
+                                    <div class="relative">
+                                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px] pointer-events-none">holiday_village</span>
+                                        <select id="au_ward" name="newWard"
+                                            class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white appearance-none transition-all"
+                                            disabled>
+                                            <option value="">-- Chọn Phường/Xã --</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <%-- Detail address --%>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Địa chỉ cụ thể <span class="text-red-400">*</span></label>
+                                    <div class="relative">
+                                        <span class="material-symbols-outlined absolute left-3 top-3 text-slate-300 text-[18px]">home</span>
+                                        <input type="text" id="au_detail" name="newAddressDetail"
+                                            class="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue outline-none bg-white transition-all"
+                                            placeholder="Số nhà, tên đường, tòa nhà...">
+                                    </div>
+                                </div>
+
+                                <%-- Info note --%>
+                                <div class="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700">
+                                    <span class="material-symbols-outlined text-[16px] mt-0.5 flex-shrink-0">info</span>
+                                    <span>Sau khi cập nhật, đơn hàng sẽ trở về trạng thái <strong>Chờ xác nhận</strong> để nhân viên kiểm tra và xác nhận lại.</span>
+                                </div>
+
+                                <%-- Buttons --%>
+                                <div class="flex gap-3 pt-2">
+                                    <button type="button" onclick="closeAddressModal(); openCancelModal();"
+                                        class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 rounded-xl">Quay lại</button>
+                                    <button type="submit"
+                                        class="flex-1 bg-gradient-to-r from-[#024acf] to-[#0288D1] text-white py-3 rounded-xl text-[10px] uppercase font-bold tracking-widest hover:opacity-90 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined text-sm">save</span>
+                                        Lưu địa chỉ mới
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
 
                 <%-- ══════  RETURN REQUEST MODAL (Voucher Style) ══════ --%>
                 <div id="returnModal" class="modal">
@@ -737,8 +866,19 @@
                     const modal = document.getElementById("cancelModal");
                     const otherBox = document.getElementById("otherReasonBox");
 
-                    function openCancelModal() { modal.classList.add("active"); }
+                    function openCancelModal()  { modal.classList.add("active"); }
                     function closeCancelModal() { modal.classList.remove("active"); }
+
+                    function openAddressModal() {
+                        var am = document.getElementById("addressModal");
+                        am.classList.add("active");
+                        // Load provinces on first open
+                        var pSel = document.getElementById("au_province");
+                        if (pSel && pSel.options.length <= 1) auLoadProvinces();
+                    }
+                    function closeAddressModal() {
+                        document.getElementById("addressModal").classList.remove("active");
+                    }
 
                     function updateFileLabel(input) {
                         const label = document.getElementById('evidenceFileName');
@@ -752,14 +892,89 @@
                         }
                     }
 
-                    function toggleOtherReason() {
-                        const selected = document.querySelector('input[name="reason"]:checked');
-                        if (selected && selected.value === "Other") {
-                            otherBox.classList.remove("hidden");
+                    function handleReasonChange(radio) {
+                        if (radio.value === 'Other') {
+                            otherBox.classList.remove('hidden');
                         } else {
-                            otherBox.classList.add("hidden");
+                            otherBox.classList.add('hidden');
                         }
                     }
+
+                    function toggleOtherReason() {
+                        const selected = document.querySelector('input[name="reason"]:checked');
+                        if (selected) handleReasonChange(selected);
+                    }
+
+                    // ── Address Modal: Province / District / Ward API ────────────
+                    function auLoadProvinces() {
+                        const sel = document.getElementById('au_province');
+                        sel.innerHTML = '<option value="">Đang tải...</option>';
+                        fetch('https://provinces.open-api.vn/api/p/')
+                            .then(r => r.json())
+                            .then(data => {
+                                sel.innerHTML = '<option value="">-- Chọn Tỉnh/Thành --</option>';
+                                data.forEach(p => {
+                                    sel.innerHTML += '<option value="' + p.code + '">' + p.name + '</option>';
+                                });
+                            })
+                            .catch(() => { sel.innerHTML = '<option value="">Lỗi tải dữ liệu</option>'; });
+                    }
+
+                    // Load all wards in the selected province (skip district step)
+                    function auLoadWardsByProvince(provinceCode) {
+                        var wardSel = document.getElementById('au_ward');
+                        wardSel.innerHTML = '<option value="">Đang tải...</option>';
+                        wardSel.disabled = true;
+                        if (!provinceCode) {
+                            wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                            return;
+                        }
+                        fetch('https://provinces.open-api.vn/api/p/' + provinceCode + '?depth=3')
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                wardSel.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
+                                var wards = [];
+                                (data.districts || []).forEach(function(d) {
+                                    (d.wards || []).forEach(function(w) {
+                                        wards.push(w.name);
+                                    });
+                                });
+                                wards.sort();
+                                wards.forEach(function(name) {
+                                    wardSel.innerHTML += '<option value="' + name + '">' + name + '</option>';
+                                });
+                                wardSel.disabled = false;
+                            })
+                            .catch(function() {
+                                wardSel.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+                            });
+                    }
+
+                    // ── Address form validation ─────────────────────────────────
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var addrForm = document.getElementById('addressUpdateForm');
+                        if (addrForm) {
+                            addrForm.addEventListener('submit', function(e) {
+                                var fullname = document.getElementById('au_fullname').value.trim();
+                                var phone    = document.getElementById('au_phone').value.trim();
+                                var province = document.getElementById('au_province').value;
+                                var ward     = document.getElementById('au_ward').value;
+                                var detail   = document.getElementById('au_detail').value.trim();
+                                // Accepts all Vietnamese 10-digit numbers: 03x 05x 07x 08x 09x
+                                var phoneRx  = /^0[35789][0-9]{8}$/;
+                                if (!fullname || !phone || !province || !ward || !detail) {
+                                    e.preventDefault();
+                                    alert('Vui lòng điền đầy đủ thông tin địa chỉ giao hàng mới.');
+                                    return;
+                                }
+                                if (!phoneRx.test(phone)) {
+                                    e.preventDefault();
+                                    alert('Số điện thoại không hợp lệ (phải là số Việt Nam 10 chữ số).');
+                                    document.getElementById('au_phone').focus();
+                                }
+                            });
+                        }
+                    });
 
                     // Custom Bank Select Logic
                     document.addEventListener('DOMContentLoaded', function() {

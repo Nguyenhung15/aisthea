@@ -131,7 +131,8 @@
 
                                                     <div class="divide-y divide-sky-100 flex flex-col">
                                                         <c:forEach var="item" items="${sessionScope.cart.items}">
-                                                            <c:set var="opacityClass" value="${item.available ? 'order-1' : 'order-last opacity-60 bg-slate-50 grayscale'}" />
+                                                            <c:set var="opacityClass"
+                                                                value="${item.available ? 'order-1' : 'order-last opacity-60 bg-slate-50 grayscale'}" />
                                                             <div class="p-8 flex flex-col md:flex-row gap-8 items-center transition-all duration-500 ${opacityClass}"
                                                                 id="item-row-${item.productColorSizeId}">
                                                                 <div class="flex items-center justify-center w-5">
@@ -144,7 +145,9 @@
                                                                                 onchange="updateSelectedTotal()">
                                                                         </c:when>
                                                                         <c:otherwise>
-                                                                            <span class="material-icons-outlined text-slate-300 pointer-events-none" title="Không khả dụng">do_not_disturb_alt</span>
+                                                                            <span
+                                                                                class="material-icons-outlined text-slate-300 pointer-events-none"
+                                                                                title="Không khả dụng">do_not_disturb_alt</span>
                                                                         </c:otherwise>
                                                                     </c:choose>
                                                                 </div>
@@ -189,7 +192,8 @@
                                                                     id="item-container-${item.productColorSizeId}">
                                                                     <c:choose>
                                                                         <c:when test="${item.available}">
-                                                                            <div class="flex items-center border border-slate-200 rounded-lg bg-white/50 p-1">
+                                                                            <div
+                                                                                class="flex items-center border border-slate-200 rounded-lg bg-white/50 p-1">
                                                                                 <button type="button"
                                                                                     onclick="updateQty(${item.productColorSizeId}, -1)"
                                                                                     class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-accent-blue transition-colors">
@@ -198,7 +202,8 @@
                                                                                 </button>
                                                                                 <input type="number"
                                                                                     id="qty-${item.productColorSizeId}"
-                                                                                    value="${item.quantity}" min="1" max="${item.stock}"
+                                                                                    value="${item.quantity}" min="1"
+                                                                                    max="${item.stock}"
                                                                                     onchange="updateQtyManual(${item.productColorSizeId}, this.value)"
                                                                                     class="w-10 border-0 bg-transparent text-center text-sm font-semibold focus:ring-0">
                                                                                 <button type="button"
@@ -209,18 +214,25 @@
                                                                                 </button>
                                                                             </div>
                                                                             <div class="text-right">
-                                                                                <span class="text-lg font-bold text-slate-900"
+                                                                                <span
+                                                                                    class="text-lg font-bold text-slate-900"
                                                                                     id="subtotal-${item.productColorSizeId}">
-                                                                                    <fmt:formatNumber value="${item.subtotal}"
-                                                                                        type="currency" currencyCode="VND"
+                                                                                    <fmt:formatNumber
+                                                                                        value="${item.subtotal}"
+                                                                                        type="currency"
+                                                                                        currencyCode="VND"
                                                                                         maxFractionDigits="0" />
                                                                                 </span>
                                                                             </div>
                                                                         </c:when>
                                                                         <c:otherwise>
-                                                                            <div class="text-right mt-4 flex items-center gap-2">
-                                                                                <span class="material-icons-outlined text-red-500 text-sm">error_outline</span>
-                                                                                <span class="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-50 px-3 py-1 rounded">HẾT HÀNG</span>
+                                                                            <div
+                                                                                class="text-right mt-4 flex items-center gap-2">
+                                                                                <span
+                                                                                    class="material-icons-outlined text-red-500 text-sm">error_outline</span>
+                                                                                <span
+                                                                                    class="text-xs font-bold text-red-500 uppercase tracking-widest bg-red-50 px-3 py-1 rounded">HẾT
+                                                                                    HÀNG</span>
                                                                             </div>
                                                                         </c:otherwise>
                                                                     </c:choose>
@@ -364,13 +376,13 @@
                             let maxStock = parseInt(input.getAttribute('max')) || 999;
                             let newQty = parseInt(value);
                             if (isNaN(newQty) || newQty < 1) newQty = 1;
-                            
+
                             if (newQty > maxStock) {
                                 newQty = maxStock;
                                 showToast('Số lượng sản phẩm vượt quá tồn kho. Đã điều chỉnh về tối đa: ' + maxStock, 'warning');
                                 input.value = newQty;
                             }
-                            
+
                             execUpdateQty(pcsId, newQty);
                         }
 

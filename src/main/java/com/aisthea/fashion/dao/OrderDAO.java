@@ -24,6 +24,9 @@ public class OrderDAO implements IOrderDAO {
     private static final String SELECT_ALL_ORDERS = "SELECT * FROM orders ORDER BY createdat DESC";
     private static final String SELECT_ADMIN_ORDER_BY_ID = "SELECT * FROM orders WHERE orderid = ?";
     private static final String DELETE_ORDER = "DELETE FROM orders WHERE orderid = ?";
+    private static final String UPDATE_ADDRESS =
+            "UPDATE orders SET fullname = ?, phone = ?, address = ?, status = 'Pending', updatedat = GETDATE() "
+            + "WHERE orderid = ? AND userid = ?";
 
     @Override
     public int addOrder(Order order, Connection conn) throws SQLException {
@@ -174,6 +177,23 @@ public class OrderDAO implements IOrderDAO {
         }
 
         return order;
+    }
+
+    /**
+     * Updates the shipping address, name, and phone for an order,
+     * and resets its status back to 'Pending' (awaiting reconfirmation).
+     */
+    public boolean updateAddress(int orderId, int userId, String fullname, String phone, String address)
+            throws SQLException {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(UPDATE_ADDRESS)) {
+            ps.setString(1, fullname);
+            ps.setString(2, phone);
+            ps.setString(3, address);
+            ps.setInt(4, orderId);
+            ps.setInt(5, userId);
+            return ps.executeUpdate() > 0;
+        }
     }
 
     @Override

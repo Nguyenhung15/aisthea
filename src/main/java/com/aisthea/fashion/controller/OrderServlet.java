@@ -1,6 +1,7 @@
 package com.aisthea.fashion.controller;
 
 import com.aisthea.fashion.dao.ReturnRequestDAO;
+import com.aisthea.fashion.dao.OrderDAO;
 import com.aisthea.fashion.model.Cart;
 import com.aisthea.fashion.model.Order;
 import com.aisthea.fashion.model.OrderItem;
@@ -120,6 +121,9 @@ public class OrderServlet extends HttpServlet {
                     break;
                 case "cancel":
                     handleCancelOrder(request, response, user);
+                    break;
+                case "updateAddress":
+                    handleUpdateAddress(request, response, user);
                     break;
                 case "adminMarkRefunded":
                     handleAdminMarkRefunded(request, response, user);
@@ -405,6 +409,54 @@ public class OrderServlet extends HttpServlet {
             String errorMsg = e.getMessage();
             String redirectUrl = (orderId != -1)
                     ? "/order?action=view&id=" + orderId + "&error=" + java.net.URLEncoder.encode(errorMsg, "UTF-8")
+                    : "/order?action=history&error=true";
+            response.sendRedirect(request.getContextPath() + redirectUrl);
+        }
+    }
+    private void handleUpdateAddress(HttpServletRequest request, HttpServletResponse response, User user)
+            throws Exception {
+        int orderId = -1;
+        try {
+            orderId = Integer.parseInt(request.getParameter("orderid"));
+
+            // Fetch order to verify ownership and eligibility
+            Order order = orderService.getOrderDetails(orderId, user.getUserId());
+            if (order == null) {
+                response.sendRedirect(request.getContextPath() + "/order?action=history&error=notfound");
+                return;
+            }
+            String status = order.getStatus();
+            if (!"Pending".equalsIgnoreCase(status) && !"Processing".equalsIgnoreCase(status)) {
+                request.getSession().setAttribute("error",
+                        "Chỉ có thể thay đổi địa chỉ khi đơn hàng đang ở trạng thái Pending hoặc Processing.");
+                response.sendRedirect(request.getContextPath() + "/order?action=view&id=" + orderId);
+                return;
+            }
+
+            String fullname = request.getParameter("newFullname");
+            String phone    = request.getParameter("newPhone");
+            String province = request.getParameter("newProvince");
+            String ward     = request.getParameter("newWard");
+            String detail   = request.getParameter("newAddressDetail");
+
+            // Build full address string: detail, ward, province
+            String fullAddress = detail + ", " + ward + ", " + province;
+
+            OrderDAO dao = new OrderDAO();
+            boolean updated = dao.updateAddress(orderId, user.getUserId(), fullname, phone, fullAddress);
+
+            if (updated) {
+                response.sendRedirect(request.getContextPath()
+                        + "/order?action=view&orderid=" + orderId + "&addrUpdated=true");
+            } else {
+                request.getSession().setAttribute("error", "Không thể cập nhật địa chỉ. Vui lòng thử lại.");
+                response.sendRedirect(request.getContextPath() + "/order?action=view&id=" + orderId);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            String msg = e.getMessage() != null ? e.getMessage() : "Lỗi không xác định";
+            String redirectUrl = (orderId != -1)
+                    ? "/order?action=view&id=" + orderId + "&error=" + java.net.URLEncoder.encode(msg, "UTF-8")
                     : "/order?action=history&error=true";
             response.sendRedirect(request.getContextPath() + redirectUrl);
         }
